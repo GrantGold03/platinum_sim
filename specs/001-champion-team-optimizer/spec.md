@@ -34,6 +34,8 @@ with the decomp"
   one; do not spend extra simulations when the difference is negligible or an ability only matters
   outside battle.
 - Q: Do the player's Pokemon have PP Ups or PP Max applied? → A: No. Every move has base PP.
+- Q: The game allows the National Dex before the first Champion win (it needs all 210 Sinnoh species seen,
+  which includes losing to the League once). Are National Dex sources allowed? → A: No. Treat them as not allowed.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -153,6 +155,10 @@ divergence ledger with its resolution.
 - **FR-003**: The tool MUST exclude anything obtainable only after defeating the Champion for the
   first time: species, evolutions, moves, move tutors, TMs, held items, and areas. "Post-game" MUST
   be determined from the game's own story-progress gates, not from a hand-written list.
+- **FR-003a**: Anything that requires the National Dex (Poké Radar, National Dex encounter and mining
+  lists, items or areas gated on it) MUST be treated as not allowed, even though the game data makes
+  the National Dex obtainable before the first Champion win. Event-only (Mystery Gift) items and
+  anything reachable only through them MUST be treated as unobtainable.
 - **FR-004**: TMs MUST be treated as single-use. The number of copies of each TM available to the
   team MUST equal the number obtainable before the Champion according to the game data; TMs sold in
   shops (including for Game Corner coins) MUST be treated as purchasable in any quantity.

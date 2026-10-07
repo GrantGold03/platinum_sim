@@ -8,6 +8,7 @@ Outputs (one file per table, plus manifest.json):
     trainers.json  {"decomp_commit", "trainers": [OpponentTrainer]}   (platsim.decomp.trainers, gauntlet order)
     exp.json       {"decomp_commit", "max_level", "tables": {EXP_RATE_*: [exp at level 0..max]}, "src"}
     constants.json {"decomp_commit", "gender_ratios", "natures", "abilities", "nature_affinities", "src"}
+    availability.json {"decomp_commit", "national_dex", "pp_restore_between_battles", "counts", "entries"}  (platsim.availability.ledger)
     manifest.json  {"decomp_commit", "showdown_commit", "files": {name: sha256}}
 
 Determinism: every file is `json.dumps(..., sort_keys=True, indent=1)` + "\n", lists keep the
@@ -103,7 +104,16 @@ def _constants() -> dict[str, Any]:
     return out
 
 
+def _availability() -> dict[str, Any]:
+    """T024 ledger: every acquisition source with its derived phase, the National Dex verdict and
+    `pp_restore_between_battles` (T026)."""
+    from platsim.availability.ledger import availability_json
+
+    return availability_json()
+
+
 OUTPUTS: dict[str, Builder] = {
+    "availability": _availability,
     "constants": _constants,
     "species": _species,
     "moves": _moves,

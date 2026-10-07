@@ -76,6 +76,14 @@ Only visible-item scripts that an events JSON actually references count. Some sc
 `Unused*`, and some maps are named `unused_*` or `dp_*`; these count only if the map graph reaches
 them.
 
+**Correction (T023–T026, 2026-10-07)**: the premise that the National Dex is granted only after the Hall of Fame
+is **false**. The only grant (`scripts_sandgem_town_pokemon_research_lab.s:539`) needs `FLAG_FIRST_ARRIVAL_ETERNA_CITY`
+and `CheckLocalDexCompleted` (all 210 Sinnoh species seen, `src/pokedex.c:28`, :801). Seven species are seen only in
+Elite Four or Champion battles, which count as seen even when lost. The user decided that **National Dex sources are
+not allowed** (spec FR-003a); `ALLOW_NATIONAL_DEX = False` in `availability/ledger.py`. Event-only items (Member Card,
+Oak's Letter, Secret Key, Azure Flute) come only from Mystery Gift handlers (`src/scrcmd_mystery_gift.c:540/582/628/670`)
+and are unobtainable.
+
 **Rationale**: FR-003 requires post-game status to come from the game's own gates. These three
 rules are mechanical, cite their source lines, and are testable with positive controls (the Battle
 Zone, Survival Area tutor and Foppa trade MUST come out post-game; the Route 212 tutor and the

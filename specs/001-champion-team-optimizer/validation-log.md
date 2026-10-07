@@ -426,3 +426,34 @@ $ PLATSIM_STRENGTH_N=160 uv run pytest -q -s tests/integration/test_policy_stren
 - **Fixture**: `tests/fixtures/reference_team.json` is a plausible level-57 team. Its formal legality is pending
   T029/T030, and its `ability_reason` values are placeholders.
 - **Test fix**: `sim/test/gauntlet.test.mjs` changed its "unknown policy" name, because `expectimax2-v1` now exists.
+
+## 2026-10-07: T023–T026 availability sources + ledger (agent; National Dex rule by the coordinator per user decision)
+
+```
+$ uv run platsim extract --check → "up to date (9 files)", exit 0
+$ uv run pytest -q tests/integration/test_availability_controls.py tests/unit/test_mapgraph.py → 51 passed, exit 0
+$ uv run pytest -q --ignore=tests/integration/test_policy_strength.py → 169 passed, exit 0 (before the rule change)
+```
+- **National Dex**: the decomp verdict is that it can be obtained before the Champion (see research R2 Correction).
+  The **user decided it is not allowed** (spec FR-003a). `ALLOW_NATIONAL_DEX = False`; Poké Radar slots are now
+  0 pre-Champion. The radar control asserts this.
+- **Event-only items** (Mystery Gift handlers only) are unobtainable. Newmoon Island, Harbor Inn, Rotom's Room,
+  Flower Paradise, Seabreak Path and Hall of Origin are unreachable. 421 maps are reachable (429 before the fixes).
+- **Counts with the rule applied**:
+  - entries: 2,453 pre-Champion, 1,542 post-game, 1,110 unobtainable;
+  - species: 182 of 493 have a pre-Champion source (breeding is not derived, so this undercounts);
+  - TMs: 36 unlimited (incl. HMs), 57 finite, 7 unavailable (TM08, 37, 42, 50, 53, 61, 73);
+  - held items: 42 unlimited, 46 finite, 70 unavailable.
+- **T026**:
+  - `encounters_unknown_533–557` are unused filler;
+  - honey trees are on 21 maps (`honey_tree.c:41-63`);
+  - there is no badge gate on the way to the League;
+  - the Snowpoint tutor is ungated;
+  - **`pp_restore_between_battles: true`**: Leppa Berry is unlimited via a berry patch (`berry_init.h`,
+    `berry_patches.c:233` yield ≥ 2). Ether, Max Ether, Elixir and Max Elixir are finite.
+- **Uncertain** (48 entries, treated as not available): mostly vendor shops with no trigger.
+- **Gaps**:
+  - Turnback Cave rooms are not linked, though Giratina is still available from the Distortion World;
+  - Pal Park is cut;
+  - field-move gating is not modelled;
+  - Pickup, wild held items and breeding are not sources (an under-approximation).

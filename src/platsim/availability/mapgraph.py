@@ -576,14 +576,15 @@ def c_script_triggers() -> dict[str, tuple[tuple[int, Ref], ...]]:
     """MAP_HEADER_* -> map-local script IDs started from C code in a file that names that header.
 
     Some maps (the Distortion World uses events_empty) start their scripts from C:
-    `ScriptManager_Set/Start(..., ID, ...)` or a `.scriptID = ID` table field. IDs are literals or
+    `ScriptManager_Set/Start(..., ID, ...)` or a `.scriptID = ID` / `.script = ID` table field (the
+    latter: C-built object events, e.g. the Distortion World Giratina, ov9_02249960.c). IDs are literals or
     `#define`s in the same file. A C file's local IDs (1..1999) are attributed to every map header
     that file names. This is an over-approximation used only to decide whether a script node has a
     trigger at all.
     """
     src_root = DECOMP_ROOT / "src"
     out: dict[str, list[tuple[int, Ref]]] = {}
-    call = re.compile(r"ScriptManager_(?:Set|Start)\([^,]+,\s*(\w+)|\.scriptID\s*=\s*(\w+)")
+    call = re.compile(r"ScriptManager_(?:Set|Start)\([^,]+,\s*(\w+)|\.script(?:ID)?\s*=\s*(\w+)")
     for path in sorted(src_root.rglob("*.c")):
         text = path.read_text(errors="replace")
         if "MAP_HEADER_" not in text or ("ScriptManager_" not in text and ".scriptID" not in text):
@@ -605,10 +606,17 @@ def c_script_triggers() -> dict[str, tuple[tuple[int, Ref], ...]]:
 
 def _trigger_starts(src: str) -> tuple[list[tuple[str, int]], dict[tuple[str, int], str]]:
     """Command nodes where the map's scripts start, with a note on what starts each one."""
+    from platsim.availability.gates import entry_triggers, story_facts, trigger_possible
+
     h = map_headers()[src]
     sf = load_script_file(h.scripts)
     starts, why = [], {}
+    facts = story_facts(True)
+    trig = entry_triggers(h.scripts)
     for i in sorted(_triggered_entries(src)):
+        ts = trig.get(i)
+        if ts and not any(trigger_possible(t, facts) for t in ts):
+            continue  # every trigger is a var condition that cannot hold pre-game (gates.live_entry_nodes)
         if i < len(sf.entries):
             n = (sf.stem, sf.command_for_entry(i))
             starts.append(n)
@@ -785,10 +793,18 @@ def _moved_warps(edges: list[Edge]) -> list[Edge]:
             # Only init scripts that can run a move of this warp matter.
             starts = [n for n in all_starts if avoid & _reach_cached(n, sf.stem)]
             refs = ", ".join(str(c.ref) for c, _, _ in lst)
-            if starts and can_finish_avoiding(starts, sf.stem, avoid, pregame=True):
+            # Every init script runs on each visit (OnTransition, OnLoad, ...): the event-data
+            # position survives only if each init script that can move the warp can also skip it.
+            if starts and all(can_finish_avoiding([n], sf.stem, avoid, pregame=True) for n in starts):
                 status_for[(name, i)] = ("keep", f"SetWarpEventPos at {refs} is skipped on some pre-game path", lst[0][0].ref)
-            elif starts and can_finish_avoiding(starts, sf.stem, avoid, pregame=False):
+            elif starts and (placed := _pregame_walkable_moves(name, sf, all_starts, lst)):
+                status_for[(name, i)] = ("keep", f"warp_moved: placed on a walkable spot by pre-game SetWarpEventPos at {placed}", lst[0][0].ref)
+            elif starts and all(can_finish_avoiding([n], sf.stem, avoid, pregame=False) for n in starts):
                 status_for[(name, i)] = ("post_game", f"warp_moved: SetWarpEventPos at {refs} runs on every pre-game path; skipped only via post-game branches", lst[0][0].ref)
+            elif starts:
+                # Moved on every pre-game visit, and no pre-game move puts it somewhere walkable.
+                why = f"warp_moved: SetWarpEventPos at {refs} runs on every pre-game visit; only post-game paths place it on a walkable spot"
+                status_for[(name, i)] = ("post_game", why, lst[0][0].ref)
             else:
                 tiles = _header_tiles(name)
                 closed = all(not _near(tiles, x, z) for _, x, z in lst if x is not None and z is not None)
@@ -813,6 +829,20 @@ def _moved_warps(edges: list[Edge]) -> list[Edge]:
         else:
             out.append(replace(e, status="uncertain", note=note, gates=e.gates + (Gate(KIND_UNCERTAIN, ref, why, False),)))
     return out
+
+
+def _pregame_walkable_moves(header: str, sf: ScriptFile, starts, sites) -> str:
+    """Refs of SetWarpEventPos sites that are pre-game from the map's init scripts and move the
+    warp onto (or next to) a walkable tile; '' if none."""
+    tiles = _header_tiles(header)
+    out = []
+    for c, x, z in sites:
+        if x is None or z is None or not _near(tiles, x, z):
+            continue
+        g = node_gates(sf.stem, c.index, starts=starts, local_file=sf.stem)
+        if g.reachable and not g.post_game:
+            out.append(str(c.ref))
+    return ", ".join(out)
 
 
 @cache
@@ -992,6 +1022,60 @@ def _coord_barriers(edges: list[Edge]) -> list[Edge]:
     return out
 
 
+def _object_barriers(edges: list[Edge]) -> list[Edge]:
+    """Mark warps that only a never-hidden-before-the-Champion object separates from the map.
+
+    A stationary object whose hidden_flag is a derived post-game flag (gates.story_facts: every
+    SetFlag / RemoveObject that would hide it is post-game or event-only) stands for the whole
+    pre-game. Flood-fill as in `_coord_barriers`, with those objects' tiles (plus other stationary
+    objects) as walls; a warp reachable without them but not with them becomes `uncertain`
+    (object_barrier). Example: the wall in front of Rotom's Room, removed only with the
+    Mystery-Gift Secret Key (scripts_team_galactic_eterna_building_1f.s:92-108)."""
+    from platsim.availability.gates import story_facts
+
+    post_flags = story_facts(True).post_flags
+    barrier_for: dict[tuple[str, Ref], list[Gate]] = {}
+    for name in map_header_names():
+        if name not in map_headers():
+            continue
+        ev = events_of(name)
+        blockers = [
+            o for o in ev["object"]
+            if o.data.get("hidden_flag") in post_flags and _STATIONARY.match(o.data.get("movement_type", ""))
+        ]
+        if not blockers or not ev["warp"]:
+            continue
+        tiles = _header_tiles(name)
+        if not tiles:
+            continue
+        objects = {(o.x, o.z) for o in ev["object"] if _STATIONARY.match(o.data.get("movement_type", ""))}
+        walls = {(o.x, o.z) for o in blockers}
+        for w in ev["warp"]:
+            others = []
+            for w2 in ev["warp"]:
+                if w2.data["dest_header_id"] != w.data["dest_header_id"]:
+                    others.extend(_near(tiles, w2.x, w2.z))
+            others.extend(_border_tiles(name, tiles))
+            if not others:
+                continue
+            mine = set(_near(tiles, w.x, w.z))
+            free = objects - walls - mine
+            with_wall = _flood(tiles, others, free | walls)
+            without = _flood(tiles, others, free)
+            if mine and (mine & without) and not (mine & with_wall):
+                for o in blockers:
+                    note = f"object_barrier: {o.data['id']} @{o.ref} (hidden_flag {o.data['hidden_flag']} is never set before the Champion) separates this warp"
+                    barrier_for.setdefault((name, w.ref), []).append(Gate(KIND_UNCERTAIN, o.ref, note, False))
+    out = []
+    for e in edges:
+        key = (e.src, e.ref)
+        if e.kind == "warp" and key in barrier_for and e.status in ("open", "conditional"):
+            out.append(Edge(e.src, e.dst, e.kind, e.ref, "uncertain", e.gates + tuple(barrier_for[key]), e.trigger, e.note, e.openers))
+        else:
+            out.append(e)
+    return out
+
+
 def _border_tiles(header: str, tiles: dict) -> list[tuple[int, int]]:
     """Walkable tiles of this header next to a walkable tile of another header."""
     mx = load_matrix(map_headers()[header].matrix)
@@ -1095,7 +1179,7 @@ class MapGraph:
 @cache
 def build_graph() -> MapGraph:
     edges = _warp_edges() + _script_edges() + _hidden_location_edges() + _c_elevator_edges() + _matrix_edges()
-    edges = _moved_warps(_coord_barriers(edges))
+    edges = _moved_warps(_object_barriers(_coord_barriers(edges)))
     return MapGraph(map_header_names(), edges)
 
 

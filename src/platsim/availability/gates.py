@@ -6,6 +6,10 @@ A *gate* is a branch whose direction depends on story progress:
   src/scrcmd_system_flags.c:148-151) and then compared;
 - a var written by `GetNationalDexEnabled` (GetSetNationalDexEnabled mode 2:
   src/scrcmd.c:5466-5482) and then compared;
+- a var written by `CheckLocalDexCompleted` (the National Dex grant's condition) and then compared:
+  kind `national_dex`, like GetNationalDexEnabled;
+- a var written by `CheckDistributionEvent`, or by `CheckItem` of a Mystery-Gift-only item
+  (event_only_items), and then compared: kind `event_only`, never true on one cartridge;
 - a var written by `CheckBadgeAcquired` / `CountBadgesAcquired` and then compared (recorded, never
   post-game: every badge is pre-Champion).
 
@@ -68,10 +72,56 @@ KIND_BADGE = "badge"
 KIND_BADGE_COUNT = "badge_count"
 KIND_REGION = "region"
 KIND_UNCERTAIN = "uncertain"
-POST_GAME_KINDS = frozenset({KIND_GAME_COMPLETED, KIND_NATIONAL_DEX, KIND_DERIVED_VAR})
+# Distribution-event checks (CheckDistributionEvent, or CheckItem of an item only Mystery Gift
+# hands out). One cartridge without Mystery Gift never passes them (FR-005); see event_only_items().
+KIND_EVENT_ONLY = "event_only"
+POST_GAME_KINDS = frozenset({KIND_GAME_COMPLETED, KIND_NATIONAL_DEX, KIND_DERIVED_VAR, KIND_EVENT_ONLY})
 
-# Pre-game world values (R2 rule 1).
-PREGAME_VALUES = {KIND_GAME_COMPLETED: 0, KIND_NATIONAL_DEX: 0}
+# Pre-game world values (R2 rule 1). KIND_EVENT_ONLY is 0 forever on one cartridge.
+PREGAME_VALUES = {KIND_GAME_COMPLETED: 0, KIND_NATIONAL_DEX: 0, KIND_EVENT_ONLY: 0}
+
+MYSTERY_GIFT_C = DECOMP_ROOT / "src" / "scrcmd_mystery_gift.c"
+
+
+@cache
+def event_only_items() -> dict[str, Ref]:
+    """ITEM_* added to the bag only by a Mystery Gift event handler.
+
+    src/scrcmd_mystery_gift.c: each `Init*Event` handler (dispatched from giftHandlers[] by the
+    received gift's type, ScrCmd_MysteryGiftGive) adds a literal ITEM_* with Bag_TryAddItem and sets
+    the distribution-event magic. An item counts as event-only when no field script gives it
+    (no literal operand of AddItem / a VAR_0x8004 / VAR_0x8008 SetVar, i.e. the item-gift idioms of
+    scripts_common.s CommonScript_AddItemQuantity and scripts_visible_items.s) and it is in no mart
+    list (include/data/mart_items.h)."""
+    text = MYSTERY_GIFT_C.read_text()
+    out: dict[str, Ref] = {}
+    cur_fn = None
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        m = re.match(r"static void (Init\w+Event)\(", line)
+        if m:
+            cur_fn = m.group(1)
+        m = re.search(r"Bag_TryAddItem\(\w+,\s*(ITEM_\w+)", line)
+        if m and cur_fn:
+            out[m.group(1)] = Ref(rel(MYSTERY_GIFT_C), lineno)
+    if not out:
+        raise ValueError("no Init*Event item grants found in src/scrcmd_mystery_gift.c")
+    given = _script_given_items()
+    marts = (DECOMP_ROOT / "include" / "data" / "mart_items.h").read_text()
+    return {k: v for k, v in out.items() if k not in given and not re.search(rf"\b{k}\b", marts)}
+
+
+@cache
+def _script_given_items() -> frozenset[str]:
+    out: set[str] = set()
+    for stem in all_script_stems():
+        for c in load_script_file(stem).commands:
+            for p in c.prims:
+                ops = [o.text for o in p.operands]
+                if p.op == "SCRCMD_ADDITEM" and ops[0].startswith("ITEM_"):
+                    out.add(ops[0])
+                elif p.op == "SCRCMD_SETVARFROMVALUE" and ops[0] in ("VAR_0x8004", "VAR_0x8008") and ops[1].startswith("ITEM_"):
+                    out.add(ops[1])
+    return frozenset(out)
 
 _WRITE_PARAM = re.compile(r"(?i)^(dest|result|ret$|returnVar|out|successVar|selectedOptionVar)")
 _ASM_SETS = {"FALSE": 0, "TRUE": 1}  # asm/macros/scrcmd.inc:67-68
@@ -144,6 +194,64 @@ def _value(token: str) -> int | None:
     return header_defines().get(token)
 
 
+SCRCMD_TABLE_H = DECOMP_ROOT / "include" / "data" / "scripts" / "scrcmd.h"
+_ARG_READ = re.compile(
+    r"(FieldSystem_GetVarPointer\([^;]*?ScriptContext_Read(?:HalfWord|Byte|Word)\(ctx\))"
+    r"|ScriptContext_(GetVarPointer|GetVar|ReadHalfWord|ReadByte|ReadWord)\(ctx\)"
+)
+
+
+@cache
+def prim_write_operands(op: str) -> frozenset[int]:
+    """Operand positions of primitive `op` that its C handler writes through a var pointer.
+
+    include/data/scripts/scrcmd.h maps SCRCMD_* to ScrCmd_*; the handler body's operand reads
+    (ScriptContext_GetVar / GetVarPointer / ReadHalfWord / ReadByte / ReadWord, in source order)
+    give each operand's role; GetVarPointer (or FieldSystem_GetVarPointer of a read id) is a write.
+    Complements the macro-parameter-name rule (e.g. GetSpeciesFromFossil `speciesVar`)."""
+    if op in _COMPARE_OPS or op in (OP_GOTOIF, OP_CALLIF):
+        return frozenset()  # compares read their var through a pointer; they never write it
+    return _handler_writes().get(op, frozenset())
+
+
+@cache
+def _handler_writes() -> dict[str, frozenset[int]]:
+    handlers = dict(re.findall(r"ScriptCommand\((SCRCMD_\w+),\s*(ScrCmd_\w+)\)", SCRCMD_TABLE_H.read_text()))
+    bodies: dict[str, str] = {}
+    for path in (DECOMP_ROOT / "src").rglob("*.c"):
+        text = path.read_text(errors="replace")
+        if "ScrCmd_" not in text:
+            continue
+        for m in re.finditer(r"^(?:static )?BOOL (ScrCmd_\w+)\(ScriptContext \*ctx\)\s*\{(.*?)^\}", text, re.S | re.M):
+            bodies.setdefault(m.group(1), m.group(2))
+    out = {}
+    for op, fn in handlers.items():
+        body = bodies.get(fn)
+        if not body:
+            continue
+        pos = set()
+        for i, m in enumerate(_ARG_READ.finditer(body)):
+            if m.group(1) or m.group(2) == "GetVarPointer":
+                if _pointer_written(body, m.start()):
+                    pos.add(i)
+        if pos:
+            out[op] = frozenset(pos)
+    return out
+
+
+def _pointer_written(body: str, at: int) -> bool:
+    """Is the var pointer fetched at `at` written? `u16 *x = ...GetVarPointer(ctx)` counts as a
+    write when the body assigns through it (`*x = `, `*x += `, `(*x)++`, ...) or hands `x` to a
+    call; a pointer that is only dereferenced for reading (SetVarFromVar's source, a compare) is
+    a read. An unnamed pointer is assumed written."""
+    line_start = body.rfind("\n", 0, at) + 1
+    m = re.search(r"\*\s*(\w+)\s*=\s*$", body[line_start:at]) or re.search(r"(\w+)\s*=\s*$", body[line_start:at])
+    if not m:
+        return True
+    x = re.escape(m.group(1))
+    return bool(re.search(rf"\*\s*{x}\s*(=[^=]|\+=|-=|\|=|&=|\+\+|--)|\(\*\s*{x}\)\s*(\+\+|--|=[^=])|[(,]\s*{x}\s*[,)]", body[body.find(";", at) + 1 :]))
+
+
 @cache
 def _write_positions(macro_name: str) -> tuple[int, ...]:
     m = macro_table().get(macro_name)
@@ -188,6 +296,9 @@ def _gate_effects(cmd: Command, taints: Taints, pending: Pending):
     for prim in cmd.prims:
         op = prim.op
         ops = [o.text for o in prim.operands]
+        for w in prim_write_operands(op):
+            if w < len(ops) and op not in _MENU_INIT:
+                taints = frozenset(t for t in taints if t[0] != ops[w])
         if op not in _COMPARE_OPS and op not in _MENU_INIT and op not in _MENU_ADD:
             # A const/menu value is only trusted until the var is handed to any other primitive
             # (a nested macro may write it without a dest-named parameter, e.g.
@@ -208,6 +319,15 @@ def _gate_effects(cmd: Command, taints: Taints, pending: Pending):
             taints = _taint(taints, ops[0], KIND_GAME_COMPLETED, "CheckGameCompleted", cmd.ref)
         elif op == "SCRCMD_GETSETNATIONALDEXENABLED" and ops[0] == "2":
             taints = _taint(taints, ops[1], KIND_NATIONAL_DEX, "GetNationalDexEnabled", cmd.ref)
+        elif op == "SCRCMD_CHECKLOCALDEXCOMPLETED":
+            # The National Dex grant's own condition (scripts_sandgem_town_pokemon_research_lab.s);
+            # same kind: decided by the ledger's National Dex verdict, not by the scripts.
+            taints = _taint(taints, ops[0], KIND_NATIONAL_DEX, "CheckLocalDexCompleted", cmd.ref)
+        elif op == "SCRCMD_CHECKDISTRIBUTIONEVENT":
+            taints = _taint(taints, ops[1], KIND_EVENT_ONLY, f"CheckDistributionEvent {ops[0]}", cmd.ref)
+        elif op == "SCRCMD_CHECKITEM" and ops[0] in event_only_items():
+            src = event_only_items()[ops[0]]
+            taints = _taint(taints, ops[2], KIND_EVENT_ONLY, f"CheckItem {ops[0]} (Mystery Gift only, {src})", cmd.ref)
         elif op == "SCRCMD_CHECKBADGEACQUIRED":
             taints = _taint(taints, ops[1], KIND_BADGE, f"CheckBadgeAcquired {ops[0]}", cmd.ref)
         elif op == "SCRCMD_COUNTBADGESACQUIRED":
@@ -304,7 +424,7 @@ def decide(prim, pending: Pending, facts: Facts) -> Decision:
         if kind in ("menu", "const"):
             return Decision(None, None, _resolve(values, cond, rhs) if values else None)
         text = f"{detail} at {src} -> {tvar} compared with {operand}, cond {cond}"
-        if kind in (KIND_GAME_COMPLETED, KIND_NATIONAL_DEX):
+        if kind in (KIND_GAME_COMPLETED, KIND_NATIONAL_DEX, KIND_EVENT_ONLY):
             taken = _resolve([PREGAME_VALUES[kind]], cond, rhs)
             return Decision(taken, Gate(kind, ref, text, True), None, cond, rhs, kind)
         return Decision(None, Gate(kind, ref, text, False), None, cond, rhs, kind)
@@ -466,7 +586,7 @@ def entry_nodes(sf: ScriptFile) -> list[Node]:
 
 
 FIXED_MAIN = POST_GAME_KINDS
-FIXED_FLAG_ONLY = frozenset({KIND_GAME_COMPLETED, KIND_DERIVED_VAR})
+FIXED_FLAG_ONLY = frozenset({KIND_GAME_COMPLETED, KIND_DERIVED_VAR, KIND_EVENT_ONLY})
 
 
 def node_gates(
@@ -477,14 +597,15 @@ def node_gates(
     facts: Facts | None = None,
     flag_facts: Facts | None = None,
 ) -> NodeGates:
-    """Gate conditions on every path from `starts` (default: the file's ScriptEntry targets).
+    """Gate conditions on every path from `starts` (default: the file's ScriptEntry targets that
+    can start before the Champion, `live_entry_nodes`).
 
     `facts` default to the derived-facts fixpoint (`story_facts()`)."""
     sf = load_script_file(stem)
-    if starts is None:
-        starts = entry_nodes(sf)
     if facts is None:
         facts = story_facts(True)
+    if starts is None:
+        starts = live_entry_nodes(sf, facts)
     if flag_facts is None:
         flag_facts = story_facts(False) if facts is story_facts(True) else facts
     node = (stem, index)
@@ -606,6 +727,8 @@ def _var_writes() -> tuple[dict[str, list[tuple[Node, int]]], frozenset[str]]:
             written = {c.args[w] for w in _write_positions(c.name) if w < len(c.args)}
             for p in c.prims:
                 ops = [o.text for o in p.operands]
+                if p.op != "SCRCMD_SETVARFROMVALUE":
+                    other.update(ops[w] for w in prim_write_operands(p.op) if w < len(ops) and ops[w].startswith("VAR_"))
                 if p.op == "SCRCMD_SETVARFROMVALUE":
                     v = _value(ops[1])
                     written.discard(ops[0])
@@ -620,9 +743,82 @@ def _var_writes() -> tuple[dict[str, list[tuple[Node, int]]], frozenset[str]]:
     return literal, frozenset(other)
 
 
+# A trigger of a map scripts-file entry: (var, value, ref); var None = unconditional.
+Trigger = tuple[str | None, int | None, Ref]
+
+
+@cache
+def entry_triggers(stem: str) -> dict[int, tuple[Trigger, ...]]:
+    """ScriptEntry index -> what can start it, for every map header whose scriptsArchiveID is `stem`.
+
+    - object / bg event scripts and init-script entries (OnTransition, OnLoad, ...): unconditional;
+    - C triggers (mapgraph.c_script_triggers): unconditional;
+    - coord events: only while `var == value` (src/unk_0203C954.c:218);
+    - frame-table rows `InitScriptGoToIfEqual var, value, id`: only while var == value
+      (FieldSystem_GetFrameTableInitScriptID, src/script_manager.c:796).
+    Entries with no trigger are absent (callers keep them as starts, over-approximating)."""
+    from pathlib import Path
+
+    from platsim.availability.mapgraph import c_script_triggers, events_of, map_headers
+
+    out: dict[int, list[Trigger]] = {}
+
+    def add(sid, trig):
+        if isinstance(sid, int) and 1 <= sid < 2000:
+            out.setdefault(sid - 1, []).append(trig)
+
+    for h in map_headers().values():
+        if h.scripts != stem:
+            continue
+        ev = events_of(h.name)
+        for kind in ("object", "bg"):
+            for e in ev[kind]:
+                add(e.data.get("script"), (None, None, e.ref))
+        for e in ev["coord"]:
+            var = e.data.get("var")
+            if isinstance(var, str) and var.startswith("VAR_"):
+                add(e.data.get("script"), (var, int(e.data.get("value", 0)) & 0xFFFF, e.ref))
+            else:
+                add(e.data.get("script"), (None, None, e.ref))
+        if Path(DECOMP_ROOT / "res/field/scripts" / f"{h.init_scripts}.s").exists():
+            init = load_script_file(h.init_scripts)
+            for name, args, ref in init.init_entries:
+                if name != "InitScriptEntry_OnFrameTable" and args:
+                    add(parse_int(args[-1]), (None, None, ref))
+            for c in init.commands:
+                if c.name == "InitScriptGoToIfEqual":
+                    val = _value(c.args[1])
+                    trig = (c.args[0], val & 0xFFFF, c.ref) if c.args[0].startswith("VAR_") and val is not None else (None, None, c.ref)
+                    add(parse_int(c.args[2]), trig)
+        for sid, ref in c_script_triggers().get(h.name, ()):
+            add(sid, (None, None, ref))
+    return {k: tuple(v) for k, v in out.items()}
+
+
+def trigger_possible(trig: Trigger, facts: Facts) -> bool:
+    var, value, _ = trig
+    if var is None:
+        return True
+    pre = facts.pre_values(var)
+    return pre is None or value in pre
+
+
+def live_entry_nodes(sf: ScriptFile, facts: Facts) -> list[Node]:
+    """entry_nodes minus entries whose every trigger is a var condition that cannot hold before
+    the Champion (e.g. Harbor Inn's dream, frame-table VAR_DARKRAI_EVENT_STATE == 1)."""
+    trig = entry_triggers(sf.stem)
+    out = []
+    for i in range(len(sf.entries)):
+        ts = trig.get(i)
+        if ts and not any(trigger_possible(t, facts) for t in ts):
+            continue
+        out.append((sf.stem, sf.command_for_entry(i)))
+    return out
+
+
 def _site_post_game(node: Node, facts: Facts, fixed: frozenset[str]) -> bool:
     sf = load_script_file(node[0])
-    starts = tuple(entry_nodes(sf))
+    starts = tuple(live_entry_nodes(sf, facts))
     free = _explore_cached(starts, node[0], frozenset(), facts)
     if node not in free.visited:
         return True  # unreachable even structurally: never runs
@@ -668,6 +864,10 @@ __all__ = [
     "entry_gates",
     "entry_nodes",
     "flag_set_sites",
+    "event_only_items",
+    "entry_triggers",
+    "live_entry_nodes",
+    "KIND_EVENT_ONLY",
     "story_facts",
     "POST_GAME_KINDS",
     "KIND_REGION",

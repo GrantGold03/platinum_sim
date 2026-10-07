@@ -229,7 +229,7 @@ research.md (R5/R7/R8) before continuing.
   - Classify a node post-game if all paths to it require a post-game gate.
   - A map edge is cut when its trigger is post-game.
   - Each gate keeps `file:line`.
-- [ ] T023 `src/platsim/availability/sources.py`, which emits `AvailabilityEntry` records (shape in
+- [X] T023 `src/platsim/availability/sources.py`, which emits `AvailabilityEntry` records (shape in
   `FD/data-model.md`) for:
   - **Wild encounters**: grass, surf, old/good/super rod, swarm, radar, day/night, dual-slot,
     Trophy Garden, Great Marsh (before/after lists), honey trees and Feebas, each tagged with its
@@ -248,7 +248,7 @@ research.md (R5/R7/R8) before continuing.
   - **Game Corner**: `PP/src/scrcmd_game_corner_prize.c:22-41`; unlimited.
   - **Underground**: `PP/src/underground/mining.c`; pre-National Dex weights only.
   - **Tutors**: from T015.
-- [ ] T024 `src/platsim/availability/ledger.py`:
+- [X] T024 `src/platsim/availability/ledger.py`:
   - set `phase` from gates and reachability, never by hand;
   - queries:
     - `species_sources(species)`: includes evolution from an obtainable pre-evolution, and
@@ -257,7 +257,7 @@ research.md (R5/R7/R8) before continuing.
     - `item_copies(item)`;
     - `tutor_available(location)`;
   - add `availability.json` to extract (T019).
-- [ ] T025 `tests/integration/test_availability_controls.py`.
+- [X] T025 `tests/integration/test_availability_controls.py`.
   - **Must be post-game**: Fight Area and Survival Area maps; Survival Area tutor; Route 228 tutor;
     Foppa Magikarp trade (Route 226); Super Rod; all swarm and Poké Radar slots; Regice, Registeel,
     Regirock, Regigigas, Heatran.
@@ -267,7 +267,7 @@ research.md (R5/R7/R8) before continuing.
     room reachable; Veilstone 3F TMs unlimited.
   
   Every assertion cites the script line that justifies it.
-- [ ] T026 Resolve research R2's UNVERIFIED items:
+- [X] T026 Resolve research R2's UNVERIFIED items:
   - which maps use `encounters_unknown_533–557`;
   - honey tree map headers;
   - whether Victory Road or the League is badge-gated;

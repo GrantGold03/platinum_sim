@@ -91,10 +91,13 @@ def test_national_dex_premise_is_not_script_derived():
     # research R2 rule 1 treats National Dex as post-game. The grant itself
     # (res/field/scripts/scripts_sandgem_town_pokemon_research_lab.s:539 SetNationalDexEnabled) is
     # behind CheckLocalDexCompleted (:56), not FLAG_GAME_COMPLETED: the premise is an input, and
-    # NodeGates.post_game_by_flag reports results without it.
+    # NodeGates.post_game_by_flag reports results without it. Since T023, CheckLocalDexCompleted's
+    # result is a `national_dex` gate (the grant's own condition; the ledger decides it).
     c = _cmd("scripts_sandgem_town_pokemon_research_lab", 539)
     g = node_gates(c.file, c.index, local_file=c.file)
-    assert c.name == "SetNationalDexEnabled" and g.reachable and not g.post_game
+    assert c.name == "SetNationalDexEnabled" and g.reachable
+    assert g.post_game and not g.post_game_by_flag
+    assert [(x.kind, x.ref.line) for x in g.gates] == [(KIND_NATIONAL_DEX, 57)]
 
 
 def test_derived_flag_victory_road_collector():
