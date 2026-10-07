@@ -231,3 +231,14 @@ $ node --test sim/test/ai_adapter.test.mjs   → tests 5, pass 5, fail 0, exit 0
   one case.
 - **Infrastructure**: `node --test sim/test/` fails on this Node version, so `sim/package.json` now uses
   `node --test test/*.test.mjs`.
+
+## 2026-10-07: T044 AI misc opcodes (agent; re-run by the coordinator)
+
+`node --test sim/test/ai_cmds_misc.test.mjs` → tests 16, pass 16, fail 0, exit 0.
+- **Opcodes**: 14, plus Dummy3E/Dummy3F, which throw `ai_unimplemented` (trap 11).
+- **How the tests reach their states**: weather, screens, hazards, Trick Room, Gravity, paralysis, faint and PP use are all
+  reached with real moves.
+- **UNVERIFIED**:
+  - the doubles branches;
+  - weather precedence and deep fog, which used a hand-built mask;
+  - the post-KO fake-out turn.
