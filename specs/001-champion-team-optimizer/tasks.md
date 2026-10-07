@@ -385,7 +385,7 @@ research.md (R5/R7/R8) before continuing.
   stat stages, types, ability, item, last move used, side conditions, weather, party, move data,
   turn count, whether a move was used before) over Showdown `Battle`/`Side`/`Pokemon` objects.
   Each query documents the decomp field it mirrors (`battleCtx->…`).
-- [ ] T040 [P] `sim/ai/cmds/flow.mjs`: control-flow, compare, jump, call, return and score-adjust
+- [X] T040 [P] `sim/ai/cmds/flow.mjs`: control-flow, compare, jump, call, return and score-adjust
   commands, each implemented with a comment citing the `trainer_ai.c` handler line.
 - [ ] T041 [P] `sim/ai/cmds/battler.mjs`: HP, status, stat-stage, type, ability, item and volatile
   query commands, with citations.

@@ -210,3 +210,12 @@ $ node --test sim/test/ai_adapter.test.mjs   → tests 5, pass 5, fail 0, exit 0
   - "consecutive Protect" is capped at 2;
   - the League battle-type bits;
   - BASIC being bit 0, which comes from reading the shift loop in `trainer_ai.c:297-309`.
+
+## 2026-10-07: T040 AI flow opcodes (agent; re-run by the coordinator)
+
+`node --test sim/test/ai_cmds_flow.test.mjs` → tests 14, pass 14, fail 0, exit 0.
+- **Opcodes**: 12, from AddToMoveScore through PopOrEnd. moveScore uses s8 wrap: 120 + 8 → 0.
+- **Table scans**: they read `prog.image` and end on −1.
+- **Call stack**: `mem.stack` holds instruction indices.
+- **Not implemented**: PushAndGoTo, which nothing in the League sections reaches.
+- **Evidence**: one end-to-end `runSection` test (ScoreMinus10, script.s:1591-1593).
