@@ -94,7 +94,10 @@ Validation (enforced by the legality validator, which is independent of the opti
 - final level gap ≤ 10.
 
 ### GauntletRun
-`seed, battles [ {trainer, won, turns, log_hash} ×≤5 ], final_levels[6], cleared (bool)`.
+`seed, battles [ {trainer, won, turns, log_hash, state_before} ×≤5 ], final_levels[6], cleared (bool)`.
+
+`state_before` is the team state at the start of that battle (`{levels[6], exp[6], pp[6][4], items[6]}`,
+the worker contract's `start_state` shape). It is present when `log` is `summary` or `full`.
 
 ### EvaluationReport
 | Field | Notes |
@@ -102,7 +105,9 @@ Validation (enforced by the legality validator, which is independent of the opti
 | team | TeamCandidate |
 | n_runs | |
 | clear_rate, clear_ci95 | Wilson interval |
-| per_battle | `{trainer: {rate, ci95}}` |
+| per_battle | `{trainer: {rate, ci95, battles}}` from full runs only |
+| champion_rate, champion_ci95, champion_battles | P(win \| reached Cynthia) from full runs plus the top-up (task T057); `champion_battles` includes top-up battles |
+| budget_preset | `standard` \| `thorough` \| `quick` (research R8) |
 | expected_final_levels[6], expected_avg_final_level, final_level_gap_max | |
 | loss_causes | top opponent mons present at losses |
 | threshold, qualified, borderline | FR-015 |

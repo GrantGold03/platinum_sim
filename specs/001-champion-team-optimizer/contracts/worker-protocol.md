@@ -28,7 +28,7 @@
   `start_state`, the team starts at its build values.
 ```
 
-Every `gauntlet` response with `"log": "summary"` also includes `state_before` per battle (the
+Every `gauntlet` response with `"log": "summary"` or `"full"` also includes `state_before` per battle (the
 `start_state` shape), so Cynthia top-ups can resume from a recorded post-Lucian state.
 
 ## Guarantees
