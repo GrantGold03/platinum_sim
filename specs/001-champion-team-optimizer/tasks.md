@@ -200,14 +200,14 @@ research.md (R5/R7/R8) before continuing.
   
   Tests: `VisibleItems_OreburghGateB1F_TM01` gives TM01 ×1; Route 201 starter `GivePokemon` at
   level 5.
-- [ ] T019 `src/platsim/extract.py` and the `platsim extract [--check]` subcommand in
+- [X] T019 `src/platsim/extract.py` and the `platsim extract [--check]` subcommand in
   `src/platsim/cli.py`:
   - run every reader (T011–T018, plus T024 once it exists);
   - write `data/generated/{species,moves,items,tutors,trainers,exp,availability}.json` and
     `manifest.json` (decomp commit, sha256 per output);
   - `--check` regenerates in memory and exits 1 on any difference;
   - call `check_pins()` first.
-- [ ] T020 `tests/integration/test_extract.py`: run extract twice and assert identical bytes; run
+- [X] T020 `tests/integration/test_extract.py`: run extract twice and assert identical bytes; run
   `--check` and assert exit 0; corrupt one output byte and assert `--check` exits 1 (positive
   control).
 
@@ -318,7 +318,7 @@ research.md (R5/R7/R8) before continuing.
 
 ### 2e. Battle engine and game layer (Node)
 
-- [ ] T032 `sim/worker.mjs`:
+- [X] T032 `sim/worker.mjs`:
   - NDJSON loop on stdin/stdout per `FD/contracts/worker-protocol.md`;
   - `hello` op;
   - at startup, load `data/generated/*.json` and `data/divergences.json` and apply every
@@ -330,7 +330,7 @@ research.md (R5/R7/R8) before continuing.
   `sodium,` + first 32 hex of `sha256(f"{master}|{run}|{battle}")`.
   - Test both languages produce identical seeds for 100 inputs; the Python test calls the Node
     function via a subprocess.
-- [ ] T034 [P] `sim/team.mjs`: Build JSON → Showdown `PokemonSet` (level, ivs, evs, nature,
+- [X] T034 [P] `sim/team.mjs`: Build JSON → Showdown `PokemonSet` (level, ivs, evs, nature,
   ability, item, moves). Opponent party: IV 30 all, EV 0, nature and ability from
   `trainers.json`. For **both** sides, after the Battle is constructed, reset every move slot to
   base PP (`maxpp = pp = move.pp`, `ppUps = 0`), because Showdown applies 3 PP Ups
@@ -339,7 +339,7 @@ research.md (R5/R7/R8) before continuing.
   - Test that a converted Garchomp at a known level gets the stats computed by the decomp formula
     (`PP/src/pokemon.c:564`) via a Python reference function in `src/platsim/decomp/stats.py`.
     Create that function with its own unit test.
-- [ ] T035 `sim/gauntlet.mjs`, the `gauntlet` op:
+- [X] T035 `sim/gauntlet.mjs`, the `gauntlet` op:
   - run trainers in order;
   - between battles restore HP, status and fainted members; carry PP over unless
     `pp_restore_between_battles` from T026 is true, in which case restore PP too (FR-012); keep
@@ -349,7 +349,7 @@ research.md (R5/R7/R8) before continuing.
   - turn limit or draw counts as a loss;
   - `stop_on_loss`;
   - returns the result object from the worker contract.
-- [ ] T036 `sim/exp.mjs`: participation mask exactly per `PP/src/battle/battle_lib.c:1456-1479` and
+- [X] T036 `sim/exp.mjs`: participation mask exactly per `PP/src/battle/battle_lib.c:1456-1479` and
   `PP/src/battle/battle_script.c:455-626`. Exp per `BtlCmd_CalcExpGain` (`battle_script.c:2186`) and
   `BattleScript_GetExpTask` (`:9685`):
   - u16 truncation;

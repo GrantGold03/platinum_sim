@@ -242,3 +242,34 @@ $ node --test sim/test/ai_adapter.test.mjs   → tests 5, pass 5, fail 0, exit 0
   - the doubles branches;
   - weather precedence and deep fog, which used a hand-built mask;
   - the post-KO fake-out turn.
+
+## 2026-10-07: T019, T020, T032, T034, T035, T036 extraction + battle engine (agent; re-run by the coordinator)
+
+```
+$ uv run platsim extract --check → "data/generated is up to date (8 files)", exit 0
+$ uv run pytest -q              → 90 passed, exit 0   (includes tests/integration/test_extract.py, test_worker.py)
+$ node --test sim/test/exp.test.mjs sim/test/team.test.mjs sim/test/gauntlet.test.mjs sim/test/seeds.test.mjs
+  → tests 30, pass 30, fail 0, exit 0
+```
+- **Policies**: both sides still use `placeholder-default` (Showdown's `default` choice). It is reported as such in
+  every result and is NOT the game AI or a player policy (replaced by T045–T050).
+- **Stats**: after a battle is built, both sides' stats are set by the decomp formula (`pokemon.c:564`). Showdown,
+  the JS port and Python `calc_stats` agree for every League mon and for six player builds (including Shedinja and
+  Rotom-Wash).
+- **PP**: Dark Pulse has 15/15 PP on Cynthia's Spiritomb and on a player build; the control without the reset gives
+  24.
+- **Exp**: 15 hand-computed cases, including a traded Lucky Egg holder, a ×1.7 foreign-language trade and an Exp.
+  Share holder that did not participate. Level-ups apply mid-battle at the KO.
+- **Smoke gauntlet** (Python → NDJSON worker): `cleared: true`, turns 16/13/10/15/23, final levels
+  [63, 60, 60, 62, 60, 60], 26 exp events. The Sitrus Berry was consumed and stayed gone, PP carried over, and
+  `hello` reported the pinned commits with ledger "none".
+- **Divergences found (for T053)**:
+  1. Endure priority: +3 in the decomp (`res/moves/endure/data.json:20`) vs +4 in Showdown gen4
+     (`data/moves.ts:4812`). NOT corrected yet.
+  2. Variable-power moves: power 1 vs 0 (cosmetic).
+  3. **Spec conflict**: the game auto-learns a level-up move when the Pokémon has fewer than 4 moves, with no prompt
+     (`battle_script.c:10021-10035`). The spec says always decline. Flagged as `auto_learn_in_game` in exp events;
+     it needs a user decision.
+- **UNVERIFIED**: player happiness defaults to 255 (affects Return/Frustration); player gender comes from Showdown's
+  PRNG; whether Showdown's Faint-event timing matches the game's exp timing.
+- **Ledger patch shape that T053 must emit**: `{resolution:"corrected", patch:{table,id,path,value}}`.
