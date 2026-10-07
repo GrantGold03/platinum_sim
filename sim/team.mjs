@@ -55,7 +55,8 @@ export function playerMember(gd, build, slot, start = {}) {
   try { rec = speciesRecord(gd, build.species); } catch (e) { throw new InvalidTeam(e.message); }
   const level = start.level ?? build.start_level;
   if (!Number.isInteger(level) || level < 1 || level > gd.exp.max_level) throw new InvalidTeam(`slot ${slot}: bad level ${level}`);
-  const moves = (build.moves ?? []).map((m) => { try { return moveRecord(gd, m).key; } catch (e) { throw new InvalidTeam(e.message); } });
+  // start.moves: moves carried from earlier battles (auto-learned level-up moves, sim/exp.mjs).
+  const moves = (start.moves ?? build.moves ?? []).map((m) => { try { return moveRecord(gd, m).key; } catch (e) { throw new InvalidTeam(e.message); } });
   if (moves.length < 1 || moves.length > 4) throw new InvalidTeam(`slot ${slot}: ${moves.length} moves`);
   const itemKey = start.item !== undefined ? start.item : build.held_item;
   let itemRec;

@@ -346,6 +346,10 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
   Only `standard` and `thorough` can produce a result marked `qualified`.
 - **Never silently loosened**: lower run counts only via an explicit `--budget` flag, and the
   report shows the loosened settings.
+- **Policy per stage** (user decision 2026-10-07, after T056 measured expectimax2-v1 at about 1.6 gauntlets/s on 16
+  workers): ability screening and successive-halving screening use `greedy-v1`; the level search and confirmation
+  use `expectimax2-v1`. Qualification and every reported rate come from `expectimax2-v1` only. Run time is not a hard
+  constraint, so prefer more expectimax2 runs whenever in doubt (FR-018).
 
 ### R8 – Measured (T008, 2026-10-07)
 

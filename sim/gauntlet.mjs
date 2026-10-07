@@ -61,6 +61,7 @@ function snapshot(party) {
     levels: party.map((m) => m.level),
     exp: party.map((m) => m.exp),
     pp: party.map((m) => [...m.pp]),
+    moves: party.map((m) => [...m.moves]),
     items: party.map((m) => m.itemRec?.key ?? null),
   };
 }
@@ -99,7 +100,7 @@ export function runGauntlet(gd, req) {
   let party;
   try {
     party = req.team.map((b, i) => playerMember(gd, b, i, ss ? {
-      level: ss.levels?.[i], exp: ss.exp?.[i], pp: ss.pp?.[i], item: ss.items ? ss.items[i] : undefined,
+      level: ss.levels?.[i], exp: ss.exp?.[i], pp: ss.pp?.[i], moves: ss.moves?.[i], item: ss.items ? ss.items[i] : undefined,
     } : {}));
   } catch (e) {
     throw e instanceof InvalidTeam ? new RequestError('invalid_team', e.message) : e;

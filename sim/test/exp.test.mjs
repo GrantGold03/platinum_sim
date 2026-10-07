@@ -159,8 +159,14 @@ test('case 13: KO in battle -> exp, mid-battle level-up, HP raised by the max-HP
   // exp: 198*49/7 = 1386 -> trainer 2079; 560 (L10 medium slow) + 2079 = 2639:
   // >= 2535 (L16), < 3120 (L17) -> level 16
   assert.equal(events.length, 1);
+  // Levels 11..16 pass res/pokemon/lucario/data.json:43 [11, FORCE_PALM] and :44 [15, FEINT].
+  // One move known -> both go into empty slots with no prompt (battle_script.c:10021-10035).
   assert.deepEqual(events[0].gains, [{ slot: 0, exp: 2079, total_exp: 2639, level: 16, from_level: 10,
-    ...(events[0].gains[0].declined_moves ? { declined_moves: events[0].gains[0].declined_moves, auto_learn_in_game: true } : {}) }]);
+    learned_moves: ['MOVE_FORCE_PALM', 'MOVE_FEINT'] }]);
+  assert.deepEqual(party[0].moves, ['extreme_speed', 'force_palm', 'feint']);
+  // Extreme Speed was used once this turn (5 -> 4 PP); new moves get full base PP.
+  assert.deepEqual(luc.baseMoveSlots.map((s) => [s.id, s.pp, s.maxpp]),
+    [['extremespeed', 4, 5], ['forcepalm', gd.moves.force_palm.pp, gd.moves.force_palm.pp], ['feint', gd.moves.feint.pp, gd.moves.feint.pp]]);
   assert.equal(party[0].level, 16);
   assert.equal(luc.level, 16);
   const s16 = calcStats(gd, gd.species.lucario, party[0].ivs, party[0].evs, 16, 'NATURE_HARDY');
@@ -169,6 +175,20 @@ test('case 13: KO in battle -> exp, mid-battle level-up, HP raised by the max-HP
   assert.equal(luc.storedStats.spe, s16.spe);
   assert.equal(luc.hp, 5 + (s16.hp - oldMax)); // pokemon.c:639
   assert.equal(battle.ended, true);
+});
+
+test('case 13b: with 4 moves the level-up move is declined (prompt -> keep moves)', () => {
+  const party = [playerMember(gd, build('lucario', 10, ['extreme_speed', 'quick_attack', 'detect', 'metal_claw'], 'ABILITY_STEADFAST'), 0)];
+  const battle = newBattle(gd, { seed: 'sodium,' + '0'.repeat(31) + '5', player: party, opponent: yanmegaOnly() });
+  const events = [];
+  new ExpTracker(gd, battle, party, { events });
+  battle.p2.active[0].sethp(1);
+  battle.makeChoices('move 1', 'move 1');
+  assert.equal(party[0].level, 16);
+  assert.deepEqual(events[0].gains[0].declined_moves, ['MOVE_FORCE_PALM', 'MOVE_FEINT']);
+  assert.equal(events[0].gains[0].learned_moves, undefined);
+  assert.deepEqual(party[0].moves, ['extreme_speed', 'quick_attack', 'detect', 'metal_claw']);
+  assert.equal(battle.p1.active[0].baseMoveSlots.length, 4);
 });
 
 test('case 14: Exp. Share holder in the back levels up off-field; participation mask', () => {

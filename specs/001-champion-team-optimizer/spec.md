@@ -33,6 +33,11 @@ with the decomp"
 - Q: How is the ability chosen for species with two abilities? → A: Test both and keep the better
   one; do not spend extra simulations when the difference is negligible or an ability only matters
   outside battle.
+- Q: Should level-up moves be auto-learned when a member has fewer than 4 moves, as the game does? → A: Yes, follow
+  the game.
+- Q: Which player policy does the optimizer use at each stage? → A: Screen candidates with greedy-v1, then run the
+  level search and confirmation with expectimax2-v1. Run time is not a hard constraint.
+- Q: Is it acceptable that Leftovers has no pre-Champion source? → A: Yes.
 - Q: Do the player's Pokemon have PP Ups or PP Max applied? → A: No. Every move has base PP.
 - Q: The game allows the National Dex before the first Champion win (it needs all 210 Sinnoh species seen,
   which includes losing to the League once). Are National Dex sources allowed? → A: No. Treat them as not allowed.
@@ -125,9 +130,9 @@ divergence ledger with its resolution.
   qualifying team found", the best clear rate reached, and at which levels, rather than a team that
   fails the threshold.
 - Two members want the same one-time item or the same single-copy TM: only one may receive it.
-- A member levels up during the gauntlet and would learn a move or evolve: it always keeps its
-  current moves and declines evolution (fixed rule, not configurable), and new levels count toward
-  final level.
+- A member levels up during the gauntlet and would learn a move or evolve: as in the game, a member
+  with fewer than 4 moves learns the level-up move automatically; a member with 4 moves declines it.
+  Evolution is always declined. New levels count toward final level.
 - Level gain from Elite Four battles pushes the level gap above 10 by the end: the team is invalid.
 - A battle ends in a draw or hits a turn limit: counted as a loss.
 - A member's moveset relies on a move with no remaining PP late in the gauntlet: PP carries over
@@ -297,7 +302,8 @@ divergence ledger with its resolution.
 - PP carries over between League battles. Whether PP-restoring items can be bought before the
   Champion is unverified; if the game data shows they can, PP is restored like HP. Finite found PP
   items are out of scope for v1.
-- During the gauntlet, level-up move prompts are always declined and evolution is always declined.
+- During the gauntlet, a member with fewer than 4 moves auto-learns level-up moves (game behaviour);
+  otherwise level-up move prompts are declined. Evolution is always declined.
 - A draw or turn-limit battle counts as a loss.
 - The battle simulator's Platinum ruleset is the starting point for mechanics; the game's code wins
   wherever they disagree.

@@ -1,5 +1,5 @@
 {
- "version": "sha256:0668c3641480a992",
+ "version": "sha256:1c030f39e80e6e42",
  "entries": [
   {
    "id": "data-move-assist-target",
@@ -718,12 +718,12 @@
   {
    "id": "exp-auto-learn-spec-conflict",
    "area": "exp",
-   "description": "On level-up the game learns a level-up move automatically, with no prompt, when the Pokemon has fewer than 4 moves (Pokemon_LevelUpMove default branch). The spec says always decline new moves. The game layer keeps the moves and flags the event as `auto_learn_in_game`. Showdown never changes move slots after construction.",
-   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:10021-10035",
+   "description": "On level-up the game learns a level-up move automatically, with no prompt, when the Pokemon has fewer than 4 moves (Pokemon_LevelUpMove default branch; BoxPokemon_AddMove fills the first empty slot with base PP). Showdown never changes move slots after construction. The game layer follows the game (user decision 2026-10-07): sim/exp.mjs adds the move to the live Pokemon and party state; with 4 moves the prompt is declined.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:10021-10035; pokeplatinum/src/pokemon.c:3852-3871",
    "showdown_ref": "pokemon-showdown/sim/pokemon.ts:354 (move slots built once from set.moves)",
-   "resolution": "accepted",
-   "impact": "PENDING USER DECISION (spec conflict). Affects only builds with fewer than 4 moves that level up into a level-up move during the League; such events are reported.",
-   "test_id": "sim/test/exp.test.mjs (auto_learn_in_game flag)"
+   "resolution": "corrected",
+   "impact": "Corrected by sim/exp.mjs (learned_moves / declined_moves in exp events); moves carry across battles.",
+   "test_id": "sim/test/exp.test.mjs (case 13, case 13b)"
   },
   {
    "id": "mech-pp-ups",

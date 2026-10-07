@@ -523,3 +523,15 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py → 207 pa
   Metal Coat; Miracle Seed; NeverMeltIce; Poison Barb; Electirizer; Magmarizer.
 - **UNVERIFIED**: Thief and Covet are not modelled (catching is assumed); Compound Eyes odds are recorded only;
   scripted gift items are not covered.
+
+## 2026-10-07: user decisions after Checkpoint B (coordinator)
+
+- **Auto-learn follows the game.** `sim/exp.mjs` learns level-up moves into empty slots with base PP
+  (`pokemon.c:3852-3871`, `battle_script.c:10021-10035`); with 4 moves the prompt is declined. Moves carry across
+  battles (`state_before.moves`, `start_state.moves`). Tests: case 13 (Lucario L10→16 with 1 move learns Force Palm and
+  Feint, `lucario/data.json:43-44`) and case 13b (4 moves → declined). The ledger entry is now `corrected`.
+  - `cd sim && node --test test/*.test.mjs` → tests 302, pass 302, fail 0, exit 0.
+  - `uv run platsim divergences` → 72 entries (exp/corrected=3), version sha256:1c030f39e80e6e42, exit 0.
+- **Policy per stage**: screening uses `greedy-v1`; level search and confirmation use `expectimax2-v1` (research R8).
+  Run time is not a hard constraint.
+- **No Leftovers** is accepted.

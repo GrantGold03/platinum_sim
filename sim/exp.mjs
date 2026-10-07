@@ -39,10 +39,10 @@
 //   exp is capped at the max-level table value; while exp >= table[level+1], level += 1 and
 //   Pokemon_CalcStats (src/pokemon.c:564-645) recomputes stats and raises current HP by the max-HP
 //   increase if current HP != 0 (:633-641). Applied mid-battle (T009 method, research R5).
-//   New moves (SEQ_GET_EXP_CHECK_LEARN_MOVE :10003) and evolution are DECLINED (spec Edge Cases).
-//   NOTE: in the game a mon with an empty move slot learns the move without a prompt
-//   (Pokemon_LevelUpMove default branch, battle_script.c:10021-10035); such cases are reported as
-//   `auto_learn_in_game` in exp events so the divergence is visible.
+//   New moves (SEQ_GET_EXP_CHECK_LEARN_MOVE :10003): with an empty move slot the game learns the
+//   move without a prompt (battle_script.c:10021-10035); this is followed (user decision
+//   2026-10-07) and reported as `learned_moves`. With 4 moves the game prompts and the spec
+//   declines (`declined_moves`). Evolution is declined (spec Edge Cases).
 import { speciesRecord } from './gamedata.mjs';
 
 export const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
@@ -230,13 +230,30 @@ export class ExpTracker {
         const stats = calcStats(gd, m.rec, m.ivs, m.evs, m.level, m.nature);
         applyStats(this.sdPokemon(slot), m.level, stats);
         g.from_level = fromLevel;
-        const learn = m.rec.learnset_level
-          .filter(([lv, mv]) => levels.includes(lv) && !m.moves.includes(mv.replace(/^MOVE_/, '').toLowerCase()))
-          .map(([lv, mv]) => mv);
-        if (learn.length) {
-          g.declined_moves = learn; // spec Edge Cases: keep current moves
-          if (m.moves.length < 4) g.auto_learn_in_game = true; // battle_script.c:10021
+        // Level-up moves, per level in learnset order (Pokemon_LevelUpMove, pokemon.c:3940-3965).
+        // BoxPokemon_AddMove (pokemon.c:3852-3871) puts the move in the first empty slot with base
+        // max PP (no PP Ups), or reports ALREADY_KNOWN / ALL_SLOTS_FILLED. An empty slot is learned
+        // with no prompt (battle_script.c:10021-10035) - the game's behaviour, which the user chose
+        // (spec Edge Cases). With 4 moves the game prompts; the spec declines (keep current moves).
+        const learned = [];
+        const declined = [];
+        for (const lv of levels) {
+          for (const [mlv, mv] of m.rec.learnset_level) {
+            if (mlv !== lv) continue;
+            const key = mv.replace(/^MOVE_/, '').toLowerCase();
+            if (m.moves.includes(key)) continue; // LEARNSET_MOVE_ALREADY_KNOWN
+            if (m.moves.length < 4) {
+              m.moves.push(key);
+              m.pp.push(gd.moves[key].pp);
+              addMoveSlot(gd, this.sdPokemon(slot), key);
+              learned.push(mv);
+            } else {
+              declined.push(mv); // LEARNSET_ALL_SLOTS_FILLED -> prompt -> declined
+            }
+          }
         }
+        if (learned.length) g.learned_moves = learned;
+        if (declined.length) g.declined_moves = declined;
       }
       gains.push(g);
     });
@@ -245,6 +262,18 @@ export class ExpTracker {
       participants: [...this.mask].sort((a, b) => a - b), exp: r.exp, gained: r.gained, shared: r.shared, gains,
     });
   }
+}
+
+// Adds a newly learned move to the live Showdown Pokemon with base PP (no PP Ups, FR-008).
+// BattleSystem_ReloadPokemon (battle_script.c:10022-10027) makes it usable at once if active.
+function addMoveSlot(gd, pokemon, key) {
+  if (!pokemon) return;
+  const move = pokemon.battle.dex.moves.get(gd.sdMove.get(key));
+  const pp = gd.moves[key].pp;
+  const slot = { move: move.name, id: move.id, pp, maxpp: pp, target: move.target, disabled: false, used: false };
+  pokemon.baseMoveSlots.push(slot);
+  if (!pokemon.transformed) pokemon.moveSlots.push(slot);
+  pokemon.ppUps?.push(0);
 }
 
 export { speciesRecord };

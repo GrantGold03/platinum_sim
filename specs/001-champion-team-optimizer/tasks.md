@@ -513,7 +513,7 @@ qualifying team" report. Running it again gives identical output. The web flow V
 
 ### Implementation for User Story 1
 
-- [ ] T060 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c. An ability has a battle effect
+- [ ] T060 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c (screening policy `greedy-v1`). An ability has a battle effect
   iff its `ABILITY_*` constant is referenced anywhere under `PP/src/battle/` (grep at extract
   time; store the refs).
   - Screening runs 200 paired gauntlets per ability; it keeps slot 1 when there is no significant
@@ -529,9 +529,9 @@ qualifying team" report. Running it again gives identical output. The web flow V
 - [ ] T062 [US1] `src/platsim/optimizer/resources.py`: assign single-copy TMs and limited items
   across the team (a member may only take a copy if one is left). Candidates that violate this are
   never generated.
-- [ ] T063 [US1] `src/platsim/optimizer/screen.py`: successive halving over candidate teams at a
+- [ ] T063 [US1] `src/platsim/optimizer/screen.py` (screening policy `greedy-v1`; research R8 "Policy per stage"): successive halving over candidate teams at a
   fixed level vector, with paired seeds. Rounds of 100 → 200 → 400 runs, keeping the top third.
-- [ ] T064 [US1] `src/platsim/optimizer/levels.py`:
+- [ ] T064 [US1] `src/platsim/optimizer/levels.py` (policy `expectimax2-v1`; all qualification and reported rates use it):
   - bisection on a uniform start-level offset to the lowest level that meets the threshold;
   - then per-member descent while the final gap stays ≤ 10 and the threshold holds;
   - the objective is the simulated expected final average level (FR-016);
