@@ -391,7 +391,7 @@ research.md (R5/R7/R8) before continuing.
   query commands, with citations.
 - [X] T042 [P] `sim/ai/cmds/moves.mjs`: move-effect, power, type, priority, last-used and
   move-in-set queries, with citations.
-- [ ] T043 [P] `sim/ai/cmds/damage.mjs`: `FlagMoveDamageScore`, `IfCurrentMoveKills`, highest-damage
+- [X] T043 [P] `sim/ai/cmds/damage.mjs`: `FlagMoveDamageScore`, `IfCurrentMoveKills`, highest-damage
   comparisons, using `sim/damage.mjs` with the AI's per-move roll from `TrainerAI_Init`.
 - [X] T044 [P] `sim/ai/cmds/misc.mjs`: random-chance, turn-count, weather, side-condition, party and
   remaining commands. Any opcode still unimplemented MUST throw `ai_unimplemented` with its name

@@ -287,3 +287,17 @@ $ node --test sim/test/exp.test.mjs sim/test/team.test.mjs sim/test/gauntlet.tes
   - Quick Claw: no `speedRand` source exists yet; T045 decides it.
   - Protect chain is capped at 2.
   - No mutation testing was done.
+
+## 2026-10-07: T043 AI damage opcodes + TrainerAI_CalcDamage (agent; re-run by the coordinator)
+
+`node --test sim/test/ai_cmds_damage.test.mjs` → tests 17, pass 17, fail 0, exit 0.
+- **Opcodes**: 6, plus `sim/ai/calcdamage.mjs` (TrainerAI_CalcDamage, TrainerAI_CalcAllDamage and the damage-roll
+  draw). The no-damage-calc, alt-power, Judgment and weight tables are parsed from the C.
+- **Hand-checked cases**: Explosion, Hidden Power, Gyro Ball (including the cap), fixed-damage moves, Psywave RNG, and
+  Low Kick / Grass Knot weights. The kill check flips at 59 vs 58 HP.
+- **Mutation check by the agent**: two deliberately broken copies of the estimator were each caught by a test.
+- **UNVERIFIED**:
+  - `monSpeedValues` on the first turn; Gyro Ball throws if it is missing.
+  - Weather Ball with no weather throws, because the C leaves its type uninitialised.
+  - `powerMul` is assumed to be 10.
+  - Form weights.
