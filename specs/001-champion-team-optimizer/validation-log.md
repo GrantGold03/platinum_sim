@@ -186,3 +186,27 @@ full damage. No berry triggers on substitute hits.
   calculation (so Counter sees the halved damage, and the order relative to Sash differs).
 - **Lesson for every later task**: game mechanics also live in `res/battle/scripts/**/*.s` and compare raw numbers.
   Search by number and by subscript, not only by constant name.
+
+## 2026-10-07: T038, T039 AI parser + adapter (agent; re-run by the coordinator)
+
+```
+$ node --test sim/test/ai_parse.test.mjs     → tests 8, pass 8, fail 0, exit 0
+$ node --test sim/test/ai_adapter.test.mjs   → tests 5, pass 5, fail 0, exit 0
+```
+- **Parser**: aicmd.h has 109 opcodes and the parser has 109 command macros. script.s gives 3,581 instructions in
+  10,607 words. From the League sections (BASIC, EVAL_ATTACK, EXPERT, SETUP_FIRST_TURN), 2,888 instructions and 77
+  opcodes are reachable; none of them touches a doubles partner. Section lines: Basic_Main 52, Expert_Main 1623,
+  EvalAttack_Main 6353, SetupFirstTurn_Main 6417.
+- **Work order for T040–T044**: `sim/ai/OPCODES.md`, which lists every reachable opcode with its handler line, count and
+  adapter queries, plus 12 traps.
+- **Adapter**: every decomp move and ability maps to Showdown by number; the only name differences are 4 renames.
+  Showdown's items have the same numbers as the decomp.
+- **UNVERIFIED (from the agent's report)**:
+  - how Showdown's move-failed state maps to the game's "last move" clearing;
+  - mapping log events to the AI's ability and item knowledge;
+  - the first-turn counter after a post-KO switch;
+  - Showdown weights versus decomp weights;
+  - the volatile-duration counts;
+  - "consecutive Protect" is capped at 2;
+  - the League battle-type bits;
+  - BASIC being bit 0, which comes from reading the shift loop in `trainer_ai.c:297-309`.

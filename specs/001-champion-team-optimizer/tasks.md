@@ -373,7 +373,7 @@ research.md (R5/R7/R8) before continuing.
     Showdown's damage for the same inputs (via `battle.actions.getDamage` with a fixed roll).
   - Each mismatch either is a bug in the port (fix it) or becomes a divergence entry with the
     decomp line.
-- [ ] T038 `sim/ai/parse.mjs`:
+- [X] T038 `sim/ai/parse.mjs`:
   - parse `PP/asm/macros/aicmd.inc` macro definitions (opcode and argument kinds) and
     `PP/src/battle/trainer_ai/script.s` into `{labels, instructions[{op, args, line}]}`;
   - resolve `gTrainerAITable` flag offsets;
@@ -381,7 +381,7 @@ research.md (R5/R7/R8) before continuing.
   
   Test that it parses the full file, that the section labels exist at the lines given in research
   R6, and that the opcode count is 109 per `PP/include/data/scripts/aicmd.h`.
-- [ ] T039 `sim/ai/adapter.mjs`: read-only battle-state queries the commands need (HP, status,
+- [X] T039 `sim/ai/adapter.mjs`: read-only battle-state queries the commands need (HP, status,
   stat stages, types, ability, item, last move used, side conditions, weather, party, move data,
   turn count, whether a move was used before) over Showdown `Battle`/`Side`/`Pokemon` objects.
   Each query documents the decomp field it mirrors (`battleCtx->…`).
