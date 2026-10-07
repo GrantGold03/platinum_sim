@@ -4,6 +4,8 @@ legality validator uses.
 Phase of an entry (never set by hand):
 - `unobtainable`: a gate of kind `event_only` (Mystery Gift / distribution event, see
   gates.event_only_items) or `other_cartridge` (dual-slot GBA) - one cartridge alone never has it;
+  or a project rule: an encounter of an EXCLUDED_SPECIES species, and the items that species holds
+  in the wild (spec FR-006a, user decision 2026-10-07: Munchlax);
 - `post_game`: its map is not reachable before the Champion (mapgraph strict reachability), or a
   post-game gate (script_flag / script_var / region), or an `uncertain` gate (conservative), or
   a `national_dex` gate while the National Dex verdict is negative, or a required item with no
@@ -162,16 +164,25 @@ class Ledger:
 # Project rule (spec FR-003a, user decision 2026-10-07): sources that need the National Dex are excluded.
 ALLOW_NATIONAL_DEX = False
 
+# Project rule (spec FR-006a + Clarification, user decision 2026-10-07): Munchlax is excluded entirely
+# ("too costly to obtain"): its encounters are not species sources (so Snorlax only through another
+# source) and the items it holds in the wild (Leftovers, res/pokemon/munchlax/data.json held_items)
+# are not item sources. All other honey-tree encounters stay allowed.
+EXCLUDED_SPECIES = frozenset({"SPECIES_MUNCHLAX"})
+EXCLUDED_SPECIES_REASON = "project_rule: {sp} is excluded entirely (spec FR-006a, user decision 2026-10-07: too costly to obtain)"
+ACQUIRE_KINDS = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
+
 
 @cache
 def build_ledger() -> Ledger:
     reached = _reached()
     entries = _merge_wild(S.all_entries())
+    entries += S.wild_held_item_entries(entries)  # spec FR-006a; phases follow the encounter's gates
     base = [_base_phase(e, reached) for e in entries]
     # Pass 1: without the National Dex (verdict inputs must not depend on it).
     _resolve_items(base, natdex_ok=False)
     verdict = national_dex_verdict(base, reached)
-    final = [_base_phase(e, reached) for e in entries]
+    final = [_apply_project_rules(_base_phase(e, reached)) for e in entries]
     # User decision 2026-10-07 (spec FR-003a): National Dex sources are NOT allowed, even though the
     # decomp verdict says the National Dex is obtainable pre-Champion. The verdict is still recorded.
     _resolve_items(final, natdex_ok=verdict["pre_champion"] and ALLOW_NATIONAL_DEX)
@@ -179,6 +190,16 @@ def build_ledger() -> Ledger:
     led.derived["pp_restore"] = pp_restore_between_battles(led)
     led.derived["counts"] = _counts(led)
     return led
+
+
+def _apply_project_rules(c: Classified) -> Classified:
+    """EXCLUDED_SPECIES: its encounters and its wild held items become unobtainable."""
+    e = c.entry
+    sp = e.subject if e.kind in ACQUIRE_KINDS else e.via_species if e.kind == "wild_held_item" else None
+    if sp in EXCLUDED_SPECIES:
+        c.phase = NEVER
+        c.reasons.append(EXCLUDED_SPECIES_REASON.format(sp=sp))
+    return c
 
 
 def _merge_wild(entries: list[S.Entry]) -> list[S.Entry]:

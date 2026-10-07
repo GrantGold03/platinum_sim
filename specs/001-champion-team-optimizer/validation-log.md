@@ -492,3 +492,34 @@ $ uv run platsim validate tests/fixtures/illegal_trade_evo.json → SPECIES_TRAD
   - evolution cancelling is not modelled;
   - move timing within a member is not modelled;
   - Volt Tackle via Light Ball is not modelled.
+
+## 2026-10-07: wild held items as a source; Munchlax excluded (spec FR-006a, user decision; agent, re-run by the coordinator)
+
+```
+$ uv run platsim extract --check → "up to date (9 files)", exit 0
+$ uv run pytest -q tests/integration/test_availability_controls.py tests/unit/test_validator.py tests/unit/test_mapgraph.py → 89 passed, exit 0
+$ uv run pytest -q --ignore=tests/integration/test_policy_strength.py → 207 passed, exit 0 (agent's run)
+```
+- **Held-item roll** (`src/pokemon.c:4670-4701`, read by the coordinator at `:4681-4696`):
+  - If common == rare and the item is not NONE, the mon always holds it.
+  - Otherwise `rand % 100`: below 45 no item, below 95 the common item, else the rare item (45 / 50 / 5%).
+  - Compound Eyes changes this to 20 / 60 / 20%.
+  - Trainer battles and roamers never roll.
+- **Rule**: `EXCLUDED_SPECIES = {"SPECIES_MUNCHLAX"}` in `availability/ledger.py`. Munchlax and its held items are
+  unobtainable; **Snorlax is also lost**, because its only pre-Champion source was evolving Munchlax.
+- **Leftovers: still 0 copies pre-Champion.** Its sources were Munchlax (excluded) and the Victory Road 1F Room 2 ball
+  (post-game per the map graph).
+- **Counts**:
+
+  | Held items | Before | After |
+  |---|---|---|
+  | unlimited | 42 | 65 |
+  | finite | 46 | 38 |
+  | unavailable | 70 | 55 |
+
+  Species with a pre-Champion source: 182 → 180.
+- **New items with battle relevance** (all unlimited): Babiri, Chople, Colbur, Haban, Kasib, Rindo, Shuca, Wacan and
+  Yache berries; Black Sludge; Grip Claw; Quick Claw; Lagging Tail; Light Ball; Lucky Egg; Shed Shell; TwistedSpoon;
+  Metal Coat; Miracle Seed; NeverMeltIce; Poison Barb; Electirizer; Magmarizer.
+- **UNVERIFIED**: Thief and Covet are not modelled (catching is assumed); Compound Eyes odds are recorded only;
+  scripted gift items are not covered.

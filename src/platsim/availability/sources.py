@@ -92,6 +92,7 @@ class Entry:
     requires_any: list[str] = field(default_factory=list)
     exclusive_group: str | None = None  # entries in one group exclude each other (starter choice)
     detail: str = ""
+    via_species: str | None = None  # wild_held_item: the wild species that holds the item
 
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
@@ -1000,6 +1001,72 @@ def tutor_entries() -> list[Entry]:
     return out
 
 
+# ---------------------------------------------------------------------------------------------
+# Wild held items (spec FR-006a)
+
+POKEMON_DIR = PP / "res" / "pokemon"
+WILD_HELD_KINDS = {"wild_slot": UNLIMITED, "static": 1}
+
+
+@cache
+def species_held_items(species: str) -> tuple[str, str, str] | None:
+    """(common, rare, data.json ref) of the base-form species data. Pokemon_GiveHeldItem runs in
+    AddWildMonToParty before any form is set (Shellos/Gastrodon/Unown, wild_encounters.c), and
+    scripted Giratina-Origin sets its form after CreateWildMon_Scripted (encounter.c), so the base
+    form's held_items always apply."""
+    sp = _species_data().get(species)
+    if sp is None or sp.form is not None:
+        return None
+    path = POKEMON_DIR / sp.key / "data.json"
+    hi = json.loads(path.read_text()).get("held_items") or {}
+    return hi.get("common", "ITEM_NONE"), hi.get("rare", "ITEM_NONE"), ref(path, '"held_items"')
+
+
+@cache
+def _held_item_rule_refs() -> tuple[str, ...]:
+    return (
+        _anchor(POKEMON_C, "void Pokemon_GiveHeldItem(Pokemon *mon, u32 battleType, int itemRates)"),
+        _anchor(WILD_C, "Pokemon_GiveHeldItem(mon, battleParams->battleType, hasCompoundEyes);"),
+    )
+
+
+def held_item_odds(common: str, rare: str) -> dict[str, str]:
+    """Pokemon_GiveHeldItem (src/pokemon.c): not for BATTLE_TYPE_TRAINER/FRONTIER; if common == rare
+    != ITEM_NONE the item is always held; otherwise rand%100 < 45 none, < 95 common, else rare
+    (Compound Eyes lead: 20 / 80, sHeldItemChance)."""
+    if common == rare and common != "ITEM_NONE":
+        return {common: "100%"}
+    out: dict[str, str] = {}
+    if common != "ITEM_NONE":
+        out[common] = "50% (60% with a Compound Eyes lead)"
+    if rare != "ITEM_NONE":
+        out[rare] = "5% (20% with a Compound Eyes lead)"
+    return out
+
+
+def wild_held_item_entries(encounters: list[Entry]) -> list[Entry]:
+    """One `wild_held_item` entry per (encounter, held item). Every wild battle built by CreateWildMon
+    (grass/surf/rod/honey tree/Great Marsh, and scripted StartWildBattle/StartLegendaryBattle via
+    CreateWildMon_Scripted) rolls the held item; roamers (AddRoamerToEnemyParty) never get one,
+    and trainer battles are skipped. The entry copies the encounter's map, gates and item
+    requirements, so the ledger gives it the encounter's phase. Repeatable wild slots give
+    unlimited copies; a one-time static encounter gives 1."""
+    out: list[Entry] = []
+    for e in encounters:
+        qty = WILD_HELD_KINDS.get(e.kind)
+        if qty is None:
+            continue
+        held = species_held_items(e.subject)
+        if held is None:
+            continue
+        common, rare, dref = held
+        for item, odds in held_item_odds(common, rare).items():
+            det = f"held by wild {e.subject} ({odds}) in {e.kind}: {e.detail}"
+            out.append(Entry("wild_held_item", item, e.map_header, qty, list(e.gates), [dref, *_held_item_rule_refs(), *e.src],
+                             e.level, None, list(e.requires_items), list(e.requires_any), e.exclusive_group, det, e.subject))
+    return out
+
+
 def all_entries() -> list[Entry]:
     return (
         wild_entries()
@@ -1015,4 +1082,4 @@ def all_entries() -> list[Entry]:
     )
 
 
-__all__ = ["Entry", "UNLIMITED", "all_entries", "trainer_entries", "dex_seen_entries", "site_gates"]
+__all__ = ["Entry", "UNLIMITED", "all_entries", "wild_held_item_entries", "trainer_entries", "dex_seen_entries", "site_gates"]

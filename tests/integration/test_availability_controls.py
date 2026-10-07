@@ -352,7 +352,10 @@ def test_honey_tree_headers(led):
     honey = [c for c in led.entries if c.entry.detail.startswith("honey tree")]
     assert {c.entry.map_header for c in honey} == set(hs)
     assert any(c.phase == PRE for c in honey) and all("ITEM_HONEY" in c.entry.requires_items for c in honey)
-    assert led.species_sources("SPECIES_MUNCHLAX")  # rare table, encounters_honey_tree.json
+    # Munchlax (rare table, encounters_honey_tree.json) is extracted, but excluded by the project
+    # rule (spec FR-006a, user decision 2026-10-07); see test_munchlax_excluded_and_leftovers_not_from_munchlax.
+    assert [c for c in honey if c.entry.subject == "SPECIES_MUNCHLAX"]
+    assert led.species_sources("SPECIES_MUNCHLAX") == []
 
 
 def test_victory_road_and_league_not_badge_gated(led):
@@ -397,3 +400,76 @@ def test_every_entry_has_source_refs(led):
     for c in led.entries:
         if c.phase != PRE:
             assert c.reasons, c.entry
+
+
+# ---------------------------------------------------------------------------------------------
+# Wild held items (spec FR-006a) and the Munchlax exclusion (user decision 2026-10-07)
+
+
+def test_wild_held_item_rule_cited():
+    # src/pokemon.c Pokemon_GiveHeldItem: trainer/frontier battles skip; common == rare != NONE
+    # -> always held; else rand%100 < 45 none, < 95 common, else rare (Compound Eyes: 20 / 80).
+    _line("src/pokemon.c", 4671, "{ 45, 95 }")
+    _line("src/pokemon.c", 4672, "{ 20, 80 }")
+    _line("src/pokemon.c", 4687, "if (monItem1 == monItem2 && monItem1 != ITEM_NONE) {")
+    # every CreateWildMon battle (incl. honey tree and scripted statics) goes through AddWildMonToParty
+    _line("src/overlay006/wild_encounters.c", 1462, "Pokemon_GiveHeldItem(mon, battleParams->battleType, hasCompoundEyes);")
+    assert S.held_item_odds("ITEM_LEFTOVERS", "ITEM_LEFTOVERS") == {"ITEM_LEFTOVERS": "100%"}
+    assert set(S.held_item_odds("ITEM_OVAL_STONE", "ITEM_LUCKY_EGG")) == {"ITEM_OVAL_STONE", "ITEM_LUCKY_EGG"}
+    assert S.held_item_odds("ITEM_NONE", "ITEM_NONE") == {}
+
+
+def test_munchlax_excluded_and_leftovers_not_from_munchlax(led):
+    # res/pokemon/munchlax/data.json:21-23 holds Leftovers in both slots; honey tree "rare" group.
+    _line("res/pokemon/munchlax/data.json", 22, '"common": "ITEM_LEFTOVERS"')
+    _line("res/field/encounters/encounters_honey_tree.json", 18, '"rare"')
+    raw = _entries(led, kind="wild_slot", subject="SPECIES_MUNCHLAX")
+    assert raw, "positive control: Munchlax honey-tree encounters are still extracted"
+    assert all(c.phase == NEVER and any("user decision 2026-10-07" in r for r in c.reasons) for c in raw)
+    assert led.species_sources("SPECIES_MUNCHLAX") == []
+    held = _entries(led, kind="wild_held_item", via_species="SPECIES_MUNCHLAX")
+    assert held and {c.entry.subject for c in held} == {"ITEM_LEFTOVERS"}
+    assert all(c.phase == NEVER for c in held)
+    assert not [c for c in led.pre(subject="ITEM_LEFTOVERS") if c.entry.via_species == "SPECIES_MUNCHLAX"]
+    # Snorlax evolves from Munchlax and has no other pre-Champion source.
+    assert led.species_sources("SPECIES_SNORLAX") == []
+
+
+def test_other_honey_tree_species_still_pre_champion(led):
+    # res/field/encounters/encounters_honey_tree.json:3 "common": Combee first.
+    _line("res/field/encounters/encounters_honey_tree.json", 3, "SPECIES_COMBEE")
+    for sp in ("SPECIES_COMBEE", "SPECIES_HERACROSS", "SPECIES_AIPOM"):
+        assert any("honey tree" in s["detail"] for s in led.species_sources(sp)), sp
+    # and its held item (res/pokemon/combee/data.json:22-23 Honey/Honey) is a source
+    _line("res/pokemon/combee/data.json", 22, '"common": "ITEM_HONEY"')
+    assert any(c.entry.via_species == "SPECIES_COMBEE" for c in led.pre(subject="ITEM_HONEY", kind="wild_held_item"))
+
+
+def test_wild_held_item_positive_control(led):
+    # res/pokemon/chansey/data.json:23 rare = Lucky Egg; Chansey is a Route 209 grass slot
+    # (res/field/encounters/encounters_route_209.json:42). No other pre-Champion Lucky Egg source.
+    _line("res/pokemon/chansey/data.json", 23, '"rare": "ITEM_LUCKY_EGG"')
+    _line("res/field/encounters/encounters_route_209.json", 42, "SPECIES_CHANSEY")
+    srcs = led.pre(subject="ITEM_LUCKY_EGG")
+    assert srcs and all(c.entry.kind == "wild_held_item" for c in srcs)
+    c = next(c for c in srcs if c.entry.map_header == "MAP_HEADER_ROUTE_209")
+    assert c.entry.via_species == "SPECIES_CHANSEY" and c.entry.quantity == S.UNLIMITED
+    assert "res/pokemon/chansey/data.json:21" in c.entry.src and "5%" in c.entry.detail
+    assert led.item_copies("ITEM_LUCKY_EGG") == S.UNLIMITED
+    # static encounters use the same roll (CreateWildMon_Scripted): Shaymin's Lum Berry entry has
+    # quantity 1 (post-game, Flower Paradise unreachable).
+    sh = _entries(led, kind="wild_held_item", via_species="SPECIES_SHAYMIN")
+    assert sh and all(x.entry.quantity == 1 and x.phase != PRE for x in sh)
+
+
+def test_wild_held_item_counts(led):
+    # Before wild held items (validation-log T023-T026): 42 unlimited, 46 finite, 70 unavailable.
+    n = led.derived["counts"]
+    assert len(n["held_items_unlimited"]) == 65
+    assert len(n["held_items_finite"]) == 38
+    assert n["held_items_unavailable_count"] == 55
+    assert led.item_copies("ITEM_LEFTOVERS") == 0
+    # no wild held item entry is pre-Champion unless its encounter is
+    for c in led.pre(kind="wild_held_item"):
+        enc = [x for x in led.pre(subject=c.entry.via_species) if x.entry.map_header == c.entry.map_header]
+        assert enc, c.entry
