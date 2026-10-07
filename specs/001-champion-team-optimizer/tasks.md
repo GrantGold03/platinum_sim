@@ -414,7 +414,7 @@ research.md (R5/R7/R8) before continuing.
     SETUP_FIRST_TURN.
   - Also run 200 full gauntlets with `greedy-v1` and assert no `ai_unimplemented` is reached. If
     one is reached, implement that opcode.
-- [ ] T049 [P] `sim/policy/greedy.mjs`: pick the highest expected-damage move via `sim/damage.mjs`;
+- [X] T049 [P] `sim/policy/greedy.mjs`: pick the highest expected-damage move via `sim/damage.mjs`;
   switch only when forced, to the member with the best expected damage.
 - [ ] T050 `sim/policy/expectimax2.mjs` per research R7:
   - enumerate actions;
@@ -429,7 +429,7 @@ research.md (R5/R7/R8) before continuing.
 - [ ] T051 `sim/test/determinism.test.mjs`: the same gauntlet request run twice gives byte-identical
   output, for both policies; a different seed changes the output (positive control). Also assert
   over 200 gauntlets that every p1 choice is a `move` or `switch`, never an item (FR-011).
-- [ ] T052 `src/platsim/sim/pool.py`:
+- [X] T052 `src/platsim/sim/pool.py`:
   - start W workers (default `os.cpu_count()`);
   - `hello` check that provenance matches pins;
   - submit requests and gather by id;

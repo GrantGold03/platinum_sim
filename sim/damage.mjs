@@ -60,9 +60,9 @@
 //   - Multi-hit moves (each hit is one calcDamage; hit counts not modelled), Future Sight/Doom
 //     Desire (battle_script.c:6079), Beat Up, Struggle recoil, confusion self-hit
 //     (battle_controller_player.c:2215).
-//   - Type-resist berries (Occa etc.): NOT FOUND in decomp C — `grep -rn WEAKEN_SE src include`
-//     hits only src/battle/trainer_ai/script.s; the positive control HOLD_EFFECT_CHOICE_ATK is found
-//     in battle_lib.c. Their in-game damage effect is therefore UNVERIFIED and not ported.
+//   - Type-resist berries (Occa etc.): not part of this formula. The game halves the final HP change
+//     afterwards in res/battle/scripts/subscripts/subscript_type_resist_berry.s (raw hold-effect
+//     numbers 19-35), called from subscript_update_hp.s:10. See validation-log "resist berries".
 //   - Substitute, Focus Sash/Band, Sturdy, Endure, False Swipe caps, HP clamping (damage > HP).
 //   - Doubles: branches are ported but need caller-supplied alive counts; UNTESTED.
 //   - Battle Frontier flag (Soul Dew) assumed false.

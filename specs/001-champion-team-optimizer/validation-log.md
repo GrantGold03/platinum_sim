@@ -322,3 +322,23 @@ $ uv run pytest -q tests/integration/test_divergences.py tests/integration/test_
 - **Positive control**: a fake +1 attack on Garchomp produces an entry. A missing resolution exits 1.
 - **Pending flips**: the Full Restore entry when T047 lands; the AI entry when T045–T048 land; the auto-learn entry on
   the user's decision.
+
+## 2026-10-07: T049 greedy-v1, T052 worker pool (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 243, pass 243, fail 0, exit 0
+$ uv run pytest -q tests/integration/test_pool.py → 6 passed, exit 0
+```
+- **greedy-v1**: expected damage = the mean of the 16 decomp rolls × accuracy. Status, variable-power, fixed and OHKO
+  moves score 0 (documented as conservative). It switches only when forced. Hand-computed check: Gyarados vs
+  Togekiss gives Surf 42.5 > Hydro Pump 43.5×… (see the test, which cites decomp lines).
+- **Pool**:
+  - Determinism: 64 gauntlets give the same results on 4 workers as on 1.
+  - Crash recovery: a worker frozen with SIGSTOP and then SIGKILLed is restarted and its request is re-run.
+  - A hello mismatch raises.
+  - **UNVERIFIED**: there is no timeout for a worker that is alive but silent.
+- **Bug fixed in `sim/gauntlet.mjs`**: the turn-1 request was built before the PP reset, so a move at 0 PP could be
+  chosen. The request is now rebuilt. Placeholder output over 50 seeds is byte-identical before and after.
+- **Throughput** (greedy player, opponents still `placeholder-default`, load from other agents present): about 96–118
+  gauntlets/s warmed on 8–16 workers; 19.6/s on 1 worker. The CPU is a Ryzen 7 5700X3D, 8 cores / 16 threads.
+- **Docs**: the stale resist-berry note in the `sim/damage.mjs` header was corrected.
