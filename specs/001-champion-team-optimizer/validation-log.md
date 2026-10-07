@@ -535,3 +535,24 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py → 207 pa
 - **Policy per stage**: screening uses `greedy-v1`; level search and confirmation use `expectimax2-v1` (research R8).
   Run time is not a hard constraint.
 - **No Leftovers** is accepted.
+
+## 2026-10-07: T072 independent final-level check + two exp bugs fixed (agents; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 308, pass 308, fail 0, exit 0
+$ uv run pytest -q tests/unit/test_exp.py tests/integration/test_final_levels.py tests/integration/test_divergences.py → 34 passed, exit 0
+$ uv run platsim divergences --check → exit 0
+```
+- **T072**: the independent Python recomputation from Showdown logs (`decomp/exp.py` `exp_gain`/`apply_exp`, written
+  from the C) is compared with the worker on the new legal `reference_team.json` (greedy-v1 vs decomp-ai, 200 runs):
+  final levels 200/200, final exp 200/200, every award equal. Mean final average level is 60.2925 for both, difference
+  0.0000 (SC-006 ≤ 1). The hand-worked run is in `tests/fixtures/reference_team_handcalc.md`.
+- **Positive controls**: dropping trainer ×1.5 leaves 41/200 matching; the old pay-at-faint rule changes 262 awards.
+- **Bug fixed 1**: an NPC-trade member was never treated as traded, so the ×1.5 boost was missing (FR-008a). `team.mjs`
+  now derives traded and language from `source: "npc_trade:…"` and `res/npc_trades/*.json`. Chatot (legal_team):
+  2079 → 3118.
+- **Bug fixed 2**: exp was paid at the faint event, before recoil. The decomp applies recoil and Life Orb in the
+  after-move step (`battle_controller_player.c:3486-3494`, `:4715-4775`) and pays exp at MOVE_END (`:3968`); an
+  attacker at 0 HP gets none (`battle_script.c:2204`, `:9740`). Exp is now paid when the action finishes and per
+  end-of-turn step. Node cases 16–21 cover this; the positive controls fail with the old rule.
+- **UNVERIFIED**: Future Sight / Perish Song payout timing (ledgered); no cartridge comparison.

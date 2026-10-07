@@ -35,6 +35,28 @@
 //   - exp += total; EV gain (BattleScript_CalcEffortValues :9776) adds nothing once the EV sum
 //     is MAX_EVS_ALL_STATS (battle_script.c:10237), which every build has (FR-008: 85 x 6), so it
 //     is not modelled.
+// When exp is paid (T072 ordering fix). The faint script only flags the payout
+// (BtlCmd_PlayFaintAnimation sets SYSCTL_PAYOUT_EXP, battle_script.c:1800); the award itself
+// (subscript_grant_exp.s: CalcExpGain + GetExpTask) runs from BattleControllerPlayer_AnyExpPayout
+// (battle_controller_player.c:4449), which is called only at:
+//   - MOVE_END of the move that caused the faint (:3968). Before it, in the same move:
+//     AFTER_MOVE_MESSAGE runs the secondary effect, incl. recoil (ONE_HIT_TRIGGER_SECONDARY
+//     :3486-3494 -> subscript_recoil_*.s -> UPDATE_HP/TryFaintMon), the faint loop runs
+//     (LOOP_FAINTED :3820-3826, Destiny Bond via subscript_faint_check_destiny_bond), and
+//     TriggerAfterMoveHitEffects (:4715-4758, Life Orb) applies. So an attacker that drops to 0
+//     HP from its own move is not counted (battle_script.c:2204) and gets nothing (:9740).
+//   - end-of-turn steps: CheckFieldConditions and CheckMonConditions call AnyFainted then
+//     AnyExpPayout before every step (:940-941, :1295-1296), so a residual KO is paid before the
+//     next residual step; CheckSideConditions only faints (:1750) and pays at TurnEnd (:1846).
+// Showdown fires `Faint` for the target before the attacker's recoil / Life Orb (battle-actions
+// faintMessages after the hits, then applyRecoilDamage). So here an enemy faint is only queued;
+// the queue is paid when the Showdown action (`battle.runAction`) returns, i.e. after everything
+// that action did, with alive = HP at that moment. In the residual action Showdown runs
+// faintMessages after each residual handler (sim/battle.ts fieldEvent), and the queue is paid
+// right after each of those calls (one handler ~ one decomp step; side-condition residuals such
+// as Future Sight / Perish Song are paid at once instead of at TurnEnd - a recorded approximation).
+// Level-ups therefore still take effect before the next action of the same turn.
+//
 // Level-up (SEQ_GET_EXP_CHECK_LEVEL_UP :9824 -> Pokemon_ShouldLevelUp, src/pokemon.c:3501-3526):
 //   exp is capped at the max-level table value; while exp >= table[level+1], level += 1 and
 //   Pokemon_CalcStats (src/pokemon.c:564-645) recomputes stats and raises current HP by the max-HP
@@ -181,6 +203,28 @@ export class ExpTracker {
       if (r === true) tracker.onSwitchIn(pokemon);
       return r;
     };
+    this.pending = [];
+    this.depth = 0;
+    this.inResidual = false;
+    const origRunAction = battle.runAction;
+    battle.runAction = function (action) {
+      const prevResidual = tracker.inResidual;
+      if (action?.choice === 'residual') tracker.inResidual = true;
+      tracker.depth++;
+      try {
+        return origRunAction.call(this, action);
+      } finally {
+        tracker.depth--;
+        tracker.inResidual = prevResidual;
+        if (tracker.depth === 0) tracker.flush(); // MOVE_END payout (battle_controller_player.c:3968)
+      }
+    };
+    const origFaintMessages = battle.faintMessages;
+    battle.faintMessages = function (...args) {
+      const r = origFaintMessages.apply(this, args);
+      if (tracker.inResidual) tracker.flush(); // per residual step (:940-941, :1295-1296)
+      return r;
+    };
     battle.onEvent('Faint', battle.format, (target) => tracker.onFaint(target));
   }
 
@@ -203,8 +247,20 @@ export class ExpTracker {
 
   onFaint(target) {
     if (target.side !== this.p2) return; // exp only for a defeated enemy (battle_script.c:2196)
+    // SYSCTL_PAYOUT_EXP is only flagged here (battle_script.c:1800); paid by flush().
+    this.pending.push({ rec: target.platsimRec, level: target.level });
+    if (this.depth === 0) this.flush(); // a faint outside any action (not expected): pay at once
+  }
+
+  flush() {
+    while (this.pending.length) {
+      const p = this.pending.shift(); // AnyExpPayout takes the lowest battler bit first; singles: one enemy
+      this.award(p.rec, p.level);
+    }
+  }
+
+  award(rec, faintedLevel) {
     const gd = this.gd;
-    const rec = target.platsimRec;
     const party = this.party.map((m, slot) => {
       const sd = this.sdPokemon(slot);
       const he = m.itemRec?.hold_effect;
@@ -218,7 +274,7 @@ export class ExpTracker {
         atMaxLevel: m.level === maxLevel(gd),
       };
     });
-    const r = expForFaint({ baseExp: rec.base_exp, faintedLevel: target.level, party, trainerBattle: this.trainerBattle });
+    const r = expForFaint({ baseExp: rec.base_exp, faintedLevel, party, trainerBattle: this.trainerBattle });
     const gains = [];
     r.totals.forEach((amount, slot) => {
       if (!amount) return;
@@ -258,7 +314,7 @@ export class ExpTracker {
       gains.push(g);
     });
     this.events.push({
-      battle: this.battleIndex, turn: this.battle.turn, fainted: rec.key, fainted_level: target.level,
+      battle: this.battleIndex, turn: this.battle.turn, fainted: rec.key, fainted_level: faintedLevel,
       participants: [...this.mask].sort((a, b) => a - b), exp: r.exp, gained: r.gained, shared: r.shared, gains,
     });
   }

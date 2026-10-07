@@ -3,7 +3,8 @@
 //
 // - Player Build (data-model.md "Build"): species/moves/item keys from data/generated, ability
 //   ABILITY_* (or its key), nature "Hardy" / NATURE_*, ivs/evs. Optional extras used by the
-//   gauntlet: is_traded, foreign_language (FR-008a), gender ("M"/"F"; otherwise Showdown picks
+//   gauntlet: is_traded, foreign_language (FR-008a; derived from `source` when absent, see
+//   tradeOrigin below), gender ("M"/"F"; otherwise Showdown picks
 //   one from the battle PRNG, which is seeded and therefore reproducible).
 // - Opponent (trainers.json, built by the TrainerData_BuildParty port in
 //   src/platsim/decomp/trainers.py): IVs = mon.iv (30 for the League), EVs 0, nature and ability
@@ -18,8 +19,10 @@
 //   (sim/exp.mjs calcStats, port of Pokemon_CalcStats src/pokemon.c:564) so a Showdown/decomp
 //   formula or base-stat difference cannot leak in. sim/test/team.test.mjs checks that
 //   Showdown's own numbers already agree.
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { Battle, Dex } from './showdown.mjs';
-import { FORMAT, MOD, itemRecord, keyOf, moveRecord, speciesRecord, toID } from './gamedata.mjs';
+import { FORMAT, MOD, REPO_ROOT, itemRecord, keyOf, moveRecord, speciesRecord, toID } from './gamedata.mjs';
 import { STAT_KEYS, calcStats, expAt } from './exp.mjs';
 
 export const P1_NAME = 'Player';
@@ -46,6 +49,43 @@ function need(map, key, what) {
   return v;
 }
 
+// ---- In-game NPC trades: not OT (FR-008a) -----------------------------------------------------
+// BattleScript_GetExpTask boosts exp when BattleSystem_PokemonIsOT is FALSE
+// (pokeplatinum/src/battle/battle_script.c:9757-9765): x170/100 if MON_DATA_LANGUAGE !=
+// gGameLanguage, else x150/100. BattleSystem_PokemonIsOT (src/battle/battle_lib.c:6286-6301)
+// compares the player's trainer ID, gender and name with the mon's OT fields.
+// NPCTrade_CreateMon (src/overlay006/npc_trade.c:117-149) gives the traded mon the NPC's otID,
+// OT name and OT gender (so it is never the player's: assumed, the player cannot pick an ID) and
+// MON_DATA_LANGUAGE = the FixedMon's `language` (res/npc_trades/<name>.json).
+// gGameLanguage = GAME_LANGUAGE (src/game_version.c:4), set by meson.build
+// (`-DGAME_LANGUAGE=LANGUAGE_ENGLISH` for the pinned US build).
+// A Build's `source` is "npc_trade:SPECIES_X@MAP_HEADER_Y" (src/platsim/legality, ledger kind
+// npc_trade). This is the single place the worker derives `traded` / `foreignLanguage`, so every
+// caller (CLI, evaluate, tests) gets the boost from the team file alone.
+const DECOMP_DIR = join(REPO_ROOT, 'pokeplatinum');
+let npcTradeCache = null;
+export function npcTradeData(dir = DECOMP_DIR) {
+  if (npcTradeCache && npcTradeCache.dir === dir) return npcTradeCache;
+  const tdir = join(dir, 'res', 'npc_trades');
+  const trades = readdirSync(tdir).filter((f) => f.endsWith('.json')).sort()
+    .map((f) => ({ file: `res/npc_trades/${f}`, ...JSON.parse(readFileSync(join(tdir, f), 'utf8')) }));
+  const m = /-DGAME_LANGUAGE=(LANGUAGE_\w+)/.exec(readFileSync(join(dir, 'meson.build'), 'utf8'));
+  if (!m) throw new Error('GAME_LANGUAGE not found in pokeplatinum/meson.build');
+  npcTradeCache = { dir, trades, gameLanguage: m[1] };
+  return npcTradeCache;
+}
+
+/** {traded, foreignLanguage, trade} for a Build `source`; traded false if it is not an NPC trade. */
+export function tradeOrigin(source) {
+  const s = String(source ?? '');
+  if (!s.startsWith('npc_trade:')) return { traded: false, foreignLanguage: false, trade: null };
+  const species = s.slice('npc_trade:'.length).split('@')[0];
+  const { trades, gameLanguage } = npcTradeData();
+  const hits = trades.filter((t) => t.species === species);
+  if (hits.length !== 1) throw new InvalidTeam(`source ${s}: ${hits.length} NPC trades give ${species} (res/npc_trades)`);
+  return { traded: true, foreignLanguage: hits[0].language !== gameLanguage, trade: hits[0].file };
+}
+
 /**
  * Player party-state member from a Build (persisted across the gauntlet).
  * start: optional {level, exp, pp:[..], item} from a start_state.
@@ -62,14 +102,16 @@ export function playerMember(gd, build, slot, start = {}) {
   let itemRec;
   try { itemRec = itemRecord(gd, itemKey); } catch (e) { throw new InvalidTeam(e.message); }
   const exp = start.exp ?? expAt(gd, rec.exp_rate, level);
+  const origin = tradeOrigin(build.source);
   return {
     slot, rec, level, exp, moves,
     ability: abilityConst(build.ability),
     nature: natureConst(build.nature ?? 'Hardy'),
     ivs: statsOf(build.ivs, 15), evs: statsOf(build.evs, 85), // FR-008 defaults
     itemRec,
-    traded: !!(build.is_traded ?? build.traded),
-    foreignLanguage: !!build.foreign_language,
+    // Explicit Build fields win (tests, what-ifs); otherwise derived from `source` (FR-008a).
+    traded: !!(build.is_traded ?? build.traded ?? origin.traded),
+    foreignLanguage: !!(build.foreign_language ?? origin.foreignLanguage),
     gender: build.gender ?? undefined,
     pp: start.pp ? [...start.pp] : moves.map((k) => gd.moves[k].pp),
   };

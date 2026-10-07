@@ -65,14 +65,35 @@ _ENTRIES: list[dict] = [
         "description": (
             "Showdown has no experience. The game layer tracks participation the game's way and "
             "computes exp per BtlCmd_CalcExpGain / BattleScript_GetExpTask (trainer x1.5, Lucky Egg "
-            "x1.5, Exp. Share split, traded x1.5/x1.7)."),
+            "x1.5, Exp. Share split, traded x1.5/x1.7; a Build whose source is an NPC trade is traded, "
+            "language from the trade's FixedMon vs GAME_LANGUAGE). Ordering: the game only flags the "
+            "payout when the enemy faints and pays at MOVE_END, after the attacker's recoil, the faint "
+            "loop and Life Orb (and, at end of turn, before each field/mon-condition step), so an "
+            "attacker KO'd by its own recoil/Life Orb gets nothing. Showdown fires the enemy's Faint "
+            "before the recoil; sim/exp.mjs therefore queues the award and pays it when the Showdown "
+            "action returns, or after each residual handler (T072 fix; before it, such an attacker was "
+            "paid). Remaining approximation: side-condition residuals (Future Sight, Perish Song) are "
+            "paid per Showdown handler instead of at TurnEnd."),
         "decomp_ref": (
             "pokeplatinum/src/battle/battle_script.c:2187 (BtlCmd_CalcExpGain), :9685 "
-            "(BattleScript_GetExpTask); pokeplatinum/src/battle/battle_lib.c:1456-1479 (exp mask)"),
-        "showdown_ref": "pokemon-showdown/sim/battle.ts:2539 (faintMessages: no exp is awarded on faint)",
+            "(BattleScript_GetExpTask), :9757-9765 (not-OT boost), :1800 (faint sets SYSCTL_PAYOUT_EXP); "
+            "pokeplatinum/src/battle/battle_controller_player.c:3486-3494 (recoil in AFTER_MOVE_MESSAGE), "
+            ":3820-3826 (LOOP_FAINTED), :3968 (MOVE_END AnyExpPayout), :940-941/:1295-1296/:1846 (end-of-turn "
+            "payouts), :4715-4775 (Life Orb); pokeplatinum/src/battle/battle_lib.c:1456-1479 (exp mask), "
+            ":6286 (BattleSystem_PokemonIsOT); pokeplatinum/src/overlay006/npc_trade.c:117-149 "
+            "(NPCTrade_CreateMon: OT and language from res/npc_trades/*.json)"),
+        "showdown_ref": (
+            "pokemon-showdown/sim/battle.ts:2539 (faintMessages: no exp is awarded on faint); "
+            "pokemon-showdown/sim/battle-actions.ts:969-975 (faintMessages before applyRecoilDamage)"),
         "resolution": "corrected",
-        "impact": "Corrected by sim/exp.mjs (T036).",
-        "test_id": "sim/test/exp.test.mjs (cases 1-15)",
+        "impact": (
+            "Corrected by sim/exp.mjs (T036; payout ordering T072 follow-up) and sim/team.mjs (traded from "
+            "source). Ordering fix on the reference team, 200 T072 runs: mean final average level 60.2925; "
+            "worker and the independent Python check (tests/integration/test_final_levels.py) agree 200/200. "
+            "Game ordering read from the decomp, not checked on cartridge (UNVERIFIED)."),
+        "test_id": (
+            "sim/test/exp.test.mjs (cases 1-21; 16 NPC-trade source, 17-20 recoil/Life Orb KO, 21 residual "
+            "payout); tests/integration/test_final_levels.py"),
     },
     {
         "id": "exp-level-up-mid-battle",
@@ -85,8 +106,9 @@ _ENTRIES: list[dict] = [
         "showdown_ref": "pokemon-showdown/sim/pokemon.ts:1398 (setSpecies: stats from the set's level; nothing in Showdown raises a level)",
         "resolution": "corrected",
         "impact": (
-            "Corrected by sim/exp.mjs (T009 spike, T036). UNVERIFIED: that Showdown's faint-event "
-            "timing matches the game's exp timing in every case."),
+            "Corrected by sim/exp.mjs (T009 spike, T036). Exp timing follows the game's payout points "
+            "(MOVE_END / end-of-turn steps), not Showdown's Faint event: see exp-gain-and-participation. "
+            "UNVERIFIED on cartridge."),
         "test_id": "sim/test/exp.test.mjs (case 13: KO -> mid-battle level-up, HP raised)",
     },
     {

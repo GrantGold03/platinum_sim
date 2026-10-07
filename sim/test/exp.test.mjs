@@ -229,3 +229,124 @@ test('case 15: a mon switched in while the foe is up joins the mask (battle_lib.
   assert.deepEqual(events[0].participants, [0, 1]);
   assert.deepEqual(events[0].gains.map((g) => [g.slot, g.exp]), [[0, 1039], [1, 1039]]);
 });
+
+// ---- T072 follow-ups: traded flag from `source`, and payout ordering ---------------------------
+// Decomp facts used below (pokeplatinum @ pinned commit):
+//   res/npc_trades/charap_chatot.json "language": "LANGUAGE_ENGLISH"; meson.build:74
+//   -DGAME_LANGUAGE=LANGUAGE_ENGLISH -> same language -> x150/100 (battle_script.c:9757-9765).
+//   Exp is paid at MOVE_END (battle_controller_player.c:3968), after the move's recoil
+//   (:3486-3494) and Life Orb (:4715-4775) and after the faint loop (:3820-3826); an attacker at
+//   0 HP is not counted (battle_script.c:2204) and gets nothing (:9740).
+import { readFileSync } from 'node:fs';
+import { tradeOrigin } from '../team.mjs';
+
+const legalTeam = JSON.parse(readFileSync(new URL('../../tests/fixtures/legal_team.json', import.meta.url), 'utf8')).builds;
+const aaronTwo = () => opponentMembers(gd, gd.trainers[0]).slice(0, 2); // Yanmega L49, Scizor L49
+const SEED = (d) => 'sodium,' + '0'.repeat(31) + d;
+const faintAndRecoilOrder = (battle) => battle.log.filter((l) => /^\|faint\||\[from\] (Recoil|item: Life Orb)/.test(l));
+
+test('case 16: a Build whose source is an NPC trade is traded (FR-008a), same language -> x1.5', () => {
+  const chatotBuild = legalTeam.find((b) => b.species === 'chatot');
+  assert.match(chatotBuild.source, /^npc_trade:SPECIES_CHATOT@/);
+  assert.equal(chatotBuild.is_traded, undefined); // the team file only carries `source`
+  assert.deepEqual(tradeOrigin(chatotBuild.source), { traded: true, foreignLanguage: false, trade: 'res/npc_trades/charap_chatot.json' });
+  assert.deepEqual(tradeOrigin('wild_slot:SPECIES_STARAVIA@MAP_HEADER_ROUTE_209'), { traded: false, foreignLanguage: false, trade: null });
+  const party = [playerMember(gd, chatotBuild, 0)];
+  assert.equal(party[0].traded, true);
+  assert.equal(party[0].foreignLanguage, false);
+  const battle = newBattle(gd, { seed: SEED('8'), player: party, opponent: aaronTwo() });
+  const events = [];
+  new ExpTracker(gd, battle, party, { events });
+  battle.p2.active[0].sethp(1);
+  battle.makeChoices('move 2', 'move 4'); // Chatot (L57) Hyper Voice outspeeds and KOs Yanmega
+  assert.equal(battle.p2.pokemon[0].fainted, true);
+  // Yanmega: 198*49/7 = 1386; trainer 1386*150/100 = 2079; traded 2079*150/100 = 3118.5 -> 3118
+  assert.deepEqual(events[0].gains.map((g) => [g.slot, g.exp]), [[0, 3118]]);
+  // An explicit Build field still wins (what-if / tests): is_traded false -> 2079
+  const p2 = [playerMember(gd, { ...chatotBuild, is_traded: false }, 0)];
+  assert.equal(p2[0].traded, false);
+});
+
+const staraptor = (moves, item = null) => build('staraptor', 60, moves, 'ABILITY_INTIMIDATE', item);
+const lucarioBench = () => build('lucario', 60, ['extreme_speed'], 'ABILITY_STEADFAST');
+
+function koTurn({ moves, item = null, playerHp, seed }) {
+  const party = [playerMember(gd, staraptor(moves, item), 0), playerMember(gd, lucarioBench(), 1)];
+  const battle = newBattle(gd, { seed: SEED(seed), player: party, opponent: aaronTwo() });
+  const events = [];
+  new ExpTracker(gd, battle, party, { events });
+  const star = battle.p1.active[0];
+  battle.p2.active[0].sethp(1);
+  if (playerHp !== undefined) star.sethp(playerHp);
+  battle.makeChoices('move 1', 'move 4'); // Staraptor L60 outspeeds Aaron's L49 Yanmega
+  return { party, battle, events, star };
+}
+
+test('case 17: Brave Bird KO + recoil KO of the attacker -> no exp (both faint)', () => {
+  const { battle, events, star } = koTurn({ moves: ['brave_bird'], playerHp: 1, seed: '9' });
+  assert.equal(battle.p2.pokemon[0].fainted, true);
+  assert.equal(star.fainted, true);
+  // Showdown's order: the enemy faint is logged before the recoil (the reason for the queue).
+  const order = faintAndRecoilOrder(battle);
+  assert.match(order[0], /^\|faint\|p2a: YANMEGA/);
+  assert.match(order[1], /\|-damage\|p1a: STARAPTOR\|0 fnt\|\[from\] Recoil/);
+  // Yanmega award: mask {0}, slot 0 at 0 HP -> nGaining 0 -> nobody gains.
+  assert.equal(events.length, 1);
+  assert.deepEqual(events[0].participants, [0]);
+  assert.deepEqual(events[0].gains, []);
+});
+
+test('case 18: Double-Edge KO + recoil KO of the attacker -> no exp', () => {
+  const { battle, events, star } = koTurn({ moves: ['double_edge'], playerHp: 1, seed: '9' });
+  assert.equal(battle.p2.pokemon[0].fainted, true);
+  assert.equal(star.fainted, true);
+  assert.equal(events.length, 1);
+  assert.deepEqual(events[0].gains, []);
+});
+
+test('case 19: recoil KO where the attacker survives -> exp', () => {
+  const { battle, events, star } = koTurn({ moves: ['brave_bird'], seed: '9' });
+  assert.equal(battle.p2.pokemon[0].fainted, true);
+  assert.ok(star.hp > 0);
+  assert.ok(battle.log.some((l) => /\|-damage\|p1a: STARAPTOR\|.*\[from\] Recoil/.test(l))); // recoil did happen
+  // 198*49/7 = 1386 -> trainer 2079
+  assert.deepEqual(events[0].gains.map((g) => [g.slot, g.exp]), [[0, 2079]]);
+});
+
+test('case 20: Life Orb KO of the attacker -> no exp; Life Orb with HP to spare -> exp', () => {
+  const dead = koTurn({ moves: ['aerial_ace'], item: 'life_orb', playerHp: 1, seed: '9' });
+  assert.equal(dead.battle.p2.pokemon[0].fainted, true);
+  assert.equal(dead.star.fainted, true);
+  assert.ok(dead.battle.log.some((l) => /\|-damage\|p1a: STARAPTOR\|0 fnt\|\[from\] item: Life Orb/.test(l)));
+  assert.deepEqual(dead.events[0].gains, []);
+  const alive = koTurn({ moves: ['aerial_ace'], item: 'life_orb', seed: '9' });
+  assert.ok(alive.star.hp > 0 && alive.star.hp < alive.star.maxhp);
+  assert.deepEqual(alive.events[0].gains.map((g) => [g.slot, g.exp]), [[0, 2079]]);
+});
+
+test('case 21: residual KO is paid before the next residual step (burn, enemy faster)', () => {
+  // CheckMonConditions pays after each step (battle_controller_player.c:1295-1296): Yanmega (faster)
+  // dies to its burn and the exp is paid before the slower Lucario's burn step. The level-up raises
+  // Lucario's HP by the max-HP gain (pokemon.c:633-641), so it survives its own burn. Paying at
+  // the end of the whole residual phase instead would let the burn KO it first (1 HP).
+  const party = [playerMember(gd, build('lucario', 10, ['extreme_speed', 'detect'], 'ABILITY_STEADFAST'), 0)];
+  const battle = newBattle(gd, { seed: SEED('a'), player: party, opponent: aaronTwo() });
+  const events = [];
+  new ExpTracker(gd, battle, party, { events });
+  const luc = battle.p1.active[0];
+  const yan = battle.p2.active[0];
+  yan.setStatus('brn');
+  luc.setStatus('brn');
+  yan.sethp(1);
+  luc.sethp(1);
+  battle.makeChoices('move 2', 'move 4'); // Detect / Double Team: no damage
+  assert.equal(yan.fainted, true);
+  const burns = battle.log.filter((l) => /\[from\] brn/.test(l) && !l.startsWith('|split'));
+  assert.match(burns[0], /p2a: YANMEGA\|0 fnt/); // Yanmega's burn step comes first
+  // 1386 -> 2079; 560 + 2079 = 2639 -> L16 (case 13). Burn after the payout: 1 + (maxHP16 - maxHP10) - maxHP16/8.
+  assert.deepEqual(events[0].gains.map((g) => [g.slot, g.exp, g.level]), [[0, 2079, 16]]);
+  const s10 = calcStats(gd, gd.species.lucario, party[0].ivs, party[0].evs, 10, 'NATURE_HARDY').hp;
+  const s16 = calcStats(gd, gd.species.lucario, party[0].ivs, party[0].evs, 16, 'NATURE_HARDY').hp;
+  assert.equal(luc.hp, 1 + (s16 - s10) - Math.floor(s16 / 8));
+  assert.ok(luc.hp > 0);
+});
