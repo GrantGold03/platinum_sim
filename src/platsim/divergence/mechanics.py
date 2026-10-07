@@ -41,21 +41,23 @@ _ENTRIES: list[dict] = [
         "id": "mech-full-restore-pseudo-move",
         "area": "ai",
         "description": (
-            "Opponent Full Restore is modelled as the project pseudo-move `trainerfullrestore` "
-            "(priority 7, Status, target self; full HP, cure status and confusion), because Showdown "
-            "has no bag items. Gap: Showdown's gen4 Taunt disables every Status-category move, so a "
-            "Taunted opponent cannot use it; in the game Taunt does not stop a trainer's bag item. "
-            "Other move-only side effects (lastMove for Encore/Disable/Mirror Move/Copycat, Sucker "
-            "Punch, Pressure, Heal Block) are also open."),
-        "decomp_ref": "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:4056 (TrainerAI_ShouldUseItem)",
+            "Opponent Full Restore uses the project pseudo-move `trainerfullrestore`, because Showdown "
+            "has no bag items. sim/ai/patches.mjs heals in Showdown's beforeTurnCallback and removes its "
+            "own move action, so it never runs as a move: Taunt, Encore, sleep/freeze/paralysis, "
+            "confusion, attraction, Truant and Pressure cannot affect it, lastMove is untouched, Sucker "
+            "Punch fails against it and Heal Block does not stop it, as in the game. Remaining "
+            "differences: Choice lock (no League mon holds a Choice item), an encored item user facing "
+            "Sucker Punch, a player Transform on the same turn copying the extra slot, and message order."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:4056 (TrainerAI_ShouldUseItem); "
+            "pokeplatinum/src/battle/battle_script.c:7385-7400 (Sucker Punch vs non-attack)"),
         "showdown_ref": "pokemon-showdown/data/mods/gen4/moves.ts:1411-1418 (taunt onDisableMove: every Status move)",
-        "resolution": "accepted",
+        "resolution": "corrected",
         "impact": (
-            "PENDING T047 (sim/ai/items.mjs): until then the opponent policy is placeholder-default "
-            "and never uses Full Restore, so League opponents heal less than on the cartridge "
-            "(optimistic for the player). Flip to corrected when T047 exempts the pseudo-move from "
-            "Taunt and tests it."),
-        "test_id": "sim/test (T047, not written yet); spike sim/spikes/fullrestore.mjs",
+            "Corrected by sim/ai/patches.mjs + sim/ai/items.mjs (T047). The remaining edge cases listed "
+            "above do not arise with League parties, apart from the encored-Sucker-Punch case, which is "
+            "a single-turn ordering difference."),
+        "test_id": "sim/test/ai_items.test.mjs; sim/test/ai_golden.test.mjs (Taunt + Full Restore)",
     },
     {
         "id": "exp-gain-and-participation",
@@ -140,12 +142,14 @@ _ENTRIES: list[dict] = [
             "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:211 (TrainerAI_Init), :286 "
             "(TrainerAI_MainSingles), :3894 (ShouldSwitch), :3989 (PickCommand), :4056 (ShouldUseItem)"),
         "showdown_ref": "pokemon-showdown/sim/side.ts:1291-1292,1360 ('default' choice -> autoChoose)",
-        "resolution": "accepted",
+        "resolution": "corrected",
         "impact": (
-            "PENDING T045-T048: opponents currently use `placeholder-default` (Showdown's default "
-            "choice), which is named in every result and is NOT the game AI. Results are not "
-            "cartridge-faithful until T045-T048 land; then flip to corrected."),
-        "test_id": "tests/integration/test_worker.py (opponent_policy reported); T048 AI tests (pending)",
+            "Corrected by the `decomp-ai` opponent policy (T045-T048), now the default. Remaining "
+            "UNVERIFIED reconstructions from Showdown's log: the AI's knowledge of the player's "
+            "ability and item, the move that last hit it, and last-move success; Gyro Ball speed values "
+            "are recomputed per decision. No cartridge comparison has been made. Showdown-mismatch "
+            "counters (invalidChoice, trappedSwitch, lockMismatch) are reported per run."),
+        "test_id": "sim/test/ai_choose/ai_switch/ai_items/ai_golden/ai_gauntlet.test.mjs",
     },
     {
         "id": "mech-rng",

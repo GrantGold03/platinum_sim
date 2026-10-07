@@ -26,6 +26,7 @@ import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
 import { greedy } from './policy/greedy.mjs';
+import { decompAI } from './ai/opponent.mjs';
 
 export const PLACEHOLDER = 'placeholder-default';
 const placeholder = { name: PLACEHOLDER, choose: () => 'default' };
@@ -34,6 +35,7 @@ export const OPPONENT_POLICIES = new Map([[PLACEHOLDER, placeholder]]);
 export const registerPlayerPolicy = (p) => PLAYER_POLICIES.set(p.name, p);
 export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
+registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)
 
@@ -77,7 +79,7 @@ function collect(gd, battle, party) {
 export function runGauntlet(gd, req) {
   const playerPolicy = PLAYER_POLICIES.get(req.player_policy ?? PLACEHOLDER);
   if (!playerPolicy) throw new RequestError('internal', `unknown player_policy ${req.player_policy} (known: ${[...PLAYER_POLICIES.keys()]})`);
-  const oppPolicy = OPPONENT_POLICIES.get(req.opponent_policy ?? PLACEHOLDER);
+  const oppPolicy = OPPONENT_POLICIES.get(req.opponent_policy ?? 'decomp-ai'); // default: the game's AI (spec FR-010)
   if (!oppPolicy) throw new RequestError('internal', `unknown opponent_policy ${req.opponent_policy}`);
   if (!Array.isArray(req.team) || req.team.length < 1 || req.team.length > 6) {
     throw new RequestError('invalid_team', `team must have 1-6 members, got ${req.team?.length}`);

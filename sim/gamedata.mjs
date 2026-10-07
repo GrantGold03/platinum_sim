@@ -18,6 +18,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Dex } from './showdown.mjs';
+import { applyAiDexPatches, FULL_RESTORE_MOVE as AI_FULL_RESTORE_MOVE } from './ai/patches.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = join(here, '..');
@@ -36,8 +37,10 @@ export const keyOf = (s, prefix) => strip(s, prefix).toLowerCase();
 // Game rule it stands in for: TrainerAI_ShouldUseItem (pokeplatinum/src/battle/trainer_ai/
 // trainer_ai.c:4056) decides; item use resolves before moves, so priority 7. Effect of Full
 // Restore: full HP, cure status and confusion. Taunt still blocks it in Showdown
-// (pokemon-showdown/data/mods/gen4/moves.ts:1411-1418); T047 patches that, not this file.
+// (pokemon-showdown/data/mods/gen4/moves.ts:1411-1418); T047 patches that in sim/ai/patches.mjs,
+// applied below in prepareDex(). The onHit here is replaced there by beforeTurnCallback.
 export const FULL_RESTORE_MOVE = 'trainerfullrestore';
+if (AI_FULL_RESTORE_MOVE !== FULL_RESTORE_MOVE) throw new Error('gamedata: sim/ai/patches.mjs FULL_RESTORE_MOVE mismatch');
 const fullRestoreData = {
   num: -1001, name: 'Trainer Full Restore', accuracy: true, basePower: 0, category: 'Status',
   pp: 64, noPPBoosts: true, priority: 7, flags: {}, target: 'self', type: '???',
@@ -91,6 +94,9 @@ export function prepareDex(divergencesPath = DIVERGENCES_PATH) {
     }
   }
   data.Moves[FULL_RESTORE_MOVE] = fullRestoreData;
+  // T047 (sim/ai/patches.mjs): run the item in beforeTurnCallback and cancel the move action, so
+  // Taunt/Encore/sleep/paralysis/confusion/Pressure/lastMove cannot touch it.
+  result.aiPatches = applyAiDexPatches(data);
   prepared = result;
   return result;
 }

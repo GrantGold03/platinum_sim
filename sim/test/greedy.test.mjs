@@ -100,7 +100,7 @@ const SMOKE = [
 ];
 
 test('full gauntlet end-to-end with greedy-v1 (opponents placeholder-default)', () => {
-  const req = { team: SMOKE, seed: 'sodium,' + 'd'.repeat(32), player_policy: GREEDY, stop_on_loss: false, log: 'summary' };
+  const req = { team: SMOKE, seed: 'sodium,' + 'd'.repeat(32), player_policy: GREEDY, opponent_policy: PLACEHOLDER, stop_on_loss: false, log: 'summary' };
   const r = runGauntlet(gd, req);
   assert.equal(r.player_policy, GREEDY);
   assert.equal(r.opponent_policy, PLACEHOLDER);

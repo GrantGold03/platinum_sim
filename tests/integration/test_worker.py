@@ -35,7 +35,7 @@ def test_worker_hello_and_gauntlet():
     reqs = [
         {"id": 1, "op": "hello"},
         {"id": 2, "op": "gauntlet", "team": TEAM, "seed": derive_seed("smoke", 0, 0),
-         "player_policy": "placeholder-default",
+         "player_policy": "placeholder-default", "opponent_policy": "placeholder-default",
          "trainers": ["aaron", "bertha", "flint", "lucian", "cynthia"],
          "stop_on_loss": True, "log": "summary"},
         {"id": 3, "op": "gauntlet", "team": [build("notamon", 5, ["tackle"], "ABILITY_NONE")], "seed": "sodium," + "0" * 32},

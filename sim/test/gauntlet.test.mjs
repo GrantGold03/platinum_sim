@@ -15,7 +15,7 @@ const TEAM = [
   B('magnezone', 60, ['thunderbolt', 'flash_cannon', 'tri_attack', 'thunder_wave'], 'ABILITY_MAGNET_PULL'),
   B('roserade', 60, ['energy_ball', 'sludge_bomb', 'shadow_ball', 'extrasensory'], 'ABILITY_NATURAL_CURE'),
 ];
-const req = (o = {}) => ({ team: TEAM, seed: 'sodium,' + 'a'.repeat(32), log: 'summary', stop_on_loss: false, ...o });
+const req = (o = {}) => ({ team: TEAM, seed: 'sodium,' + 'a'.repeat(32), log: 'summary', stop_on_loss: false, opponent_policy: PLACEHOLDER, ...o });
 
 test('deterministic: same request -> byte-identical result; other seed differs (positive control)', () => {
   const a = JSON.stringify(runGauntlet(gd, req()));

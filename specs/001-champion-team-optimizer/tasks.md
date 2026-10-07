@@ -396,17 +396,17 @@ research.md (R5/R7/R8) before continuing.
 - [X] T044 [P] `sim/ai/cmds/misc.mjs`: random-chance, turn-count, weather, side-condition, party and
   remaining commands. Any opcode still unimplemented MUST throw `ai_unimplemented` with its name
   and the script line that reached it.
-- [ ] T045 `sim/ai/choose.mjs`: `TrainerAI_Init` (scores 100, invalid → 0, per-move roll),
+- [X] T045 `sim/ai/choose.mjs`: `TrainerAI_Init` (scores 100, invalid → 0, per-move roll),
   `TrainerAI_EvalMoves`, and `TrainerAI_MainSingles` (flag order, max score, random tie break via
   the run PRNG).
-- [ ] T046 `sim/ai/switch.mjs`: `TrainerAI_ShouldSwitch` (`trainer_ai.c:3894`) and
+- [X] T046 `sim/ai/switch.mjs`: `TrainerAI_ShouldSwitch` (`trainer_ai.c:3894`) and
   `BattleAI_PostKOSwitchIn` (`battle_lib.c:7923-8090`), including the documented u8 overflow bug
   (`PP/docs/bugs_and_glitches.md`).
-- [ ] T047 `sim/ai/items.mjs`: `TrainerAI_ShouldUseItem` (`trainer_ai.c:4056`), which uses
+- [X] T047 `sim/ai/items.mjs`: `TrainerAI_ShouldUseItem` (`trainer_ai.c:4056`), which uses
   Full Restore only when `0 < hp < maxhp/4`, plus the slot rule and the no-break
   double-consumption behaviour. On "use", p2 chooses `trainerfullrestore` and the count is
   decremented. Then `TrainerAI_PickCommand` order: switch → item → fight.
-- [ ] T048 AI tests:
+- [X] T048 AI tests:
   - `sim/test/ai_cmds.test.mjs`: at least one test per implemented opcode.
   - `sim/test/ai_golden.test.mjs`: at least 15 hand-built positions across all five trainers. Each
     fixture comment walks through the script lines that produce the expected choice. Include Full

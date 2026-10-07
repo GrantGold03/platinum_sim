@@ -42,3 +42,20 @@ Handlers may add helpers to `ctx` only through `makeCtx({extra})` in T045; don't
 - **Running an instruction**: run a single instruction with `HANDLERS[name](ctx, ins)`, using a real `ins`
   taken from `prog.instructions` (find one by name and line) so the argument decoding is the real one.
 - **Assertions**: check `ctx.next`, `ctx.mem` and the `ctx.rand` call counts.
+
+## Decision layer (T045-T047)
+
+| File | Ports |
+|---|---|
+| `choose.mjs` | `TrainerAI_Init` / `EvalMoves` / `MainSingles` / `RecordLastMove`, `BattleSystem_CheckInvalidMoves`, `AIRng` (byte-exact `BattleSystem_RandNext` LCG) |
+| `switch.mjs` | `TrainerAI_ShouldSwitch` + helpers, `BattleAI_PostKOSwitchIn` (u8 overflow kept), `BattleSystem_CalcEffectiveness`, `TypeMatchupMultiplier`, `Move_CalcVariableType` |
+| `items.mjs` | `InitAI` item compaction, `TrainerAI_ShouldUseItem` (Full Restore only; slot rule; no-break double consumption), `TrainerAI_PickCommand` |
+| `patches.mjs` | Dex patches: `trainerfullrestore` runs in `beforeTurnCallback` and cancels its move action; Taunt/Encore exempt it |
+| `opponent.mjs` | the `decomp-ai` opponent policy: per-battle state, log -> AI memory / `moveHit` / `speedRand`, Showdown choice strings |
+
+- **RNG**: one `AIRng` per battle, seeded with the first 4 bytes of `sha256(`${battle.prngSeed}|trainer-ai`)`.
+  `ctx.rand` in a decision is `st.rng.next()`. Draw order: 4 `speedRand` at battle start, then per decision
+  PickCommand draws, Init's 4 rolls, script draws, the tie break; 4 `speedRand` after every turn that had a
+  move request (pre-move phase, battle_controller_player.c:853-856).
+- **ctx.damage** is `calcdamage.mjs`; `mem.monSpeedValues` is pre-filled per decision by `speedValuesNow()`.
+- **Divergence counters**: `AGGREGATE` / `st.stats` (`invalidChoice`, `trappedSwitch`, `lockMismatch`).

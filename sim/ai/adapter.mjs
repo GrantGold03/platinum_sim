@@ -380,6 +380,10 @@ export function createAdapter(battle, opts = {}) {
       if (v.uproar) m |= turns(v.uproar, 7) << K('VOLATILE_CONDITION_UPROAR_SHIFT');
       if (v.bide) m |= turns(v.bide, 3) << K('VOLATILE_CONDITION_BIDE_SHIFT');
       if (v.lockedmove) m |= (turns(v.lockedmove, 3) << K('VOLATILE_CONDITION_THRASH_SHIFT')) | K('VOLATILE_CONDITION_MOVE_LOCKED');
+      // Charge turn of a two-turn move (Solar Beam, Bounce, ...): the game locks the move choice
+      // (Battler_LockMoveChoice, battle_lib.c:1828-1832; tested by effect_script_0151.s:9, cleared
+      // by subscript_charge_move_cleanup.s:6). Showdown: the 'twoturnmove' volatile. (T046)
+      if (v.twoturnmove) m |= K('VOLATILE_CONDITION_MOVE_LOCKED');
       if (v.partiallytrapped) m |= turns(v.partiallytrapped, 7) << K('VOLATILE_CONDITION_BIND_SHIFT');
       if (v.attract) {
         // ATTRACT_0 << (battler that caused it) (VOLATILE_CONDITION_ATTRACT_SHIFT 16).

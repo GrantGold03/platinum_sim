@@ -374,3 +374,36 @@ $ uv run pytest -q tests/integration/test_pool.py → 6 passed, exit 0
   2. **Newmoon Island** comes out reachable; in fact it needs an event-only item. Event and distribution-only items
      must be treated as unobtainable (FR-005, one cartridge).
   3. **Terrain** uses only the collision bit, so terrain evidence never decides an edge, only marks it uncertain.
+
+## 2026-10-07: T045–T048 trainer-AI decision layer (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 294, pass 294, fail 0, exit 0
+$ uv run pytest -q                     → 129 passed, exit 0
+$ uv run platsim divergences           → 72 entries (ai/corrected=2, ...), version sha256:0668c3641480a992, exit 0
+```
+- **Files**: `sim/ai/{choose,switch,items,patches,opponent}.mjs`. `decomp-ai` is registered and is now the
+  **default opponent policy** (changed by the coordinator). Tests that check placeholder behaviour request it
+  explicitly.
+- **200-gauntlet run** (decomp-ai vs greedy-v1, from the agent's report):
+  - no `ai_unimplemented` and no other error;
+  - byte-identical on rerun, and a different seed gives a different result;
+  - 14,770 AI decisions: 9,752 moves, 3,966 post-KO replacements, 914 Full Restores, 125 voluntary switches, 13 locked
+    turns;
+  - the mismatch counters never fired.
+- **Throughput with the AI**: about 9.5 gauntlets/s per process.
+- **Full Restore** now heals in `beforeTurnCallback` and cancels its move action. Taunt, Encore, Pressure, lastMove,
+  Sucker Punch and Heal Block are handled as in the game, each tested live. The ledger entry is now `corrected`.
+- **Golden positions**: 18, covering all five trainers. Each asserts the damage estimates, the score changes by script
+  line, the RNG draw count and the choice.
+- **Score past 127**: unreachable with League flags (static bound +25 < +28), so it is tested at the handler level
+  only.
+- **RNG**: the AI has its own LCRNG stream, seeded from `sha256(prngSeed|trainer-ai)`. Quick Claw `speedRand` is drawn
+  at battle start and after each turn, per `battle_controller_player.c:853-856`.
+- **UNVERIFIED**:
+  - the AI memory reconstructed from Showdown's log (player ability/item knowledge, the move that last hit, last-move
+    success);
+  - Gyro Ball speed values;
+  - double-KO visibility;
+  - the overflow score being 64 by C arithmetic vs 65 in the bugs doc;
+  - no comparison against the cartridge.
