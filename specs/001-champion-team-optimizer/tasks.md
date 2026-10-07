@@ -190,7 +190,7 @@ research.md (R5/R7/R8) before continuing.
   held item, bag items, AI flags); all IVs are 30; every ability is slot 1. Personalities and
   natures are a cross-check against R3's values, which came from a separate re-implementation. If
   they disagree, re-derive both by hand from the C code and record which was wrong.
-- [ ] T018 `src/platsim/decomp/scripts.py`, a field-script parser for `PP/res/field/scripts/*.s`:
+- [X] T018 `src/platsim/decomp/scripts.py`, a field-script parser for `PP/res/field/scripts/*.s`:
   - tokenize labels, `ScriptEntry` lines (index = order) and commands with args;
   - build a control-flow graph over `GoTo`/`Call`/`GoToIf*`/`CallIf*`/`End`;
   - resolve `CallCommonScript`/`Common_*` to `scripts_common.s`;
@@ -213,7 +213,7 @@ research.md (R5/R7/R8) before continuing.
 
 ### 2c. Availability ledger (FR-003–FR-006, research R2)
 
-- [ ] T021 `src/platsim/availability/mapgraph.py`:
+- [X] T021 `src/platsim/availability/mapgraph.py`:
   - nodes = `MAP_HEADER_*` from `PP/generated/map_headers.txt`;
   - script and encounter links from `PP/include/data/map_headers.h`;
   - edges from:
@@ -223,7 +223,7 @@ research.md (R5/R7/R8) before continuing.
     - hidden locations (`EnableHiddenLocation`).
   - Each edge records the script node that triggers it, if any. Reachability starts from
     `MAP_HEADER_TWINLEAF_TOWN`.
-- [ ] T022 `src/platsim/availability/gates.py`: for a script node, collect the gate conditions on
+- [X] T022 `src/platsim/availability/gates.py`: for a script node, collect the gate conditions on
   every path that reaches it: `FLAG_GAME_COMPLETED` checks, `CheckGameCompleted`,
   `GetNationalDexEnabled` comparisons, and badge checks (`CheckBadgeAcquired`).
   - Classify a node post-game if all paths to it require a post-game gate.

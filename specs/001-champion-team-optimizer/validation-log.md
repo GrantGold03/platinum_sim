@@ -354,3 +354,23 @@ $ uv run pytest -q tests/integration/test_pool.py → 6 passed, exit 0
 - **Zero reach**: when nobody reaches Cynthia, no top-up runs.
 - **Determinism**: results are the same with 3 and 5 workers.
 - **Budget table**: `src/platsim/budget.py` is now the single preset table; `report/json_report.py` imports from it.
+
+## 2026-10-07: T018, T021, T022 scripts parser, map graph, gates (agent; re-run by the coordinator)
+
+`uv run pytest -q tests/unit/test_scripts.py tests/unit/test_mapgraph.py` → 22 passed, exit 0.
+- **Controls**:
+  - The Fight Area is unreachable. The only cut edge into it is the Snowpoint ship, `scripts_snowpoint_city.s:210`,
+    gated by `FLAG_GAME_COMPLETED` at `:183`.
+  - All 10 gym maps, Victory Road 1F/2F/B1F and all 19 Pokémon League maps are reachable from Twinleaf.
+  - Victory Road 1F→Room 1 is post-game: the Collector stands on the warp and is only hidden after the game is
+    completed.
+- **Counts**: 593 headers. Strict mode reaches 429; loose mode reaches 441.
+- **Uncertain edges**: listed in the agent's report and in `mapgraph` output; they are cut in strict mode.
+- **OPEN, for T023/T026**:
+  1. **National Dex timing**: the grant at `scripts_sandgem_town_pokemon_research_lab.s:539` sits behind
+     `CheckLocalDexCompleted`, not `FLAG_GAME_COMPLETED`. Research R2's premise "National Dex means post-game" is
+     therefore UNVERIFIED and must be traced. Is the lab event reachable before the Champion with a completed Sinnoh
+     dex?
+  2. **Newmoon Island** comes out reachable; in fact it needs an event-only item. Event and distribution-only items
+     must be treated as unobtainable (FR-005, one cartridge).
+  3. **Terrain** uses only the collision bit, so terrain evidence never decides an edge, only marks it uncertain.
