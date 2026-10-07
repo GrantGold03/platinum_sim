@@ -387,7 +387,7 @@ research.md (R5/R7/R8) before continuing.
   Each query documents the decomp field it mirrors (`battleCtx->…`).
 - [X] T040 [P] `sim/ai/cmds/flow.mjs`: control-flow, compare, jump, call, return and score-adjust
   commands, each implemented with a comment citing the `trainer_ai.c` handler line.
-- [ ] T041 [P] `sim/ai/cmds/battler.mjs`: HP, status, stat-stage, type, ability, item and volatile
+- [X] T041 [P] `sim/ai/cmds/battler.mjs`: HP, status, stat-stage, type, ability, item and volatile
   query commands, with citations.
 - [X] T042 [P] `sim/ai/cmds/moves.mjs`: move-effect, power, type, priority, last-used and
   move-in-set queries, with citations.

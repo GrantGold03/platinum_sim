@@ -273,3 +273,17 @@ $ node --test sim/test/exp.test.mjs sim/test/team.test.mjs sim/test/gauntlet.tes
 - **UNVERIFIED**: player happiness defaults to 255 (affects Return/Frustration); player gender comes from Showdown's
   PRNG; whether Showdown's Faint-event timing matches the game's exp timing.
 - **Ledger patch shape that T053 must emit**: `{resolution:"corrected", patch:{table,id,path,value}}`.
+
+## 2026-10-07: T041 AI battler opcodes (agent; re-run by the coordinator)
+
+`node --test sim/test/ai_cmds_battler.test.mjs` → tests 19, pass 19, fail 0, exit 0.
+- **Opcodes**: 31, each with a TAI or BL line cited. Every state is reached with real moves, and each has a
+  positive control.
+- **AI memory**: ability and item knowledge about the player is read from AI memory.
+- **Speed compare**: its `monSpeedValues` side effect is written to `ctx.mem.monSpeedValues`; T043 and T045 read it
+  from there.
+- **Partner battlers**: arguments naming a partner throw (they are unreachable in the League).
+- **UNVERIFIED**:
+  - Quick Claw: no `speedRand` source exists yet; T045 decides it.
+  - Protect chain is capped at 2.
+  - No mutation testing was done.
