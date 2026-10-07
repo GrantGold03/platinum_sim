@@ -45,7 +45,7 @@ legality, divergence and determinism tests, and Principle V requires positive co
 
 **Purpose**: Project skeleton, toolchains, pins.
 
-- [ ] T001 Create `pyproject.toml` with:
+- [X] T001 Create `pyproject.toml` with:
   - package `platsim` under `src/`, `requires-python = ">=3.14"`;
   - dependencies `fastapi`, `uvicorn`, `openpyxl`;
   - dev dependency `pytest`, plus `httpx` (needed by FastAPI's TestClient);
@@ -53,22 +53,22 @@ legality, divergence and determinism tests, and Principle V requires positive co
   
   Then run `uv sync` and record its output. If any package fails to install on Python 3.14,
   stop and report it; do not downgrade Python silently.
-- [ ] T002 [P] Create the directory skeleton from plan.md:
+- [X] T002 [P] Create the directory skeleton from plan.md:
   - `src/platsim/{decomp,availability,legality,divergence,sim,optimizer,report,web,web/static}/__init__.py`
     (no `__init__.py` in `web/static`);
   - `sim/{ai,ai/cmds,policy,spikes,test}/`;
   - `tests/{unit,integration,fixtures}/`;
   - `data/`.
-- [ ] T003 [P] Create `sim/package.json` (`"type": "module"`, `"private": true`,
+- [X] T003 [P] Create `sim/package.json` (`"type": "module"`, `"private": true`,
   `"scripts": {"test": "node --test test/"}`, no dependencies). Create `sim/showdown.mjs`, which
   re-exports `Battle`, `Dex`, `Teams`, `PRNG` from `../pokemon-showdown/dist/sim/index.js` via
   `createRequire`. This is the only file that imports Showdown.
-- [ ] T004 Build Showdown: `cd pokemon-showdown && npm ci && node build`. This needs network once.
+- [X] T004 Build Showdown: `cd pokemon-showdown && npm ci && node build`. This needs network once.
   - Verify `pokemon-showdown/dist/sim/index.js` exists.
   - Verify `node -e "require('./pokemon-showdown/dist/sim').Dex.mod('gen4').species.get('garchomp').baseStats"`
     prints stats.
   - Record both outputs in `FD/validation-log.md`.
-- [ ] T005 [P] Create `src/platsim/pins.py`:
+- [X] T005 [P] Create `src/platsim/pins.py`:
   - constants `DECOMP_COMMIT`, `SHOWDOWN_COMMIT`, `ROM_REV1_SHA1 = "0862ec35b24de5c7e2dcb88c9eea0873110d755c"`;
   - `check_pins()`, which runs `git -C <repo> rev-parse HEAD` and `git status --porcelain` (ignoring
     `node_modules/`, `dist/` and `config/config.js` in `PS`) and raises with a clear message on a
@@ -76,10 +76,10 @@ legality, divergence and determinism tests, and Principle V requires positive co
   
   Test in `tests/unit/test_pins.py`: positive control (passes on the real repos) and negative
   control (a monkeypatched wrong commit raises).
-- [ ] T006 [P] Add `/data/generated/` to `.gitignore` (`/runs/`, `.venv/` and `node_modules/` are
+- [X] T006 [P] Add `/data/generated/` to `.gitignore` (`/runs/`, `.venv/` and `node_modules/` are
   already there). Add `tests/conftest.py` with `DECOMP_ROOT` and `SHOWDOWN_ROOT` fixtures pointing
   at the vendored dirs.
-- [ ] T007 [P] Create `RUN-STATE.md` at the repo root with sections Goal, Method, Done, Next, Traps,
+- [X] T007 [P] Create `RUN-STATE.md` at the repo root with sections Goal, Method, Done, Next, Traps,
   seeded from plan.md's "Phases after this plan".
 
 ---
@@ -93,7 +93,7 @@ report writers. Both US1 and US2 depend on all of this.
 
 ### 2a. Spikes (do first; results can change the plan)
 
-- [ ] T008 [P] Throughput spike in `sim/spikes/throughput.mjs`:
+- [X] T008 [P] Throughput spike in `sim/spikes/throughput.mjs`:
   - In one Node process, run 500 battles in format `gen4customgame` with seed
     `sodium,<run index as 32 hex>`.
   - p2 is Cynthia's team, typed from `PP/res/trainers/data/champion_cynthia.json`.
@@ -103,14 +103,14 @@ report writers. Both US1 and US2 depend on all of this.
   
   Then run 16 copies in parallel and report aggregate battles/s. Write the numbers into
   `FD/research.md` under a new "R8 – Measured" subsection.
-- [ ] T009 [P] Mid-battle level-up spike in `sim/spikes/levelup.mjs`. After turn 1, set a p1
+- [X] T009 [P] Mid-battle level-up spike in `sim/spikes/levelup.mjs`. After turn 1, set a p1
   Pokémon's `level` and `set.level`, recompute stored stats and `maxhp` using Showdown's stat
   routine, and raise `hp` by the max-HP increase.
   - Verify a later damage roll uses the new stats. Use the same seed with and without the change
     and compare.
   - Record works / doesn't work and the exact code in `FD/research.md` R5. If it doesn't work, mark
     the ledger plan as "levels applied between battles".
-- [ ] T010 [P] Full Restore spike in `sim/spikes/fullrestore.mjs`.
+- [X] T010 [P] Full Restore spike in `sim/spikes/fullrestore.mjs`.
   - Before the first `Dex.get`, add a move `trainerfullrestore` to `Dex.mod('gen4').data.Moves`:
     priority high enough to act before all moves, no PP use shown, heals to full HP, cures status
     and confusion, target self, never misses.

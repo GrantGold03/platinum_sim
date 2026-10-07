@@ -165,6 +165,48 @@ mid-battle level-up, no heuristic AI.
 | Level-up moves | Spec default: keep current moves. | n/a |
 | Player bag items | Forbidden by spec (FR-011). | n/a |
 
+### R5 – Spike results (2026-10-07)
+
+**T009, mid-battle level-up (`sim/spikes/levelup.mjs`): WORKS.**
+- Method: set `pokemon.level` and `pokemon.set.level`, then `stats = battle.spreadModify(species.baseStats, set)`.
+  Assign `baseStoredStats` and `storedStats`, set `baseMaxhp` and `maxhp` to `stats.hp`, and raise
+  `hp` by the max-HP increase.
+- Verified with the same seed:
+  - the stats equal a freshly built level-70 copy (maxhp 252; atk 208, def 159, spa 138, spd 145,
+    spe 168);
+  - HP rose by exactly the max-HP gain (114 → 183 with max 183 → 252);
+  - later damage differs.
+- These numbers are Showdown's stat formula. Matching it against the decomp formula
+  (`pokemon.c:564`) is T034.
+- **Decision**: level-ups are applied mid-battle. The ledger entry is `corrected-by-patch`.
+
+**T010, opponent Full Restore pseudo-move (`sim/spikes/fullrestore.mjs`): WORKS, with one gap.**
+- Injected into `Dex.mod('gen4').data.Moves` before the first get: priority 7, category Status,
+  target self. Its `onHit` calls `sethp(maxhp)`, `cureStatus()` and removes confusion. It is added
+  to the user's move slots for the turn it is chosen, then removed.
+- Basic case: Milotic at 39/195 HP and poisoned was healed to 195/195 and cured, **before** p1's
+  Extreme Speed (+1).
+- Torment, two consecutive uses: both succeed.
+- **Gap**: under Taunt, Showdown blocks it (`|cant|p2a: Milotic|move: Taunt|Trainer Full Restore`,
+  from `ps/data/mods/gen4/moves.ts:1411-1418`, which disables every `Status`-category move). In the
+  game, Taunt does not stop a trainer's bag item. **T047 MUST fix this**, e.g. via a runtime patch
+  of the gen4 Taunt condition that exempts `trainerfullrestore`, plus a test.
+- Other interactions T047 MUST handle or ledger, because the pseudo-move is still a "move" to
+  Showdown: it sets `lastMove` (affects Encore, Disable, Mirror Move, Copycat), Sucker Punch
+  targeting it, Pressure PP deduction, Choice lock (no League mon holds a Choice item), and Heal
+  Block.
+
+**Found during T008: PP Ups.** Showdown gives every move 3 PP Ups at construction
+(`ps/sim/pokemon.ts:361`). For example, Cynthia's Spiritomb has Dark Pulse at 24 PP; base is 15.
+The game sets trainer Pokémon moves to `MoveTable_CalcMaxPP(move, ppUps)`
+(`BoxPokemon_SetMoveSlot`, `pp/src/pokemon.c:3925`). `ppUps` is 0 for a freshly built trainer
+Pokémon because `Pokemon_Init` zeroes its data (`pp/src/pokemon.c:294`), so trainer moves get base PP.
+- PP carries over between League battles, so this matters.
+- **T034 MUST overwrite `maxpp`/`pp` after construction.** For opponents: base PP.
+- For the player: PP Ups/PP Max are items whose pre-Champion availability is finite or unknown. The
+  spec does not yet say how many the player has, so **this is an open question for the user**.
+  Until it is answered, the safe default is base PP.
+
 ## R6. Opponent AI: running the game's own AI scripts
 
 **Decision**: Write an **interpreter in the Node worker** that runs the decomp's AI bytecode
@@ -277,6 +319,23 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
   Only `standard` and `thorough` can produce a result marked `qualified`.
 - **Never silently loosened**: lower run counts only via an explicit `--budget` flag, and the
   report shows the loosened settings.
+
+### R8 – Measured (T008, 2026-10-07)
+
+`node sim/spikes/throughput.mjs`: 500 battles per process, `gen4customgame`. p2 is Cynthia's
+first-run team from `champion_cynthia.json`; p1 is her species at level 60 with 15 IVs and 85 EVs.
+Both sides choose `default`, so there is **no AI and no player policy** in these numbers.
+
+| Setup | Battles/s | Mean turns |
+|---|---|---|
+| 1 process | 42.9 | 25.7 |
+| 16 processes in parallel (16 logical CPUs) | 18.9 each, **295 combined** | 25.8–26.0 |
+
+- A gauntlet is up to 5 battles, so the engine ceiling is about **59 gauntlets/s** on this machine.
+  At that rate, 2,000 confirmation runs take about 34 s before any AI or policy cost.
+- The real throughput depends on the cost of the AI interpreter and `expectimax2-v1`. Re-measure
+  after T048 and T056.
+- Checkpoint A threshold (≥ 5 battles/s per process): **met**.
 
 ## R9. Language and tool split
 
