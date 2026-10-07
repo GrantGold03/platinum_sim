@@ -1,0 +1,13 @@
+# ROM: never commit or redistribute (constitution, Technical Constraints)
+*.nds
+
+# Vendored upstream repos: pinned by commit in specs/001-champion-team-optimizer/research.md
+/pokeplatinum/
+/pokemon-showdown/
+
+# Python / Node / run outputs
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+/runs/
