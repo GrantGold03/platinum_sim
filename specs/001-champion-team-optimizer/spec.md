@@ -119,9 +119,9 @@ divergence ledger with its resolution.
   qualifying team found", the best clear rate reached, and at which levels, rather than a team that
   fails the threshold.
 - Two members want the same one-time item or the same single-copy TM: only one may receive it.
-- A member levels up during the gauntlet and would learn or evolve: level-up move learning and
-  evolution prompts follow the player's chosen policy (default: keep current moves, decline
-  evolution unless the build specifies otherwise), and new levels count toward final level.
+- A member levels up during the gauntlet and would learn a move or evolve: it always keeps its
+  current moves and declines evolution (fixed rule, not configurable), and new levels count toward
+  final level.
 - Level gain from Elite Four battles pushes the level gap above 10 by the end: the team is invalid.
 - A battle ends in a draw or hits a turn limit: counted as a loss.
 - A member's moveset relies on a move with no remaining PP late in the gauntlet: PP carries over
@@ -133,8 +133,9 @@ divergence ledger with its resolution.
 
 **Input and output**
 
-- **FR-001**: The tool MUST accept exactly six species as input, plus optional constraints (fixed
-  members' levels or moves, IV assumptions, simulation budget, random seed).
+- **FR-001**: The tool MUST accept exactly six species as input, plus optional settings: minimum
+  clear rate (FR-015), simulation budget preset (FR-018), and random seed. IVs, EVs, and nature are
+  not settable (FR-008).
 - **FR-002**: The tool MUST output the optimized team in a standard team-export text format and as a
   machine-readable report containing the full provenance required by the constitution (simulation
   count, clear rates with confidence intervals, opponent policy, player policy, seeds, game-data
@@ -200,12 +201,12 @@ divergence ledger with its resolution.
   purchasable items outside battle (HP, status, fainted members); PP is NOT restored between
   battles except by resources the build explicitly accounts for.
 - **FR-013**: The player's in-battle decisions MUST come from a named, fixed decision policy, and
-  every result MUST state which policy was used. The policy MUST be a strong look-ahead
-  player approximating a skilled human, fixed and named per run.
-- **FR-014**: Experience, level-ups, and EV gains during the gauntlet MUST follow the game's formulas
+  every result MUST state which policy was used. The policy MUST be a strong look-ahead player
+  approximating a skilled human.
+- **FR-014**: Experience and level-ups during the gauntlet MUST follow the game's formulas
   (trainer-battle bonus, participation split, held experience items, boosted experience for
   Pokemon from in-game trades) so that "level after beating
-  Cynthia" is computed, not estimated.
+  Cynthia" is computed, not estimated. EVs stay at 85 per stat throughout (FR-008).
 
 **Objective and evaluation**
 
@@ -243,8 +244,8 @@ divergence ledger with its resolution.
 - **Team Candidate**: Six builds plus the shared resources they consume (single-copy TMs and items).
 - **Opponent Trainer**: An Elite Four member or the Champion — party, levels, moves, held items,
   in-battle items, AI behaviour, battle order.
-- **Gauntlet Result**: Outcome of one simulated run — per-battle win/loss, final levels and EVs per
-  member, seed.
+- **Gauntlet Result**: Outcome of one simulated run — per-battle win/loss, final levels per member,
+  seed.
 - **Evaluation Report**: Aggregated results for a candidate — clear rates with confidence intervals,
   expected final average level, level gap, simulation count, policies, provenance.
 - **Divergence Ledger Entry**: A known difference between the simulator and the game, with its
@@ -282,8 +283,7 @@ divergence ledger with its resolution.
 - PP carries over between League battles. Whether PP-restoring items can be bought before the
   Champion is unverified; if the game data shows they can, PP is restored like HP. Finite found PP
   items are out of scope for v1.
-- Level-up move prompts and evolution prompts during the gauntlet follow the build's stated choice;
-  default is keep moves and decline evolution.
+- During the gauntlet, level-up move prompts are always declined and evolution is always declined.
 - A draw or turn-limit battle counts as a loss.
 - The battle simulator's Platinum ruleset is the starting point for mechanics; the game's code wins
   wherever they disagree.

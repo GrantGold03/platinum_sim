@@ -22,6 +22,6 @@ small amount of plain JS.
 | GET | `/api/species?q=gar` | | `[{key, name, types, available, reason?}]` (≤ 25) |
 | POST | `/api/jobs` | `{species: [6 keys], min_clear?: float, seed?: str, budget?: str}` | `201 {id}`; `422` with per-species reasons if invalid |
 | GET | `/api/jobs/{id}` | | `Job` (see data-model) |
-| GET | `/api/jobs/{id}/result.json` · `/result.xlsx` · `/result.csv` | | file; `409` until done |
+| GET | `/api/jobs/{id}/result.json` · `/result.xlsx` · `/result.csv` · `/team.txt` | | file; `409` until done |
 
 Only one job runs at a time (it uses all workers). Later jobs queue.

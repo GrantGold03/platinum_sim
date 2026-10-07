@@ -20,7 +20,16 @@
 
 {"id": 3, "op": "damage_check", "attacker": {...}, "defender": {...}, "move": "earthquake", "field": {...}}
 → {"id": 3, "ok": true, "decomp_rolls": [16 ints], "showdown_rolls": [16 ints]}
+
+{"id": 4, "op": "gauntlet", "team": [...], "seed": "...", "player_policy": "expectimax2-v1",
+ "trainers": ["cynthia"],
+ "start_state": {"levels": [..6], "exp": [..6], "pp": [[..4] ×6], "items": [..6]}}
+→ same response shape as op 2. This is used for the Cynthia top-up (research R8). Without
+  `start_state`, the team starts at its build values.
 ```
+
+Every `gauntlet` response with `"log": "summary"` also includes `state_before` per battle (the
+`start_state` shape), so Cynthia top-ups can resume from a recorded post-Lucian state.
 
 ## Guarantees
 - **Determinism**: the same request with the same seed gives byte-identical output, apart from

@@ -139,9 +139,22 @@ research.md (R5/R7/R8) before continuing.
   - Parse evolutions by array shape exactly as `PP/tools/dataproc/src/speciesproc.c:552-630`.
   - Display name from `pokedex_data.en.name`.
   
-  Tests in `tests/unit/test_species.py`: Bulbasaur and Garchomp full records, with values copied
-  from their `data.json` and cited; a trade evolution (Kadabra → Alakazam `EVO_TRADE`); an
-  item-trade evolution (Onix → Steelix `EVO_TRADE_WITH_HELD_ITEM`); total species count.
+  Tests in `tests/unit/test_species.py` (SC-005: at least 20 species): full records (base stats,
+  types, abilities, exp rate, level-up learnset, TM list, tutor list, evolutions), with values
+  copied from each `data.json` and cited, for 20 species chosen to cover:
+  - all six of Cynthia's species and Garchomp's line (Gible, Gabite);
+  - Bulbasaur;
+  - a mono-type species whose type is repeated;
+  - a species with two abilities and one with `ABILITY_NONE` in slot 2;
+  - a trade evolution (Kadabra → Alakazam `EVO_TRADE`);
+  - an item-trade evolution (Onix → Steelix `EVO_TRADE_WITH_HELD_ITEM`);
+  - a `LEVEL_KNOW_MOVE` evolution (Piloswine → Mamoswine);
+  - a `LEVEL_SPECIES_IN_PARTY` evolution (Mantyke → Mantine);
+  - a form with its own stats (Rotom-Wash);
+  - Eevee (7 evolutions);
+  - Shedinja (Ninjask/Shedinja methods).
+  
+  Also test the total species count.
 - [ ] T013 [P] `src/platsim/decomp/moves.py`: read `PP/res/moves/<name>/data.json`, with the
   accuracy and power normalisation from `PP/tools/dataproc/src/moveproc.c:136-147`.
   - Test Quick Attack priority 1, Swift accuracy 0 (never misses), and Earthquake fields, copied
@@ -258,7 +271,11 @@ research.md (R5/R7/R8) before continuing.
   - which maps use `encounters_unknown_533–557`;
   - honey tree map headers;
   - whether Victory Road or the League is badge-gated;
-  - whether the Snowpoint tutor has a gate.
+  - whether the Snowpoint tutor has a gate;
+  - whether any PP-restoring item (Ether, Max Ether, Elixir, Max Elixir, Leppa Berry as a
+    repeatable source) can be bought, or respawns, before the Champion (`PP/include/data/mart_items.h`,
+    specialty marts, Game Corner, daily hidden items). Write the answer to
+    `data/generated/availability.json` as `pp_restore_between_battles: true|false` with refs.
   
   Record the findings with `file:line` in `FD/research.md` R2 and add a control to T025 for each.
 
@@ -305,7 +322,9 @@ research.md (R5/R7/R8) before continuing.
   - NDJSON loop on stdin/stdout per `FD/contracts/worker-protocol.md`;
   - `hello` op;
   - at startup, load `data/generated/*.json` and `data/divergences.json` and apply every
-    `corrected` data patch to `Dex.mod('gen4').data` before any `Dex.*.get()`;
+    `corrected` data patch to `Dex.mod('gen4').data` before any `Dex.*.get()`. If
+    `data/divergences.json` does not exist yet (it is created by T053), apply no patches and
+    report `divergence_ledger_version: "none"` in `hello`;
   - register the `trainerfullrestore` pseudo-move from T010.
 - [ ] T033 [P] Seed derivation, the same in `sim/seeds.mjs` and `src/platsim/sim/seeds.py`:
   `sodium,` + first 32 hex of `sha256(f"{master}|{run}|{battle}")`.
@@ -319,8 +338,11 @@ research.md (R5/R7/R8) before continuing.
     Create that function with its own unit test.
 - [ ] T035 `sim/gauntlet.mjs`, the `gauntlet` op:
   - run trainers in order;
-  - between battles restore HP, status and fainted members, carry PP over (FR-012), and keep
+  - between battles restore HP, status and fainted members; carry PP over unless
+    `pp_restore_between_battles` from T026 is true, in which case restore PP too (FR-012); keep
     levels and exp;
+  - accept an optional `start_state` (levels, exp, PP, items) and return `state_before` for each
+    battle when `log` is `summary` or `full` (`FD/contracts/worker-protocol.md`, op 4);
   - turn limit or draw counts as a loss;
   - `stop_on_loss`;
   - returns the result object from the worker contract.
@@ -402,7 +424,8 @@ research.md (R5/R7/R8) before continuing.
   
   The policy is named `expectimax2-v1`.
 - [ ] T051 `sim/test/determinism.test.mjs`: the same gauntlet request run twice gives byte-identical
-  output, for both policies; a different seed changes the output (positive control).
+  output, for both policies; a different seed changes the output (positive control). Also assert
+  over 200 gauntlets that every p1 choice is a `move` or `switch`, never an item (FR-011).
 - [ ] T052 `src/platsim/sim/pool.py`:
   - start W workers (default `os.cpu_count()`);
   - `hello` check that provenance matches pins;
@@ -441,6 +464,21 @@ research.md (R5/R7/R8) before continuing.
   Record rates, CIs and run time in `FD/research.md` R7. If it fails, improve the leaf evaluation;
   do not relabel the policy as strong.
 
+- [ ] T057 `src/platsim/sim/champion.py`, the Cynthia top-up (FR-017, SC-003, research R8
+  "Champion share"):
+  - from the full gauntlet results of a candidate, collect the `state_before` of every Cynthia
+    battle;
+  - run Cynthia-only gauntlets (`trainers: ["cynthia"]`, `start_state` drawn with replacement
+    from those states, seeds derived with battle index 99 so they never collide with full runs)
+    until Cynthia's Wilson half-width meets the budget preset's target **and** her battle count
+    exceeds every Elite Four member's;
+  - return her win rate as P(win | reached Cynthia) with its CI, separately from the gauntlet
+    clear rate.
+  
+  If no full run reached Cynthia, report that and run no top-up; never invent a start state.
+  Test in `tests/integration/test_champion_topup.py` that the counts meet the rule, that the
+  result is deterministic for a fixed seed, and that the zero-reach case is handled.
+
 **Checkpoint B**: data extracted, ledger controls pass, validator passes, worker deterministic, AI
 reaches no unimplemented opcode, policy benchmark recorded. Update `RUN-STATE.md`.
 
@@ -457,13 +495,13 @@ qualifying team" report. Running it again gives identical output. The web flow V
 
 ### Tests for User Story 1
 
-- [ ] T057 [P] [US1] `tests/integration/test_optimize_small.py`: optimize with `--budget quick` on a
+- [ ] T058 [P] [US1] `tests/integration/test_optimize_small.py`: optimize with `--budget quick` on a
   fixed six-species set and seed. Assert:
   - the output passes `validator.validate`;
   - the report has every provenance field;
   - the `quick` budget is labelled in the output;
   - two runs give identical JSON.
-- [ ] T058 [P] [US1] `tests/integration/test_web.py` (FastAPI TestClient):
+- [ ] T059 [P] [US1] `tests/integration/test_web.py` (FastAPI TestClient):
   - species search returns Garchomp for `gar`, and the post-game-only species are flagged;
   - POST with 5 species gives 422;
   - a valid POST gives 201;
@@ -472,44 +510,47 @@ qualifying team" report. Running it again gives identical output. The web flow V
 
 ### Implementation for User Story 1
 
-- [ ] T059 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c. An ability has a battle effect
+- [ ] T060 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c. An ability has a battle effect
   iff its `ABILITY_*` constant is referenced anywhere under `PP/src/battle/` (grep at extract
   time; store the refs).
   - Screening runs 200 paired gauntlets per ability; it keeps slot 1 when there is no significant
     difference and records `ability_reason`.
   - Test with a positive control: an ability known to be referenced in battle code yields
     has-effect with refs.
-- [ ] T060 [P] [US1] `src/platsim/optimizer/candidates.py`: for each member, enumerate:
+- [ ] T061 [P] [US1] `src/platsim/optimizer/candidates.py`: for each member, enumerate:
   - sources (wild / gift / NPC trade, FR-008b);
   - legal moves at a level via `legality/movesources.py`;
   - prune moves per research R8 (strictly dominated: same type, category and accuracy class,
     lower power, no secondary effect);
   - held items from the ledger.
-- [ ] T061 [US1] `src/platsim/optimizer/resources.py`: assign single-copy TMs and limited items
+- [ ] T062 [US1] `src/platsim/optimizer/resources.py`: assign single-copy TMs and limited items
   across the team (a member may only take a copy if one is left). Candidates that violate this are
   never generated.
-- [ ] T062 [US1] `src/platsim/optimizer/screen.py`: successive halving over candidate teams at a
+- [ ] T063 [US1] `src/platsim/optimizer/screen.py`: successive halving over candidate teams at a
   fixed level vector, with paired seeds. Rounds of 100 → 200 → 400 runs, keeping the top third.
-- [ ] T063 [US1] `src/platsim/optimizer/levels.py`:
+- [ ] T064 [US1] `src/platsim/optimizer/levels.py`:
   - bisection on a uniform start-level offset to the lowest level that meets the threshold;
   - then per-member descent while the final gap stays ≤ 10 and the threshold holds;
   - the objective is the simulated expected final average level (FR-016);
   - borderline handling per research R8.
-- [ ] T064 [US1] `src/platsim/optimizer/run.py`: orchestrate prune → ability screen → screen →
-  level search → confirm (≥ 2,000 paired runs on the winner and runner-up, FR-019).
+- [ ] T065 [US1] `src/platsim/optimizer/run.py`: orchestrate prune → ability screen → screen →
+  level search → confirm (run counts per the budget preset in `FD/research.md` R8; paired runs on
+  the winner and runner-up, FR-019) → Cynthia top-up via T057 for the winner.
   - Checkpoint to `runs/<job-id>/state.json` after each stage and resume from it.
   - Run `validator.validate` on the final team; a violation is a hard error.
   - Emit a "no qualifying team" report with the best rate and levels when nothing qualifies.
-- [ ] T065 [US1] `platsim optimize` in `src/platsim/cli.py` per `FD/contracts/cli.md`: species
+- [ ] T066 [US1] `platsim optimize` in `src/platsim/cli.py` per `FD/contracts/cli.md`: species
   name/key resolution with closest-match errors, `--min-clear`, `--seed`, `--workers`, `--budget`.
-  Writes JSON, xlsx and csv into `runs/<job-id>/`.
-- [ ] T066 [US1] `src/platsim/web/app.py` per `FD/contracts/http-api.md`:
+  Writes JSON, xlsx, csv and `team.txt` (Showdown export, via T027) into `runs/<job-id>/`, as the
+  constitution's Interface rule requires. T058 asserts `team.txt` exists and re-imports to the
+  same team.
+- [ ] T067 [US1] `src/platsim/web/app.py` per `FD/contracts/http-api.md`:
   - bind to 127.0.0.1;
   - `/api/species` reads the ledger;
   - a single-job FIFO queue runs `optimizer.run` in a background thread with progress callbacks;
   - job state is persisted in `runs/<id>/job.json`;
   - `platsim serve` subcommand.
-- [ ] T067 [P] [US1] `src/platsim/web/static/index.html`, `style.css`, `app.js` (plain JS, no
+- [ ] T068 [P] [US1] `src/platsim/web/static/index.html`, `style.css`, `app.js` (plain JS, no
   framework):
   - search-as-you-type list, with a toggle to show excluded species and their reasons;
   - six slots with remove;
@@ -520,7 +561,7 @@ qualifying team" report. Running it again gives identical output. The web flow V
   
   Must work at phone width.
 
-**Checkpoint**: US1 is complete when T057 and T058 pass and quickstart V8 and V9 have been run
+**Checkpoint**: US1 is complete when T058 and T059 pass and quickstart V8 and V9 have been run
 with their output recorded.
 
 ---
@@ -533,17 +574,28 @@ with their output recorded.
 twice gives identical reports, with per-trainer rates and CIs, expected final levels and loss
 causes. An illegal team exits 2 with its violations.
 
-- [ ] T068 [P] [US2] `src/platsim/report/losses.py`: from gauntlet results (`log: summary`),
+- [ ] T069 [P] [US2] `src/platsim/report/losses.py`: from gauntlet results (`log: summary`),
   tally which opponent Pokémon were on the field when the player's last member fainted, per
   trainer. Test with synthetic results.
-- [ ] T069 [US2] `platsim evaluate TEAM` in `src/platsim/cli.py`:
+- [ ] T070 [US2] `platsim evaluate TEAM` in `src/platsim/cli.py`:
   - accepts JSON or Showdown export;
   - validate first (exit 2 on violations);
   - run N paired gauntlets through `pool.py`;
   - stats via `stats.py`;
-  - write the reports via T055 with loss causes.
-- [ ] T070 [US2] `tests/integration/test_evaluate.py` (quickstart V7): determinism across two runs;
+  - Cynthia top-up via T057;
+  - write the reports via T055 with loss causes, plus `team.txt` (Showdown export, via T027).
+- [ ] T071 [US2] `tests/integration/test_evaluate.py` (quickstart V7): determinism across two runs;
   CI half-width ≤ 2 points at 2,000 runs; an illegal fixture exits 2.
+
+- [ ] T072 [US2] `tests/integration/test_final_levels.py` (SC-006):
+  - add `exp_gain(...)` to `src/platsim/decomp/exp.py`: an independent Python implementation of
+    the decomp exp formula (same `file:line` refs as T036);
+  - run 200 seeded gauntlets of `tests/fixtures/reference_team.json` with `log: "full"`, recompute
+    each run's final levels in Python from the battle log (who was active when each opponent
+    fainted, held items, traded flag), and assert they equal the worker's final levels exactly;
+  - assert the mean final average level matches the Python value within 1 level;
+  - include one fully hand-worked run in `tests/fixtures/reference_team_handcalc.md`, showing the
+    arithmetic for every exp award.
 
 **Checkpoint**: US2 works on its own with any legal fixed team.
 
@@ -556,11 +608,11 @@ causes. An illegal team exits 2 with its violations.
 **Independent Test**: quickstart V3 and V4 outputs match the expected values, each line with a
 `file:line` ref. Divergence entries are queryable.
 
-- [ ] T071 [US3] `platsim explain SUBJECT` in `src/platsim/cli.py`:
+- [ ] T073 [US3] `platsim explain SUBJECT` in `src/platsim/cli.py`:
   - subjects `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`,
     `divergence:<id>`;
   - prints availability entries (phase, quantity, gates) or trainer details, each with `src` refs.
-- [ ] T072 [US3] `tests/integration/test_explain.py`:
+- [ ] T074 [US3] `tests/integration/test_explain.py`:
   - Cynthia's party output (V3);
   - Abra pre-Champion trade and Magikarp Foppa post-game (V4);
   - a Game Corner TM shows "unlimited";
@@ -572,15 +624,15 @@ causes. An illegal team exits 2 with its violations.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T073 [P] `README.md`: what the tool does, setup (quickstart prerequisites), CLI and web usage,
+- [ ] T075 [P] `README.md`: what the tool does, setup (quickstart prerequisites), CLI and web usage,
   how to read the spreadsheet, and the provenance and divergence concepts.
-- [ ] T074 Run every scenario V1–V9 in `FD/quickstart.md` and record the commands and real outputs
+- [ ] T076 Run every scenario V1–V9 in `FD/quickstart.md` and record the commands and real outputs
   in `FD/validation-log.md`. Record the quickstart benchmarks (runs/s per policy, full optimize
   wall time) in `FD/research.md` R8.
-- [ ] T075 Constitution compliance review against `.specify/memory/constitution.md` Principles I–V.
+- [ ] T077 Constitution compliance review against `.specify/memory/constitution.md` Principles I–V.
   Record findings in `FD/validation-log.md`, and fix or justify each in plan.md Complexity
   Tracking.
-- [ ] T076 Final `RUN-STATE.md` update: done, open risks (AI fidelity without an emulator), next
+- [ ] T078 Final `RUN-STATE.md` update: done, open risks (AI fidelity without an emulator), next
   steps.
 
 ---
@@ -589,7 +641,7 @@ causes. An illegal team exits 2 with its violations.
 
 - **Setup (T001–T007)**: T001 first; T002, T003, T005, T006 and T007 in parallel after it; T004
   after T003.
-- **Foundational (T008–T056)** blocks every story. Inside it:
+- **Foundational (T008–T057)** blocks every story. Inside it:
   - Spikes T008–T010 run first and in parallel. Checkpoint A may change later tasks.
   - Readers T011–T017 run in parallel; T018 is independent of them. Then T019 → T020.
   - Availability: T021 and T022 need T018; T023 needs T018 and T021; T024 needs T022 and T023;
@@ -601,11 +653,12 @@ causes. An illegal team exits 2 with its violations.
     (parallel) → T045 → T046 → T047 → T048. T049 needs T037. T050 needs T045–T047 and T049. Then
     T051, then T052.
   - T053 needs T019 and T032. T054 and T055 are independent. T056 needs T050 and T052.
-- **US1 (T057–T067)** needs Phase 2. T059 and T060 run in parallel → T061 → T062 → T063 → T064
-  → T065 → T066. T067 can be built in parallel with T059–T065.
-- **US2 (T068–T070)** needs Phase 2 only, so it can be done before or alongside US1.
-- **US3 (T071–T072)** needs T024 and T053 only.
-- **Polish (T073–T076)** comes after the desired stories.
+    T057 needs T035, T052 and T054.
+- **US1 (T058–T068)** needs Phase 2. T060 and T061 run in parallel → T062 → T063 → T064 → T065
+  → T066 → T067. T068 can be built in parallel with T060–T066.
+- **US2 (T069–T072)** needs Phase 2 only, so it can be done before or alongside US1.
+- **US3 (T073–T074)** needs T024 and T053 only.
+- **Polish (T075–T078)** comes after the desired stories.
 
 ### User story completion order
 
@@ -626,10 +679,10 @@ T011 constants.py  T012 species.py  T013 moves.py  T014 items.py  T015 tutors.py
 T040 flow.mjs  T041 battler.mjs  T042 moves.mjs  T043 damage.mjs  T044 misc.mjs
 
 # US1:
-T059 abilities.py  T060 candidates.py  T067 static web page
+T060 abilities.py  T061 candidates.py  T068 static web page
 
 # US2 alongside US1:
-T068 losses.py
+T069 losses.py
 ```
 
 ## Implementation Strategy

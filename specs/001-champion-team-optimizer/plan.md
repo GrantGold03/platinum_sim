@@ -105,13 +105,14 @@ src/platsim/
 ├── decomp/                    # readers for pokeplatinum sources (json, .s scripts, .h tables, csv)
 │   ├── constants.py           #   generated/*.txt enums
 │   ├── species.py, moves.py, items.py, tutors.py, trainers.py, exp.py
+│   ├── stats.py               #   decomp stat formula (reference for Showdown set conversion)
 │   └── scripts.py             #   field-script parser (gift/item/warp/gate commands)
 ├── availability/              # ledger, map graph, gate rules (R2)
 ├── legality/                  # independent validator (Constitution III)
 ├── divergence/                # Showdown-vs-decomp comparison + ledger
 ├── sim/                       # worker pool client (NDJSON), seeds
 ├── optimizer/                 # pruning, successive halving, level search, ability screening
-├── stats.py                   # Wilson CI, paired comparison
+├── stats.py                   # Wilson CI, paired comparison (statistics, not game stats)
 ├── report/                    # JSON, xlsx/csv writers
 ├── web/                       # FastAPI app + static/index.html, style.css, app.js
 └── cli.py

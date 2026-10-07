@@ -258,6 +258,23 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
   ≤ 2 points. When the interval straddles the threshold, the result is marked `borderline` and
   more runs are added, up to a cap, before deciding.
 - **Ability screening** (FR-008c): 200 paired runs; equal if not significant.
+- **Champion share** (FR-017, SC-003): `stop_on_loss` means Cynthia is only reached by runs that
+  beat all four Elite Four members. After the full runs, the tool **tops up Cynthia-only battles**.
+  It starts each one from a team state recorded after Lucian in a full run that reached Cynthia
+  (levels, exp, PP, held items), drawing those states with replacement and using new seeds.
+  - It keeps going until Cynthia's win-rate interval is within the target **and** she has more
+    battles than any Elite Four member.
+  - Her win rate is reported separately, as P(win | reached Cynthia).
+  - The full-gauntlet clear rate still comes only from full runs.
+- **Budget presets** (FR-018). The CI target applies to both the gauntlet and Cynthia:
+
+  | Preset | Screening rounds | Ability screen | Confirm (per finalist) | CI half-width target | Meets SC-003? |
+  |---|---|---|---|---|---|
+  | `standard` (default) | 100 → 200 → 400 | 200 | ≥ 2,000, more until the target is met | ±2 points | yes |
+  | `thorough` | 200 → 400 → 800 | 400 | ≥ 5,000, more until the target is met | ±1.5 points | yes |
+  | `quick` | 50 → 100 → 200 | 100 | 500 | none | **no**: labelled `quick` in every output, for testing only |
+
+  Only `standard` and `thorough` can produce a result marked `qualified`.
 - **Never silently loosened**: lower run counts only via an explicit `--budget` flag, and the
   report shows the loosened settings.
 
