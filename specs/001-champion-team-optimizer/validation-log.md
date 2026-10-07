@@ -330,8 +330,9 @@ $ cd sim && node --test test/*.test.mjs → tests 243, pass 243, fail 0, exit 0
 $ uv run pytest -q tests/integration/test_pool.py → 6 passed, exit 0
 ```
 - **greedy-v1**: expected damage = the mean of the 16 decomp rolls × accuracy. Status, variable-power, fixed and OHKO
-  moves score 0 (documented as conservative). It switches only when forced. Hand-computed check: Gyarados vs
-  Togekiss gives Surf 42.5 > Hydro Pump 43.5×… (see the test, which cites decomp lines).
+  moves score 0 (documented as conservative). It switches only when forced. Hand-computed check: Gyarados L60 vs
+  Togekiss L60 move scores `[42.5, 0, 0, 43.5]`; greedy picks Surf over Hydro Pump despite Hydro Pump's higher
+  nominal power × accuracy (see `sim/test/greedy.test.mjs`, which cites decomp lines).
 - **Pool**:
   - Determinism: 64 gauntlets give the same results on 4 workers as on 1.
   - Crash recovery: a worker frozen with SIGSTOP and then SIGKILLed is restarted and its request is re-run.
