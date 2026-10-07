@@ -111,3 +111,17 @@ $ node --test sim/test/seeds.test.mjs
   (0/20) is also worked by hand.
 - **Models**: these hold structure only; legality is enforced by T029. The Showdown export round trip is defined
   as `import(export(t)) == showdown_set()` for each build, because the export format cannot carry provenance.
+
+## 2026-10-07: T055 report writers (agent; re-run by the coordinator)
+
+```
+$ uv run pytest tests/unit/test_reports.py -q
+11 passed in 0.17s
+pytest exit=0
+```
+- Uses synthetic fixtures only. The report writer refuses contradictory reports, e.g. `quick` together with
+  `qualified`.
+- `team.txt` for a no-qualifying report is written so that `import_team` rejects it.
+- The import into Showdown itself is **UNVERIFIED**.
+- **Infrastructure**: pytest temp directories now go in `/dev/shm/platsim-pytest-<pid>` (removed at exit;
+  `tests/conftest.py`) and the pytest cache is disabled, so no temp files land in `/tmp` or the repo.

@@ -27,3 +27,5 @@ packages = ["src/platsim"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# No .pytest_cache in the repo. Per-process temp dir under /dev/shm: see tests/conftest.py.
+addopts = "-p no:cacheprovider"

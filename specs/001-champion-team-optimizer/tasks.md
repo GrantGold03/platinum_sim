@@ -453,7 +453,7 @@ research.md (R5/R7/R8) before continuing.
   - mean and CI of final average level.
   
   Tests against textbook values in `tests/unit/test_stats.py`.
-- [ ] T055 [P] Report writers:
+- [X] T055 [P] Report writers:
   - `src/platsim/report/json_report.py`: the EvaluationReport from data-model;
   - `src/platsim/report/xlsx.py`: the sheets Team, Evaluation, Resources, Provenance and
     Divergences, exactly per `FD/contracts/spreadsheet.md`;
