@@ -20,7 +20,7 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
 
 ## Next
 - Wait for the user's review of Checkpoint A, then T011+ (decomp readers).
-- Open question for the user: how many PP Ups does the player's team have? (Default: none.)
+- Decided: no PP Ups for anyone (spec FR-008); T034 resets PP to base.
 
 ## Traps
 - Showdown applies 3 PP Ups to every move (`sim/pokemon.ts:361`); T034 must reset PP.

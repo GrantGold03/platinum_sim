@@ -332,7 +332,10 @@ research.md (R5/R7/R8) before continuing.
     function via a subprocess.
 - [ ] T034 [P] `sim/team.mjs`: Build JSON → Showdown `PokemonSet` (level, ivs, evs, nature,
   ability, item, moves). Opponent party: IV 30 all, EV 0, nature and ability from
-  `trainers.json`.
+  `trainers.json`. For **both** sides, after the Battle is constructed, reset every move slot to
+  base PP (`maxpp = pp = move.pp`, `ppUps = 0`), because Showdown applies 3 PP Ups
+  (`pokemon-showdown/sim/pokemon.ts:361`) and the spec says no PP Ups (FR-008, research R5). Test
+  that Cynthia's Spiritomb Dark Pulse has 15 PP and so does the same move on a player build.
   - Test that a converted Garchomp at a known level gets the stats computed by the decomp formula
     (`PP/src/pokemon.c:564`) via a Python reference function in `src/platsim/decomp/stats.py`.
     Create that function with its own unit test.

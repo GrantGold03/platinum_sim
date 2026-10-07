@@ -204,8 +204,8 @@ Pokémon because `Pokemon_Init` zeroes its data (`pp/src/pokemon.c:294`), so tra
 - PP carries over between League battles, so this matters.
 - **T034 MUST overwrite `maxpp`/`pp` after construction.** For opponents: base PP.
 - For the player: PP Ups/PP Max are items whose pre-Champion availability is finite or unknown. The
-  spec does not yet say how many the player has, so **this is an open question for the user**.
-  Until it is answered, the safe default is base PP.
+  user decided (2026-10-07): **no PP Ups for the player either**, so every move has base PP (spec
+  FR-008).
 
 ## R6. Opponent AI: running the game's own AI scripts
 

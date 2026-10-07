@@ -33,6 +33,7 @@ with the decomp"
 - Q: How is the ability chosen for species with two abilities? → A: Test both and keep the better
   one; do not spend extra simulations when the difference is negligible or an ability only matters
   outside battle.
+- Q: Do the player's Pokemon have PP Ups or PP Max applied? → A: No. Every move has base PP.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -167,7 +168,8 @@ divergence ledger with its resolution.
   received from an in-game NPC trade or gift MUST use whatever IVs, nature (from its fixed
   personality value), and other stats the game code fixes for it; values the game code does not
   fix fall back to the defaults above. Because EVs start at the 510 maximum, no EVs are gained
-  during the gauntlet.
+  during the gauntlet. No PP Ups or PP Max are applied: every move has its base PP, for the player
+  and (as in the game data) for opponents.
 - **FR-008a**: In-game NPC trades are within one cartridge and are allowed (FR-005 forbids only
   trades with another game or cartridge). Their Pokemon MUST be treated as not originally the
   player's, so they receive the game's boosted experience during the gauntlet.
