@@ -343,3 +343,14 @@ $ uv run pytest -q tests/integration/test_pool.py → 6 passed, exit 0
 - **Throughput** (greedy player, opponents still `placeholder-default`, load from other agents present): about 96–118
   gauntlets/s warmed on 8–16 workers; 19.6/s on 1 worker. The CPU is a Ryzen 7 5700X3D, 8 cores / 16 threads.
 - **Docs**: the stale resist-berry note in the `sim/damage.mjs` header was corrected.
+
+## 2026-10-07: T057 Cynthia top-up (agent; re-run by the coordinator)
+
+`uv run pytest -q tests/unit/test_reports.py tests/integration/test_champion_topup.py` → 17 passed, exit 0.
+- **Real test** (player greedy-v1, opponent still `placeholder-default`, so NOT a real evaluation): 200 full runs, with
+  every League member fought 200 times and Cynthia won 71. The top-up added 1,981 Cynthia battles. Cynthia's total
+  was 2,181 battles, rate 0.3498, CI [0.3301, 0.3701], half-width 0.019999. Both rules were met.
+- **Cap**: `max_topup=10` gives `cap_hit` with `target_met=False`.
+- **Zero reach**: when nobody reaches Cynthia, no top-up runs.
+- **Determinism**: results are the same with 3 and 5 workers.
+- **Budget table**: `src/platsim/budget.py` is now the single preset table; `report/json_report.py` imports from it.

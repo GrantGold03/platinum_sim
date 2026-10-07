@@ -467,7 +467,7 @@ research.md (R5/R7/R8) before continuing.
   Record rates, CIs and run time in `FD/research.md` R7. If it fails, improve the leaf evaluation;
   do not relabel the policy as strong.
 
-- [ ] T057 `src/platsim/sim/champion.py`, the Cynthia top-up (FR-017, SC-003, research R8
+- [X] T057 `src/platsim/sim/champion.py`, the Cynthia top-up (FR-017, SC-003, research R8
   "Champion share"):
   - from the full gauntlet results of a candidate, collect the `state_before` of every Cynthia
     battle;

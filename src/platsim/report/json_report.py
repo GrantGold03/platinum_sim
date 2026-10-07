@@ -31,8 +31,11 @@ from typing import Any
 
 from platsim.legality.models import TeamCandidate
 
-BUDGET_PRESETS = frozenset({"standard", "thorough", "quick"})
-QUALIFYING_PRESETS = frozenset({"standard", "thorough"})  # research.md R8
+from platsim.budget import PRESETS as _PRESETS
+
+# Single source of truth: platsim.budget (research.md R8).
+BUDGET_PRESETS = frozenset(_PRESETS)
+QUALIFYING_PRESETS = frozenset(n for n, p in _PRESETS.items() if p.qualifying)
 DIVERGENCE_AREAS = frozenset({"data", "mechanics", "ai", "exp"})
 DIVERGENCE_RESOLUTIONS = frozenset({"corrected", "accepted"})
 
