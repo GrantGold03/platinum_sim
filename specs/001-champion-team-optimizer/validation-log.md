@@ -149,3 +149,21 @@ $ git -C pokeplatinum status --porcelain | wc -l
   - Gift and trainer Pokémon take their ability from the base form (`pokemon.c:473-484`).
   - Experience 0 gives level 1.
   - Form personal IDs are 496 + their index (Rotom-Wash = 504).
+
+## 2026-10-07: T037 damage formula port (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/damage.test.mjs
+# damage cross-check: 109 combinations, 102 exact 16-roll matches, 7 known divergences, 6 zero-damage (immunity) cases
+# tests 114   # pass 114   # fail 0   node exit=0
+```
+- **Divergences** (game behaviour kept in the port; listed in `sim/test/damage_divergences.json` for T053): type-chart
+  sequential truncation; Sniper before variance; Expert Belt rounding; final-modifier chaining; base-power modifier
+  rounding (Dry Skin); stat modifier before stages (Choice Band at -1); Metronome-item float (analytic only).
+- **Not covered by the port** (listed in the module header): variable-power and variable-type moves (the caller
+  supplies them), fixed, OHKO and multi-hit moves, Substitute, Focus Sash, Sturdy and Endure, and HP capping.
+- **OPEN, resist berries (Occa, etc.)**: the coordinator confirmed that `HOLD_EFFECT_WEAKEN_SE_*` and
+  `HOLD_EFFECT_WEAKEN_NORMAL` appear only in `src/battle/trainer_ai/script.s` and `res/items/data/*.json`. No battle C,
+  .s, .inc or .h file references them by name. The damage-halving code has not been located in the decomp. Until it
+  is, the optimizer MUST NOT offer resist berries (Constitution I). A follow-up search is needed (e.g. effectParam
+  plus a table lookup).

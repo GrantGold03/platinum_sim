@@ -365,7 +365,7 @@ research.md (R5/R7/R8) before continuing.
   Tests in `sim/test/exp.test.mjs`: at least 8 hand-computed cases (show the arithmetic in
   comments), including multi-level gain, an Exp. Share holder that did not participate, and a
   traded Lucky Egg holder.
-- [ ] T037 `sim/damage.mjs`: port `BattleSystem_CalcMoveDamage` (`PP/src/battle/battle_lib.c:6601-7080`)
+- [X] T037 `sim/damage.mjs`: port `BattleSystem_CalcMoveDamage` (`PP/src/battle/battle_lib.c:6601-7080`)
   plus the crit multiplier, the variance (`:7081`) and the type chart (`:2399`, `:2560`), returning
   all 16 rolls.
   - Tests in `sim/test/damage.test.mjs`: ≥ 50 combinations (physical/special, STAB, ×4/×0.25/×0

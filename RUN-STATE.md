@@ -23,6 +23,7 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
 - Decided: no PP Ups for anyone (spec FR-008); T034 resets PP to base.
 
 ## Traps
+- Resist berries (HOLD_EFFECT_WEAKEN_SE_*): their battle effect is not located in the decomp C yet, so they are excluded from the optimizer until found (validation-log, T037).
 - Showdown applies 3 PP Ups to every move (`sim/pokemon.ts:361`); T034 must reset PP.
 - Showdown Taunt blocks the Full Restore pseudo-move; T047 must patch this.
 - The session scratchpad disappeared mid-session; `/dev/shm` was used once for throughput output and

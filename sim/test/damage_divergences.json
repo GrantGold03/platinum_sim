@@ -1,0 +1,51 @@
+[
+  {
+    "id": "type-chart-sequential-truncation",
+    "description": "The game applies each type-chart row in table order with integer truncation (x5/10 or x20/10 per row, BattleSystem_Divide), so a resisted-then-super-effective dual type (e.g. Fire vs Water/Grass, Ice vs Water/Flying) can lose 1 HP: floor(d/2)*2. Showdown sums effectiveness first and multiplies x2 then /2, so the pair cancels exactly. Game damage <= Showdown by up to 1.",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2612-2646 (row walk), :7545-7547 (ApplyTypeMultiplier divide), :2403-2404 (FIRE/WATER before FIRE/GRASS), :3599-3618 (BattleSystem_Divide)",
+    "showdown_ref": "pokemon-showdown/data/mods/gen4/scripts.ts:111-125 (typeMod summed, doubled then halved)",
+    "example": "Garchomp Flamethrower vs Ludicolo: port/game rolls are even (e.g. 60) where Showdown gives the odd value (61); hand case in damage.test.mjs: 41 -> STAB 61 -> x5/10 = 30 -> x20/10 = 60 (Showdown 61). Also Milotic Ice Beam vs Gyarados."
+  },
+  {
+    "id": "sniper-after-variance",
+    "description": "Game: a Sniper crit sets criticalMul = 3 and multiplies the base damage before the random roll. Showdown: crit x2 before the roll, then Sniper as a chained x1.5 in the final ModifyDamage step after random, STAB and type. Rolls differ by about 1-3 HP in either direction.",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:7142-7144 (criticalMul 3), pokeplatinum/src/battle/battle_script.c:1344 (damage *= criticalMul before variance at :1385)",
+    "showdown_ref": "pokemon-showdown/data/abilities.ts:4359-4366 (sniper onModifyDamage chainModify(1.5)); pokemon-showdown/data/mods/gen4/scripts.ts:84-87,130",
+    "example": "Aaron's Drapion (Sniper) crit X-Scissor vs Lucian's Alakazam: port [310,314,318,...,366], Showdown [309,312,318,...,366]."
+  },
+  {
+    "id": "expert-belt-rounding",
+    "description": "Game: Expert Belt = damage*(100+20)/100, floored. Showdown: chainModify([4915,4096]) with 4096-based round-to-nearest. Showdown is 1 HP higher on some rolls.",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2663-2665; effectParam 20 from pokeplatinum/res/items/data/expert_belt.json",
+    "showdown_ref": "pokemon-showdown/data/items.ts:1901-1914 (expertbelt), pokemon-showdown/sim/battle.ts:2336-2347 (modify rounding)",
+    "example": "Cynthia's Lucario (Expert Belt) Aura Sphere vs Tyranitar: port 321 vs Showdown 322 on the lowest roll (pre-belt 268: game 32160/100 = 321; Showdown (268*4915+2047)>>12 = 322)."
+  },
+  {
+    "id": "final-modifier-chaining",
+    "description": "Game applies Filter/Solid Rock (BattleSystem_Divide(d*3,4)) and then Expert Belt (d*120/100) as two separately floored steps. Showdown chains 0.75 and 1.2 into one 4096-based modifier (3686/4096) and rounds once. Showdown 1 HP higher on some rolls. (Filter/Solid Rock alone never diverged: after a x2/x4 the damage is even, where floor and Showdown rounding agree.)",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2657-2667",
+    "showdown_ref": "pokemon-showdown/data/abilities.ts:1284-1290 (filter chainModify(0.75)), pokemon-showdown/data/items.ts:1901-1914, pokemon-showdown/sim/battle.ts:2325-2334 (chainModify)",
+    "example": "Spiritomb (Expert Belt) Shadow Ball vs Lucian's Mr. Mime (Filter): port [80,80,82,...,97], Showdown [81,81,83,...,97]."
+  },
+  {
+    "id": "bp-modifier-rounding",
+    "description": "Game scales move power with floored integer math at each step (e.g. Dry Skin power*125/100). Showdown applies base-power modifiers through chainModify with 4096-based round-to-nearest. Seen on Dry Skin; any other power modifier whose exact result has a fractional part >= ~0.5 can diverge the same way (type items, Muscle Band/Wise Glasses, Iron Fist, Rivalry, Technician stacks) — not observed in the tested cases for those.",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:6845-6847 (Dry Skin)",
+    "showdown_ref": "pokemon-showdown/data/abilities.ts:1098-1112 (dryskin onSourceBasePower chainModify(1.25)), pokemon-showdown/sim/battle.ts:2336-2347",
+    "example": "Flint's Magmortar Flamethrower (power 95) vs Dry Skin Toxicroak: game power 95*125/100 = 118, Showdown (95*5120+2047)>>12 = 119; rolls port [127..151] vs Showdown [129..153]."
+  },
+  {
+    "id": "stat-modifier-before-stages",
+    "description": "Game multiplies the raw stat by Choice Band/Specs, Huge Power, Hustle, Guts, Marvel Scale, Soul Dew etc. first, and applies the stat-stage fraction last (inside the damage expression). Showdown applies the stage first (calculateStat) and the Modify(Atk|SpA|Def|SpD) multipliers after, rounded. Diverges when a stage is non-zero (seen with -1 Atk; +1 matched in the tested case).",
+    "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:6724-6729 (Choice items on raw stat), :6950-6956 (stage fraction applied in the damage expression)",
+    "showdown_ref": "pokemon-showdown/sim/battle-actions.ts:1689-1695 (calculateStat with boosts, then Modify* events), pokemon-showdown/sim/pokemon.ts:583-593, pokemon-showdown/data/items.ts:974-977 (choiceband chainModify(1.5))",
+    "example": "Choice Band Garchomp (Atk 238) at -1 Atk: game floor(238*150/100)=357 -> 357*10/15 = 238; Showdown floor(238/1.5)=158 -> modify(158,1.5) = 237. EQ vs Infernape: port [320,326,...,380] vs Showdown [320,324,...,378]."
+  },
+  {
+    "id": "metronome-item-float",
+    "description": "Game: Metronome item damage*(10+turns)/10 in integers. Showdown gen4: damage * (1 + numConsecutive/10) in floating point, floored after Phase2; e.g. 45*1.4 = 62.999... -> 62 where the game gives 63. ANALYTIC ONLY: the battle case tested (2 consecutive) matched; the float error was found by enumerating d=1..4999, n=1..10 (143 differing pairs). Mapping Showdown numConsecutive to the game's metronomeTurns counter is UNVERIFIED.",
+    "decomp_ref": "pokeplatinum/src/battle/battle_script.c:1350-1352",
+    "showdown_ref": "pokemon-showdown/data/mods/gen4/items.ts:320-340 (metronome onModifyDamagePhase2)",
+    "example": "pre-variance damage 45, 4 consecutive uses: game 63, Showdown 62 (analytic)."
+  }
+]
