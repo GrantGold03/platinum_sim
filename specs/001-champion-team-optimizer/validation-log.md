@@ -167,3 +167,22 @@ $ cd sim && node --test test/damage.test.mjs
   .s, .inc or .h file references them by name. The damage-halving code has not been located in the decomp. Until it
   is, the optimizer MUST NOT offer resist berries (Constitution I). A follow-up search is needed (e.g. effectParam
   plus a table lookup).
+
+## 2026-10-07: resist berries located (resolves the T037 OPEN item)
+
+The effect is in a battle **subscript**, not in C. `res/battle/scripts/subscripts/subscript_type_resist_berry.s` is called
+from `subscript_update_hp.s:10`, which runs from `BattleControllerPlayer_UpdateHP`
+(`src/battle/battle_controller_player.c:~3435-3438`). The subscript compares raw hold-effect numbers 19–35 and raw type
+IDs; it does not use the `HOLD_EFFECT_WEAKEN_*` names, which is why the name search missed it. Coordinator check of the
+file:
+- line 21: `== 35` → Chilan, which needs a Normal-type move and no super-effective check;
+- line 22: the super-effective gate;
+- the line after `_245`: `DivideVarByValue BTLVAR_HP_CALC_TEMP, 2`, then `RemoveItem`.
+
+The halving applies to the final HP change, rounded toward zero with a minimum of 1 (`BattleSystem_Divide`,
+`battle_lib.c:3599-3619`), after the Focus Sash and Endure clamp. Counter, Mirror Coat and Shell Bell bookkeeping use the
+full damage. No berry triggers on substitute hits.
+- **Decision**: resist berries are allowed. The ledger (T053) gets a divergence entry: Showdown halves inside its damage
+  calculation (so Counter sees the halved damage, and the order relative to Sash differs).
+- **Lesson for every later task**: game mechanics also live in `res/battle/scripts/**/*.s` and compare raw numbers.
+  Search by number and by subscript, not only by constant name.
