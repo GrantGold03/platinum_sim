@@ -125,3 +125,27 @@ pytest exit=0
 - The import into Showdown itself is **UNVERIFIED**.
 - **Infrastructure**: pytest temp directories now go in `/dev/shm/platsim-pytest-<pid>` (removed at exit;
   `tests/conftest.py`) and the pytest cache is disabled, so no temp files land in `/tmp` or the repo.
+
+## 2026-10-07: T012–T017 + decomp stat formula (agent; re-run by the coordinator)
+
+```
+$ uv run pytest tests/unit/test_species.py tests/unit/test_moves.py tests/unit/test_items.py tests/unit/test_tutors.py tests/unit/test_exp.py tests/unit/test_trainers.py tests/unit/test_decomp_stats.py tests/unit/test_constants.py -q
+49 passed in 0.87s
+pytest exit=0
+$ git -C pokeplatinum status --porcelain | wc -l
+0
+```
+- **Spot check by the coordinator**: Garchomp in `res/pokemon/garchomp/data.json:2-9` is 108/130/95/spe 102/spa 80/spd 85.
+  The loader gives `{'hp':108,'atk':130,'def':95,'spa':80,'spd':85,'spe':102}`, abilities `['ABILITY_SAND_VEIL', None]`,
+  and its src includes `generated/species.txt:446`.
+- **T012**: the 20 species were chosen per the task. Expected values were copied from each `data.json` with line
+  citations, not typed by hand.
+- **T017**: `header.trainerType` is the trainer class ID (`tools/dataproc/.../trainerproc.c:152`), so the LCRNG
+  iterates 65–69 times for the League. `trainerIDs` is the `TRAINER_*` index (`src/encounter.c:751`). The gender
+  modifier is 120 for Bertha and Cynthia and 136 for the others. Personalities were checked by a hand-worked LCRNG
+  step and an independent closed-form jump-ahead. **UNVERIFIED** against a ROM or emulator.
+- **Quirks for later tasks**:
+  - Egg moves live only on the base species of a line, so legality checks must walk back through pre-evolutions.
+  - Gift and trainer Pokémon take their ability from the base form (`pokemon.c:473-484`).
+  - Experience 0 gives level 1.
+  - Form personal IDs are 496 + their index (Rotom-Wash = 504).

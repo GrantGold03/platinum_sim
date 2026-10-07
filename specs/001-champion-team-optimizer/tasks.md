@@ -131,7 +131,7 @@ research.md (R5/R7/R8) before continuing.
   Tests in `tests/unit/test_constants.py`: `SPECIES_NONE == 0`, `SPECIES_EGG == 494`,
   `SPECIES_BAD_EGG == 495`, `ABILITY_NONE == 0`, `TYPE_MYSTERY == 9` (values per research.md R1;
   re-confirm against the files).
-- [ ] T012 [P] `src/platsim/decomp/species.py`, which reads every `PP/res/pokemon/<name>/data.json`
+- [X] T012 [P] `src/platsim/decomp/species.py`, which reads every `PP/res/pokemon/<name>/data.json`
   and the forms listed as `data` in `PP/res/pokemon/form_registry.json`:
   - Map the folder name to `SPECIES_*` with the rule in `PP/res/pokemon/meson.build`.
   - Reorder `base_stats` to hp/atk/def/spa/spd/spe.
@@ -155,27 +155,27 @@ research.md (R5/R7/R8) before continuing.
   - Shedinja (Ninjask/Shedinja methods).
   
   Also test the total species count.
-- [ ] T013 [P] `src/platsim/decomp/moves.py`: read `PP/res/moves/<name>/data.json`, with the
+- [X] T013 [P] `src/platsim/decomp/moves.py`: read `PP/res/moves/<name>/data.json`, with the
   accuracy and power normalisation from `PP/tools/dataproc/src/moveproc.c:136-147`.
   - Test Quick Attack priority 1, Swift accuracy 0 (never misses), and Earthquake fields, copied
     from source.
-- [ ] T014 [P] `src/platsim/decomp/items.py`: read `PP/res/items/data/*.json` (skip `ITEM_UNUSED_*`
+- [X] T014 [P] `src/platsim/decomp/items.py`: read `PP/res/items/data/*.json` (skip `ITEM_UNUSED_*`
   per `itemproc.c:162`) and the TM/HM → move map from `teachesMove`.
   - Test TM01 = Focus Punch, TM26 = Earthquake, TM92 = Trick Room, HM08 = Rock Climb; Leftovers
     hold effect `HOLD_EFFECT_HP_RESTORE_GRADUAL`; Lucky Egg `HOLD_EFFECT_EXP_UP`.
-- [ ] T015 [P] `src/platsim/decomp/tutors.py`: read `PP/res/pokemon/move_tutors.json` (38 entries,
+- [X] T015 [P] `src/platsim/decomp/tutors.py`: read `PP/res/pokemon/move_tutors.json` (38 entries,
   array order = bit index) and add the two script tutors:
   - Draco Meteor: `scripts_route_210_grandma_wilma_house.s`, Dragon type + max friendship.
   - Starter ultimates: `scripts_route_228_north_house.s`, with the 12 species parsed from
     `Route228NorthHouse_CheckFinalStageStarter`.
   
   Test 38 entries, Dive at ROUTE_212 costing 2/4/2/0, and Superpower at SURVIVAL_AREA.
-- [ ] T016 [P] `src/platsim/decomp/exp.py`: parse `PP/res/pokemon/.shared/exp_tables.csv` (column
+- [X] T016 [P] `src/platsim/decomp/exp.py`: parse `PP/res/pokemon/.shared/exp_tables.csv` (column
   order = `generated/exp_rates.txt`) and add `level_from_exp(rate, exp)` mirroring
   `PP/src/pokemon.c:2366` and `exp_at(rate, level)`.
   - Test that level-100 values match the CSV, and the boundary cases exp = table[n] − 1 → n−1 and
     exp = table[n] → n.
-- [ ] T017 [P] `src/platsim/decomp/trainers.py`: read the five first-run files listed in
+- [X] T017 [P] `src/platsim/decomp/trainers.py`: read the five first-run files listed in
   `FD/research.md` R3. Port `TrainerData_BuildParty` (`PP/src/trainer_data.c:176-316`):
   - LCRNG `state*1103515245+24691`, return `>>16` (`PP/src/math_util.c:80`);
   - seed `ivScale+level+species+trainerID`;
