@@ -457,3 +457,38 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py → 169 pa
   - Pal Park is cut;
   - field-move gating is not modelled;
   - Pickup, wild held items and breeding are not sources (an under-approximation).
+
+## 2026-10-07: T028–T031 move sources, validator, fixtures, `platsim validate` (agent; re-run by the coordinator)
+
+```
+$ uv run pytest -q tests/unit/test_validator.py → 33 passed, exit 0
+$ uv run platsim validate tests/fixtures/legal_team.json → "legal (no violations)", exit 0
+$ uv run platsim validate tests/fixtures/illegal_trade_evo.json → SPECIES_TRADE_EVOLUTION (Gengar from Haunter, EVO_TRADE,
+  src res/pokemon/haunter/data.json:110), exit 2
+```
+- **Fixtures**: each illegal fixture yields exactly its one expected code. A subprocess check confirms the validator
+  never imports `platsim.optimizer`, with a positive control.
+- **Decisions**:
+  - The relearner (Pastoria) is available and costs one Heart Scale per move.
+  - Max friendship is treated as reachable (walk cycle).
+  - Draco Meteor needs a Dragon-type stage.
+  - Egg moves need a pre-Champion father, which is recorded in the source detail. Ditto is not pre-Champion, so
+    genderless and male-only lines cannot be bred.
+  - Minimum start levels come from ledger levels and evolution levels.
+- **`tests/fixtures/reference_team.json` is ILLEGAL** (15 violations, file not edited):
+  - Alakazam is trade-evolution only;
+  - its `source` values are placeholders;
+  - 9 move-source labels are wrong.
+  
+  The T056 benchmark is still valid as a comparison of policy strength, but the fixture must be replaced with a legal
+  team before it is used for SC-006 or evaluation (T072, T071).
+- **Ledger gap found by the coordinator**: wild held items are not a source.
+  `res/pokemon/munchlax/data.json:21-23` holds Leftovers in both slots, and Munchlax is a pre-Champion honey-tree
+  encounter, yet the ledger reports 0 Leftovers. The other copies (`scripts_visible_items.s:1517` Victory Road 1F
+  Room 2, `:1601` Stark Mountain Life Orb) are correctly post-game per the map graph. **Follow-up**: add wild held
+  items as an item source.
+- **UNVERIFIED / conservative**:
+  - alternate forms are rejected;
+  - evolution cancelling is not modelled;
+  - move timing within a member is not modelled;
+  - Volt Tackle via Light Ball is not modelled.

@@ -284,7 +284,7 @@ research.md (R5/R7/R8) before continuing.
 - [X] T027 [P] `src/platsim/legality/models.py`: dataclasses `Build`, `MoveChoice`, `TeamCandidate`,
   `Violation(code, message, src)` exactly as in `FD/data-model.md`, with JSON round-trip and
   Showdown export/import of the team.
-- [ ] T028 `src/platsim/legality/movesources.py`: `sources(species, move, level, ledger)` returns
+- [X] T028 `src/platsim/legality/movesources.py`: `sources(species, move, level, ledger)` returns
   every legal `MoveChoice` source:
   - level-up at or below level;
   - pre-evolution level-up, where the pre-evolution's level must be below its evolution level;
@@ -295,7 +295,7 @@ research.md (R5/R7/R8) before continuing.
     the move by a non-egg method; record the father.
   
   The `detail` strings follow `FD/contracts/spreadsheet.md`.
-- [ ] T029 `src/platsim/legality/validator.py`: `validate(team) -> list[Violation]`. It checks:
+- [X] T029 `src/platsim/legality/validator.py`: `validate(team) -> list[Violation]`. It checks:
   - species availability (FR-003, FR-005);
   - source choice (FR-008b);
   - move legality at `start_level` (FR-007);
@@ -307,13 +307,13 @@ research.md (R5/R7/R8) before continuing.
   
   It MUST NOT import `platsim.optimizer`; enforce this with a test that inspects `sys.modules`
   after import.
-- [ ] T030 [P] Fixtures and tests:
+- [X] T030 [P] Fixtures and tests:
   - fixtures in `tests/fixtures/`: `legal_team.json`, `illegal_postgame_tutor.json`,
     `illegal_trade_evo.json` (Gengar), `illegal_tm_copies.json` (two members using a single-copy
     TM), `illegal_stats.json` (IV 31), `illegal_ability.json`, `illegal_level_gap.json`;
   - tests in `tests/unit/test_validator.py`: each illegal fixture yields exactly the expected
     violation codes, and the legal one yields none.
-- [ ] T031 `platsim validate TEAM` in `src/platsim/cli.py` per `FD/contracts/cli.md` (exit 2 with
+- [X] T031 `platsim validate TEAM` in `src/platsim/cli.py` per `FD/contracts/cli.md` (exit 2 with
   violations).
 
 ### 2e. Battle engine and game layer (Node)

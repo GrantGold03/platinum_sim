@@ -45,8 +45,39 @@ def _add_divergences(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=run)
 
 
+def _add_validate(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("validate", help="legality check of a team (FR-003..FR-008c); exit 2 if illegal")
+    p.add_argument("team", type=Path, help="team file: JSON (TeamCandidate / {'team': [...]}) or Showdown export text")
+    p.add_argument("--json", action="store_true", help="print the violations as JSON")
+
+    def run(args: argparse.Namespace) -> int:
+        import json
+
+        from platsim.legality.validator import format_violations, validate
+
+        if not args.team.is_file():
+            print(f"platsim validate: no such file: {args.team}", file=sys.stderr)
+            return 1
+        try:
+            violations = validate(str(args.team))
+        except (ValueError, KeyError) as e:
+            print(f"platsim validate: cannot read {args.team}: {e}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps({"team": str(args.team), "legal": not violations,
+                              "violations": [v.to_dict() for v in violations]}, indent=2))
+        elif violations:
+            print(format_violations(violations))
+            print(f"{args.team}: ILLEGAL - {len(violations)} violation(s)")
+        else:
+            print(f"{args.team}: legal (no violations)")
+        return 2 if violations else 0
+
+    p.set_defaults(func=run)
+
+
 # Later tasks append (e.g. validate T031, divergences T053, optimize, serve).
-_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences]
+_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences, _add_validate]
 
 
 def build_parser() -> argparse.ArgumentParser:

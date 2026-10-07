@@ -1,0 +1,267 @@
+{
+  "_comment": "legal_team with Gyarados also using TM26 Earthquake; the ledger has 1 pre-Champion copy of TM26 and Garchomp already uses it. Expected: TM_COPIES only.",
+  "builds": [
+    {
+      "species": "infernape",
+      "source": "gift:SPECIES_CHIMCHAR@MAP_HEADER_ROUTE_201",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 41"
+        },
+        {
+          "move": "flare_blitz",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 57"
+        },
+        {
+          "move": "mach_punch",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Monferno Lv 14)"
+        },
+        {
+          "move": "u_turn",
+          "source_kind": "tm",
+          "detail": "TM89 - Game Corner - Veilstone City Prize Exchange (unlimited)"
+        }
+      ],
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "held_item": "sitrus_berry",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "garchomp",
+      "source": "breed:SPECIES_GIBLE@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "draco_meteor",
+          "source_kind": "tutor",
+          "detail": "Draco Meteor tutor - Route 210 (Dragon type Garchomp, max friendship)"
+        },
+        {
+          "move": "earthquake",
+          "source_kind": "tm",
+          "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)"
+        },
+        {
+          "move": "iron_head",
+          "source_kind": "egg",
+          "detail": "Egg move (father: Bastiodon - Level-up Lv 52)"
+        },
+        {
+          "move": "fire_fang",
+          "source_kind": "relearner",
+          "detail": "Move relearner - Pastoria City (1 Heart Scale; Garchomp Lv 1 move)"
+        }
+      ],
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gyarados",
+      "source": "wild_slot:SPECIES_MAGIKARP@MAP_HEADER_CANALAVE_CITY",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "earthquake",
+          "source_kind": "tm",
+          "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)"
+        },
+        {
+          "move": "dragon_dance",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 44"
+        },
+        {
+          "move": "ice_fang",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 32"
+        },
+        {
+          "move": "aqua_tail",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 35"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "lucario",
+      "source": "egg:SPECIES_RIOLU@MAP_HEADER_IRON_ISLAND_B2F_LEFT_ROOM",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "aura_sphere",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 37"
+        },
+        {
+          "move": "dragon_pulse",
+          "source_kind": "tm",
+          "detail": "TM59 - Item ball - Victory Road B1F (1 copy)"
+        },
+        {
+          "move": "dark_pulse",
+          "source_kind": "tm",
+          "detail": "TM79 - Item ball - Victory Road 2F (1 copy)"
+        },
+        {
+          "move": "extreme_speed",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 51"
+        }
+      ],
+      "ability": "ABILITY_STEADFAST",
+      "ability_reason": "tie_default",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "chatot",
+      "source": "npc_trade:SPECIES_CHATOT@MAP_HEADER_ETERNA_CITY_CONDOMINIUMS_1F",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "chatter",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 21"
+        },
+        {
+          "move": "hyper_voice",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 45"
+        }
+      ],
+      "ability": "ABILITY_TANGLED_FEET",
+      "ability_reason": "fixed_by_trade",
+      "held_item": "leppa_berry",
+      "nature": "Lonely",
+      "ivs": {
+        "hp": 15,
+        "atk": 20,
+        "def": 15,
+        "spa": 25,
+        "spd": 15,
+        "spe": 25
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "staraptor",
+      "source": "wild_slot:SPECIES_STARAVIA@MAP_HEADER_ROUTE_209",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "brave_bird",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 49"
+        },
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 34"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    }
+  ]
+}
