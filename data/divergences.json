@@ -1,0 +1,769 @@
+{
+ "version": "sha256:e48e13f16138a917",
+ "entries": [
+  {
+   "id": "data-move-assist-target",
+   "area": "data",
+   "description": "Assist target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/assist/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:639",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-bide-power",
+   "area": "data",
+   "description": "Bide power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/bide/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:1267",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (beforeMoveCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-conversion2-target",
+   "area": "data",
+   "description": "Conversion 2 target: decomp RANGE_USER, Showdown gen4 normal.",
+   "decomp_ref": "pokeplatinum/res/moves/conversion_2/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:2844",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-copycat-target",
+   "area": "data",
+   "description": "Copycat target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/copycat/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:2869",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-counter-power",
+   "area": "data",
+   "description": "Counter power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/counter/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:2990",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-counter-flag-protect",
+   "area": "data",
+   "description": "Counter flag-protect: decomp False, Showdown gen4 True.",
+   "decomp_ref": "pokeplatinum/res/moves/counter/data.json:21",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:2999",
+   "resolution": "corrected",
+   "impact": "`protect` interactions (e.g. Protect, Magic Coat, Snatch, Mirror Move, contact abilities) follow the decomp after the patch.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff",
+   "patch": {
+    "table": "Moves",
+    "id": "counter",
+    "path": [
+     "flags",
+     "protect"
+    ],
+    "value": 0
+   }
+  },
+  {
+   "id": "data-move-crushgrip-power",
+   "area": "data",
+   "description": "Crush Grip power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/crush_grip/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:3247",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-dragonrage-power",
+   "area": "data",
+   "description": "Dragon Rage power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/dragon_rage/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:4179",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damage) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-endeavor-power",
+   "area": "data",
+   "description": "Endeavor power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/endeavor/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:4787",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-endure-priority",
+   "area": "data",
+   "description": "Endure priority: decomp 3, Showdown gen4 4.",
+   "decomp_ref": "pokeplatinum/res/moves/endure/data.json:20",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:4812",
+   "resolution": "corrected",
+   "impact": "Turn order follows the decomp after the patch.",
+   "test_id": "tests/integration/test_divergences.py::test_endure_patch_in_live_battle",
+   "patch": {
+    "table": "Moves",
+    "id": "endure",
+    "path": [
+     "priority"
+    ],
+    "value": 3
+   }
+  },
+  {
+   "id": "data-move-fissure-power",
+   "area": "data",
+   "description": "Fissure power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/fissure/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:5516",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (ohko) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-flail-power",
+   "area": "data",
+   "description": "Flail power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/flail/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:5532",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-fling-power",
+   "area": "data",
+   "description": "Fling power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/fling/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:5736",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (onPrepareHit) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-frustration-power",
+   "area": "data",
+   "description": "Frustration power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/frustration/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:6275",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-grassknot-power",
+   "area": "data",
+   "description": "Grass Knot power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/grass_knot/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:7540",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-guillotine-power",
+   "area": "data",
+   "description": "Guillotine power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/guillotine/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:8004",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (ohko) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-gyroball-power",
+   "area": "data",
+   "description": "Gyro Ball power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/gyro_ball/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:8050",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-hail-flag-protect",
+   "area": "data",
+   "description": "Hail flag-protect: decomp True, Showdown gen4 False.",
+   "decomp_ref": "pokeplatinum/res/moves/hail/data.json:21",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:8078",
+   "resolution": "corrected",
+   "impact": "`protect` interactions (e.g. Protect, Magic Coat, Snatch, Mirror Move, contact abilities) follow the decomp after the patch. UNVERIFIED whether either engine consults this flag for a field-targeting move, so the patch may change nothing.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff",
+   "patch": {
+    "table": "Moves",
+    "id": "hail",
+    "path": [
+     "flags",
+     "protect"
+    ],
+    "value": 1
+   }
+  },
+  {
+   "id": "data-move-hiddenpower-power",
+   "area": "data",
+   "description": "Hidden Power power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/hidden_power/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/mods/gen5/moves.ts:384",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-horndrill-power",
+   "area": "data",
+   "description": "Horn Drill power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/horn_drill/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:8982",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (ohko) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-lowkick-power",
+   "area": "data",
+   "description": "Low Kick power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/low_kick/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:10445",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-magiccoat-target",
+   "area": "data",
+   "description": "Magic Coat target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/magic_coat/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:10733",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-magnitude-power",
+   "area": "data",
+   "description": "Magnitude power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/magnitude/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:10893",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (onModifyMove) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-metalburst-power",
+   "area": "data",
+   "description": "Metal Burst power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/metal_burst/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:11658",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-metalburst-flag-protect",
+   "area": "data",
+   "description": "Metal Burst flag-protect: decomp False, Showdown gen4 True.",
+   "decomp_ref": "pokeplatinum/res/moves/metal_burst/data.json:21",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/moves.ts:855",
+   "resolution": "corrected",
+   "impact": "`protect` interactions (e.g. Protect, Magic Coat, Snatch, Mirror Move, contact abilities) follow the decomp after the patch.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff",
+   "patch": {
+    "table": "Moves",
+    "id": "metalburst",
+    "path": [
+     "flags",
+     "protect"
+    ],
+    "value": 0
+   }
+  },
+  {
+   "id": "data-move-metronome-target",
+   "area": "data",
+   "description": "Metronome target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/metronome/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:11807",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-mirrorcoat-power",
+   "area": "data",
+   "description": "Mirror Coat power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/mirror_coat/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:11986",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-mirrorcoat-flag-protect",
+   "area": "data",
+   "description": "Mirror Coat flag-protect: decomp False, Showdown gen4 True.",
+   "decomp_ref": "pokeplatinum/res/moves/mirror_coat/data.json:21",
+   "showdown_ref": "pokemon-showdown/data/mods/gen8/moves.ts:510",
+   "resolution": "corrected",
+   "impact": "`protect` interactions (e.g. Protect, Magic Coat, Snatch, Mirror Move, contact abilities) follow the decomp after the patch.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff",
+   "patch": {
+    "table": "Moves",
+    "id": "mirrorcoat",
+    "path": [
+     "flags",
+     "protect"
+    ],
+    "value": 0
+   }
+  },
+  {
+   "id": "data-move-mirrormove-target",
+   "area": "data",
+   "description": "Mirror Move target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/mirror_move/data.json:18",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/moves.ts:930",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-naturalgift-power",
+   "area": "data",
+   "description": "Natural Gift power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/natural_gift/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:12568",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (onPrepareHit) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-naturepower-target",
+   "area": "data",
+   "description": "Nature Power target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/nature_power/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/mods/gen5/moves.ts:603",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-nightshade-power",
+   "area": "data",
+   "description": "Night Shade power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/night_shade/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:12728",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damage) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-present-power",
+   "area": "data",
+   "description": "Present power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/present/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:13922",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (onModifyMove) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-psywave-power",
+   "area": "data",
+   "description": "Psywave power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/psywave/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:14295",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-punishment-power",
+   "area": "data",
+   "description": "Punishment power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/punishment/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:14327",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-return-power",
+   "area": "data",
+   "description": "Return power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/return/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:15017",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-reversal-power",
+   "area": "data",
+   "description": "Reversal power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/reversal/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:15080",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-seismictoss-power",
+   "area": "data",
+   "description": "Seismic Toss power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/seismic_toss/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:15994",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damage) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-sheercold-power",
+   "area": "data",
+   "description": "Sheer Cold power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/sheer_cold/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:16201",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (ohko) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-sleeptalk-target",
+   "area": "data",
+   "description": "Sleep Talk target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/sleep_talk/data.json:18",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:16898",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-snatch-target",
+   "area": "data",
+   "description": "Snatch target: decomp RANGE_SINGLE_TARGET_SPECIAL, Showdown gen4 self.",
+   "decomp_ref": "pokeplatinum/res/moves/snatch/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:17133",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-sonicboom-power",
+   "area": "data",
+   "description": "Sonic Boom power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/sonic_boom/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:17299",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damage) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-spitup-power",
+   "area": "data",
+   "description": "Spit Up power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/spit_up/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:17665",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-struggle-target",
+   "area": "data",
+   "description": "Struggle target: decomp RANGE_SINGLE_TARGET, Showdown gen4 randomNormal.",
+   "decomp_ref": "pokeplatinum/res/moves/struggle/data.json:19",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:18229",
+   "resolution": "accepted",
+   "impact": "Accepted: singles only; target encodings differ but no League singles case was identified where this changes the outcome. UNVERIFIED per move.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-superfang-power",
+   "area": "data",
+   "description": "Super Fang power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/super_fang/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:18464",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (damageCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-trumpcard-power",
+   "area": "data",
+   "description": "Trump Card power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/trump_card/data.json:11",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:20079",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-move-wringout-power",
+   "area": "data",
+   "description": "Wring Out power: decomp 1, Showdown gen4 0.",
+   "decomp_ref": "pokeplatinum/res/moves/wring_out/data.json:12",
+   "showdown_ref": "pokemon-showdown/data/moves.ts:21098",
+   "resolution": "accepted",
+   "impact": "None (cosmetic): the stored value is a placeholder; Showdown sets power/damage at run time (basePowerCallback) and the game in its effect code. Whether each run-time formula matches the game is not checked by this diff.",
+   "test_id": "tests/integration/test_divergences.py::test_ledger_matches_fresh_diff"
+  },
+  {
+   "id": "data-item-amuletcoin-missing",
+   "area": "data",
+   "description": "Amulet Coin (HOLD_EFFECT_MONEY_UP) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/amulet_coin.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-cleansetag-missing",
+   "area": "data",
+   "description": "Cleanse Tag (HOLD_EFFECT_ENCOUNTERS_DOWN) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/cleanse_tag.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-everstone-missing",
+   "area": "data",
+   "description": "Everstone (HOLD_EFFECT_NO_EVOLVE) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/everstone.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-expshare-missing",
+   "area": "data",
+   "description": "Exp. Share (HOLD_EFFECT_EXP_SHARE) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/exp_share.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "Exp. Share/Lucky Egg: corrected by the game layer (sim/exp.mjs). The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-luckincense-missing",
+   "area": "data",
+   "description": "Luck Incense (HOLD_EFFECT_MONEY_UP) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/luck_incense.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-luckyegg-missing",
+   "area": "data",
+   "description": "Lucky Egg (HOLD_EFFECT_EXP_UP) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/lucky_egg.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "Exp. Share/Lucky Egg: corrected by the game layer (sim/exp.mjs). The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-pureincense-missing",
+   "area": "data",
+   "description": "Pure Incense (HOLD_EFFECT_ENCOUNTERS_DOWN) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/pure_incense.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-smokeball-missing",
+   "area": "data",
+   "description": "Smoke Ball (HOLD_EFFECT_FLEE) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/smoke_ball.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "data-item-soothebell-missing",
+   "area": "data",
+   "description": "Soothe Bell (HOLD_EFFECT_FRIENDSHIP_UP) has no Showdown gen4 item; held, it does nothing in Showdown.",
+   "decomp_ref": "pokeplatinum/res/items/data/soothe_bell.json:17",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1 (no entry; sim/gamedata.mjs mapItems reports it unmapped)",
+   "resolution": "accepted",
+   "impact": "The other out-of-battle hold effects (money, encounter, flee, friendship, evolution) have no effect in a League trainer battle.",
+   "test_id": "sim/test/team.test.mjs (id mapping: unmapped items listed)"
+  },
+  {
+   "id": "damage-type-chart-sequential-truncation",
+   "area": "mechanics",
+   "description": "The game applies each type-chart row in table order with integer truncation (x5/10 or x20/10 per row, BattleSystem_Divide), so a resisted-then-super-effective dual type (e.g. Fire vs Water/Grass, Ice vs Water/Flying) can lose 1 HP: floor(d/2)*2. Showdown sums effectiveness first and multiplies x2 then /2, so the pair cancels exactly. Game damage <= Showdown by up to 1. Example: Garchomp Flamethrower vs Ludicolo: port/game rolls are even (e.g. 60) where Showdown gives the odd value (61); hand case in damage.test.mjs: 41 -> STAB 61 -> x5/10 = 30 -> x20/10 = 60 (Showdown 61). Also Milotic Ice Beam vs Gyarados.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2612-2646 (row walk), :7545-7547 (ApplyTypeMultiplier divide), :2403-2404 (FIRE/WATER before FIRE/GRASS), :3599-3618 (BattleSystem_Divide)",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/scripts.ts:111-125 (typeMod summed, doubled then halved)",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-sniper-after-variance",
+   "area": "mechanics",
+   "description": "Game: a Sniper crit sets criticalMul = 3 and multiplies the base damage before the random roll. Showdown: crit x2 before the roll, then Sniper as a chained x1.5 in the final ModifyDamage step after random, STAB and type. Rolls differ by about 1-3 HP in either direction. Example: Aaron's Drapion (Sniper) crit X-Scissor vs Lucian's Alakazam: port [310,314,318,...,366], Showdown [309,312,318,...,366].",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:7142-7144 (criticalMul 3), pokeplatinum/src/battle/battle_script.c:1344 (damage *= criticalMul before variance at :1385)",
+   "showdown_ref": "pokemon-showdown/data/abilities.ts:4359-4366 (sniper onModifyDamage chainModify(1.5)); pokemon-showdown/data/mods/gen4/scripts.ts:84-87,130",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-expert-belt-rounding",
+   "area": "mechanics",
+   "description": "Game: Expert Belt = damage*(100+20)/100, floored. Showdown: chainModify([4915,4096]) with 4096-based round-to-nearest. Showdown is 1 HP higher on some rolls. Example: Cynthia's Lucario (Expert Belt) Aura Sphere vs Tyranitar: port 321 vs Showdown 322 on the lowest roll (pre-belt 268: game 32160/100 = 321; Showdown (268*4915+2047)>>12 = 322).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2663-2665; effectParam 20 from pokeplatinum/res/items/data/expert_belt.json",
+   "showdown_ref": "pokemon-showdown/data/items.ts:1901-1914 (expertbelt), pokemon-showdown/sim/battle.ts:2336-2347 (modify rounding)",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-final-modifier-chaining",
+   "area": "mechanics",
+   "description": "Game applies Filter/Solid Rock (BattleSystem_Divide(d*3,4)) and then Expert Belt (d*120/100) as two separately floored steps. Showdown chains 0.75 and 1.2 into one 4096-based modifier (3686/4096) and rounds once. Showdown 1 HP higher on some rolls. (Filter/Solid Rock alone never diverged: after a x2/x4 the damage is even, where floor and Showdown rounding agree.) Example: Spiritomb (Expert Belt) Shadow Ball vs Lucian's Mr. Mime (Filter): port [80,80,82,...,97], Showdown [81,81,83,...,97].",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2657-2667",
+   "showdown_ref": "pokemon-showdown/data/abilities.ts:1284-1290 (filter chainModify(0.75)), pokemon-showdown/data/items.ts:1901-1914, pokemon-showdown/sim/battle.ts:2325-2334 (chainModify)",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-bp-modifier-rounding",
+   "area": "mechanics",
+   "description": "Game scales move power with floored integer math at each step (e.g. Dry Skin power*125/100). Showdown applies base-power modifiers through chainModify with 4096-based round-to-nearest. Seen on Dry Skin; any other power modifier whose exact result has a fractional part >= ~0.5 can diverge the same way (type items, Muscle Band/Wise Glasses, Iron Fist, Rivalry, Technician stacks) — not observed in the tested cases for those. Example: Flint's Magmortar Flamethrower (power 95) vs Dry Skin Toxicroak: game power 95*125/100 = 118, Showdown (95*5120+2047)>>12 = 119; rolls port [127..151] vs Showdown [129..153].",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:6845-6847 (Dry Skin)",
+   "showdown_ref": "pokemon-showdown/data/abilities.ts:1098-1112 (dryskin onSourceBasePower chainModify(1.25)), pokemon-showdown/sim/battle.ts:2336-2347",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-stat-modifier-before-stages",
+   "area": "mechanics",
+   "description": "Game multiplies the raw stat by Choice Band/Specs, Huge Power, Hustle, Guts, Marvel Scale, Soul Dew etc. first, and applies the stat-stage fraction last (inside the damage expression). Showdown applies the stage first (calculateStat) and the Modify(Atk|SpA|Def|SpD) multipliers after, rounded. Diverges when a stage is non-zero (seen with -1 Atk; +1 matched in the tested case). Example: Choice Band Garchomp (Atk 238) at -1 Atk: game floor(238*150/100)=357 -> 357*10/15 = 238; Showdown floor(238/1.5)=158 -> modify(158,1.5) = 237. EQ vs Infernape: port [320,326,...,380] vs Showdown [320,324,...,378].",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:6724-6729 (Choice items on raw stat), :6950-6956 (stage fraction applied in the damage expression)",
+   "showdown_ref": "pokemon-showdown/sim/battle-actions.ts:1689-1695 (calculateStat with boosts, then Modify* events), pokemon-showdown/sim/pokemon.ts:583-593, pokemon-showdown/data/items.ts:974-977 (choiceband chainModify(1.5))",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "damage-metronome-item-float",
+   "area": "mechanics",
+   "description": "Game: Metronome item damage*(10+turns)/10 in integers. Showdown gen4: damage * (1 + numConsecutive/10) in floating point, floored after Phase2; e.g. 45*1.4 = 62.999... -> 62 where the game gives 63. ANALYTIC ONLY: the battle case tested (2 consecutive) matched; the float error was found by enumerating d=1..4999, n=1..10 (143 differing pairs). Mapping Showdown numConsecutive to the game's metronomeTurns counter is UNVERIFIED. Example: pre-variance damage 45, 4 consecutive uses: game 63, Showdown 62 (analytic).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:1350-1352",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/items.ts:320-340 (metronome onModifyDamagePhase2)",
+   "resolution": "accepted",
+   "impact": "Showdown resolves real damage (Constitution II), so battle damage can differ from the cartridge by about 1-3 HP on some rolls; the AI's own damage estimate uses the game formula (sim/damage.mjs).",
+   "test_id": "sim/test/damage.test.mjs"
+  },
+  {
+   "id": "mech-resist-berry-order",
+   "area": "mechanics",
+   "description": "Resist berries (Occa ... Chilan). Game: a battle subscript halves the final HP change (DivideVarByValue, rounded toward zero, min 1) when HP is updated, after the Focus Sash/Endure clamp; Counter, Mirror Coat and Shell Bell use the full damage; no trigger on substitute hits. Showdown: halves inside the damage calculation (onSourceModifyDamage, chainModify(0.5)), so Counter/Mirror Coat see the halved damage and the order relative to Focus Sash differs.",
+   "decomp_ref": "pokeplatinum/res/battle/scripts/subscripts/subscript_type_resist_berry.s:21-22 (Chilan id 35 / super-effective gate), :111 (DivideVarByValue BTLVAR_HP_CALC_TEMP, 2); called from pokeplatinum/res/battle/scripts/subscripts/subscript_update_hp.s:10",
+   "showdown_ref": "pokemon-showdown/data/items.ts:4347-4366 (occaberry onSourceModifyDamage; the other resist berries follow the same pattern)",
+   "resolution": "accepted",
+   "impact": "Rare: differs only when a resist-berry holder is hit by a super-effective move and then uses Counter/Mirror Coat, holds a Focus Sash-like clamp, or rounding of the halved value differs by 1 HP. Resist berries stay allowed (validation-log 2026-10-07).",
+   "test_id": "UNTESTED: no battle test exercises the ordering yet"
+  },
+  {
+   "id": "mech-full-restore-pseudo-move",
+   "area": "ai",
+   "description": "Opponent Full Restore is modelled as the project pseudo-move `trainerfullrestore` (priority 7, Status, target self; full HP, cure status and confusion), because Showdown has no bag items. Gap: Showdown's gen4 Taunt disables every Status-category move, so a Taunted opponent cannot use it; in the game Taunt does not stop a trainer's bag item. Other move-only side effects (lastMove for Encore/Disable/Mirror Move/Copycat, Sucker Punch, Pressure, Heal Block) are also open.",
+   "decomp_ref": "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:4056 (TrainerAI_ShouldUseItem)",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/moves.ts:1411-1418 (taunt onDisableMove: every Status move)",
+   "resolution": "accepted",
+   "impact": "PENDING T047 (sim/ai/items.mjs): until then the opponent policy is placeholder-default and never uses Full Restore, so League opponents heal less than on the cartridge (optimistic for the player). Flip to corrected when T047 exempts the pseudo-move from Taunt and tests it.",
+   "test_id": "sim/test (T047, not written yet); spike sim/spikes/fullrestore.mjs"
+  },
+  {
+   "id": "exp-gain-and-participation",
+   "area": "exp",
+   "description": "Showdown has no experience. The game layer tracks participation the game's way and computes exp per BtlCmd_CalcExpGain / BattleScript_GetExpTask (trainer x1.5, Lucky Egg x1.5, Exp. Share split, traded x1.5/x1.7).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:2187 (BtlCmd_CalcExpGain), :9685 (BattleScript_GetExpTask); pokeplatinum/src/battle/battle_lib.c:1456-1479 (exp mask)",
+   "showdown_ref": "pokemon-showdown/sim/battle.ts:2539 (faintMessages: no exp is awarded on faint)",
+   "resolution": "corrected",
+   "impact": "Corrected by sim/exp.mjs (T036).",
+   "test_id": "sim/test/exp.test.mjs (cases 1-15)"
+  },
+  {
+   "id": "exp-level-up-mid-battle",
+   "area": "exp",
+   "description": "Level-ups happen mid-battle at the KO in the game (stats recomputed with Pokemon_CalcStats, current HP raised by the max-HP gain). Showdown has no level-up; the game layer sets the level and stats on the live Showdown Pokemon.",
+   "decomp_ref": "pokeplatinum/src/pokemon.c:564 (Pokemon_CalcStats); pokeplatinum/src/battle/battle_script.c:9685 (BattleScript_GetExpTask)",
+   "showdown_ref": "pokemon-showdown/sim/pokemon.ts:1398 (setSpecies: stats from the set's level; nothing in Showdown raises a level)",
+   "resolution": "corrected",
+   "impact": "Corrected by sim/exp.mjs (T009 spike, T036). UNVERIFIED: that Showdown's faint-event timing matches the game's exp timing in every case.",
+   "test_id": "sim/test/exp.test.mjs (case 13: KO -> mid-battle level-up, HP raised)"
+  },
+  {
+   "id": "exp-auto-learn-spec-conflict",
+   "area": "exp",
+   "description": "On level-up the game learns a level-up move automatically, with no prompt, when the Pokemon has fewer than 4 moves (Pokemon_LevelUpMove default branch). The spec says always decline new moves. The game layer keeps the moves and flags the event as `auto_learn_in_game`. Showdown never changes move slots after construction.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:10021-10035",
+   "showdown_ref": "pokemon-showdown/sim/pokemon.ts:354 (move slots built once from set.moves)",
+   "resolution": "accepted",
+   "impact": "PENDING USER DECISION (spec conflict). Affects only builds with fewer than 4 moves that level up into a level-up move during the League; such events are reported.",
+   "test_id": "sim/test/exp.test.mjs (auto_learn_in_game flag)"
+  },
+  {
+   "id": "mech-pp-ups",
+   "area": "mechanics",
+   "description": "Showdown gives every move 3 PP Ups at construction. The game sets trainer mons' max PP with ppUps 0 (Pokemon_Init zeroes the data); the spec (FR-008) gives the player no PP Ups either.",
+   "decomp_ref": "pokeplatinum/src/pokemon.c:3925 (BoxPokemon_SetMoveSlot), :292-294 (Pokemon_Init zeroes the mon)",
+   "showdown_ref": "pokemon-showdown/sim/pokemon.ts:361 (ppUps = 3)",
+   "resolution": "corrected",
+   "impact": "Corrected by sim/team.mjs: every slot of both sides is reset to decomp base PP.",
+   "test_id": "sim/test/team.test.mjs (Dark Pulse has base PP 15 ... (no PP Ups))"
+  },
+  {
+   "id": "mech-stats-overwrite",
+   "area": "mechanics",
+   "description": "Battle stats: Showdown computes them with its own formula (spreadModify/statModify). The game layer overwrites both sides' stats with the decomp formula after construction so no formula or base-stat difference can leak in.",
+   "decomp_ref": "pokeplatinum/src/pokemon.c:564 (Pokemon_CalcStats)",
+   "showdown_ref": "pokemon-showdown/sim/battle.ts:2350-2358 (spreadModify, statModify)",
+   "resolution": "corrected",
+   "impact": "Corrected by sim/team.mjs; the test also shows Showdown's own numbers already agree for every League mon.",
+   "test_id": "sim/test/team.test.mjs (player builds / every League opponent: Showdown stats == Python calc_stats)"
+  },
+  {
+   "id": "ai-trainer-ai",
+   "area": "ai",
+   "description": "Showdown has no in-game trainer AI. The project runs the decomp's AI scripts in an interpreter (research R6): move choice (TrainerAI_Init/EvalMoves/MainSingles), switch and item choice in TrainerAI_PickCommand order.",
+   "decomp_ref": "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:211 (TrainerAI_Init), :286 (TrainerAI_MainSingles), :3894 (ShouldSwitch), :3989 (PickCommand), :4056 (ShouldUseItem)",
+   "showdown_ref": "pokemon-showdown/sim/side.ts:1291-1292,1360 ('default' choice -> autoChoose)",
+   "resolution": "accepted",
+   "impact": "PENDING T045-T048: opponents currently use `placeholder-default` (Showdown's default choice), which is named in every result and is NOT the game AI. Results are not cartridge-faithful until T045-T048 land; then flip to corrected.",
+   "test_id": "tests/integration/test_worker.py (opponent_policy reported); T048 AI tests (pending)"
+  },
+  {
+   "id": "mech-rng",
+   "area": "mechanics",
+   "description": "The cartridge's battle RNG is a 32-bit LCG (BattleSystem_RandNext); Showdown uses a seeded ChaCha20 (sodium) PRNG, and draws random numbers in a different order and count. Individual battles cannot be reproduced from a cartridge seed.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_system.c:1308-1311 (BattleSystem_RandNext, LCRNG)",
+   "showdown_ref": "pokemon-showdown/sim/prng.ts:176 (SodiumRNG); :59 (sodium seeds)",
+   "resolution": "accepted",
+   "impact": "None on the estimates: results are win-rate distributions over seeded runs (Constitution IV), reproducible from the project seed, not from the cartridge.",
+   "test_id": "sim/test/seeds.test.mjs (seed derivation is deterministic)"
+  }
+ ]
+}

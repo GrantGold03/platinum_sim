@@ -51,7 +51,8 @@ def test_worker_hello_and_gauntlet():
     hello = out[1]
     assert hello["ok"] and hello["showdown_commit"] == SHOWDOWN_COMMIT
     assert hello["decomp_commit"] == DECOMP_COMMIT
-    assert hello["divergence_ledger_version"] == "none"  # data/divergences.json not created yet (T053)
+    ledger = REPO_ROOT / "data" / "divergences.json"  # T053; "none" when absent
+    assert hello["divergence_ledger_version"] == (json.loads(ledger.read_text())["version"] if ledger.exists() else "none")
     assert hello["decomp_data_hash"].startswith("sha256:")
 
     g = out[2]

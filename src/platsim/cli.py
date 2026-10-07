@@ -25,8 +25,28 @@ def _add_extract(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=run)
 
 
+def _add_divergences(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("divergences",
+                       help="regenerate the Showdown-vs-decomp divergence ledger data/divergences.json")
+    p.add_argument("--check", action="store_true",
+                   help="regenerate in memory and exit 1 if the ledger file differs")
+    p.add_argument("--out", type=Path, default=None, help="ledger path (default: data/divergences.json)")
+    p.add_argument("--dump", type=Path, default=None,
+                   help="use this sim/dump_dex.mjs output instead of running node")
+    p.add_argument("--ledger", type=Path, default=None,
+                   help="only validate an existing ledger file (exit 1 if an entry lacks a resolution)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.divergence import compare
+
+        return compare.main(args.out or compare.LEDGER_PATH, dump_path=args.dump,
+                            ledger_in=args.ledger, check_only=args.check)
+
+    p.set_defaults(func=run)
+
+
 # Later tasks append (e.g. validate T031, divergences T053, optimize, serve).
-_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract]
+_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences]
 
 
 def build_parser() -> argparse.ArgumentParser:

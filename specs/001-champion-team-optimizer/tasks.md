@@ -437,7 +437,7 @@ research.md (R5/R7/R8) before continuing.
   - propagate `ai_unimplemented` as an error that stops the job.
   
   Test in `tests/integration/test_pool.py`.
-- [ ] T053 Divergence ledger:
+- [X] T053 Divergence ledger:
   - `sim/dump_dex.mjs` dumps Showdown gen4 species, moves and items as JSON;
   - `src/platsim/divergence/compare.py` diffs that dump against `data/generated/` and writes
     `data/divergences.json` (fields per data-model `DivergenceEntry`);

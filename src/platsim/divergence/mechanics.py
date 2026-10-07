@@ -1,0 +1,169 @@
+"""Hand-written mechanics divergences for the ledger (T053; research R5, R6; validation-log.md).
+
+Data divergences are computed by compare.py; the damage-formula divergences come from
+sim/test/damage_divergences.json (T037). Everything here is a behaviour difference between the
+cartridge and Showdown that a data diff cannot see. Each entry cites the decomp and Showdown
+source by path:line at the pinned commits (src/platsim/pins.py); the lines were opened and checked
+when the entry was written.
+
+Resolutions:
+  corrected - the game layer (sim/*.mjs) makes the battle follow the decomp; `test_id` proves it.
+  accepted  - the difference remains; `impact` says what it changes. Entries that are waiting for
+              a task say so in `impact` (flip them to corrected when that task lands).
+"""
+
+from __future__ import annotations
+
+_ENTRIES: list[dict] = [
+    {
+        "id": "mech-resist-berry-order",
+        "area": "mechanics",
+        "description": (
+            "Resist berries (Occa ... Chilan). Game: a battle subscript halves the final HP change "
+            "(DivideVarByValue, rounded toward zero, min 1) when HP is updated, after the Focus Sash/"
+            "Endure clamp; Counter, Mirror Coat and Shell Bell use the full damage; no trigger on "
+            "substitute hits. Showdown: halves inside the damage calculation (onSourceModifyDamage, "
+            "chainModify(0.5)), so Counter/Mirror Coat see the halved damage and the order relative "
+            "to Focus Sash differs."),
+        "decomp_ref": (
+            "pokeplatinum/res/battle/scripts/subscripts/subscript_type_resist_berry.s:21-22 "
+            "(Chilan id 35 / super-effective gate), :111 (DivideVarByValue BTLVAR_HP_CALC_TEMP, 2); "
+            "called from pokeplatinum/res/battle/scripts/subscripts/subscript_update_hp.s:10"),
+        "showdown_ref": "pokemon-showdown/data/items.ts:4347-4366 (occaberry onSourceModifyDamage; the other resist berries follow the same pattern)",
+        "resolution": "accepted",
+        "impact": (
+            "Rare: differs only when a resist-berry holder is hit by a super-effective move and "
+            "then uses Counter/Mirror Coat, holds a Focus Sash-like clamp, or rounding of the halved "
+            "value differs by 1 HP. Resist berries stay allowed (validation-log 2026-10-07)."),
+        "test_id": "UNTESTED: no battle test exercises the ordering yet",
+    },
+    {
+        "id": "mech-full-restore-pseudo-move",
+        "area": "ai",
+        "description": (
+            "Opponent Full Restore is modelled as the project pseudo-move `trainerfullrestore` "
+            "(priority 7, Status, target self; full HP, cure status and confusion), because Showdown "
+            "has no bag items. Gap: Showdown's gen4 Taunt disables every Status-category move, so a "
+            "Taunted opponent cannot use it; in the game Taunt does not stop a trainer's bag item. "
+            "Other move-only side effects (lastMove for Encore/Disable/Mirror Move/Copycat, Sucker "
+            "Punch, Pressure, Heal Block) are also open."),
+        "decomp_ref": "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:4056 (TrainerAI_ShouldUseItem)",
+        "showdown_ref": "pokemon-showdown/data/mods/gen4/moves.ts:1411-1418 (taunt onDisableMove: every Status move)",
+        "resolution": "accepted",
+        "impact": (
+            "PENDING T047 (sim/ai/items.mjs): until then the opponent policy is placeholder-default "
+            "and never uses Full Restore, so League opponents heal less than on the cartridge "
+            "(optimistic for the player). Flip to corrected when T047 exempts the pseudo-move from "
+            "Taunt and tests it."),
+        "test_id": "sim/test (T047, not written yet); spike sim/spikes/fullrestore.mjs",
+    },
+    {
+        "id": "exp-gain-and-participation",
+        "area": "exp",
+        "description": (
+            "Showdown has no experience. The game layer tracks participation the game's way and "
+            "computes exp per BtlCmd_CalcExpGain / BattleScript_GetExpTask (trainer x1.5, Lucky Egg "
+            "x1.5, Exp. Share split, traded x1.5/x1.7)."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/battle_script.c:2187 (BtlCmd_CalcExpGain), :9685 "
+            "(BattleScript_GetExpTask); pokeplatinum/src/battle/battle_lib.c:1456-1479 (exp mask)"),
+        "showdown_ref": "pokemon-showdown/sim/battle.ts:2539 (faintMessages: no exp is awarded on faint)",
+        "resolution": "corrected",
+        "impact": "Corrected by sim/exp.mjs (T036).",
+        "test_id": "sim/test/exp.test.mjs (cases 1-15)",
+    },
+    {
+        "id": "exp-level-up-mid-battle",
+        "area": "exp",
+        "description": (
+            "Level-ups happen mid-battle at the KO in the game (stats recomputed with "
+            "Pokemon_CalcStats, current HP raised by the max-HP gain). Showdown has no level-up; the "
+            "game layer sets the level and stats on the live Showdown Pokemon."),
+        "decomp_ref": "pokeplatinum/src/pokemon.c:564 (Pokemon_CalcStats); pokeplatinum/src/battle/battle_script.c:9685 (BattleScript_GetExpTask)",
+        "showdown_ref": "pokemon-showdown/sim/pokemon.ts:1398 (setSpecies: stats from the set's level; nothing in Showdown raises a level)",
+        "resolution": "corrected",
+        "impact": (
+            "Corrected by sim/exp.mjs (T009 spike, T036). UNVERIFIED: that Showdown's faint-event "
+            "timing matches the game's exp timing in every case."),
+        "test_id": "sim/test/exp.test.mjs (case 13: KO -> mid-battle level-up, HP raised)",
+    },
+    {
+        "id": "exp-auto-learn-spec-conflict",
+        "area": "exp",
+        "description": (
+            "On level-up the game learns a level-up move automatically, with no prompt, when the "
+            "Pokemon has fewer than 4 moves (Pokemon_LevelUpMove default branch). The spec says "
+            "always decline new moves. The game layer keeps the moves and flags the event as "
+            "`auto_learn_in_game`. Showdown never changes move slots after construction."),
+        "decomp_ref": "pokeplatinum/src/battle/battle_script.c:10021-10035",
+        "showdown_ref": "pokemon-showdown/sim/pokemon.ts:354 (move slots built once from set.moves)",
+        "resolution": "accepted",
+        "impact": (
+            "PENDING USER DECISION (spec conflict). Affects only builds with fewer than 4 moves that "
+            "level up into a level-up move during the League; such events are reported."),
+        "test_id": "sim/test/exp.test.mjs (auto_learn_in_game flag)",
+    },
+    {
+        "id": "mech-pp-ups",
+        "area": "mechanics",
+        "description": (
+            "Showdown gives every move 3 PP Ups at construction. The game sets trainer mons' max PP "
+            "with ppUps 0 (Pokemon_Init zeroes the data); the spec (FR-008) gives the player no PP "
+            "Ups either."),
+        "decomp_ref": "pokeplatinum/src/pokemon.c:3925 (BoxPokemon_SetMoveSlot), :292-294 (Pokemon_Init zeroes the mon)",
+        "showdown_ref": "pokemon-showdown/sim/pokemon.ts:361 (ppUps = 3)",
+        "resolution": "corrected",
+        "impact": "Corrected by sim/team.mjs: every slot of both sides is reset to decomp base PP.",
+        "test_id": "sim/test/team.test.mjs (Dark Pulse has base PP 15 ... (no PP Ups))",
+    },
+    {
+        "id": "mech-stats-overwrite",
+        "area": "mechanics",
+        "description": (
+            "Battle stats: Showdown computes them with its own formula (spreadModify/statModify). "
+            "The game layer overwrites both sides' stats with the decomp formula after construction "
+            "so no formula or base-stat difference can leak in."),
+        "decomp_ref": "pokeplatinum/src/pokemon.c:564 (Pokemon_CalcStats)",
+        "showdown_ref": "pokemon-showdown/sim/battle.ts:2350-2358 (spreadModify, statModify)",
+        "resolution": "corrected",
+        "impact": "Corrected by sim/team.mjs; the test also shows Showdown's own numbers already agree for every League mon.",
+        "test_id": "sim/test/team.test.mjs (player builds / every League opponent: Showdown stats == Python calc_stats)",
+    },
+    {
+        "id": "ai-trainer-ai",
+        "area": "ai",
+        "description": (
+            "Showdown has no in-game trainer AI. The project runs the decomp's AI scripts in an "
+            "interpreter (research R6): move choice (TrainerAI_Init/EvalMoves/MainSingles), switch "
+            "and item choice in TrainerAI_PickCommand order."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/trainer_ai/trainer_ai.c:211 (TrainerAI_Init), :286 "
+            "(TrainerAI_MainSingles), :3894 (ShouldSwitch), :3989 (PickCommand), :4056 (ShouldUseItem)"),
+        "showdown_ref": "pokemon-showdown/sim/side.ts:1291-1292,1360 ('default' choice -> autoChoose)",
+        "resolution": "accepted",
+        "impact": (
+            "PENDING T045-T048: opponents currently use `placeholder-default` (Showdown's default "
+            "choice), which is named in every result and is NOT the game AI. Results are not "
+            "cartridge-faithful until T045-T048 land; then flip to corrected."),
+        "test_id": "tests/integration/test_worker.py (opponent_policy reported); T048 AI tests (pending)",
+    },
+    {
+        "id": "mech-rng",
+        "area": "mechanics",
+        "description": (
+            "The cartridge's battle RNG is a 32-bit LCG (BattleSystem_RandNext); Showdown uses a "
+            "seeded ChaCha20 (sodium) PRNG, and draws random numbers in a different order and "
+            "count. Individual battles cannot be reproduced from a cartridge seed."),
+        "decomp_ref": "pokeplatinum/src/battle/battle_system.c:1308-1311 (BattleSystem_RandNext, LCRNG)",
+        "showdown_ref": "pokemon-showdown/sim/prng.ts:176 (SodiumRNG); :59 (sodium seeds)",
+        "resolution": "accepted",
+        "impact": (
+            "None on the estimates: results are win-rate distributions over seeded runs "
+            "(Constitution IV), reproducible from the project seed, not from the cartridge."),
+        "test_id": "sim/test/seeds.test.mjs (seed derivation is deterministic)",
+    },
+]
+
+
+def entries() -> list[dict]:
+    return [dict(e) for e in _ENTRIES]

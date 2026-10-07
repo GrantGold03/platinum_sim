@@ -301,3 +301,24 @@ $ node --test sim/test/exp.test.mjs sim/test/team.test.mjs sim/test/gauntlet.tes
   - Weather Ball with no weather throws, because the C leaves its type uninitialised.
   - `powerMul` is assumed to be 10.
   - Form weights.
+
+## 2026-10-07: T053 divergence ledger (agent; re-run by the coordinator)
+
+```
+$ uv run platsim divergences --check
+data/divergences.json is up to date: 72 entries (ai/accepted=2, data/accepted=51, data/corrected=5, exp/accepted=1,
+exp/corrected=2, mechanics/accepted=9, mechanics/corrected=2); 5 Dex patches; version sha256:e48e13f16138a917
+div-check exit=0
+$ uv run pytest -q tests/integration/test_divergences.py tests/integration/test_worker.py → 6 passed, exit 0
+```
+- **Corrected data**:
+  - Endure priority, decomp +3 vs Showdown +4. In a live battle the order flipped from p1,p2 to p2,p1 with the patch.
+  - Counter, Mirror Coat and Metal Burst `flags.protect` set to 0.
+  - Hail `flags.protect` set to 1 (whether this has any effect is **UNVERIFIED**).
+- **Accepted data**: 30 variable-power placeholders, 12 move-target differences (call moves, Struggle, Conversion 2),
+  and 9 hold items with no battle effect that are missing from Showdown.
+- **No differences** in base stats, types or abilities (505 species), or in move power, accuracy, PP, type, category
+  and main flags (467 moves).
+- **Positive control**: a fake +1 attack on Garchomp produces an entry. A missing resolution exits 1.
+- **Pending flips**: the Full Restore entry when T047 lands; the AI entry when T045–T048 land; the auto-learn entry on
+  the user's decision.
