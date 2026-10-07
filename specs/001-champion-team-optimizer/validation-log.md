@@ -407,3 +407,22 @@ $ uv run platsim divergences           → 72 entries (ai/corrected=2, ...), ver
   - double-KO visibility;
   - the overflow score being 64 by C arithmetic vs 65 in the bugs doc;
   - no comparison against the cartridge.
+
+## 2026-10-07: T050 expectimax2-v1, T051 determinism, T056 strength benchmark (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 301, pass 301, fail 0, exit 0
+$ PLATSIM_STRENGTH_N=160 uv run pytest -q -s tests/integration/test_policy_strength.py   (coordinator rerun)
+  greedy-v1       cleared 26/160 = 0.1625  Wilson95 [0.1134, 0.2275]
+  expectimax2-v1  cleared 92/160 = 0.5750  Wilson95 [0.4975, 0.6490]
+  McNemar exact: expectimax2-only=75 greedy-only=9 p=4.31e-14 verdict=A
+  2 passed, exit 0
+```
+- **Agent's N=2000 run** (1258 s, exit 0): 1040/2000 vs 316/2000, p = 3.56e-129 (see research R7 – Measured).
+- **T051**: over 200 gauntlets per policy, every p1 choice is a move or a switch. The live battle and AI RNG are never
+  touched by the look-ahead; a positive control (a policy that draws from the battle PRNG) is caught.
+- **Prediction check**: the shadow-state AI matches the live AI on 664/664 choices. As a control, setting the opponent
+  to 1 HP changes the choice in 140/166 cases.
+- **Fixture**: `tests/fixtures/reference_team.json` is a plausible level-57 team. Its formal legality is pending
+  T029/T030, and its `ability_reason` values are placeholders.
+- **Test fix**: `sim/test/gauntlet.test.mjs` changed its "unknown policy" name, because `expectimax2-v1` now exists.

@@ -13,12 +13,13 @@
 // Seeds: battle i of a request uses deriveSeed(request.seed, 0, i) (sim/seeds.mjs), unless the
 // request passes `seeds` (one per trainer). Every battle's seed is echoed in the result.
 //
-// Policies. The decomp trainer AI (T045-T047) and expectimax2-v1 (T050) do not exist yet; the
-// player may request `greedy-v1` (T049, sim/policy/greedy.mjs). Both sides default to
-// `placeholder-default`, which sends Showdown's `default` choice (first legal move / first legal
-// switch). It is NOT the game AI and NOT a player policy; its name is reported in every result
-// (`player_policy`, `opponent_policy`) so no result produced with it can be mistaken for a real
-// evaluation. Later tasks register real policies with registerPlayerPolicy / registerOpponentPolicy.
+// Policies. The player may request `greedy-v1` (T049, sim/policy/greedy.mjs) or
+// `expectimax2-v1` (T050, sim/policy/expectimax2.mjs); the opponent defaults to `decomp-ai`
+// (T045-T047). The player defaults to `placeholder-default`, which sends Showdown's `default`
+// choice (first legal move / first legal switch). It is NOT a player policy; its name is reported
+// in every result (`player_policy`, `opponent_policy`) so no result produced with it can be
+// mistaken for a real evaluation. Policies register with registerPlayerPolicy /
+// registerOpponentPolicy.
 //   policy = { name, choose(ctx) -> Showdown choice string, afterTurn?(ctx) }
 //   ctx = { gd, battle, side, request, trainer, bag (opponent bag items, mutable), members }
 import { createHash } from 'node:crypto';
@@ -26,6 +27,7 @@ import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
 import { greedy } from './policy/greedy.mjs';
+import { expectimax2 } from './policy/expectimax2.mjs';
 import { decompAI } from './ai/opponent.mjs';
 
 export const PLACEHOLDER = 'placeholder-default';
@@ -35,6 +37,7 @@ export const OPPONENT_POLICIES = new Map([[PLACEHOLDER, placeholder]]);
 export const registerPlayerPolicy = (p) => PLAYER_POLICIES.set(p.name, p);
 export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
+registerPlayerPolicy(expectimax2); // `expectimax2-v1` (T050, sim/policy/expectimax2.mjs, research R7)
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)

@@ -84,5 +84,5 @@ test('pp_restore_between_battles from availability data restores PP', () => {
 
 test('invalid team and unknown policy are reported with the contract error kinds', () => {
   assert.throws(() => runGauntlet(gd, req({ team: [B('notamon', 50, ['tackle'], 'ABILITY_NONE')] })), (e) => e.kind === 'invalid_team');
-  assert.throws(() => runGauntlet(gd, req({ player_policy: 'expectimax2-v1' })), (e) => e.kind === 'internal' && /unknown player_policy/.test(e.message));
+  assert.throws(() => runGauntlet(gd, req({ player_policy: 'no-such-policy-v0' })), (e) => e.kind === 'internal' && /unknown player_policy/.test(e.message));
 });

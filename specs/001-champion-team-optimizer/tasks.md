@@ -416,7 +416,7 @@ research.md (R5/R7/R8) before continuing.
     one is reached, implement that opcode.
 - [X] T049 [P] `sim/policy/greedy.mjs`: pick the highest expected-damage move via `sim/damage.mjs`;
   switch only when forced, to the member with the best expected damage.
-- [ ] T050 `sim/policy/expectimax2.mjs` per research R7:
+- [X] T050 `sim/policy/expectimax2.mjs` per research R7:
   - enumerate actions;
   - predict the opponent with the AI (`sim/ai/choose.mjs`, `switch.mjs`, `items.mjs`) on a
     hypothetical state;
@@ -426,7 +426,7 @@ research.md (R5/R7/R8) before continuing.
   - leaf evaluation documented in a header comment.
   
   The policy is named `expectimax2-v1`.
-- [ ] T051 `sim/test/determinism.test.mjs`: the same gauntlet request run twice gives byte-identical
+- [X] T051 `sim/test/determinism.test.mjs`: the same gauntlet request run twice gives byte-identical
   output, for both policies; a different seed changes the output (positive control). Also assert
   over 200 gauntlets that every p1 choice is a `move` or `switch`, never an item (FR-011).
 - [X] T052 `src/platsim/sim/pool.py`:
@@ -461,7 +461,7 @@ research.md (R5/R7/R8) before continuing.
   
   Test in `tests/unit/test_reports.py`: open the xlsx with openpyxl and check the sheet names,
   headers and that every move has a source.
-- [ ] T056 Policy strength benchmark, `tests/integration/test_policy_strength.py`: on
+- [X] T056 Policy strength benchmark, `tests/integration/test_policy_strength.py`: on
   `tests/fixtures/reference_team.json`, run 2,000 paired gauntlets for `greedy-v1` and
   `expectimax2-v1`. `expectimax2-v1` must have a higher clear rate with a significant paired test.
   Record rates, CIs and run time in `FD/research.md` R7. If it fails, improve the leaf evaluation;

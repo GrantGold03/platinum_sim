@@ -1,0 +1,288 @@
+{
+  "_comment": "T056 reference team for the policy-strength benchmark (tests/integration/test_policy_strength.py). A plausible pre-Champion six: every move is in the species' OWN level-up learnset at a level <= start_level (checked against data/generated/species.json learnset_level, extracted from pokeplatinum res/pokemon/<species>/data.json; the test re-checks this), abilities are in the species' ability list, IV 15 / EV 85 / Hardy (spec FR-008), no held items. Formal legality (availability before the Champion, source, trade rules, level floors) is NOT established here; it is checked later by the legality validator (T029/T030). Uniform level 57 was chosen so that neither policy's clear rate is near 0% or 100% against decomp-ai (level sweep with greedy-v1, 100 gauntlets each, recorded in the T056 report: L52 0%, L56 10%, L58 59%, L60 75%, L64 100%). ability_reason values are fixture placeholders: Luxray's and Alakazam's abilities were picked by hand, not by the FR-008c ability screen.",
+  "level": 57,
+  "team": [
+    {
+      "species": "infernape",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Lv 41 (res/pokemon/infernape/data.json learnset)"
+        },
+        {
+          "move": "flame_wheel",
+          "source_kind": "level_up",
+          "detail": "Lv 21 (res/pokemon/infernape/data.json learnset)"
+        },
+        {
+          "move": "mach_punch",
+          "source_kind": "level_up",
+          "detail": "Lv 14 (res/pokemon/infernape/data.json learnset)"
+        },
+        {
+          "move": "taunt",
+          "source_kind": "level_up",
+          "detail": "Lv 1 (res/pokemon/infernape/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "staraptor",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "brave_bird",
+          "source_kind": "level_up",
+          "detail": "Lv 49 (res/pokemon/staraptor/data.json learnset)"
+        },
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Lv 34 (res/pokemon/staraptor/data.json learnset)"
+        },
+        {
+          "move": "aerial_ace",
+          "source_kind": "level_up",
+          "detail": "Lv 28 (res/pokemon/staraptor/data.json learnset)"
+        },
+        {
+          "move": "double_team",
+          "source_kind": "level_up",
+          "detail": "Lv 13 (res/pokemon/staraptor/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "luxray",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "thunder_fang",
+          "source_kind": "level_up",
+          "detail": "Lv 35 (res/pokemon/luxray/data.json learnset)"
+        },
+        {
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Lv 42 (res/pokemon/luxray/data.json learnset)"
+        },
+        {
+          "move": "spark",
+          "source_kind": "level_up",
+          "detail": "Lv 13 (res/pokemon/luxray/data.json learnset)"
+        },
+        {
+          "move": "scary_face",
+          "source_kind": "level_up",
+          "detail": "Lv 49 (res/pokemon/luxray/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "tie_default",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "garchomp",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "dragon_claw",
+          "source_kind": "level_up",
+          "detail": "Lv 33 (res/pokemon/garchomp/data.json learnset)"
+        },
+        {
+          "move": "dig",
+          "source_kind": "level_up",
+          "detail": "Lv 40 (res/pokemon/garchomp/data.json learnset)"
+        },
+        {
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Lv 48 (res/pokemon/garchomp/data.json learnset)"
+        },
+        {
+          "move": "fire_fang",
+          "source_kind": "level_up",
+          "detail": "Lv 1 (res/pokemon/garchomp/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gyarados",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "aqua_tail",
+          "source_kind": "level_up",
+          "detail": "Lv 35 (res/pokemon/gyarados/data.json learnset)"
+        },
+        {
+          "move": "ice_fang",
+          "source_kind": "level_up",
+          "detail": "Lv 32 (res/pokemon/gyarados/data.json learnset)"
+        },
+        {
+          "move": "dragon_dance",
+          "source_kind": "level_up",
+          "detail": "Lv 44 (res/pokemon/gyarados/data.json learnset)"
+        },
+        {
+          "move": "bite",
+          "source_kind": "level_up",
+          "detail": "Lv 20 (res/pokemon/gyarados/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "alakazam",
+      "source": "reference-fixture",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "psychic",
+          "source_kind": "level_up",
+          "detail": "Lv 40 (res/pokemon/alakazam/data.json learnset)"
+        },
+        {
+          "move": "calm_mind",
+          "source_kind": "level_up",
+          "detail": "Lv 36 (res/pokemon/alakazam/data.json learnset)"
+        },
+        {
+          "move": "recover",
+          "source_kind": "level_up",
+          "detail": "Lv 30 (res/pokemon/alakazam/data.json learnset)"
+        },
+        {
+          "move": "reflect",
+          "source_kind": "level_up",
+          "detail": "Lv 28 (res/pokemon/alakazam/data.json learnset)"
+        }
+      ],
+      "ability": "ABILITY_SYNCHRONIZE",
+      "ability_reason": "tie_default",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    }
+  ]
+}

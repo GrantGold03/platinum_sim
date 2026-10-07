@@ -275,6 +275,25 @@ gives the "skilled human" quality FR-013 asks for at a small fraction of the cos
 teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or it is not called
 "strong".
 
+### R7 – Measured (T056, 2026-10-07)
+
+- **Setup**: 2,000 paired seeds (master `t056-policy-strength`), `tests/fixtures/reference_team.json` at level 57,
+  opponent `decomp-ai`, 16 workers.
+
+  | Policy | Cleared | Rate | Wilson 95% | Gauntlets/s (16 workers) |
+  |---|---|---|---|---|
+  | greedy-v1 | 316 | 0.158 | [0.143, 0.175] | 52.2 |
+  | expectimax2-v1 | 1040 | 0.520 | [0.498, 0.542] | 1.64 |
+
+- **Significance**: McNemar exact, 860 seeds cleared only by expectimax2 vs 136 only by greedy, p = 3.56e-129.
+  `expectimax2-v1` is therefore "strong" relative to greedy (FR-013). A coordinator rerun at N = 160 reproduced 92/160
+  vs 26/160 exactly.
+- **Cost**: about 50 ms per decision, about 32× slower than greedy; around 75% of that is running the AI for
+  prediction. **This dominates the optimizer budget** (see R8). At 1.64 gauntlets/s, the standard preset's ≥ 2,000
+  confirmation runs take about 20 minutes per finalist on this machine.
+- **Known model gaps** are listed in the header of `sim/policy/expectimax2.mjs`: unmodelled status/setup moves, weather
+  never expiring, hazards, multi-hit moves, and so on.
+
 ## R8. Simulation budget and search strategy
 
 **Facts**: 16 cores and 30 GB RAM on this machine. Showdown has no published throughput figure.
