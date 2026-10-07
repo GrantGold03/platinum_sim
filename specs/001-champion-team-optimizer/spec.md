@@ -36,6 +36,9 @@ with the decomp"
 - Q: Do the player's Pokemon have PP Ups or PP Max applied? → A: No. Every move has base PP.
 - Q: The game allows the National Dex before the first Champion win (it needs all 210 Sinnoh species seen,
   which includes losing to the League once). Are National Dex sources allowed? → A: No. Treat them as not allowed.
+- Q: Do items held by wild Pokemon count as a source? → A: Yes, every wild held item counts, except that Munchlax is
+  excluded entirely (too costly to obtain): neither Munchlax itself nor items it holds (Leftovers) are allowed. All other
+  honey-tree encounters are allowed.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -166,6 +169,9 @@ divergence ledger with its resolution.
   forbidden. Only what one Platinum cartridge can obtain alone, before the Champion, is allowed.
 - **FR-006**: Held items MUST be limited to those obtainable pre-Champion, respecting the number of
   copies obtainable; single-copy items can be held by at most one member.
+- **FR-006a**: Items held by wild Pokemon obtainable pre-Champion MUST count as item sources (repeatable
+  wild encounters give unlimited copies). Munchlax MUST be excluded entirely, both as a team member and
+  as a held-item source (user decision 2026-10-07).
 - **FR-007**: Each member's moves, ability, and evolution stage MUST be valid for its species and
   for its level at the moment it is used (e.g., level-up moves at or below the current level, or
   learned by a pre-evolution and carried forward, or via move relearner if pre-Champion).
