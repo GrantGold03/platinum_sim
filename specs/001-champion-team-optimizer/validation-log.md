@@ -94,3 +94,20 @@ pytest exit=0
 ```
 Positive control: every `FLAG_UNK_0xNNNN` name in `generated/vars_flags.txt` (more than 50 of them) equals its embedded hex
 value, which confirms the alias and continue-counting semantics. SPECIES_GARCHOMP = 445 (`generated/species.txt:446`).
+
+## 2026-10-07: T027, T033, T054 (utilities agent; re-run by the coordinator)
+
+```
+$ uv run pytest tests/unit/test_models.py tests/unit/test_seeds.py tests/unit/test_stats.py -q -p no:cacheprovider
+23 passed in 0.54s
+pytest exit=0
+$ node --test sim/test/seeds.test.mjs
+# pass 2   # fail 0   node exit=0
+```
+- **Seeds**: Python and Node give identical seeds over 100 inputs. A derived seed gives an identical Showdown log
+  across two runs, and a different seed gives a different log (positive control).
+- **Stats**: `runs_needed(0.75, 0.02)` = 1799 (Wilson), against "about 1,800" in R8. The Wilson CI is checked against
+  the Newcombe 1998 Table I values that the agent recalled from memory (**UNVERIFIED** against the paper); one row
+  (0/20) is also worked by hand.
+- **Models**: these hold structure only; legality is enforced by T029. The Showdown export round trip is defined
+  as `import(export(t)) == showdown_set()` for each build, because the export format cannot carry provenance.

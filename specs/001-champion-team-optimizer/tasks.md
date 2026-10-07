@@ -281,7 +281,7 @@ research.md (R5/R7/R8) before continuing.
 
 ### 2d. Legality validator (Constitution III, independent of the optimizer)
 
-- [ ] T027 [P] `src/platsim/legality/models.py`: dataclasses `Build`, `MoveChoice`, `TeamCandidate`,
+- [X] T027 [P] `src/platsim/legality/models.py`: dataclasses `Build`, `MoveChoice`, `TeamCandidate`,
   `Violation(code, message, src)` exactly as in `FD/data-model.md`, with JSON round-trip and
   Showdown export/import of the team.
 - [ ] T028 `src/platsim/legality/movesources.py`: `sources(species, move, level, ledger)` returns
@@ -326,7 +326,7 @@ research.md (R5/R7/R8) before continuing.
     `data/divergences.json` does not exist yet (it is created by T053), apply no patches and
     report `divergence_ledger_version: "none"` in `hello`;
   - register the `trainerfullrestore` pseudo-move from T010.
-- [ ] T033 [P] Seed derivation, the same in `sim/seeds.mjs` and `src/platsim/sim/seeds.py`:
+- [X] T033 [P] Seed derivation, the same in `sim/seeds.mjs` and `src/platsim/sim/seeds.py`:
   `sodium,` + first 32 hex of `sha256(f"{master}|{run}|{battle}")`.
   - Test both languages produce identical seeds for 100 inputs; the Python test calls the Node
     function via a subprocess.
@@ -446,7 +446,7 @@ research.md (R5/R7/R8) before continuing.
   - add the `platsim divergences` command, which exits 1 if any entry lacks a resolution;
   - test in `tests/integration/test_divergences.py`, with a positive control that injects a fake
     stat difference and expects an entry.
-- [ ] T054 [P] `src/platsim/stats.py`:
+- [X] T054 [P] `src/platsim/stats.py`:
   - Wilson 95% CI;
   - runs needed for a given half-width;
   - paired comparison of two candidates on shared seeds (McNemar exact test on discordant pairs);
