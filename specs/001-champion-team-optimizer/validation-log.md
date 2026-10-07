@@ -219,3 +219,15 @@ $ node --test sim/test/ai_adapter.test.mjs   → tests 5, pass 5, fail 0, exit 0
 - **Call stack**: `mem.stack` holds instruction indices.
 - **Not implemented**: PushAndGoTo, which nothing in the League sections reaches.
 - **Evidence**: one end-to-end `runSection` test (ScoreMinus10, script.s:1591-1593).
+
+## 2026-10-07: T042 AI move opcodes (agent; re-run by the coordinator)
+
+`node --test sim/test/ai_cmds_moves.test.mjs` → tests 16, pass 16, fail 0, exit 0.
+- **Opcodes**: 14. The player's moves are read from AI memory, not the truth.
+- **Mutation check by the agent**: two deliberate bugs made tests 8, 9 and 15 fail; the tests passed again once the
+  bugs were reverted.
+- **Local helpers**: a full `AIScript_Battler` port (including partners) and `Battler_CountMoves`.
+- **UNVERIFIED**: trap 6 (how a failed move maps to "last move"), and whether the lastResortCount mapping holds beyond
+  one case.
+- **Infrastructure**: `node --test sim/test/` fails on this Node version, so `sim/package.json` now uses
+  `node --test test/*.test.mjs`.

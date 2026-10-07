@@ -389,7 +389,7 @@ research.md (R5/R7/R8) before continuing.
   commands, each implemented with a comment citing the `trainer_ai.c` handler line.
 - [ ] T041 [P] `sim/ai/cmds/battler.mjs`: HP, status, stat-stage, type, ability, item and volatile
   query commands, with citations.
-- [ ] T042 [P] `sim/ai/cmds/moves.mjs`: move-effect, power, type, priority, last-used and
+- [X] T042 [P] `sim/ai/cmds/moves.mjs`: move-effect, power, type, priority, last-used and
   move-in-set queries, with citations.
 - [ ] T043 [P] `sim/ai/cmds/damage.mjs`: `FlagMoveDamageScore`, `IfCurrentMoveKills`, highest-damage
   comparisons, using `sim/damage.mjs` with the AI's per-move roll from `TrainerAI_Init`.
