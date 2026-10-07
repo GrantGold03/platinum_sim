@@ -83,3 +83,14 @@ torment: two consecutive uses, healedToFull true, true
 **Checkpoint A**: throughput 18.9–42.9 battles/s per process (threshold 5): met. T009 works. T010
 works, with the Taunt gap and PP-Up finding recorded for T034 and T047. No plan change is needed;
 research.md R5 and R8 are updated.
+
+## 2026-10-07: Phase 2b (T011)
+
+**T011**: `src/platsim/decomp/constants.py` (C-enum semantics, aliases, masks refused).
+```
+$ uv run pytest tests/unit/test_constants.py -q -p no:cacheprovider
+5 passed in 0.22s
+pytest exit=0
+```
+Positive control: every `FLAG_UNK_0xNNNN` name in `generated/vars_flags.txt` (more than 50 of them) equals its embedded hex
+value, which confirms the alias and continue-counting semantics. SPECIES_GARCHOMP = 445 (`generated/species.txt:446`).

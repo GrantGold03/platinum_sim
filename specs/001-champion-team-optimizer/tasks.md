@@ -123,7 +123,7 @@ research.md (R5/R7/R8) before continuing.
 
 ### 2b. Decomp readers (Python)
 
-- [ ] T011 [P] `src/platsim/decomp/constants.py`:
+- [X] T011 [P] `src/platsim/decomp/constants.py`:
   - `load_enum(name)` parses `PP/generated/<name>.txt`: value = 0-based line index, or the explicit
     value after `=` when present. Skip blank lines and handle trailing `MAX_*`/`NUM_*` sentinels.
   - Returns `{name: int}` plus a `src` ref per name.
