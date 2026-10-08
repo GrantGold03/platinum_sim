@@ -24,9 +24,11 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
 
 ## Next
 - **All 78 tasks are complete** (2026-10-08). The feature works end to end: extract, validate, evaluate, optimize, explain, serve.
-- **Headline result** (V8): the six reference species qualify at average final level **56.10** (clear 0.766, CI lower bound
-  0.75005). The hand-built all-L60 team clears 0.9445.
+- **Headline result** (2026-10-08, defaults: no egg moves, no trade evolutions): the six reference species qualify at
+  average final level **58.23** (start 58/57/57/58/58/59, clear 0.8645). Output in `runs/final-defaults/`. The earlier
+  56.10 used egg moves and the old TM counts and is superseded.
 - **Optional follow-ups** (see validation-log T077):
+  - cap the borderline-confirmation extension (a team at about 75% spent 20,000 runs);
   - `sim/` code hash in provenance;
   - fix the "? (unlimited)" item-source text;
   - real-browser UI check;

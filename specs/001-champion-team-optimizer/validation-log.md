@@ -824,3 +824,18 @@ $ ledger.tm_copies → TM65 1, TM28 1, TM86 1, TM26 1, TM71 1, TM80 1
   walkable but cut off from the arrival tile. A connectivity check would fix this. Copies are now deduplicated by flag
   anyway.
 - **Still open**: about 60 NPC gift sites have no detectable received flag and are counted as before.
+
+## 2026-10-08: fresh standard optimize under new defaults (coordinator)
+
+`uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed --workers 16 --out runs/final-defaults`
+→ EXIT=0, wall time 4:38:49. Run on commit ed92a56 with `repo_dirty` false; legality options egg moves off and trade
+evolutions off; player expectimax2-v2.
+- **First confirmation**: 57/56/56/57/57/58 reached the 20,000-run cap with 14,991 cleared (74.96%), not qualified.
+  This cost about 2.5 h; see the follow-up below.
+- **+1 fallback**: 58/57/57/58/58/59 → **qualified**. Clear 0.8645 [0.8488, 0.8788] over 2,000 runs; Cynthia 0.8676;
+  expected average final level **58.23**; gap 4.
+- `uv run platsim validate runs/final-defaults/team.txt` → legal, exit 0.
+- **Every source is simple and named**: one starter gift, the rest wild catches; no egg; Sitrus Berry from a berry
+  patch. The single-copy TMs used are TM23, TM26, TM71 and TM80.
+- **Follow-up recommended**: borderline extension spends up to 20,000 runs on a team whose rate is essentially at the
+  threshold. Cap the extension much lower (e.g. 5,000) and treat a team still undecided as not qualifying.
