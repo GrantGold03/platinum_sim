@@ -54,6 +54,12 @@ def test_worker_hello_and_gauntlet():
     ledger = REPO_ROOT / "data" / "divergences.json"  # T053; "none" when absent
     assert hello["divergence_ledger_version"] == (json.loads(ledger.read_text())["version"] if ledger.exists() else "none")
     assert hello["decomp_data_hash"].startswith("sha256:")
+    # Code version (sim/version.mjs): the same scheme computed in Python over the same files.
+    from platsim.version import sim_code_hash
+
+    assert hello["sim_code_hash"] == sim_code_hash()
+    assert hello["node_version"] == subprocess.run(["node", "--version"], capture_output=True, text=True,
+                                                   check=True).stdout.strip()
 
     g = out[2]
     assert g["ok"], g

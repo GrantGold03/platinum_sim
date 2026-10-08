@@ -287,7 +287,8 @@ def _read_table(csv_path: Path) -> dict | None:
 SUMMARY_KEYS = ("qualified", "borderline", "threshold", "objective", "n_runs", "clear_rate", "clear_ci95",
                 "champion_rate", "champion_ci95", "expected_avg_final_level", "final_level_gap_max", "budget_preset",
                 "warnings", "no_qualifying", "player_policy", "opponent_policy", "seeds", "decomp_commit",
-                "showdown_commit", "divergence_ledger_version")
+                "showdown_commit", "divergence_ledger_version", "sim_code_hash", "platsim_code_hash", "repo_commit",
+                "repo_dirty", "node_version", "python_version")
 
 
 def _read_summary(json_path: Path) -> dict | None:

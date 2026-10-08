@@ -57,6 +57,16 @@ def test_determinism_fast(tmp_path):
     r = json.loads((tmp_path / "a" / "result.json").read_text())
     assert r["n_runs"] == int(n) and r["budget_preset"] == "quick" and not r["qualified"]
     assert r["player_policy"] == "expectimax2-v2" and r["opponent_policy"] == "decomp-ai"
+    # Code version (platsim/version.py): which code produced the result; equal across worker counts
+    # (the byte-identical check above covers them).
+    from platsim import version
+
+    assert r["sim_code_hash"] == version.sim_code_hash() and r["platsim_code_hash"] == version.platsim_code_hash()
+    assert r["repo_commit"] == version.repo_commit() and isinstance(r["repo_dirty"], bool)
+    assert r["node_version"].startswith("v") and r["python_version"].count(".") == 2
+    for k in ("decomp_commit", "showdown_commit", "divergence_ledger_version", "seeds"):
+        assert r[k]
+    assert r["provenance"]["worker"]["decomp_data_hash"].startswith("sha256:")
     for f in ("result.json", "result.xlsx", "result.csv", "team.txt"):
         assert (tmp_path / "a" / f).is_file()
     # team.txt is a Showdown export that re-imports to a legal team

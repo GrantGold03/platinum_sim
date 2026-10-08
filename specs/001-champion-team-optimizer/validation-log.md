@@ -739,3 +739,23 @@ All logs are in `runs/t076/`.
 3. Do a real-browser check of the web page.
 4. Test optimizer resume after a mid-stage kill.
 5. Compare against the cartridge or an emulator for AI fidelity.
+
+## 2026-10-08: code versioning in provenance (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 314, pass 314, fail 0, exit 0
+$ uv run pytest -q tests/unit/test_version.py tests/unit/test_optimizer_resume.py tests/integration/test_pool.py tests/integration/test_worker.py → 32 passed, exit 0
+$ echo '{"id":1,"op":"hello"}' | node sim/worker.mjs → … "sim_code_hash":"sha256:4fbd7471…","node_version":"v22.22.1" …
+```
+- **Hashes**:
+  - `sim_code_hash` covers `sim/**/*.mjs` and `package.json`, excluding tests and spikes.
+  - `platsim_code_hash` covers `src/platsim/**/*.py` and `pyproject.toml`.
+  - Both use sorted (path, length, bytes), and Node and Python agree.
+- **Provenance**: every result now has `sim_code_hash`, `platsim_code_hash`, `repo_commit`, `repo_dirty`, `node_version`
+  and `python_version`. The agent's 8-vs-3-worker evaluate was still byte-identical.
+- **Pool**: all workers must agree on `sim_code_hash` and the Node version.
+- **Optimizer**: `state.json` stores the fingerprint. A resume with different code, data, ledger, pins or runtime is
+  refused with a `--force-new` hint. A change in `repo_commit` or `repo_dirty` alone is logged but does not block.
+- **UNVERIFIED**: `test_optimize_small` (a real-pool optimize after the reorder) was not rerun; it is exercised by
+  the planned full optimize rerun.
+- **Closes**: the T077 gap under Principle IV.

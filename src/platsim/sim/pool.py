@@ -2,8 +2,9 @@
 
 - `WorkerPool(workers=W)` starts W workers (default `os.cpu_count()`) and sends each a `hello`.
   The reported `showdown_commit` and `decomp_commit` must equal `platsim.pins`, and every worker
-  must report the same provenance (data hash, ledger version, policies); otherwise `PinMismatch`
-  is raised and all workers are stopped.
+  must report the same provenance (sim code hash, node version, data hash, ledger version, policies);
+  a hello without `sim_code_hash` is refused. Otherwise `PinMismatch` is raised and all workers are
+  stopped. `pool.hello` holds the agreed provenance; `pool.sim_code_hash` the agreed sim code hash.
 - `submit(request)` returns a `concurrent.futures.Future` for the worker's response dict;
   `map(requests)` returns the responses in request order. The pool assigns its own wire ids and
   routes each response back by id; the caller's own `id` (if any) is put back on the response.
@@ -29,11 +30,14 @@ import threading
 from concurrent.futures import Future
 from dataclasses import dataclass, field
 
-from platsim import pins
+from platsim import pins, version
 
 WORKER_SCRIPT = pins.REPO_ROOT / "sim" / "worker.mjs"
 # Fields that must agree across every worker of one pool (provenance, Constitution IV).
-_PROVENANCE = ("showdown_commit", "decomp_commit", "decomp_data_hash", "divergence_ledger_version",
+# sim_code_hash (sim/version.mjs) fingerprints the worker code: a worker restarted after sim/ changed
+# on disk reports a different hash and is refused, so one run never mixes sim code versions.
+_PROVENANCE = ("showdown_commit", "decomp_commit", "sim_code_hash", "node_version", "decomp_data_hash",
+               "divergence_ledger_version",
                "divergence_patches_applied", "policies", "opponent_policies", "pp_restore_between_battles")
 
 
@@ -89,6 +93,8 @@ class _Worker:
         bad = {k: (resp.get(k), v) for k, v in expected.items() if resp.get(k) != v}
         if bad:
             raise PinMismatch(f"worker {self.index}: hello does not match pins (got, pinned): {bad}")
+        if not resp.get("sim_code_hash"):
+            raise PinMismatch(f"worker {self.index}: hello has no sim_code_hash (code version unknown)")
         self.hello = resp
         return resp
 
@@ -193,6 +199,7 @@ class WorkerPool:
         self._lock = threading.Lock()
         self._closed = False
         self.hello: dict | None = None
+        version.local_fingerprint()  # fix the Python code fingerprint at the start of the run (cached)
         self.workers = [_Worker(self, i) for i in range(self.size)]
         try:
             for w in self.workers:
@@ -232,6 +239,10 @@ class WorkerPool:
                 job.future.set_exception(self._fatal)
         for _ in range(sentinels):
             self._jobs.put(None)
+
+    @property
+    def sim_code_hash(self) -> str | None:
+        return self.hello.get("sim_code_hash") if self.hello else None
 
     @property
     def restarts(self) -> int:

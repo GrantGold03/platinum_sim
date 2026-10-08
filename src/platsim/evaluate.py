@@ -29,8 +29,10 @@ Pipeline:
 threshold, its half-width <= the preset target, and `final_level_gap_max` <= 10. Evaluate does not add
 runs to resolve a borderline result (that is the optimizer's confirm stage).
 
-result.json is a pure function of (team, runs, seed, policies, budget, threshold, pinned data):
+result.json is a pure function of (team, runs, seed, policies, budget, threshold, pinned data, code version):
 it contains no wall-clock time or output path, so two runs with the same inputs write identical JSON.
+The code version (sim_code_hash, platsim_code_hash, repo_commit, repo_dirty, node_version,
+python_version; platsim/version.py) is recorded so results from different code are told apart.
 """
 
 from __future__ import annotations
@@ -220,6 +222,14 @@ def _divergences() -> tuple[list[DivergenceEntry], str | None]:
     return [DivergenceEntry.from_dict(e) for e in d["entries"]], d.get("version")
 
 
+def code_version_fields(hello: dict) -> dict:
+    """EvaluationReport code-version fields (platsim/version.py) from the pool's agreed hello."""
+    from platsim.version import CODE_KEYS, code_fingerprint
+
+    fp = code_fingerprint(hello)
+    return {k: fp[k] for k in CODE_KEYS}
+
+
 def default_out_dir(team_path: Path, master: str, runs: int, policy: str) -> Path:
     h = hashlib.sha256(team_path.read_bytes() + f"|{master}|{runs}|{policy}".encode()).hexdigest()[:8]
     return pins.REPO_ROOT / "runs" / f"evaluate-{time.strftime('%Y%m%d-%H%M%S')}-{h}"
@@ -351,7 +361,7 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
                "champion_topup_seed": "derive_seed(master, k, 99)",
                "loss_cause_replay_seed": "the lost battle's own seed"},
         decomp_commit=hello["decomp_commit"], showdown_commit=hello["showdown_commit"],
-        divergence_ledger_version=hello["divergence_ledger_version"],
+        divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
         obtained_from=[b.source for b in team.builds], divergences=divs, warnings=warnings, provenance=provenance,
     )
     _log(f"timing: full runs {t_full:.1f}s ({n / max(t_full, 1e-9):.2f} gauntlets/s), Cynthia top-up {t_champ:.1f}s, "
@@ -380,5 +390,5 @@ def summary_text(r: EvaluationReport) -> str:
 
 
 __all__ = ["DEFAULT_PLAYER_POLICY", "DEFAULT_RUNS", "InvalidTeamInput", "TeamEvaluation", "UsageError", "evaluate",
-           "evaluate_team", "load_and_validate", "run_full_gauntlets",
+           "code_version_fields", "evaluate_team", "load_and_validate", "run_full_gauntlets",
            "summary_text", "worker_team"]

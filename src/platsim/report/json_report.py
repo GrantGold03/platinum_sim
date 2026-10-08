@@ -13,6 +13,9 @@ not carry (all optional, all defaulting to "not recorded" in the spreadsheet rat
 - `no_qualifying`: set instead of `team` when no team met the threshold (spec.md Edge Cases,
   SC-001): best clear rate reached and at which levels. A failing team is never reported as the
   result.
+- `sim_code_hash`, `platsim_code_hash`, `repo_commit`, `repo_dirty`, `node_version`,
+  `python_version`: which code produced the result (platsim/version.py; data-model.md). Optional
+  only so that result.json files written before code versioning still load (they read as None).
 - `provenance`: extra run provenance (worker hello data hash, run-count rule, Cynthia top-up
   details, ...); free-form dict, written to result.json and the Provenance sheet.
 - `warnings`: human-readable warnings. `budget_preset == "quick"` always adds QUICK_WARNING
@@ -215,6 +218,13 @@ class EvaluationReport:
     decomp_commit: str
     showdown_commit: str
     divergence_ledger_version: str
+    # --- code version (src/platsim/version.py; None only in reports written before it existed) ---
+    sim_code_hash: str | None = None
+    platsim_code_hash: str | None = None
+    repo_commit: str | None = None
+    repo_dirty: bool | None = None
+    node_version: str | None = None
+    python_version: str | None = None
     # --- display / variant fields (see module docstring) ---
     objective: str = DEFAULT_OBJECTIVE
     obtained_from: list[str] = field(default_factory=list)
@@ -281,6 +291,12 @@ class EvaluationReport:
             "decomp_commit": self.decomp_commit,
             "showdown_commit": self.showdown_commit,
             "divergence_ledger_version": self.divergence_ledger_version,
+            "sim_code_hash": self.sim_code_hash,
+            "platsim_code_hash": self.platsim_code_hash,
+            "repo_commit": self.repo_commit,
+            "repo_dirty": self.repo_dirty,
+            "node_version": self.node_version,
+            "python_version": self.python_version,
             "obtained_from": list(self.obtained_from),
             "held_item_sources": list(self.held_item_sources),
             "resources": [r.to_dict() for r in self.resources],
@@ -313,6 +329,12 @@ class EvaluationReport:
             decomp_commit=d["decomp_commit"],
             showdown_commit=d["showdown_commit"],
             divergence_ledger_version=d["divergence_ledger_version"],
+            sim_code_hash=d.get("sim_code_hash"),
+            platsim_code_hash=d.get("platsim_code_hash"),
+            repo_commit=d.get("repo_commit"),
+            repo_dirty=d.get("repo_dirty"),
+            node_version=d.get("node_version"),
+            python_version=d.get("python_version"),
             objective=d.get("objective", DEFAULT_OBJECTIVE),
             obtained_from=list(d.get("obtained_from", [])),
             held_item_sources=list(d.get("held_item_sources", [])),

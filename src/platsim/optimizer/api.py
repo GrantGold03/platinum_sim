@@ -21,6 +21,7 @@ class OptimizeRequest:
     budget: str = DEFAULT_PRESET  # platsim.budget preset name
     workers: int | None = None  # None: os.cpu_count()
     out_dir: Path | None = None  # None: runs/<job-id>/
+    force_new: bool = False  # discard an existing checkpoint in out_dir (moved to superseded-N/) instead of resuming
 
 
 @dataclass

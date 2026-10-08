@@ -83,7 +83,7 @@ const rl = require('readline').createInterface({ input: process.stdin });
 rl.on('line', (l) => {
   const r = JSON.parse(l);
   const out = (o) => process.stdout.write(JSON.stringify({ id: r.id, ...o }) + '\\n');
-  if (r.op === 'hello') return out({ ok: true, showdown_commit: %(sd)s, decomp_commit: %(pp)s });
+  if (r.op === 'hello') return out({ ok: true, showdown_commit: %(sd)s, decomp_commit: %(pp)s, sim_code_hash: %(sch)s });
   if (r.mode === 'ai') return out({ ok: false, error: { kind: 'ai_unimplemented', detail: 'AI command 0x2a' } });
   if (r.mode === 'crash') process.exit(3);
   setTimeout(() => out({ ok: true, echo: r.n }), r.delay || 0);
@@ -91,8 +91,9 @@ rl.on('line', (l) => {
 """
 
 
-def fake_cmd():
-    return ["node", "-e", FAKE % {"sd": json.dumps(pins.SHOWDOWN_COMMIT), "pp": json.dumps(pins.DECOMP_COMMIT)}]
+def fake_cmd(sim_code_hash="sha256:" + "a" * 64):
+    return ["node", "-e", FAKE % {"sd": json.dumps(pins.SHOWDOWN_COMMIT), "pp": json.dumps(pins.DECOMP_COMMIT),
+                                  "sch": json.dumps(sim_code_hash)}]
 
 
 def test_ai_unimplemented_stops_the_job():
@@ -118,3 +119,42 @@ def test_request_that_crashes_twice_fails_with_workercrashed():
             p.submit({"op": "x", "mode": "crash"}).result(timeout=30)
         assert p.restarts == 2
         assert p.map([{"op": "x", "n": 9}])[0]["echo"] == 9  # the slot still works
+
+
+def test_real_pool_exposes_sim_code_hash():
+    from platsim import version
+
+    with WorkerPool(2) as p:
+        assert p.sim_code_hash == p.hello["sim_code_hash"] == version.sim_code_hash()
+        assert p.hello["node_version"].startswith("v")
+
+
+def test_workers_with_different_sim_code_hash_are_refused(monkeypatch):
+    with WorkerPool(2, command=fake_cmd()) as p:  # positive control: agreeing stand-ins are accepted
+        assert p.sim_code_hash == "sha256:" + "a" * 64
+    real_spawn = pool_mod._Worker.spawn
+
+    def spawn(self):  # worker 1 runs "other code"
+        if self.index == 1:
+            self.pool.command = fake_cmd("sha256:" + "b" * 64)
+        real_spawn(self)
+
+    monkeypatch.setattr(pool_mod._Worker, "spawn", spawn)
+    with pytest.raises(PinMismatch, match="sim_code_hash"):
+        WorkerPool(2, command=fake_cmd())
+
+
+def test_restarted_worker_with_changed_sim_code_is_refused():
+    """sim/ changed on disk mid-run: the restarted worker reports another hash and the job stops."""
+    with WorkerPool(1, command=fake_cmd()) as p:
+        assert p.map([{"op": "x", "n": 1}])[0]["echo"] == 1
+        p.command = fake_cmd("sha256:" + "c" * 64)
+        with pytest.raises(PinMismatch, match="sim_code_hash"):
+            p.submit({"op": "x", "mode": "crash"}).result(timeout=30)
+        with pytest.raises(PinMismatch):
+            p.submit({"op": "x", "n": 2})
+
+
+def test_hello_without_sim_code_hash_is_refused():
+    with pytest.raises(PinMismatch, match="no sim_code_hash"):
+        WorkerPool(1, command=fake_cmd(None))

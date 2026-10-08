@@ -7,7 +7,10 @@
 ## Requests
 ```json
 {"id": 1, "op": "hello"}
-→ {"id": 1, "ok": true, "showdown_commit": "...", "decomp_data_hash": "...", "divergence_ledger_version": "...", "policies": ["expectimax2-v1", "greedy-v1"]}
+→ {"id": 1, "ok": true, "showdown_commit": "...", "sim_code_hash": "sha256:...", "node_version": "v22.22.1",
+   "decomp_commit": "...", "decomp_data_hash": "sha256:...", "divergence_ledger_version": "...",
+   "divergence_patches_applied": 5, "policies": ["greedy-v1", "expectimax2-v2", ...],
+   "opponent_policies": ["decomp-ai", ...], "pp_restore_between_battles": false}
 
 {"id": 2, "op": "gauntlet",
  "team": [ /* 6 Build objects incl. start_level, moves, ability, item, nature, ivs, evs, is_traded */ ],
@@ -30,6 +33,18 @@
 
 Every `gauntlet` response with `"log": "summary"` or `"full"` also includes `state_before` per battle (the
 `start_state` shape), so Cynthia top-ups can resume from a recorded post-Lucian state.
+
+`hello` code version (sim/version.mjs, computed once at worker start):
+- `sim_code_hash` = `"sha256:"` + sha256 over every `*.mjs` and `package.json` under `sim/`, excluding
+  `sim/test/**`, `sim/spikes/**` and `node_modules/**`. Files are taken in ascending order of their
+  repo-relative POSIX path (`sim/ai/adapter.mjs`, ...), each contributing
+  `<path utf-8> 0x00 <byte length, decimal> 0x00 <file bytes>`. `src/platsim/version.py` computes the
+  same hash in Python.
+- `node_version` = `process.version`.
+
+The pool (`src/platsim/sim/pool.py`) requires `showdown_commit` / `decomp_commit` to equal the pins,
+refuses a hello without `sim_code_hash`, and requires every worker (including a restarted one) to
+report the same `sim_code_hash`, `node_version`, data hash, ledger version and policies.
 
 ## Guarantees
 - **Determinism**: the same request with the same seed gives byte-identical output, apart from

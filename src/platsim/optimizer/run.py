@@ -6,7 +6,8 @@ OBJECTIVE (stated in every result, Constitution IV): among teams whose full-gaun
 the threshold (FR-015), minimise the expected average level of the six members after the Champion is
 defeated, with final level gap <= 10 (FR-016).
 
-Stages (each checkpointed in <out>/state.json; a re-run with the same request resumes from it)
+Stages (each checkpointed in <out>/state.json; a re-run with the same request resumes from it, only if the
+code fingerprint matches - see _State; `--force-new` starts over)
 -------------------------------------------------------------------------------------------------
 0. resolve: species names -> SPECIES_* (candidates.resolve_species; InvalidRequest = CLI exit 2).
 1. prune / candidates (candidates.py, resources.py): source variants, legal move pools, R8 dominance
@@ -57,7 +58,7 @@ import sys
 import time
 from pathlib import Path
 
-from platsim import pins
+from platsim import pins, version
 from platsim.budget import get_preset
 from platsim.optimizer import candidates as C
 from platsim.optimizer import resources as R
@@ -92,16 +93,42 @@ def default_out_dir(fp: dict) -> Path:
 
 
 class _State:
-    def __init__(self, path: Path, fp: dict):
+    """<out>/state.json: the job fingerprint (request), the code fingerprint (platsim/version.py:
+    sim + platsim code hashes, node/python versions, pinned commits, data hash, ledger version) and the
+    stage checkpoints. A resume is refused when the job differs, or when any behaviour field of the code
+    fingerprint differs (version.BEHAVIOUR_KEYS), so one result never mixes code versions. With
+    `force_new` the old checkpoint and result files are moved to <out>/superseded-N/ and the job starts
+    over."""
+
+    def __init__(self, path: Path, fp: dict, code: dict, force_new: bool = False):
         self.path = path
         if path.is_file():
-            self.data = json.loads(path.read_text(encoding="utf-8"))
-            if self.data.get("fingerprint") != fp:
-                raise InvalidRequest(f"{path.parent} holds a different optimize job ({self.data.get('fingerprint')}); "
-                                     "use another --out")
-            _log(f"resuming from {path} (stages done: {sorted(self.data.get('stages', {}))})")
-        else:
-            self.data = {"fingerprint": fp, "stages": {}, "level_points": {}, "timing": {}}
+            data = json.loads(path.read_text(encoding="utf-8"))
+            problem = None
+            if data.get("fingerprint") != fp:
+                problem = (f"{path.parent} holds a different optimize job ({data.get('fingerprint')})")
+            else:
+                diff = version.fingerprint_diff(data.get("code"), code)
+                if diff:
+                    what = ("it records no code fingerprint (written before code versioning)" if not data.get("code")
+                            else "; ".join(f"{k}: checkpoint {a!r}, now {b!r}" for k, (a, b) in diff.items()))
+                    problem = (f"{path} was produced by different code/data, refusing to resume and mix versions: "
+                               f"{what}")
+            if problem and not force_new:
+                raise InvalidRequest(f"{problem}. Re-run with --force-new to start over in this directory (the old "
+                                     "checkpoint and results are moved to a superseded-N/ subdirectory), or use "
+                                     "another --out.")
+            if force_new:
+                moved = _supersede(path.parent)
+                _log(f"--force-new: previous checkpoint and results moved to {moved}")
+            else:
+                self.data = data
+                if any(data["code"].get(k) != code.get(k) for k in ("repo_commit", "repo_dirty")):
+                    _log(f"note: repo commit/dirty state differs from the checkpoint ({data['code'].get('repo_commit')}, "
+                         f"dirty={data['code'].get('repo_dirty')}); code hashes match, resuming")
+                _log(f"resuming from {path} (stages done: {sorted(self.data.get('stages', {}))})")
+                return
+        self.data = {"fingerprint": fp, "code": code, "stages": {}, "level_points": {}, "timing": {}}
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -117,6 +144,19 @@ class _State:
         if seconds is not None:
             self.data["timing"][name] = round(seconds, 1)
         self.save()
+
+
+def _supersede(out: Path) -> Path:
+    """Move state.json and the result files of `out` into a fresh out/superseded-N/ (nothing is deleted)."""
+    n = 1
+    while (out / f"superseded-{n}").exists():
+        n += 1
+    dest = out / f"superseded-{n}"
+    dest.mkdir(parents=True)
+    for name in ("state.json", "result.json", "result.xlsx", "result.csv", "team.txt"):
+        if (out / name).exists():
+            os.replace(out / name, dest / name)
+    return dest
 
 
 class _Progress:
@@ -228,13 +268,15 @@ def run_optimization(req: OptimizeRequest, progress: ProgressCallback | None = N
     consts = C.resolve_species(req.species, led)
     fp = job_fingerprint(consts, req)
     out = Path(req.out_dir) if req.out_dir else default_out_dir(fp)
-    state = _State(out / "state.json", fp)
-    if state.stage("report") and (out / "result.json").is_file():
-        prog("done", detail=f"already complete: {out}")
-        return OptimizeResult(out, bool(state.stage("report")["qualified"]))
-    state.save()
+    # The pool starts first: its hello (agreed by every worker) gives the sim code hash and data
+    # fingerprint that the checkpoint must match before anything is resumed.
     pool = WorkerPool(req.workers)
     try:
+        state = _State(out / "state.json", fp, version.code_fingerprint(pool.hello), force_new=req.force_new)
+        if state.stage("report") and (out / "result.json").is_file():
+            prog("done", detail=f"already complete: {out}")
+            return OptimizeResult(out, bool(state.stage("report")["qualified"]))
+        state.save()
         qualified = _run(req, preset, led, consts, out, state, pool, prog)
     finally:
         pool.close()
@@ -641,7 +683,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
 
 
 def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, specs, why: str, attempts=None) -> bool:
-    from platsim.evaluate import _divergences
+    from platsim.evaluate import _divergences, code_version_fields
     from platsim.legality.validator import showdown_name
     from platsim.report import write_all
     from platsim.report.json_report import EvaluationReport, NoQualifying
@@ -659,7 +701,8 @@ def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, spe
         threshold=float(req.min_clear), qualified=False, borderline=False, player_policy=POLICY,
         opponent_policy=OPPONENT, seeds={"master": str(req.seed), "scheme": SCHEME},
         decomp_commit=hello["decomp_commit"], showdown_commit=hello["showdown_commit"],
-        divergence_ledger_version=hello["divergence_ledger_version"], divergences=divs, no_qualifying=nq,
+        divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
+        divergences=divs, no_qualifying=nq,
         warnings=[f"No qualifying team: {why}. Best clear rate {best.wins}/{best.n} at start levels {best.levels}."],
         provenance={"optimizer": _optimizer_provenance(req, preset, state, {
             "best_team_labels": [m.label() for m in specs], "best_team": R.spec_to_json(specs),

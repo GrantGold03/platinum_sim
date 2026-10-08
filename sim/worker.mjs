@@ -6,12 +6,19 @@
 // divergence_ledger_version "none"), register the trainerfullrestore pseudo-move (T010).
 // All of that is sim/gamedata.mjs loadGameData().
 //
+// hello also reports sim_code_hash (sim/version.mjs) and node_version.
+//
 // Ops: hello, gauntlet. Unknown ops and failures answer
 //   {"id", "ok": false, "error": {"kind": "invalid_team" | "ai_unimplemented" | "internal", "detail"}}
 // Env: PLATSIM_GENERATED_DIR / PLATSIM_DIVERGENCES override the data paths (tests).
 import { createInterface } from 'node:readline';
 import { DIVERGENCES_PATH, GENERATED_DIR, loadGameData, showdownCommit } from './gamedata.mjs';
 import { OPPONENT_POLICIES, PLAYER_POLICIES, runGauntlet } from './gauntlet.mjs';
+import { simCodeHash } from './version.mjs';
+
+// Code fingerprint, computed once at start (sim/version.mjs): every result names the sim code that
+// produced it, and the pool refuses workers that disagree (src/platsim/sim/pool.py).
+const SIM_CODE_HASH = simCodeHash();
 
 const gd = loadGameData({
   dir: process.env.PLATSIM_GENERATED_DIR || GENERATED_DIR,
@@ -22,6 +29,8 @@ const SHOWDOWN_COMMIT = showdownCommit();
 function hello() {
   return {
     showdown_commit: SHOWDOWN_COMMIT,
+    sim_code_hash: SIM_CODE_HASH,
+    node_version: process.version,
     decomp_commit: gd.manifest.decomp_commit,
     decomp_data_hash: gd.decompDataHash,
     divergence_ledger_version: gd.dexPatch.version,

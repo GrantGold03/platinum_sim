@@ -114,6 +114,15 @@ the worker contract's `start_state` shape). It is present when `log` is `summary
 | player_policy, opponent_policy | e.g. `expectimax2-v1`, `decomp-ai@c248fb3` |
 | seeds | master seed + derivation scheme |
 | decomp_commit, showdown_commit, divergence_ledger_version | |
+| sim_code_hash, platsim_code_hash | content hashes of the code that produced the result (`src/platsim/version.py`): `sim/**/*.mjs` + `sim/package.json` excluding `sim/test/`, `sim/spikes/` (reported by every worker's `hello`; the pool requires them to agree); `src/platsim/**/*.py` + `pyproject.toml` |
+| repo_commit, repo_dirty | `git rev-parse HEAD` of this repo; whether `git status` shows changes outside `runs/`, `data/generated/`, `.venv/`, `node_modules` (informational: the content hashes identify the code) |
+| node_version, python_version | runtime versions |
+| provenance | free-form run details (worker data hash `decomp_data_hash`, run-count rule, Cynthia top-up, optimizer stages) |
+
+None of these fields contains a time or path, so result.json stays byte-identical across worker
+counts. The optimizer checkpoint (`<out>/state.json`) records the same code fingerprint plus the
+data/pin fields; a resume whose sim/platsim code hash, Node/Python version, pins, data hash or ledger
+version differ is refused (`--force-new` moves the old checkpoint to `superseded-N/` and starts over).
 
 ### Job (web)
 `id, status (queued | running | done | failed), species[6], options, progress {stage, runs_done, best_so_far}, result_paths {json, xlsx, csv}, error`.

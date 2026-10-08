@@ -131,6 +131,9 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
                    help="simulation budget preset (research R8; 'quick' is for testing and never qualifies)")
     p.add_argument("--out", type=Path, default=None,
                    help="output directory (default runs/optimize-<hash of the request>/; re-running resumes from its state.json)")
+    p.add_argument("--force-new", action="store_true",
+                   help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
+                        "checkpoint was made by different code or data, which is never resumed")
 
     def run(args: argparse.Namespace) -> int:
         from platsim.optimizer.api import InvalidRequest, OptimizeRequest, run_optimization
@@ -139,7 +142,8 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
             print(f"platsim optimize: exactly 6 species are required, got {len(args.species)}", file=sys.stderr)
             return 2
         req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
-                              budget=args.budget, workers=args.workers, out_dir=args.out)
+                              budget=args.budget, workers=args.workers, out_dir=args.out,
+                              force_new=args.force_new)
         try:
             res = run_optimization(req)
         except InvalidRequest as e:
