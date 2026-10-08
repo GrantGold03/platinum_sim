@@ -510,3 +510,71 @@ def test_unused_condominium_tm04_is_not_pre_champion(led):
     # Every map the rule takes out of reach is an unused / DP-only map.
     collision_dsts = {e.dst for e in g.edges if "warp_on_collision" in (e.note or "")}
     assert collision_dsts and all("UNUSED" in h or "_DP_" in h for h in collision_dsts - led.reached), collision_dsts
+
+
+# ---------------------------------------------------------------------------------------------
+# One-time flags shared by several entries (ledger._item_copies flag groups, 2026-10-08)
+
+
+def test_tm65_shared_received_flag_counts_once(led):
+    """Both Fantina rooms give TM65 and both set FLAG_RECEIVED_FANTINA_TM65 after the give, each
+    guarded by a check of it: one acquisition in total (it was 2 copies before the flag groups)."""
+    real, dp = f"{SCRIPTS}/scripts_hearthome_city_gym_leader_room.s", f"{SCRIPTS}/scripts_hearthome_city_dp_gym_leader_room.s"
+    _line(real, 92, "Common_GiveItemQuantity")
+    _line(real, 93, "SetFlag FLAG_RECEIVED_FANTINA_TM65")
+    _line(real, 109, "GoToIfUnset FLAG_RECEIVED_FANTINA_TM65")
+    _line(dp, 77, "Common_GiveItemQuantity")
+    _line(dp, 78, "SetFlag FLAG_RECEIVED_FANTINA_TM65")
+    _line(dp, 94, "GoToIfUnset FLAG_RECEIVED_FANTINA_TM65")
+    tm65 = [c for c in led.pre(subject="ITEM_TM65") if c.entry.kind == "npc_item_gift"]
+    assert {c.entry.src[0] for c in tm65} == {f"{real}:92", f"{dp}:77"}  # both sources still listed
+    assert {c.entry.once_flag for c in tm65} == {"FLAG_RECEIVED_FANTINA_TM65"}
+    srcs = {r for c in tm65 for r in c.entry.once_flag_src}
+    assert {f"{real}:93", f"{real}:109", f"{dp}:78", f"{dp}:94"} <= srcs
+    assert led.tm_copies("TM65") == 1
+    grp = [g for g in led.derived["counts"]["shared_once_flag_groups"] if g["item"] == "ITEM_TM65"]
+    assert grp == [{**grp[0], "flag": "FLAG_RECEIVED_FANTINA_TM65", "quantity_summed": 2, "quantity_counted": 1}]
+
+
+def test_shared_item_ball_and_seam_hidden_item_flags(led):
+    """One item ball listed in three map headers (one hidden_flag) is one TM28; a hidden item on a
+    map seam (one hidden_items.h flag, two events files) is one copy."""
+    for path, line in (("events_ruin_maniac_cave_short.json", 9), ("events_ruin_maniac_cave_long.json", 24), ("events_maniac_tunnel.json", 24)):
+        _line(f"res/field/events/{path}", line, '"hidden_flag": "FLAG_OBTAINED_RUIN_MANIAC_CAVE_OR_TUNNEL_TM28"')
+    tm28 = led.pre(subject="ITEM_TM28", kind="item_ball")
+    assert len(tm28) == 3 and {c.entry.once_flag for c in tm28} == {"FLAG_OBTAINED_RUIN_MANIAC_CAVE_OR_TUNNEL_TM28"}
+    assert led.tm_copies("TM28") == 1
+    _line("include/data/field/hidden_items.h", 29, "FLAG_OBTAINED_HIDDEN_VALOR_LAKEFRONT_PP_UP")
+    seam = [c for c in led.pre(subject="ITEM_PP_UP", kind="hidden_item") if c.entry.once_flag == "FLAG_OBTAINED_HIDDEN_VALOR_LAKEFRONT_PP_UP"]
+    assert {c.entry.map_header for c in seam} == {"MAP_HEADER_VALOR_LAKEFRONT", "MAP_HEADER_ROUTE_222"}
+
+
+def test_distinct_flags_still_sum(led):
+    """Positive control: item balls of one item with distinct hidden_flags add up. PP Up: 4 item
+    balls (distinct flags) + 6 hidden-item entries of which 2 share the Valor Lakefront seam flag
+    -> 9 copies (10 entries)."""
+    _line("res/field/events/events_route_206.json", 256, '"hidden_flag": "FLAG_OBTAINED_ROUTE_206_PP_UP"')
+    _line("res/field/events/events_route_213.json", 538, '"hidden_flag": "FLAG_OBTAINED_ROUTE_213_PP_UP"')
+    balls = led.pre(subject="ITEM_PP_UP", kind="item_ball")
+    assert len(balls) == 4 and len({c.entry.once_flag for c in balls}) == 4
+    assert all(c.entry.quantity == 1 for c in led.pre(subject="ITEM_PP_UP"))
+    assert len(led.pre(subject="ITEM_PP_UP")) == 10
+    assert led.item_copies("ITEM_PP_UP") == 9
+    # Route 229: two Nuggets in one run, only the first sets FLAG_RECEIVED_ROUTE_229_NUGGET -> not grouped.
+    _line(f"{SCRIPTS}/scripts_route_229.s", 19, "SetFlag FLAG_RECEIVED_ROUTE_229_NUGGET")
+    nug = [c for c in led.entries if c.entry.kind == "npc_item_gift" and c.entry.subject == "ITEM_NUGGET" and c.entry.map_header == "MAP_HEADER_ROUTE_229"]
+    assert sorted((c.entry.src[0].rsplit(":", 1)[1], c.entry.once_flag) for c in nug) == [("18", "FLAG_RECEIVED_ROUTE_229_NUGGET"), ("24", None)]
+
+
+def test_shared_flag_counts_summary(led):
+    """2026-10-08 flag groups: 20 pre-Champion groups; TM28 3->1, TM65 2->1, TM86 2->1 are the
+    finite-TM changes (TM14/25/38/90 are sold, unlimited either way; HM06 is never consumed)."""
+    n = led.derived["counts"]
+    groups = {(g["item"], g["flag"]): (g["quantity_summed"], g["quantity_counted"]) for g in n["shared_once_flag_groups"]}
+    assert len(groups) == 20
+    assert groups[("ITEM_TM86", "FLAG_RECEIVED_GARDENIA_TM86")] == (2, 1)
+    assert groups[("ITEM_TM28", "FLAG_OBTAINED_RUIN_MANIAC_CAVE_OR_TUNNEL_TM28")] == (3, 1)
+    assert n["tms_finite"]["ITEM_TM28"] == 1 and n["tms_finite"]["ITEM_TM65"] == 1 and n["tms_finite"]["ITEM_TM86"] == 1
+    assert len(n["tms_finite"]) == 56 and len(n["tms_unlimited"]) == 36 and len(n["tms_unavailable"]) == 8
+    data = json.loads((DECOMP_ROOT.parent / "data/generated/availability.json").read_text())
+    assert len(data["counts"]["shared_once_flag_groups"]) == 20

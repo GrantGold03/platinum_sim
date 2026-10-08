@@ -411,17 +411,50 @@ def pre_sp_src(s) -> list[str]:
     return list(getattr(s, "src", [])[:1])
 
 
+def once_flag_groups(led: Ledger, item: str) -> dict[str, list[Classified]]:
+    """Pre-Champion finite entries of `item` grouped by their one-time flag (Entry.once_flag)."""
+    out: dict[str, list[Classified]] = {}
+    for c in led.pre(subject=item):
+        if c.entry.once_flag and c.entry.quantity != UNLIMITED and c.entry.kind not in ("trainer_seen", "dex_seen"):
+            out.setdefault(c.entry.once_flag, []).append(c)
+    return out
+
+
 def _item_copies(led: Ledger, item: str) -> int | str:
+    """Sum of pre-Champion quantities, except that entries sharing a one-time flag (Entry.once_flag:
+    an item ball shown in two map headers, a hidden item on a map seam, one NPC gift reachable from
+    two rooms or two branches) are one acquisition: a flag group adds the max quantity of one
+    member, not the sum."""
     total = 0
+    groups: dict[str, int] = {}
     for c in led.pre(subject=item):
         if c.entry.kind in ("trainer_seen", "dex_seen"):
             continue
         if c.entry.quantity == UNLIMITED:
             return UNLIMITED
-        total += int(c.entry.quantity)
+        q = int(c.entry.quantity)
+        if c.entry.once_flag:
+            groups[c.entry.once_flag] = max(groups.get(c.entry.once_flag, 0), q)
+        else:
+            total += q
+    total += sum(groups.values())
     if total and _is_berry(item) and led.pre(kind="berry_tree"):
         return UNLIMITED
     return total
+
+
+def _shared_flag_groups(led: Ledger) -> list[dict]:
+    """Every one-time flag shared by more than one pre-Champion entry of one item (counts summary)."""
+    items = sorted({c.entry.subject for c in led.entries if c.phase == PRE and c.entry.once_flag})
+    out = []
+    for item in items:
+        for flag, cs in once_flag_groups(led, item).items():
+            if len(cs) > 1:
+                out.append({"item": item, "flag": flag, "entries": [f"{c.entry.kind} {c.entry.map_header} {c.entry.src[0]}" for c in cs],
+                            "flag_src": sorted({r for c in cs for r in c.entry.once_flag_src}),
+                            "quantity_summed": sum(int(c.entry.quantity) for c in cs),
+                            "quantity_counted": max(int(c.entry.quantity) for c in cs)})
+    return out
 
 
 @cache
@@ -474,6 +507,7 @@ def _counts(led: Ledger) -> dict:
         "held_items_unlimited": sorted(h for h, v in held_counts.items() if v == UNLIMITED),
         "held_items_finite": {h: v for h, v in held_counts.items() if v not in (0, UNLIMITED)},
         "held_items_unavailable_count": sum(1 for v in held_counts.values() if v == 0),
+        "shared_once_flag_groups": _shared_flag_groups(led),
         "maps_reachable": len(led.reached),
     }
 

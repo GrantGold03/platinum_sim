@@ -93,6 +93,11 @@ class Entry:
     exclusive_group: str | None = None  # entries in one group exclude each other (starter choice)
     detail: str = ""
     via_species: str | None = None  # wild_held_item: the wild species that holds the item
+    # Finite one-time acquisitions: the save flag that records it (item ball object hidden_flag,
+    # hidden item flag, NPC gift "received" flag), and where it is read. Entries sharing a flag are
+    # one acquisition in total (ledger._item_copies counts a flag group once).
+    once_flag: str | None = None
+    once_flag_src: list[str] = field(default_factory=list)
 
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
@@ -680,8 +685,28 @@ def visible_item_entries() -> list[Entry]:
                     qty = parse_int(c.args[1])
             if item is None or qty is None:
                 continue
-            out.append(Entry("item_ball", item, h, qty, [], [str(o.ref), str(iref)], None, None, [], [], None, sf.entry_label(entry)))
+            # The ball is the object: picking it up sets its hidden_flag (it never reappears), so
+            # two objects with one hidden_flag (one ball shown in two map headers) are one copy.
+            flag = o.data.get("hidden_flag")
+            once = flag if isinstance(flag, str) and flag.startswith("FLAG_") else None
+            out.append(Entry("item_ball", item, h, qty, [], [str(o.ref), str(iref)], None, None, [], [], None, sf.entry_label(entry),
+                             once_flag=once, once_flag_src=[_field_ref(str(o.ref), "hidden_flag")] if once else []))
     return out
+
+
+def _field_ref(obj_ref: str, key: str) -> str:
+    """`path:line` of the first `"key":` at or after an events-JSON element's start line."""
+    path, line = obj_ref.rsplit(":", 1)
+    lines = _text_lines(path)
+    for i in range(int(line) - 1, min(len(lines), int(line) + 40)):
+        if f'"{key}"' in lines[i]:
+            return f"{path}:{i + 1}"
+    return obj_ref
+
+
+@cache
+def _text_lines(path: str) -> tuple[str, ...]:
+    return tuple((PP / path).read_text().splitlines())
 
 
 @cache
@@ -716,10 +741,14 @@ def hidden_item_entries() -> list[Entry]:
             q: int | str = qty
             det = flag
             src = [str(b.ref), href]
+            once = flag
             if flag in daily:
                 q, det = UNLIMITED, f"{flag} (re-hidden daily)"
                 src.append(daily[flag])
-            out.append(Entry("hidden_item", item, h, q, [], src, None, None, [], [], None, det))
+                once = None
+            # A bg event on a map seam is listed in both maps' events files; one flag, one copy.
+            out.append(Entry("hidden_item", item, h, q, [], src, None, None, [], [], None, det,
+                             once_flag=once, once_flag_src=[href] if once else []))
     return out
 
 
@@ -801,6 +830,7 @@ def npc_gift_entries() -> list[Entry]:
                 if not items:
                     continue
                 daily = _daily_guard(sf, c.index)
+                rf = None if daily else received_flag(stem, c.index)
                 for h in owners:
                     gs = site_gates(h, stem, c.index)
                     for item, q in items:
@@ -808,8 +838,57 @@ def npc_gift_entries() -> list[Entry]:
                         det = f"daily ({daily})" if daily else ("several possible items at this site; each counted once" if len(items) > 1 else "")
                         if q is None and not daily:
                             det = (det + "; " if det else "") + "quantity not literal, counted as 1"
-                        out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [], [], None, det))
+                        out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [], [], None, det,
+                                         once_flag=rf[0] if rf else None, once_flag_src=list(rf[1:]) if rf else []))
     return out
+
+
+RECEIVED_FLAG_WINDOW = 8  # commands after the give; real "received" SetFlags sit 1-7 commands after it
+
+
+@cache
+def _checked_flags(stem: str) -> dict[str, str]:
+    """Flags read (CheckFlag: GoToIfSet / GoToIfUnset / ...) in a script file -> first read site."""
+    out: dict[str, str] = {}
+    for c in load_script_file(stem).commands:
+        for p in c.prims:
+            if p.op == "SCRCMD_CHECKFLAG":
+                out.setdefault(p.operands[0].text, str(c.ref))
+    return out
+
+
+@cache
+def received_flag(stem: str, idx: int) -> tuple[str, str, str] | None:
+    """(flag, SetFlag ref, CheckFlag ref) of the one-time "received" flag of the give at (stem, idx).
+
+    The nearest SetFlag on the forward path from the give (breadth-first through next / goto /
+    branch / Call inside the file, within RECEIVED_FLAG_WINDOW commands) of a flag that the same
+    file also checks (the guard that skips the give once the flag is set). Map-local flags
+    (FLAG_MAP_LOCAL_*, cleared on map load) and daily flags are not one-time and are skipped.
+    Every run of the give sets the flag and every run is guarded by it, so two gives that set the
+    same flag are one acquisition in total (e.g. both Fantina rooms set FLAG_RECEIVED_FANTINA_TM65).
+    A give with no such flag (a second give in the same run, as on Route 229) gets None.
+    """
+    sf = load_script_file(stem)
+    checked = _checked_flags(stem)
+    seen: set[int] = set()
+    frontier = [idx]
+    for _ in range(RECEIVED_FLAG_WINDOW + 1):
+        nxt: list[int] = []
+        for i in frontier:
+            if i in seen or i >= len(sf.commands):
+                continue
+            seen.add(i)
+            c = sf.commands[i]
+            for p in c.prims:
+                if p.op != "SCRCMD_SETFLAG":
+                    continue
+                f = p.operands[0].text
+                if f in checked and not f.startswith("FLAG_MAP_LOCAL") and not _is_daily_flag(f):
+                    return f, str(c.ref), checked[f]
+            nxt += [s.index for s in successors(sf, i, stem) if s.file == stem and s.kind != "call_common"]
+        frontier = nxt
+    return None
 
 
 def _daily_guard(sf, idx: int) -> str | None:

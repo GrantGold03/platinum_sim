@@ -806,3 +806,21 @@ $ uv run pytest -q tests/unit/test_legality_options.py tests/unit/test_validator
 - **OPEN, TM65 overcount**: 2 copies counted, 1 real. A DP-leftover Hearthome gym leader room is still counted, and
   both rooms set `FLAG_RECEIVED_FANTINA_TM65` (`scripts_hearthome_city_gym_leader_room.s:93`,
   `scripts_hearthome_city_dp_gym_leader_room.s:78`). To be fixed next: gifts sharing a received flag count as one copy.
+
+## 2026-10-08: shared one-time flag dedupe (agent; re-run by the coordinator)
+
+```
+$ uv run platsim extract --check → up to date (10 files), exit 0
+$ uv run pytest -q tests/integration/test_availability_controls.py tests/integration/test_explain.py tests/unit/test_validator.py tests/unit/test_legality_options.py → 129 passed, exit 0
+$ ledger.tm_copies → TM65 1, TM28 1, TM86 1, TM26 1, TM71 1, TM80 1
+```
+- **Rule**: finite pre-Champion entries for the same item that share the one-time flag guarding them (an item ball's
+  hidden_flag, a hidden item's flag, or an NPC gift's checked-and-set received flag) count the maximum single quantity,
+  not the sum. A test confirms that one conversation giving 2 Nuggets is still 2.
+- **Groups**: 20 were affected. The finite TMs that changed are **TM65 2→1, TM28 3→1, TM86 2→1**. TM14, TM25, TM38 and
+  TM90 stay unlimited because they are sold. The rest are mostly hidden items on map seams. No held-item count
+  changed.
+- **Still open**: the DP-leftover Hearthome gym rooms remain reachable in the map graph, because their warp tiles are
+  walkable but cut off from the arrival tile. A connectivity check would fix this. Copies are now deduplicated by flag
+  anyway.
+- **Still open**: about 60 NPC gift sites have no detectable received flag and are counted as before.

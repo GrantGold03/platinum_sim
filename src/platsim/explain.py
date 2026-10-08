@@ -234,6 +234,8 @@ def _entry_lines(c, led, indent: str = "  ") -> list[str]:
         out.append(_line(f"{ind}requires any of: {', '.join(e.requires_any)}", *e.src))
     if e.exclusive_group:
         out.append(_line(f"{ind}exclusive group: {e.exclusive_group} (only one of the group can be taken)", *e.src))
+    if getattr(e, "once_flag", None):
+        out.append(_line(f"{ind}one-time flag: {e.once_flag} (entries sharing it are one acquisition)", *(e.once_flag_src or e.src)))
     for r in c.reasons:
         out.append(_line(f"{ind}reason: {r}", *e.src))
     if c.uncertain:
@@ -355,6 +357,14 @@ def _explain_item(const: str, subject: str, kind: str, led) -> Explanation:
         refs = [c.entry.src[0] for c in cs if c.phase == "pre_champion"]
         lines.append(_line(f"  copies used by optimizer ({what} pre-Champion copies): {_qty(copies)}"
                            + (" (no pre-Champion source)" if copies == 0 else ""), *(refs[:6] or all_refs)))
+    from platsim.availability.ledger import once_flag_groups
+
+    for flag, grp in once_flag_groups(led, const).items():
+        if len(grp) > 1:
+            lines.append(_line(f"  shared one-time flag {flag}: {len(grp)} pre-Champion entries, counted once "
+                               f"(max quantity {max(int(c.entry.quantity) for c in grp)}, not the sum "
+                               f"{sum(int(c.entry.quantity) for c in grp)})",
+                               *sorted({r for c in grp for r in c.entry.once_flag_src})))
     purch = [c for c in cs if c.phase == "pre_champion" and c.entry.kind in ("shop", "game_corner")]
     lines.append(_line(f"  purchasable pre-Champion: {'yes' if purch else 'no'}"
                        + (" (" + ", ".join(sorted({c.entry.kind for c in purch})) + ")" if purch else ""),

@@ -167,14 +167,31 @@ def test_game_corner_tm_unlimited(capsys, ledger):
 
 
 def test_finite_tm_count_matches_ledger(capsys, ledger):
+    # TM28 was the ">1" control here (3 copies) until 2026-10-08: its three item-ball entries are one
+    # ball shown in three map headers (one hidden_flag), so it is 1 copy now; no TM has more than
+    # one finite copy any more, so the non-trivial finite control is PP Up below.
     n = ledger.tm_copies("TM28")
-    assert isinstance(n, int) and n > 1, n  # control: a finite, non-trivial count
+    assert n == 1, n
     d = run_json(capsys, "tm28")
     assert d["copies"] == n
     rc, out, _ = run(capsys, "tm28")
     assert f"copies used by optimizer (TM/HM pre-Champion copies): {n}  [" in out
     assert "purchasable pre-Champion: no" in out
-    assert len([e for e in d["entries"] if e["phase"] == "pre_champion"]) >= 1
+    assert "shared one-time flag FLAG_OBTAINED_RUIN_MANIAC_CAVE_OR_TUNNEL_TM28: 3 pre-Champion entries, counted once" in out
+    assert len([e for e in d["entries"] if e["phase"] == "pre_champion"]) == 3
+    m = ledger.item_copies("ITEM_PP_UP")
+    assert isinstance(m, int) and m > 1, m  # control: a finite, non-trivial count
+    assert run_json(capsys, "item:pp_up")["copies"] == m
+
+
+def test_tm65_explain_counts_shared_flag_once(capsys, ledger):
+    assert ledger.tm_copies("TM65") == 1
+    rc, out, err = run(capsys, "tm65")
+    assert rc == 0, err
+    assert "copies used by optimizer (TM/HM pre-Champion copies): 1  [" in out
+    assert "shared one-time flag FLAG_RECEIVED_FANTINA_TM65: 2 pre-Champion entries, counted once" in out
+    assert "res/field/scripts/scripts_hearthome_city_gym_leader_room.s:93" in out
+    assert "res/field/scripts/scripts_hearthome_city_dp_gym_leader_room.s:78" in out
 
 
 def test_poke_radar_national_dex_exclusion(capsys):
