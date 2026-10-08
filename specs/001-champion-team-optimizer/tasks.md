@@ -513,7 +513,7 @@ qualifying team" report. Running it again gives identical output. The web flow V
 
 ### Implementation for User Story 1
 
-- [ ] T060 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c (screening policy `greedy-v1`). An ability has a battle effect
+- [X] T060 [P] [US1] `src/platsim/optimizer/abilities.py`, FR-008c (screening policy `greedy-v1`). An ability has a battle effect
   iff its `ABILITY_*` constant is referenced anywhere under `PP/src/battle/` (grep at extract
   time; store the refs).
   - Screening runs 200 paired gauntlets per ability; it keeps slot 1 when there is no significant

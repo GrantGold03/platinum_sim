@@ -632,3 +632,21 @@ $ uv run platsim explain species:magikarp → exit 0; the Foppa trade shows [pos
   - unknown subjects exit 2 with suggestions.
 - **Quickstart** V3 and V4 wording was corrected (constant names, IV order, why Foppa is post-game).
 - **Note**: each call builds the ledger, about 35 s.
+
+## 2026-10-07: T060 ability classification + choose_ability (agent; re-run by the coordinator)
+
+```
+$ uv run platsim extract --check → "up to date (10 files)", exit 0 (new data/generated/abilities_battle.json)
+$ uv run pytest -q tests/unit/test_abilities.py tests/integration/test_ability_screen.py → 28 passed, exit 0
+```
+- **Rule**: an ability has a battle effect iff its `ABILITY_*` name appears, with comments stripped, in
+  `src/battle/**` (excluding `trainer_ai`), `include/battle/**`, `include/constants/battle/**` or
+  `res/battle/scripts/**/*.s`. A raw-number comparison scan finds none.
+- **Result**: of 123 abilities, 121 have an effect and 2 do not (Stench, Illuminate). 9 abilities are found only in
+  battle scripts, e.g. Rock Head, Reckless and Leaf Guard; a C-only scan would have misclassified them.
+- **`choose_ability`** checks in this order: single_ability, then fixed_by_trade, then other_no_battle_effect, then a
+  greedy-v1 paired screen with McNemar (tested_better or tie_default). In the real quick-preset screen of Luxray,
+  Rivalry vs Intimidate tied (p = 1) and the outcomes differed on 18 seeds, which shows the ability is applied.
+- **Divergence added**: `mech-pickup-honey-gather-after-battle` (accepted). The after-battle item from Pickup and
+  Honey Gather (`battle_script.c:7797/:7825`) is not simulated.
+- **UNVERIFIED**: the tested_better branch has been exercised only with a stub pool.

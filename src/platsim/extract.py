@@ -9,6 +9,7 @@ Outputs (one file per table, plus manifest.json):
     exp.json       {"decomp_commit", "max_level", "tables": {EXP_RATE_*: [exp at level 0..max]}, "src"}
     constants.json {"decomp_commit", "gender_ratios", "natures", "abilities", "nature_affinities", "src"}
     availability.json {"decomp_commit", "national_dex", "pp_restore_between_battles", "counts", "entries"}  (platsim.availability.ledger)
+    abilities_battle.json {"decomp_commit", "rule", "counts", "abilities": {ABILITY_*: {has_battle_effect, battle_refs, ...}}}  (platsim.optimizer.abilities, T060)
     manifest.json  {"decomp_commit", "showdown_commit", "files": {name: sha256}}
 
 Determinism: every file is `json.dumps(..., sort_keys=True, indent=1)` + "\n", lists keep the
@@ -112,7 +113,15 @@ def _availability() -> dict[str, Any]:
     return availability_json()
 
 
+def _abilities_battle() -> dict[str, Any]:
+    """T060 / FR-008c: which abilities the battle engine checks (C + battle scripts), with refs."""
+    from platsim.optimizer.abilities import battle_effect_table
+
+    return battle_effect_table()
+
+
 OUTPUTS: dict[str, Builder] = {
+    "abilities_battle": _abilities_battle,
     "availability": _availability,
     "constants": _constants,
     "species": _species,

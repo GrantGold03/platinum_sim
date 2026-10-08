@@ -173,6 +173,23 @@ _ENTRIES: list[dict] = [
         "test_id": "sim/test/ai_choose/ai_switch/ai_items/ai_golden/ai_gauntlet.test.mjs",
     },
     {
+        "id": "mech-pickup-honey-gather-after-battle",
+        "area": "mechanics",
+        "description": (
+            "Pickup and Honey Gather can give the holder an item after a won battle, trainer battles "
+            "included (BtlCmd_GenerateEndOfBattleItem). The gauntlet does not model end-of-battle item "
+            "generation, so these abilities have no effect in simulation."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/battle_script.c:7797, :7825 (BtlCmd_GenerateEndOfBattleItem); "
+            "pokeplatinum/res/battle/scripts/subscripts/subscript_battle_won.s:72"),
+        "showdown_ref": "pokemon-showdown/data/abilities.ts (pickup/honeygather: no end-of-battle item in a single battle)",
+        "resolution": "accepted",
+        "impact": (
+            "Only an item gained between League rooms; it never changes a battle in progress. The "
+            "ability screen will see a tie for these and keep slot 1 (FR-008c)."),
+        "test_id": "tests/unit/test_abilities.py (Pickup/Honey Gather classified has-effect)",
+    },
+    {
         "id": "mech-rng",
         "area": "mechanics",
         "description": (
