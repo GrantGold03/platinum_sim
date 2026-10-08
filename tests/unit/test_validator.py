@@ -31,7 +31,7 @@ import pytest
 from platsim import cli
 from platsim.availability.ledger import build_ledger
 from platsim.legality import movesources as MS
-from platsim.legality.models import TeamCandidate, export_team
+from platsim.legality.models import LegalityOptions, TeamCandidate, export_team
 from platsim.legality.validator import showdown_name, validate
 from platsim.pins import REPO_ROOT
 
@@ -51,6 +51,12 @@ EXPECTED = {
 @pytest.fixture(scope="module")
 def led():
     return build_ledger()
+
+
+@pytest.fixture(scope="module")
+def egg_led(led):
+    """Egg moves allowed (LegalityOptions; default off since 2026-10-08)."""
+    return led.with_options(LegalityOptions(allow_egg_moves=True))
 
 
 def _legal() -> dict:
@@ -108,7 +114,8 @@ def test_relearner_and_level_up_provenance(led):
     assert crunch[0].source_kind == "level_up" and crunch[0].detail == "Level-up Lv 48"
 
 
-def test_egg_move_needs_breeding_and_records_father(led):
+def test_egg_move_needs_breeding_and_records_father(egg_led):
+    led = egg_led  # this test is about egg moves: allow_egg_moves on
     bred = _opt("SPECIES_GARCHOMP", "breed:SPECIES_GIBLE@MAP_HEADER_POKEMON_DAY_CARE", led)
     eggs = [c for c in MS.sources("SPECIES_GARCHOMP", "MOVE_IRON_HEAD", 57, led, bred) if c.source_kind == "egg"]
     assert eggs and "father:" in eggs[0].detail
@@ -118,6 +125,40 @@ def test_egg_move_needs_breeding_and_records_father(led):
     # Negative with a reason: no pre-Champion father learns Outrage by a non-egg method.
     assert MS.sources("SPECIES_GARCHOMP", "MOVE_OUTRAGE", 57, led, bred) == []
     assert any("no pre-Champion father" in w for w in MS.explain("SPECIES_GARCHOMP", "MOVE_OUTRAGE", 57, led, bred))
+
+
+def test_egg_moves_off_by_default(led, egg_led):
+    """Default LegalityOptions: no egg-move source at all, with a reason naming the flag; the same
+    bred option still exists (a Day-Care egg is a species source either way)."""
+    assert led.options == LegalityOptions() and not led.options.allow_egg_moves
+    bred = _opt("SPECIES_GARCHOMP", "breed:SPECIES_GIBLE@MAP_HEADER_POKEMON_DAY_CARE", led)
+    assert MS.sources("SPECIES_GARCHOMP", "MOVE_IRON_HEAD", 57, led, bred) == []
+    assert any("--allow-egg-moves" in w for w in MS.explain("SPECIES_GARCHOMP", "MOVE_IRON_HEAD", 57, led, bred))
+    # positive control: the same query with the flag on finds the egg move
+    on = _opt("SPECIES_GARCHOMP", "breed:SPECIES_GIBLE@MAP_HEADER_POKEMON_DAY_CARE", egg_led)
+    assert [c.source_kind for c in MS.sources("SPECIES_GARCHOMP", "MOVE_IRON_HEAD", 57, egg_led, on)] == ["egg"]
+    # the view is one object per option set and shares the ledger's facts
+    assert led.with_options(LegalityOptions(allow_egg_moves=True)) is egg_led and egg_led.entries is led.entries
+    assert led.with_options(None) is led and egg_led.with_options(LegalityOptions()) is led
+
+
+def _iron_head(d: dict) -> dict:
+    g = d["builds"][1]
+    g["moves"][2] = {"move": "iron_head", "source_kind": "egg", "detail": "Egg move (father: Bastiodon - Level-up Lv 52)"}
+    return d
+
+
+def test_egg_move_rejected_by_default_and_accepted_with_the_flag(led):
+    d = _iron_head(_legal())  # bred Garchomp with the egg move Iron Head
+    (v,) = validate(d, led)
+    assert v.code == "EGG_MOVE_NOT_ALLOWED" and "MOVE_IRON_HEAD" in v.message and "--allow-egg-moves" in v.message
+    assert any("daycare.c" in s for s in v.src)
+    assert validate(_iron_head(_legal()), led, options=LegalityOptions(allow_egg_moves=True)) == []
+    # declared `egg` for a move that is learnable another way is still an egg move: rejected, naming the others
+    d = _legal()
+    d["builds"][1]["moves"][2] = {"move": "crunch", "source_kind": "egg", "detail": "Egg move"}
+    (v,) = validate(d, led)
+    assert v.code == "EGG_MOVE_NOT_ALLOWED" and "level_up" in v.message
 
 
 def test_bastiodon_is_a_valid_iron_head_father(led):
@@ -164,10 +205,11 @@ def test_declared_source_kind_must_match(led):
     assert _codes(d, led) == ["MOVE_SOURCE_MISMATCH"]
 
 
-def test_egg_move_on_a_wild_member_is_not_learnable(led):
-    d = _legal()
-    d["builds"][1]["source"] = "wild_slot:SPECIES_GABITE@MAP_HEADER_VICTORY_ROAD_1F"
-    assert _codes(d, led) == ["MOVE_NOT_LEARNABLE"]
+def test_egg_move_on_a_wild_member_is_not_learnable(led, egg_led):
+    for lg in (led, egg_led):  # not bred: never an egg move, flag or not
+        d = _iron_head(_legal())
+        d["builds"][1]["source"] = "wild_slot:SPECIES_GABITE@MAP_HEADER_VICTORY_ROAD_1F"
+        assert _codes(d, lg) == ["MOVE_NOT_LEARNABLE"]
 
 
 def test_npc_trade_fixed_values_enforced(led):

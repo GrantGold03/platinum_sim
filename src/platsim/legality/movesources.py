@@ -3,7 +3,8 @@
 Public API
 - `source_options(species, ledger)` -> [SourceOption]: every pre-Champion way to own `species`
   (FR-003/FR-005/FR-008b): a ledger acquisition entry (wild / gift / static / roamer / GiveEgg /
-  NPC trade) followed by zero or more non-trade evolutions, or Day-Care breeding. Each option has
+  NPC trade) followed by zero or more evolutions, or Day-Care breeding. Trade evolutions are
+  included only when `ledger.options.allow_trade_evolutions` (see "Legality options"). Each option has
   an `id` (what `Build.source` holds), the chain of `stages` with the lowest level each stage can
   exist at, `min_level` (FR-007 / data-model "start_level >= minimum obtainable level"), the NPC
   trade `fixed_mon`, and the items its evolutions consume.
@@ -38,12 +39,33 @@ Rules (each traced in the decomp; refs are attached to the MoveChoice `availabil
   sFriendshipChangeTable is +1 at every friendship tier with no cap below MAX_FRIENDSHIP_VALUE
   (pokemon.c Pokemon_UpdateFriendship), and walking is unlimited.
 - Route 228 starter tutor: only if ledger.tutor_available("ROUTE_228") (it is post-game).
-- Egg move: only when the member was bred (option kind "breed"); the egg species' egg move list
+- Egg move: only when `ledger.options.allow_egg_moves` and the member was bred (option kind "breed"); the egg species' egg move list
   (LoadSpeciesEggMoves, daycare.c), passed by the *father* (Egg_BuildMoveset). The father must be
   pre-Champion obtainable, able to be male (not female-only / genderless, not Ditto), not in the
   Undiscovered group, share an egg group with a female-capable mother of the line
   (Egg_AreEggGroupsCompatible), and learn the move by a non-egg method. The father is recorded in
   the detail string.
+
+Legality options (legality/models.LegalityOptions, read from `ledger.options`; a ledger view per
+option set comes from `Ledger.with_options`; every cache here keys on the options):
+- allow_egg_moves (default False): off, no egg-move MoveChoice is ever produced (the validator
+  reports EGG_MOVE_NOT_ALLOWED when the move would be an egg move with the flag on). A Day-Care
+  egg ("breed" option) stays a species source either way: hatching a species is not an egg move,
+  and the source preference ranks it last (used only for a breeding-only path).
+- allow_trade_evolutions (default False, FR-005): on, EVO_TRADE (pokemon.c
+  Pokemon_GetEvolutionTargetSpecies, case EVO_CLASS_BY_TRADE) and EVO_TRADE_WITH_HELD_ITEM become
+  evolution steps. The evolution happens when the Pokemon is received in the trade, with no level-up
+  (the stage enters at the pre-evolution's level). The held item must have a pre-Champion copy
+  (ledger.item_copies) and is used up (evolution.c Evolution_ProcessEvolutionEffects sets
+  MON_DATA_HELD_ITEM to ITEM_NONE for EVO_TRADE_WITH_HELD_ITEM), so it is counted in
+  `SourceOption.consumes` like an evolution stone. The option keeps the id of its acquisition
+  entry, and its detail says "trade evolution; needs a second cartridge for the trade". Trading a
+  Pokemon away and back never rewrites its OT (trade_room/application.c calls
+  UpdateMonStatusAndTrainerInfo with mode 5, which only touches an egg's met data), so a
+  trade-evolved member of the player's own is still OT and gets no traded exp boost; only NPC-trade
+  sources do (sim/team.mjs tradeOrigin).
+- Breeding mothers (`breed_mothers`) still use ledger.species_sources, which never includes trade
+  evolutions (conservative).
 """
 
 from __future__ import annotations
@@ -65,7 +87,7 @@ from platsim.decomp.tutors import (
     shard_tutors,
     starter_ultimate_tutors,
 )
-from platsim.legality.models import MoveChoice
+from platsim.legality.models import DEFAULT_LEGALITY, MoveChoice
 from platsim.pins import DECOMP_ROOT
 
 PP = DECOMP_ROOT
@@ -75,6 +97,7 @@ DAYCARE_C = PP / "src" / "overlay005" / "daycare.c"
 MOVE_REMINDER_C = PP / "src" / "move_reminder_data.c"
 SCRIPTS = PP / "res" / "field" / "scripts"
 RELEARNER_SCRIPT = SCRIPTS / "scripts_pastoria_city_east_house.s"
+TRADE_ROOM_C = PP / "src" / "applications" / "trade_room" / "application.c"
 DAYCARE_SCRIPT = SCRIPTS / "scripts_day_care_common.s"
 POKEMON_H = PP / "include" / "constants" / "pokemon.h"
 
@@ -123,6 +146,11 @@ def refs() -> dict[str, list[str]]:
         "default_moves": [ref(POKEMON_C, "static void BoxPokemon_SetDefaultMoves(BoxPokemon *boxMon)")],
         "evolution": [ref(POKEMON_C, "u16 Pokemon_GetEvolutionTargetSpecies(")],
         "evolution_item_consumed": [ref(EVOLUTION_C, "case EVO_LEVEL_WITH_HELD_ITEM_DAY:")],
+        "trade_evolution": [
+            ref(POKEMON_C, "case EVO_CLASS_BY_TRADE:"),
+            ref(EVOLUTION_C, "case EVO_TRADE_WITH_HELD_ITEM:"),
+            ref(TRADE_ROOM_C, "UpdateMonStatusAndTrainerInfo(receivingMon"),
+        ],
         "relearner": [
             ref(RELEARNER_SCRIPT, "CheckItem ITEM_HEART_SCALE"),
             ref(RELEARNER_SCRIPT, "OpenMoveReminderMenu"),
@@ -279,7 +307,7 @@ class SourceOption:
 
 
 def _needs_levelup(method: str | None) -> bool:
-    return method is not None and method not in ITEM_METHODS
+    return method is not None and method not in ITEM_METHODS and method not in TRADE_METHODS
 
 
 def stage_max(opt: SourceOption, i: int, level: int) -> int:
@@ -307,11 +335,17 @@ def _default_moves(const: str, lvl: int) -> list[str]:
     return known
 
 
+def options_of(ledger):
+    """The ledger view's LegalityOptions (models.DEFAULT_LEGALITY for a plain ledger)."""
+    return getattr(ledger, "options", None) or DEFAULT_LEGALITY
+
+
 def source_options(species: str, ledger) -> list[SourceOption]:
     cache_ = ledger.derived.setdefault("legality_options", {})
-    if species not in cache_:
-        cache_[species] = _options(species, ledger, frozenset())
-    return cache_[species]
+    key = (species, options_of(ledger))
+    if key not in cache_:
+        cache_[key] = _options(species, ledger, frozenset())
+    return cache_[key]
 
 
 def min_level(species: str, ledger) -> int | None:
@@ -351,8 +385,9 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
                          e.quantity, e.exclusive_group, (), detail, tuple(e.src)))
     for o in _breed_options(species, led):
         add(o)
+    trade_ok = options_of(led).allow_trade_evolutions
     for pre, ev in _preds().get(species, []):
-        if ev.method in TRADE_METHODS:
+        if ev.method in TRADE_METHODS and not trade_ok:
             continue
         need: list[str] = []
         if isinstance(ev.param, str) and ev.param.startswith("ITEM_"):
@@ -371,8 +406,8 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
             if ev.method in _level_methods():
                 enter = max(int(ev.param), prev.enter + 1)
                 out_level = int(ev.param)
-            elif ev.method in ITEM_METHODS:
-                enter, out_level = prev.enter, None
+            elif ev.method in ITEM_METHODS or ev.method in TRADE_METHODS:
+                enter, out_level = prev.enter, None  # no level-up: evolves on use / on receipt
             else:
                 enter, out_level = prev.enter + 1, None
             if ev.method == "EVO_LEVEL_KNOW_MOVE":
@@ -383,12 +418,18 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
             stages = po.stages[:-1] + (Stage(prev.species, prev.enter, prev.via, out_level), Stage(species, enter, ev.method))
             consumes = dict(po.consumes)
             for it in need:
-                if ev.method in ITEM_METHODS or ev.method in HELD_ITEM_METHODS:
+                if ev.method in ITEM_METHODS or ev.method in HELD_ITEM_METHODS or ev.method == "EVO_TRADE_WITH_HELD_ITEM":
                     consumes[it] = consumes.get(it, 0) + 1
+            if ev.method in TRADE_METHODS:
+                held = f" holding {load_items()[ev.param].name}" if need else ""
+                how = f"trade evolution{held}; needs a second cartridge for the trade"
+                esrc = tuple(refs()["evolution"]) + tuple(refs()["trade_evolution"])
+            else:
+                how, esrc = ev.method, tuple(refs()["evolution"])
             o = SourceOption(po.id, po.kind, po.acquired, po.map_header, po.level_lo, po.level_hi, stages,
                              po.fixed_mon, po.quantity, po.exclusive_group, tuple(sorted(consumes.items())),
-                             po.detail + f" -> {species_name(species)} ({ev.method})",
-                             po.src + tuple(refs()["evolution"]) + tuple(by_constant()[pre].src[6:7]), po.mothers)
+                             po.detail + f" -> {species_name(species)} ({how})",
+                             po.src + esrc + tuple(by_constant()[pre].src[6:7]), po.mothers)
             add(o)
     return sorted(out.values(), key=lambda o: (o.min_level, o.id))
 
@@ -610,6 +651,9 @@ def _choices(opt: SourceOption, move: str, level: int, led, allow_egg: bool = Tr
     if move in sp[root].egg_moves:
         if not allow_egg:
             why.append("egg move (fathers must learn it by a non-egg method)")
+        elif not options_of(led).allow_egg_moves:
+            why.append(f"egg move of {species_name(root)}: egg moves are not allowed (enable allow_egg_moves / "
+                       "--allow-egg-moves)")
         elif opt.kind != "breed":
             why.append(f"egg move of {species_name(root)}, but this member is not bred (source {opt.id})")
         else:
@@ -636,7 +680,7 @@ def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
     preference order (`move_source_key`: no limited copy first, then level-up < TM/HM < tutor <
     relearner), then the simplest father source (`option_class`), then the species constant.
     Returns (SPECIES_*, MoveChoice of the father's own source) or None."""
-    key = ("legality_father", egg_species, move)
+    key = ("legality_father", egg_species, move, options_of(led))
     if key in led.derived:
         return led.derived[key]
     mgroups = {g for m in mothers for g in egg_groups(m)}
@@ -821,7 +865,7 @@ def held_item_source(item: str, led, option: SourceOption | None = None) -> tupl
     return "; ".join(s.label for s in srcs), [r for s in srcs for r in s.src]
 
 
-__all__ = ["SourceOption", "Stage", "source_options", "min_level", "sources", "explain", "uses_of",
+__all__ = ["SourceOption", "Stage", "options_of", "source_options", "min_level", "sources", "explain", "uses_of",
            "relearner_available", "daycare_available", "find_father", "refs", "egg_groups", "gender_ratio",
            "BREED", "OPTION_RANK", "MOVE_KIND_ORDER", "option_class", "option_sort_key", "move_source_key", "move_cost",
            "consumes_limited", "resource_copies", "NoNamedSource", "ItemSource", "item_sources", "held_item_source"]

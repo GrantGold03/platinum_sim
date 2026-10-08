@@ -1,5 +1,5 @@
 {
-  "_comment": "T030 legal team. Each source / move / ability / IV value was read from the decomp: species learnsets res/pokemon/<species>/data.json (by_level, by_tm, egg_moves), the NPC trade res/npc_trades/charap_chatot.json (IVs hp15 atk20 def15 speed25 spAtk25 spDef15, personality 2151 -> nature Lonely = 2151 % 25 (src/pokemon.c:2412), ability slot 2 = Tangled Feet (personality odd), held Leppa Berry), Draco Meteor tutor res/field/scripts/scripts_route_210_grandma_wilma_house.s:80-82, move relearner res/field/scripts/scripts_pastoria_city_east_house.s:53, egg moves src/overlay005/daycare.c Egg_BuildMoveset. Availability (sources, TM copies) from the T024 ledger.",
+  "_comment": "T030 legal team. Each source / move / ability / IV value was read from the decomp: species learnsets res/pokemon/<species>/data.json (by_level, by_tm, egg_moves), the NPC trade res/npc_trades/charap_chatot.json (IVs hp15 atk20 def15 speed25 spAtk25 spDef15, personality 2151 -> nature Lonely = 2151 % 25 (src/pokemon.c:2412), ability slot 2 = Tangled Feet (personality odd), held Leppa Berry), Draco Meteor tutor res/field/scripts/scripts_route_210_grandma_wilma_house.s:80-82, move relearner res/field/scripts/scripts_pastoria_city_east_house.s:53, egg moves src/overlay005/daycare.c Egg_BuildMoveset. Availability (sources, TM copies) from the T024 ledger. Egg moves are off by default since 2026-10-08 (LegalityOptions): Garchomp's third move was the egg move Iron Head and is now Crunch (Garchomp level-up Lv 48, res/pokemon/garchomp/data.json); the Day-Care egg stays its species source (hatching is not an egg move).",
   "builds": [
     {
       "species": "infernape",
@@ -64,9 +64,9 @@
           "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)"
         },
         {
-          "move": "iron_head",
-          "source_kind": "egg",
-          "detail": "Egg move (father: Bastiodon - Level-up Lv 52)"
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 48"
         },
         {
           "move": "fire_fang",

@@ -211,12 +211,18 @@ def unavailable_reason(const: str, led) -> str | None:
     name = display_name(const)
     if const in EXCLUDED_SPECIES:
         return f"{name} is excluded entirely by project rule (spec FR-006a, user decision 2026-10-07)"
+    trade_ok = MS.options_of(led).allow_trade_evolutions
     trade = [(p, ev) for p, ev in MS._preds().get(const, []) if ev.method in MS.TRADE_METHODS]
     if trade:
         p, ev = trade[0]
         held = f" holding {ev.param}" if isinstance(ev.param, str) else ""
-        return f"{name} is only reachable by trade evolution from {display_name(p)} ({ev.method}{held}), " \
-               "which needs a second cartridge (FR-005)"
+        if not trade_ok:
+            return f"{name} is only reachable by trade evolution from {display_name(p)} ({ev.method}{held}), " \
+                   "which needs a second cartridge (FR-005; allow it with --allow-trade-evolutions)"
+        miss = ([f"{display_name(p)} has no pre-Champion source"] if not MS.source_options(p, led) else []) + \
+               ([f"{ev.param} has no pre-Champion copy"] if held and led.item_copies(ev.param) == 0 else [])
+        return f"{name} is only reachable by trade evolution from {display_name(p)} ({ev.method}{held}); trade " \
+               f"evolutions are allowed, but {'; '.join(miss) or 'no pre-Champion path reaches it'}"
     # walk the pre-evolution chain for post-game / excluded entries
     chain, todo = [], [const]
     while todo:
@@ -224,7 +230,7 @@ def unavailable_reason(const: str, led) -> str | None:
         if c in chain:
             continue
         chain.append(c)
-        todo += [p for p, ev in MS._preds().get(c, []) if ev.method not in MS.TRADE_METHODS]
+        todo += [p for p, ev in MS._preds().get(c, []) if trade_ok or ev.method not in MS.TRADE_METHODS]
     post, never = [], []
     for c in led.entries:
         if c.entry.subject in chain or getattr(c.entry, "via_species", None) in chain:

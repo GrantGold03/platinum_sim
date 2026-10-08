@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from platsim.budget import DEFAULT_PRESET
+from platsim.legality.models import LegalityOptions
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,9 @@ class OptimizeRequest:
     workers: int | None = None  # None: os.cpu_count()
     out_dir: Path | None = None  # None: runs/<job-id>/
     force_new: bool = False  # discard an existing checkpoint in out_dir (moved to superseded-N/) instead of resuming
+    # Optional legality rules (egg moves, trade evolutions; both off by default). Part of the job
+    # fingerprint: a checkpoint made with other options is never resumed.
+    legality: LegalityOptions = field(default_factory=LegalityOptions)
 
 
 @dataclass

@@ -40,7 +40,9 @@ def stubbed(monkeypatch):
         return False
 
     monkeypatch.setattr("platsim.sim.pool.WorkerPool", StubPool)
-    monkeypatch.setattr("platsim.availability.ledger.build_ledger", lambda: None)  # the ledger is not needed here
+    # the ledger is not needed here (run_optimization only asks it for a legality-options view)
+    monkeypatch.setattr("platsim.availability.ledger.build_ledger",
+                        lambda: type("NoLedger", (), {"with_options": lambda self, o: None})())
     monkeypatch.setattr(R.C, "resolve_species", lambda species, led: [f"SPECIES_{s.upper()}" for s in species])
     monkeypatch.setattr(R, "_run", fake_run)
     StubPool.hello = dict(HELLO)

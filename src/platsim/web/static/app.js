@@ -12,7 +12,7 @@
     slots: $("slots"), count: $("team-count"), form: $("opt-form"), minClear: $("min-clear"), seed: $("seed"),
     optimize: $("optimize"), formError: $("form-error"), progCard: $("progress-card"), progress: $("progress"),
     jobError: $("job-error"), resCard: $("result-card"), summary: $("summary"), downloads: $("downloads"),
-    table: $("result-table"),
+    table: $("result-table"), allowEgg: $("allow-egg-moves"), allowTrade: $("allow-trade-evolutions"),
   };
 
   const team = []; // [{key, name, types}]
@@ -45,9 +45,10 @@
     const seq = ++searchSeq;
     const q = els.search.value.trim();
     const excluded = els.showExcluded.checked ? 1 : 0;
+    const trade = els.allowTrade.checked ? 1 : 0;
     let res;
     try {
-      res = await fetch(`/api/species?q=${encodeURIComponent(q)}&excluded=${excluded}`);
+      res = await fetch(`/api/species?q=${encodeURIComponent(q)}&excluded=${excluded}&trade_evolutions=${trade}`);
     } catch (e) {
       if (seq === searchSeq) els.status.textContent = "Cannot reach the server.";
       return;
@@ -81,7 +82,8 @@
         onclick: () => addMember(s) },
         el("span", { class: "name", text: s.name }),
         el("span", { class: "types", text: s.types.join(" / ") }),
-        s.available ? null : el("span", { class: "reason", text: s.reason }));
+        s.available ? null : el("span", { class: "reason", text: s.reason }),
+        s.available && s.note ? el("span", { class: "note", text: s.note }) : null);
       els.results.append(el("li", { class: s.available ? "" : "excluded" }, btn));
     }
   }
@@ -148,7 +150,8 @@
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ species: team.map((m) => m.key), min_clear: pct / 100, seed: els.seed.value.trim() || "default" }),
+        body: JSON.stringify({ species: team.map((m) => m.key), min_clear: pct / 100, seed: els.seed.value.trim() || "default",
+          allow_egg_moves: els.allowEgg.checked, allow_trade_evolutions: els.allowTrade.checked }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.status !== 201) {
@@ -228,7 +231,8 @@
       ["Detail", p.detail],
       ["Best so far", bestText(p.best_so_far)],
       ["Species", (job.species || []).join(", ")],
-      ["Options", job.options ? `min clear ${fmtPct(job.options.min_clear)}, seed “${job.options.seed}”, budget ${job.options.budget}` : null],
+      ["Options", job.options ? `min clear ${fmtPct(job.options.min_clear)}, seed “${job.options.seed}”, budget ${job.options.budget}` +
+        `, egg moves ${job.options.allow_egg_moves ? "allowed" : "off"}, trade evolutions ${job.options.allow_trade_evolutions ? "allowed" : "off"}` : null],
     ]);
   }
 
@@ -247,6 +251,7 @@
       ["Final level gap", typeof s.final_level_gap_max === "number" ? s.final_level_gap_max.toFixed(1) : null],
       ["Threshold", typeof s.threshold === "number" ? fmtPct(s.threshold) : null],
       ["Budget", s.budget_preset],
+      ["Legality options", s.legality_options ? `egg moves ${s.legality_options.allow_egg_moves ? "allowed" : "off"}, trade evolutions ${s.legality_options.allow_trade_evolutions ? "allowed" : "off"}` : null],
       ["Policies", s.player_policy ? `player ${s.player_policy}; opponent ${s.opponent_policy}` : null],
       ["Objective", s.objective],
       ["Commits", s.decomp_commit ? `decomp ${String(s.decomp_commit).slice(0, 10)}, Showdown ${String(s.showdown_commit).slice(0, 10)}, ledger ${s.divergence_ledger_version}` : null],
@@ -281,6 +286,7 @@
   // ---- wire up -----------------------------------------------------------------------------
   els.search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS); });
   els.showExcluded.addEventListener("change", runSearch);
+  els.allowTrade.addEventListener("change", runSearch); // availability depends on it (egg moves never do)
   els.form.addEventListener("submit", submit);
   renderTeam();
   runSearch();

@@ -41,6 +41,18 @@ def test_illegal_fixture_exits_2(tmp_path):
     assert validate(str(REFERENCE)) == []
 
 
+def test_egg_move_team_exits_2_without_the_flag(tmp_path):
+    """The V8 optimize result (Luxray egg moves) is illegal by default: evaluate refuses it with
+    EGG_MOVE_NOT_ALLOWED and simulates nothing; validate accepts it with the flag."""
+    v8 = FIX / "t076_v8_team.json"
+    p, _ = _evaluate(tmp_path / "out", str(v8), "--runs", "5")
+    assert p.returncode == 2, p.stderr[-2000:]
+    assert "EGG_MOVE_NOT_ALLOWED" in p.stderr and not (tmp_path / "out").exists()
+    from platsim.legality.models import LegalityOptions
+
+    assert validate(str(v8), options=LegalityOptions(allow_egg_moves=True)) == []
+
+
 def _same_json(a, b) -> None:
     ja, jb = (a / "result.json").read_text(), (b / "result.json").read_text()
     assert ja == jb, f"result.json differs between {a} and {b}"
@@ -67,6 +79,8 @@ def test_determinism_fast(tmp_path):
     for k in ("decomp_commit", "showdown_commit", "divergence_ledger_version", "seeds"):
         assert r[k]
     assert r["provenance"]["worker"]["decomp_data_hash"].startswith("sha256:")
+    # Legality options the team was validated under (both off by default)
+    assert r["provenance"]["legality_options"] == {"allow_egg_moves": False, "allow_trade_evolutions": False}
     for f in ("result.json", "result.xlsx", "result.csv", "team.txt"):
         assert (tmp_path / "a" / f).is_file()
     # team.txt is a Showdown export that re-imports to a legal team

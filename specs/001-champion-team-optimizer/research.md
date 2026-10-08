@@ -84,6 +84,11 @@ not allowed** (spec FR-003a); `ALLOW_NATIONAL_DEX = False` in `availability/ledg
 Oak's Letter, Secret Key, Azure Flute) come only from Mystery Gift handlers (`src/scrcmd_mystery_gift.c:540/582/628/670`)
 and are unobtainable.
 
+**Warp-on-wall rule (2026-10-08)**: a warp whose tile and all four neighbours are collision tiles cannot be stepped on, so
+it is cut from strict reachability (`mapgraph._collision_warps`; warps moved by scripts and maps without tile data are
+skipped). This removed 18 warps and 14 maps (421 → 407 reachable), all unused or DP-leftover maps. TM04 (only in an unused
+Eterna condominium 4F, warp at `events_eterna_city_condominiums_3f.json:72-76`) and Focus Band became unavailable.
+
 **Rationale**: FR-003 requires post-game status to come from the game's own gates. These three
 rules are mechanical, cite their source lines, and are testable with positive controls (the Battle
 Zone, Survival Area tutor and Foppa trade MUST come out post-game; the Route 212 tutor and the

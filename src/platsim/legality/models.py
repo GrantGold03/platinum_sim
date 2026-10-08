@@ -53,6 +53,47 @@ Stats = dict[str, int]
 NameFn = Callable[[str, str], str]
 
 
+@dataclass(frozen=True)
+class LegalityOptions:
+    """Optional legality rules (user decisions 2026-10-08; Constitution III: explicit inputs, never
+    silent assumptions). Both default OFF.
+
+    - `allow_egg_moves`: egg moves (Day-Care breeding with a father that knows the move,
+      movesources "Egg move") are legal sources. Off: no member may use an egg move (validator
+      EGG_MOVE_NOT_ALLOWED). A Day-Care egg stays a legal *species* source either way: hatching a
+      species is not an egg move, and the source preference already ranks it last.
+    - `allow_trade_evolutions`: EVO_TRADE / EVO_TRADE_WITH_HELD_ITEM evolutions are legal (they need
+      a second cartridge to trade with, relaxing FR-005). The held item must have a pre-Champion copy
+      and is used up (evolution.c). Off (FR-005): such species are rejected (SPECIES_TRADE_EVOLUTION).
+
+    Threading: callers turn options into a ledger view (`Ledger.with_options`), which every
+    legality / optimizer function reads as `ledger.options`; results record `to_dict()` in their
+    provenance (`legality_options`)."""
+
+    allow_egg_moves: bool = False
+    allow_trade_evolutions: bool = False
+
+    def to_dict(self) -> dict[str, bool]:
+        return {"allow_egg_moves": self.allow_egg_moves, "allow_trade_evolutions": self.allow_trade_evolutions}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any] | None) -> LegalityOptions:
+        d = d or {}
+        unknown = set(d) - {"allow_egg_moves", "allow_trade_evolutions"}
+        if unknown:
+            raise ValueError(f"unknown legality option(s): {sorted(unknown)}")
+        for k, v in d.items():
+            if not isinstance(v, bool):
+                raise ValueError(f"legality option {k} must be true or false, got {v!r}")
+        return cls(**d)
+
+
+DEFAULT_LEGALITY = LegalityOptions()
+# Behaviour of every result written before the options existed (2026-10-08): egg moves were legal,
+# trade evolutions were not. Used only to re-read such results (report --rerender).
+LEGACY_LEGALITY = LegalityOptions(allow_egg_moves=True, allow_trade_evolutions=False)
+
+
 def _identity(_kind: str, value: str) -> str:
     return value
 

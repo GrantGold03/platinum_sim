@@ -13,6 +13,10 @@
   no resume flag, so the web runner cannot ask the optimizer to continue from its checkpoint.
   Submit the job again (same species and seed give the same result, spec US1 scenario 4).
 - Result files (result.json / result.xlsx / result.csv / team.txt) return 409 until the job is done.
+- Legality options (legality/models.LegalityOptions): POST /api/jobs takes `allow_egg_moves` and
+  `allow_trade_evolutions` (JSON booleans, default false), stored in the job's `options` and passed
+  to the optimizer as OptimizeRequest.legality. GET /api/species takes `trade_evolutions=1` to
+  report availability with trade evolutions allowed (egg moves never change availability).
 """
 
 from __future__ import annotations
@@ -36,6 +40,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from platsim.budget import DEFAULT_PRESET, PRESETS
+from platsim.legality.models import LegalityOptions
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest, OptimizeResult, Progress, run_optimization
 from platsim.pins import REPO_ROOT
 
@@ -200,8 +205,10 @@ class JobRunner:
             return
         self.current = jid
         opts = job["options"]
+        legality = LegalityOptions(allow_egg_moves=bool(opts.get("allow_egg_moves", False)),
+                                   allow_trade_evolutions=bool(opts.get("allow_trade_evolutions", False)))
         req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]), seed=str(opts["seed"]),
-                              budget=str(opts["budget"]), out_dir=store.path(jid))
+                              budget=str(opts["budget"]), out_dir=store.path(jid), legality=legality)
         store.update(jid, status="running", started=_now(),
                      progress={**job["progress"], "stage": "starting"})
         last_stage = ["starting"]
@@ -296,7 +303,9 @@ def _read_summary(json_path: Path) -> dict | None:
         d = json.loads(json_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    return {k: d.get(k) for k in SUMMARY_KEYS}
+    out = {k: d.get(k) for k in SUMMARY_KEYS}
+    out["legality_options"] = (d.get("provenance") or {}).get("legality_options")
+    return out
 
 
 def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT_RUNS_DIR, catalog=None,
@@ -323,10 +332,12 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/api/species")
-    def species(q: str = "", excluded: int = 1, limit: int = 25) -> list[dict]:
+    def species(q: str = "", excluded: int = 1, limit: int = 25, trade_evolutions: int = 0) -> list[dict]:
         cat = holder.require()
         limit = max(1, min(int(limit), 25))
-        return [s.to_json() for s in cat.search(q, include_excluded=bool(excluded), limit=limit)]
+        trade = bool(trade_evolutions)
+        return [s.to_json(allow_trade_evolutions=trade)
+                for s in cat.search(q, include_excluded=bool(excluded), limit=limit, allow_trade_evolutions=trade)]
 
     @app.post("/api/jobs", status_code=201)
     def submit(payload: Any = Body(...)) -> JSONResponse:
@@ -334,8 +345,8 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
         if not isinstance(payload, dict):
             return JSONResponse({"detail": "request body must be a JSON object", "reasons": {}}, status_code=422)
         try:
-            keys = cat.resolve_team(payload.get("species"))
             options = _options(payload)
+            keys = cat.resolve_team(payload.get("species"), allow_trade_evolutions=options["allow_trade_evolutions"])
         except InvalidRequest as e:
             return JSONResponse({"detail": str(e), "reasons": e.reasons}, status_code=422)
         job = store.create(keys, options)
@@ -387,7 +398,15 @@ def _options(payload: dict) -> dict:
     budget = payload.get("budget") or DEFAULT_PRESET
     if budget not in PRESETS:
         raise InvalidRequest(f"unknown budget {budget!r} (known: {', '.join(PRESETS)})")
-    return {"min_clear": min_clear, "seed": str(seed), "budget": budget}
+    flags = {}
+    for k in ("allow_egg_moves", "allow_trade_evolutions"):
+        v = payload.get(k, False)
+        if v is None:
+            v = False
+        if not isinstance(v, bool):
+            raise InvalidRequest(f"{k} must be true or false, got {v!r}")
+        flags[k] = v
+    return {"min_clear": min_clear, "seed": str(seed), "budget": budget, **flags}
 
 
 def _job_or_404(store: JobStore, job_id: str) -> dict:

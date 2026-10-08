@@ -84,7 +84,7 @@ def _log(msg: str) -> None:
 
 def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
     return {"species": list(consts), "min_clear": req.min_clear, "seed": str(req.seed), "budget": req.budget,
-            "state_version": STATE_VERSION}
+            "legality_options": req.legality.to_dict(), "state_version": STATE_VERSION}
 
 
 def default_out_dir(fp: dict) -> Path:
@@ -264,7 +264,8 @@ def run_optimization(req: OptimizeRequest, progress: ProgressCallback | None = N
     if req.workers is not None and req.workers < 1:
         raise InvalidRequest(f"workers must be >= 1, got {req.workers}")
     prog("resolve", detail=f"resolving {list(req.species)}")
-    led = build_ledger()
+    # Every legality / candidate query below reads the options from this ledger view (Ledger.with_options).
+    led = build_ledger().with_options(req.legality)
     consts = C.resolve_species(req.species, led)
     fp = job_fingerprint(consts, req)
     out = Path(req.out_dir) if req.out_dir else default_out_dir(fp)
@@ -625,7 +626,7 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
         "objective": "minimise expected average final level after Cynthia among teams with clear rate >= threshold "
                      "and final gap <= 10 (FR-016)",
         "request": {"species": state.data["fingerprint"]["species"], "min_clear": req.min_clear,
-                    "seed": str(req.seed), "budget": preset.name},
+                    "seed": str(req.seed), "budget": preset.name, "legality_options": req.legality.to_dict()},
         "budget_preset": {"name": preset.name, "screening_rounds": list(preset.screening_rounds),
                           "ability_screen": preset.ability_screen, "confirm_min": preset.confirm_min,
                           "ci_half_width": preset.ci_half_width, "qualifying": preset.qualifying},
@@ -694,7 +695,7 @@ def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, spe
         divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
         divergences=divs, no_qualifying=nq,
         warnings=[f"No qualifying team: {why}. Best clear rate {best.wins}/{best.n} at start levels {best.levels}."],
-        provenance={"optimizer": _optimizer_provenance(req, preset, state, {
+        provenance={"legality_options": req.legality.to_dict(), "optimizer": _optimizer_provenance(req, preset, state, {
             "best_team_labels": [m.label() for m in specs], "best_team": R.spec_to_json(specs),
             "confirm_attempts": attempts})},
     )

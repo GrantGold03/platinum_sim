@@ -31,7 +31,11 @@ Status of an edge:
   * `terrain`: two headers touch in the matrix but no walkable tile pair crosses their border
     (collision bit, include/constants/field/map.h:21-23) - for the edge itself this is a hard
     "no", so these edges are *dropped*, and listed;
-  * `untriggered`: a script warp whose node no event / init script of the map reaches.
+  * `untriggered`: a script warp whose node no event / init script of the map reaches;
+  * `warp_on_collision`: a static warp (never moved by SetWarpEventPos) whose tile and four
+    neighbours are all collision (include/constants/field/map.h collision bit) in the map's own
+    terrain, so the player can never step on it (e.g. the unused Eterna condominium 4F stairs at
+    (1,1) of events_eterna_city_condominiums_3f.json; see `_collision_warps`).
 Reachability is computed to a fixpoint (an object's hidden flag may be set by a script in a map
 that only becomes reachable later). `reachable(strict=True)` treats uncertain edges as cut;
 `strict=False` treats them as open. The difference is the uncertainty report.
@@ -831,6 +835,50 @@ def _moved_warps(edges: list[Edge]) -> list[Edge]:
     return out
 
 
+@cache
+def _script_moved_warps() -> frozenset[tuple[str, int]]:
+    """(header, warp index) of every warp some SetWarpEventPos of its map's scripts moves."""
+    out = set()
+    for name in map_header_names():
+        h = map_headers().get(name)
+        if h is None:
+            continue
+        n = len(events_of(name)["warp"])
+        for c in load_script_file(h.scripts).commands:
+            for p in c.prims:
+                if p.op == "SCRCMD_SETWARPEVENTPOS":
+                    i = _int_operand(p, 0)
+                    if i is not None and i < n:
+                        out.add((name, i))
+    return frozenset(out)
+
+
+def _collision_warps(edges: list[Edge]) -> list[Edge]:
+    """A static warp edge (event data position, not moved by any SetWarpEventPos: those are
+    `_moved_warps`' job) whose tile and four neighbours are all collision in its map's terrain is
+    never stepped on: `uncertain` (warp_on_collision), so strict reachability cuts it. Only applied
+    when the map's terrain covers the warp tile (no terrain data: unchanged)."""
+    moved = _script_moved_warps()
+    out = []
+    for e in edges:
+        if e.kind != "warp" or e.status not in ("open", "conditional"):
+            out.append(e)
+            continue
+        w = next((w for w in events_of(e.src)["warp"] if w.ref == e.ref), None)
+        if w is None or (e.src, w.index) in moved:
+            out.append(e)
+            continue
+        tiles = _header_tiles(e.src)
+        if (w.x, w.z) not in tiles or _near(tiles, w.x, w.z):
+            out.append(e)
+            continue
+        why = (f"warp_on_collision: warp {w.index} of {e.src} at ({w.x},{w.z}) and its four neighbours are collision "
+               "tiles (include/constants/field/map.h collision bit): the player can never step on it")
+        note = (e.note + "; " if e.note else "") + why
+        out.append(replace(e, status="uncertain", note=note, gates=e.gates + (Gate(KIND_UNCERTAIN, e.ref, why, False),)))
+    return out
+
+
 def _pregame_walkable_moves(header: str, sf: ScriptFile, starts, sites) -> str:
     """Refs of SetWarpEventPos sites that are pre-game from the map's init scripts and move the
     warp onto (or next to) a walkable tile; '' if none."""
@@ -1179,7 +1227,7 @@ class MapGraph:
 @cache
 def build_graph() -> MapGraph:
     edges = _warp_edges() + _script_edges() + _hidden_location_edges() + _c_elevator_edges() + _matrix_edges()
-    edges = _moved_warps(_object_barriers(_coord_barriers(edges)))
+    edges = _collision_warps(_moved_warps(_object_barriers(_coord_barriers(edges))))
     return MapGraph(map_header_names(), edges)
 
 

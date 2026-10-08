@@ -16,6 +16,10 @@ the producing run) is copied unchanged. Provenance gets a `rerender` block namin
 the sha256 of its result.json, and the code (platsim_code_hash, repo commit/dirty) that re-rendered.
 
 The source run directory is never written to.
+
+Legality options: sources are re-selected under the run's own `provenance.legality_options`
+(models.LegalityOptions). A run written before the options existed has none and was produced with
+egg moves allowed and trade evolutions forbidden (models.LEGACY_LEGALITY), so that is used.
 """
 
 from __future__ import annotations
@@ -62,7 +66,11 @@ def rerender(run_dir: Path, out_dir: Path | None = None) -> tuple[EvaluationRepo
         raise RerenderError(f"run used decomp {rep.decomp_commit}, this checkout pins {DECOMP_COMMIT}: sources would "
                             "come from different game data")
 
-    led = build_ledger()
+    from platsim.legality.models import LEGACY_LEGALITY, LegalityOptions
+
+    recorded = rep.provenance.get("legality_options")
+    legality = LegalityOptions.from_dict(recorded) if recorded is not None else LEGACY_LEGALITY
+    led = build_ledger().with_options(legality)
     old = rep.team
     specs, levels = [], []
     for b in old.builds:
@@ -109,6 +117,9 @@ def rerender(run_dir: Path, out_dir: Path | None = None) -> tuple[EvaluationRepo
                         "resources. Battle numbers, seeds, commits and the producing run's code hashes are copied "
                         "unchanged (no battle was re-simulated).",
         "source_preference": "legality/movesources.py 'Source preference' (option_sort_key, move_source_key)",
+        "legality_options": legality.to_dict(),
+        "legality_options_from": "the run's provenance" if recorded is not None else
+                                 "not recorded (run predates the options): legacy behaviour, egg moves allowed",
         "checks": ["showdown_set identical per member", "is_traded identical per member",
                    "independent validator: 0 violations"],
         "changes": changes,

@@ -1,5 +1,5 @@
 {
-  "_comment": "legal_team with Staraptor replaced by Gengar, reachable only by EVO_TRADE from Haunter (res/pokemon/haunter/data.json evolutions). Expected: SPECIES_TRADE_EVOLUTION only.",
+  "_comment": "legal_team with Staraptor replaced by Gengar, reachable only by EVO_TRADE from Haunter (res/pokemon/haunter/data.json evolutions). Expected: SPECIES_TRADE_EVOLUTION only. Egg moves are off by default since 2026-10-08 (LegalityOptions): Garchomp's third move was the egg move Iron Head and is now Crunch (Garchomp level-up Lv 48, res/pokemon/garchomp/data.json); the Day-Care egg stays its species source (hatching is not an egg move).",
   "builds": [
     {
       "species": "infernape",
@@ -64,9 +64,9 @@
           "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)"
         },
         {
-          "move": "iron_head",
-          "source_kind": "egg",
-          "detail": "Egg move (father: Bastiodon - Level-up Lv 52)"
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 48"
         },
         {
           "move": "fire_fang",

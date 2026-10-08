@@ -223,7 +223,9 @@ def test_turnback_cave_giratina_room_is_conservatively_cut(led):
 def test_gyms_victory_road_league_reachable(led):
     # generated/map_headers.txt: gym, Victory Road and Pokemon League headers (see test_mapgraph)
     names = map_header_names()
-    gyms = [n for n in names if re.search(r"_GYM(_ROOM_\d|_LEADER_ROOM)?$", n)]
+    # *_DP_GYM headers are Diamond/Pearl layouts left in the data; the Platinum gym's warp to the
+    # Eterna DP gym sits on a collision tile (mapgraph warp_on_collision), so they are excluded.
+    gyms = [n for n in names if re.search(r"_GYM(_ROOM_\d|_LEADER_ROOM)?$", n) and "_DP_" not in n]
     league = [n for n in names if n.startswith("MAP_HEADER_POKEMON_LEAGUE")]
     vr = ["MAP_HEADER_VICTORY_ROAD_1F", "MAP_HEADER_VICTORY_ROAD_2F", "MAP_HEADER_VICTORY_ROAD_B1F"]
     assert len(league) == 19 and len(gyms) >= 8
@@ -466,10 +468,45 @@ def test_wild_held_item_counts(led):
     # Before wild held items (validation-log T023-T026): 42 unlimited, 46 finite, 70 unavailable.
     n = led.derived["counts"]
     assert len(n["held_items_unlimited"]) == 65
-    assert len(n["held_items_finite"]) == 38
-    assert n["held_items_unavailable_count"] == 55
+    # 2026-10-08: Focus Band's only finite source (unused Jubilife condominium 4F gift) is behind a
+    # warp on a collision tile (mapgraph warp_on_collision): 38 -> 37 finite, 55 -> 56 unavailable.
+    assert len(n["held_items_finite"]) == 37
+    assert n["held_items_unavailable_count"] == 56
+    assert led.item_copies("ITEM_FOCUS_BAND") == 0
     assert led.item_copies("ITEM_LEFTOVERS") == 0
     # no wild held item entry is pre-Champion unless its encounter is
     for c in led.pre(kind="wild_held_item"):
         enc = [x for x in led.pre(subject=c.entry.via_species) if x.entry.map_header == c.entry.map_header]
         assert enc, c.entry
+
+
+# ---------------------------------------------------------------------------------------------
+# Warps on collision tiles (mapgraph._collision_warps, 2026-10-08)
+
+
+def test_unused_condominium_tm04_is_not_pre_champion(led):
+    """The unused Eterna condominium 4F (TM04 gift) is entered only by a warp at (1,1) of the 3F,
+    a collision tile with collision neighbours (include/constants/field/map.h:22 collision mask):
+    the player can never step on it, so TM04 has no pre-Champion copy (it was 1 before the rule)."""
+    path = "res/field/events/events_eterna_city_condominiums_3f.json"
+    _line(path, 75, "MAP_HEADER_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F")
+    _line(path, 73, '"x": 1,')
+    _line(path, 74, '"z": 1,')
+    _line(f"{SCRIPTS}/scripts_unused_eterna_city_condominiums_4f.s", 17, "FLAG_RECEIVED_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F_TM04")
+    _line("include/constants/field/map.h", 22, "TERRAIN_ATTRIBUTES_COLLISION_MASK         0x8000")
+    g = build_graph()
+    (e,) = [e for e in g.edges if e.kind == "warp" and e.dst == "MAP_HEADER_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F"]
+    assert e.status == "uncertain" and "warp_on_collision" in e.note and e.ref.line == 72
+    assert "MAP_HEADER_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F" not in led.reached
+    tm04 = _entries(led, subject="ITEM_TM04")
+    assert tm04 and all(c.phase != PRE for c in tm04)  # the gift entry exists, it is just not reachable
+    assert led.item_copies("ITEM_TM04") == 0
+    # Positive controls: the same rule leaves the real 3F, its walkable stairs to 2F, and every real
+    # map whose collision warp has another way in reachable.
+    assert any(e.kind == "warp" and e.src == "MAP_HEADER_ETERNA_CITY_CONDOMINIUMS_3F" and e.status == "open" for e in g.edges)
+    for h in ("MAP_HEADER_ETERNA_CITY_CONDOMINIUMS_3F", "MAP_HEADER_VALOR_LAKEFRONT", "MAP_HEADER_ACUITY_LAKEFRONT",
+              "MAP_HEADER_SENDOFF_SPRING", "MAP_HEADER_HEARTHOME_CITY_GYM_TRAINER_ROOM_2"):
+        assert h in led.reached, h
+    # Every map the rule takes out of reach is an unused / DP-only map.
+    collision_dsts = {e.dst for e in g.edges if "warp_on_collision" in (e.note or "")}
+    assert collision_dsts and all("UNUSED" in h or "_DP_" in h for h in collision_dsts - led.reached), collision_dsts

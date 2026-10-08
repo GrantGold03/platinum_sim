@@ -780,3 +780,29 @@ $ grep -c "?" runs/t076/v8-rerendered/result.csv → 0
 - **Agent's broader run**: 224 tests passed (unit, evaluate, web).
 - **Open**: the TM04 source is listed as "Gift - Unused Eterna City Condominiums…". It is being checked as part of the
   flags task.
+
+## 2026-10-08: optional legality flags (egg moves, trade evolutions; both default off) + TM04 fix (agent; re-run by the coordinator)
+
+```
+$ uv run platsim extract --check → up to date (10 files), exit 0
+$ uv run platsim validate tests/fixtures/t076_v8_team.json → 2× EGG_MOVE_NOT_ALLOWED (Luxray Ice Fang, Fire Fang), exit 2
+$ uv run platsim validate --allow-egg-moves tests/fixtures/t076_v8_team.json → legal, exit 0
+$ uv run pytest -q tests/unit/test_legality_options.py tests/unit/test_validator.py tests/integration/test_availability_controls.py tests/integration/test_web.py → 108 passed, exit 0
+```
+- **Options**: `LegalityOptions(allow_egg_moves=False, allow_trade_evolutions=False)` is passed through the validator,
+  the ledger view (`Ledger.with_options`), the optimizer, evaluate, the CLI flags, the web API and the page
+  checkboxes. The options are recorded in `provenance.legality_options` and in the optimizer fingerprint, so a resume
+  with different options is refused.
+- **Egg moves off**: no egg-move sources are offered. A Day Care egg remains allowed as a species source.
+- **Trade evolutions on**: they are legal from an obtainable pre-evolution. An item-trade evolution consumes a
+  pre-Champion copy of the item (Rhyperior ×2 → ITEM_COPIES for the single Protector). No traded-exp boost applies: a
+  received Pokémon's OT is unchanged (`trade_room/application.c:2452` → `unk_02092494.c:816-822`), and
+  `BattleSystem_PokemonIsOT` compares OT (`battle_lib.c:6286-6301`). `sim/team.mjs` already boosts only `npc_trade:`
+  sources, and a Node test covers it.
+- **Fixtures**: `legal_team` and the six `illegal_*` fixtures replaced Garchomp's egg move Iron Head with Crunch
+  (Lv 48). Egg-specific tests pass the flag explicitly.
+- **TM04 was wrong**: its gift sits behind an unreachable warp, now cut by the warp-on-wall rule (research R2). TM04 is
+  now unavailable (0 copies). Focus Band is also now unavailable.
+- **OPEN, TM65 overcount**: 2 copies counted, 1 real. A DP-leftover Hearthome gym leader room is still counted, and
+  both rooms set `FLAG_RECEIVED_FANTINA_TM65` (`scripts_hearthome_city_gym_leader_room.s:93`,
+  `scripts_hearthome_city_dp_gym_leader_room.s:78`). To be fixed next: gifts sharing a received flag count as one copy.

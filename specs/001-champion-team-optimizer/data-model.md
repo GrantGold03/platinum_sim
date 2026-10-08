@@ -72,7 +72,7 @@ Personality is computed by the Python port of `TrainerData_BuildParty` and teste
 ### Build (one team member)
 | Field | Type | Rule |
 |---|---|---|
-| species | Species key | must have pre-Champion availability, no trade evolution (FR-003, FR-005) |
+| species | Species key | must have pre-Champion availability, no trade evolution (FR-003, FR-005) unless `allow_trade_evolutions` |
 | source | AvailabilityEntry ref | wild/gift/npc_trade; selected by the optimizer (FR-008b) |
 | start_level | int 1–100 | chosen by the optimizer; ≥ the minimum level at which the species/form is obtainable |
 | moves | [MoveChoice ×1–4] | |
@@ -117,15 +117,21 @@ the worker contract's `start_state` shape). It is present when `log` is `summary
 | sim_code_hash, platsim_code_hash | content hashes of the code that produced the result (`src/platsim/version.py`): `sim/**/*.mjs` + `sim/package.json` excluding `sim/test/`, `sim/spikes/` (reported by every worker's `hello`; the pool requires them to agree); `src/platsim/**/*.py` + `pyproject.toml` |
 | repo_commit, repo_dirty | `git rev-parse HEAD` of this repo; whether `git status` shows changes outside `runs/`, `data/generated/`, `.venv/`, `node_modules` (informational: the content hashes identify the code) |
 | node_version, python_version | runtime versions |
-| provenance | free-form run details (worker data hash `decomp_data_hash`, run-count rule, Cynthia top-up, optimizer stages) |
+| provenance | free-form run details (worker data hash `decomp_data_hash`, run-count rule, Cynthia top-up, optimizer stages). `legality_options` `{allow_egg_moves, allow_trade_evolutions}` (both false by default) records the optional legality rules the team was validated under; the optimizer also records them in `optimizer.request` |
 
 None of these fields contains a time or path, so result.json stays byte-identical across worker
 counts. The optimizer checkpoint (`<out>/state.json`) records the same code fingerprint plus the
-data/pin fields; a resume whose sim/platsim code hash, Node/Python version, pins, data hash or ledger
+data/pin fields, and its job fingerprint includes `legality_options` (a resume with other options is
+refused as a different job); a resume whose sim/platsim code hash, Node/Python version, pins, data hash or ledger
 version differ is refused (`--force-new` moves the old checkpoint to `superseded-N/` and starts over).
 
 ### Job (web)
-`id, status (queued | running | done | failed), species[6], options, progress {stage, runs_done, best_so_far}, result_paths {json, xlsx, csv}, error`.
+`id, status (queued | running | done | failed), species[6], options {min_clear, seed, budget, allow_egg_moves, allow_trade_evolutions}, progress {stage, runs_done, best_so_far}, result_paths {json, xlsx, csv}, error`.
+
+### LegalityOptions
+`allow_egg_moves: bool = false, allow_trade_evolutions: bool = false` (frozen; `src/platsim/legality/models.py`).
+Passed as CLI flags, web job fields or `OptimizeRequest.legality`; applied through a ledger view
+(`Ledger.with_options`) that every legality and optimizer query reads.
 
 State transitions: `queued → running → done | failed`. There are no other transitions. A job
 interrupted by a restart resumes from its last checkpoint or is marked `failed` with its reason.

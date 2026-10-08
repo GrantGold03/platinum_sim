@@ -17,6 +17,19 @@
   <main>
     <section class="card" aria-labelledby="pick-h">
       <h2 id="pick-h">1. Choose species</h2>
+      <fieldset class="rules">
+        <legend>Optional rules (both off by default)</legend>
+        <label class="check" for="allow-egg-moves">
+          <input id="allow-egg-moves" type="checkbox">
+          Allow egg moves (Day-Care breeding)
+        </label>
+        <label class="check" for="allow-trade-evolutions">
+          <input id="allow-trade-evolutions" type="checkbox" aria-describedby="trade-help">
+          Allow trade evolutions
+        </label>
+        <p id="trade-help" class="muted small">Trade evolutions need a second cartridge to trade with; an
+          item-trade evolution uses up its held item, which must be obtainable before the Champion.</p>
+      </fieldset>
       <label class="field" for="search">Search species
         <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. gar"
                aria-describedby="search-status" aria-controls="results">

@@ -22,6 +22,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from platsim.legality.models import Build, MoveChoice, TeamCandidate
+from platsim.legality.models import LegalityOptions
 from platsim.optimizer.api import OptimizeRequest, OptimizeResult, Progress
 from platsim.report import write_all
 from platsim.report.json_report import BattleStat, EvaluationReport
@@ -178,9 +179,11 @@ def test_job_lifecycle_and_results(tmp_path, catalog):
     stub.release.set()
     job = _wait(client, jid, {"done", "failed"})
     assert job["status"] == "done", job
-    assert job["species"] == team and job["options"] == {"min_clear": 0.8, "seed": "fixed", "budget": "standard"}
+    assert job["species"] == team and job["options"] == {"min_clear": 0.8, "seed": "fixed", "budget": "standard",
+                                                           "allow_egg_moves": False, "allow_trade_evolutions": False}
     req = stub.calls[0]
     assert req.species == tuple(team) and req.min_clear == 0.8 and req.seed == "fixed" and req.out_dir == tmp_path / jid
+    assert req.legality == LegalityOptions()  # both optional rules off by default
     assert job["table"]["headers"][:3] == ["Slot", "Species", "Obtained from"]
     assert "Move 1 source" in job["table"]["headers"] and len(job["table"]["rows"]) == 6
     assert job["summary"]["qualified"] is True and job["summary"]["n_runs"] == 100
@@ -251,3 +254,37 @@ def test_serve_binds_localhost(tmp_path, monkeypatch):
     assert seen["app"][1]["runs_dir"] == tmp_path
     with pytest.raises(SystemExit):
         cli.build_parser().parse_args(["serve", "--host", "0.0.0.0"])
+
+
+def test_legality_options_page_search_and_jobs(tmp_path, catalog):
+    """Two unchecked checkboxes; species search reflects trade evolutions; POST fields reach the
+    optimizer request (OptimizeRequest.legality) and the job's options."""
+    stub = StubRunner()
+    client = TestClient(webapp.create_app(runner=stub, runs_dir=tmp_path, catalog=catalog))
+    page = client.get("/").text
+    for cid in ("allow-egg-moves", "allow-trade-evolutions"):
+        tag = page[page.index(f'id="{cid}"') - 7:page.index(f'id="{cid}"') + 60]
+        assert 'type="checkbox"' in tag and "checked" not in tag, tag
+    js = client.get("/static/app.js").text
+    assert "allow_egg_moves" in js and "allow_trade_evolutions" in js and "trade_evolutions=" in js
+
+    off = client.get("/api/species", params={"q": "alakazam"}).json()
+    assert off[0]["key"] == "alakazam" and off[0]["available"] is False and off[0]["reason_code"] == "trade_evolution"
+    on = client.get("/api/species", params={"q": "alakazam", "trade_evolutions": 1}).json()
+    assert on[0]["available"] is True and on[0]["trade_evolution"] is True
+    assert client.get("/api/species", params={"q": "alakazam", "excluded": 0}).json() == []
+    gar = client.get("/api/species", params={"q": "garchomp", "trade_evolutions": 1}).json()[0]  # control
+    assert gar["available"] is True and "trade_evolution" not in gar
+
+    team = _available_team(catalog)[:5] + ["alakazam"]
+    r = client.post("/api/jobs", json={"species": team})
+    assert r.status_code == 422 and "alakazam" in r.json()["reasons"]
+    r = client.post("/api/jobs", json={"species": team, "allow_trade_evolutions": "yes"})
+    assert r.status_code == 422 and "allow_trade_evolutions" in r.json()["detail"]
+    assert not any(tmp_path.iterdir())
+    r = client.post("/api/jobs", json={"species": team, "allow_trade_evolutions": True, "allow_egg_moves": True})
+    assert r.status_code == 201, r.json()
+    job = _wait(client, r.json()["id"], {"done", "failed"})
+    assert job["status"] == "done", job
+    assert job["options"]["allow_egg_moves"] is True and job["options"]["allow_trade_evolutions"] is True
+    assert stub.calls[-1].legality == LegalityOptions(allow_egg_moves=True, allow_trade_evolutions=True)

@@ -1,7 +1,10 @@
 """Legality validator (T029, Constitution III). Independent of the optimizer: this module and
 everything it imports never import `platsim.optimizer` (tests/unit/test_validator.py checks it).
 
-`validate(team, ledger=None, final_levels=None) -> list[Violation]`
+`validate(team, ledger=None, final_levels=None, options=None) -> list[Violation]`
+
+`options` (models.LegalityOptions; default: the ledger's own, i.e. both OFF for `build_ledger()`)
+selects the optional rules: egg moves and trade evolutions (user decisions 2026-10-08).
 
 `team` is a TeamCandidate, a dict (TeamCandidate JSON `{"builds": [...]}` or the fixture shape
 `{"team": [...]}`), or Showdown export text (see `load_team`). Keys may be data/generated keys
@@ -12,14 +15,18 @@ Violation codes (each carries `src` refs: decomp lines behind the rule, plus the
 - SCHEMA: a member record cannot be read.
 - SPECIES_UNKNOWN; SPECIES_FORM_UNSUPPORTED (alternate forms are not modelled by the availability
   ledger, so they are conservatively rejected); SPECIES_TRADE_EVOLUTION (only reachable through a
-  trade evolution, FR-005); SPECIES_UNAVAILABLE (no pre-Champion source, FR-003/FR-003a).
+  trade evolution, FR-005, while allow_trade_evolutions is off; with it on, when the trade
+  evolution's pre-evolution or held item has no pre-Champion source); SPECIES_UNAVAILABLE (no
+  pre-Champion source, FR-003/FR-003a).
 - SOURCE_INVALID: `source` is not one of the species' pre-Champion source options (FR-008b);
   SOURCE_EXHAUSTED: a one-time source (gift, static, trade, starter choice) used by more members
   than it can give.
 - LEVEL_OUT_OF_RANGE (1..100); LEVEL_BELOW_MINIMUM: below the lowest level the species can have
   on that source (FR-007, data-model Build.start_level).
 - MOVE_COUNT (1..4); MOVE_DUPLICATE; MOVE_UNKNOWN; MOVE_NOT_LEARNABLE (no legal source at
-  start_level, FR-007); MOVE_SOURCE_MISMATCH (learnable, but not by the declared source_kind).
+  start_level, FR-007); MOVE_SOURCE_MISMATCH (learnable, but not by the declared source_kind);
+  EGG_MOVE_NOT_ALLOWED (an egg move - the move would be legal as an egg move, or is declared
+  `egg` - while allow_egg_moves is off).
 - ABILITY_INVALID (not one of the species' abilities); ABILITY_FIXED_BY_TRADE (the NPC trade's
   personality fixes another ability, FR-008c); ABILITY_REASON (ability_reason contradicts the data:
   `single_ability` on a two-ability species, or `fixed_by_trade` without an NPC-trade source).
@@ -48,6 +55,7 @@ from platsim.decomp.stats import nature_affinities
 from platsim.legality import movesources as MS
 from platsim.legality.models import (
     DEFAULT_EV,
+    LegalityOptions,
     DEFAULT_IV,
     STAT_KEYS,
     Build,
@@ -82,6 +90,7 @@ def _src() -> dict[str, list[str]]:
         "team": [fr("FR-001")],
         "species": [fr("FR-003"), fr("FR-003a"), fr("FR-005")],
         "trade_evo": [ref(pokemon_c, "case EVO_CLASS_BY_TRADE:"), fr("FR-005")],
+        "egg_option": MS.refs()["egg"][:2],
         "source": [fr("FR-008b"), _repo_ref(DATA_MODEL, "| source | AvailabilityEntry ref")],
         "level": [fr("FR-007"), _repo_ref(DATA_MODEL, "| start_level | int 1–100")],
         "moves": [fr("FR-007")],
@@ -170,7 +179,14 @@ def _nature_const(value: str) -> str | None:
 # Input
 
 
-def load_team(path_or_text: str | Path, ledger=None) -> tuple[TeamCandidate | None, list[int] | None, list[Violation]]:
+def _ledger(ledger, options: LegalityOptions | None):
+    from platsim.availability.ledger import build_ledger
+
+    return (ledger or build_ledger()).with_options(options)
+
+
+def load_team(path_or_text: str | Path, ledger=None, options: LegalityOptions | None = None
+              ) -> tuple[TeamCandidate | None, list[int] | None, list[Violation]]:
     """Read a team file: JSON (TeamCandidate or {"team": [...]}) or Showdown export text.
     Returns (team, final_levels, violations found while reading)."""
     p = Path(path_or_text)
@@ -179,7 +195,7 @@ def load_team(path_or_text: str | Path, ledger=None) -> tuple[TeamCandidate | No
         d = json.loads(text)
         return _team_from_dict(d)
     sets = import_team(text, key_of=_showdown_key)
-    return from_showdown(sets, ledger), None, []
+    return from_showdown(sets, ledger, options), None, []
 
 
 def _showdown_key(kind: str, name: str) -> str:
@@ -206,7 +222,7 @@ def _team_from_dict(d: dict[str, Any]) -> tuple[TeamCandidate | None, list[int] 
     return TeamCandidate(builds, dict(d.get("resource_use", {}))), finals, bad
 
 
-def from_showdown(sets: list[ShowdownSet], ledger=None) -> TeamCandidate:
+def from_showdown(sets: list[ShowdownSet], ledger=None, options: LegalityOptions | None = None) -> TeamCandidate:
     """Showdown text carries no provenance (source, move sources, ability_reason). For each member
     try every source option; per move take the best legal source by `movesources.move_source_key`,
     and keep the simplest option (`movesources.option_sort_key`: the species itself < a
@@ -214,9 +230,7 @@ def from_showdown(sets: list[ShowdownSet], ledger=None) -> TeamCandidate:
     of its own. If none works, the first option is kept so the validator reports why. Team-wide copy limits are
     checked afterwards on the chosen sources (a different TM choice could in principle avoid a
     TM_COPIES violation reported here)."""
-    from platsim.availability.ledger import build_ledger
-
-    led = ledger or build_ledger()
+    led = _ledger(ledger, options)
     builds = []
     for slot, s in enumerate(sets, start=1):
         species = _resolve(_species_index(), s.species) or s.species
@@ -272,10 +286,9 @@ def showdown_name(kind: str, key: str) -> str:
 # Validation
 
 
-def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[int] | None = None) -> list[Violation]:
-    from platsim.availability.ledger import build_ledger
-
-    led = ledger or build_ledger()
+def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[int] | None = None,
+             options: LegalityOptions | None = None) -> list[Violation]:
+    led = _ledger(ledger, options)
     out: list[Violation] = []
     if isinstance(team, str):
         team, finals, read = load_team(team, led)
@@ -368,11 +381,20 @@ def _validate_build(slot: int, b: Build, led) -> dict[str, Any]:
         trade = [(p, ev) for p, ev in MS._preds().get(species, []) if ev.method in MS.TRADE_METHODS]
         if trade:
             p, ev = trade[0]
-            v.append(Violation("SPECIES_TRADE_EVOLUTION",
-                               f"{tag}: {name} is only reachable by trade evolution from {MS.species_name(p)} ({ev.method}"
-                               f"{', holding ' + ev.param if isinstance(ev.param, str) else ''}), which needs a second "
-                               "cartridge (FR-005)",
-                               _src()["trade_evo"] + MS.by_constant()[p].src[6:7]))
+            held = ev.param if isinstance(ev.param, str) else None
+            how = f"{MS.species_name(p)} ({ev.method}{', holding ' + held if held else ''})"
+            if MS.options_of(led).allow_trade_evolutions:
+                miss = []
+                if not MS.source_options(p, led):
+                    miss.append(f"{MS.species_name(p)} has no pre-Champion source")
+                if held and led.item_copies(held) == 0:
+                    miss.append(f"{held} has no pre-Champion copy (ledger)")
+                msg = (f"{tag}: {name} is only reachable by trade evolution from {how}; trade evolutions are allowed, "
+                       f"but {'; '.join(miss) or 'no pre-Champion path reaches it'}")
+            else:
+                msg = (f"{tag}: {name} is only reachable by trade evolution from {how}, which needs a second "
+                       "cartridge (FR-005; enable allow_trade_evolutions / --allow-trade-evolutions to allow it)")
+            v.append(Violation("SPECIES_TRADE_EVOLUTION", msg, _src()["trade_evo"] + MS.by_constant()[p].src[6:7]))
         else:
             v.append(Violation("SPECIES_UNAVAILABLE", f"{tag}: {name} has no pre-Champion source (no wild, gift, egg, "
                                "static, NPC trade, breeding or non-trade evolution source; National Dex sources excluded)",
@@ -407,6 +429,17 @@ def _validate_build(slot: int, b: Build, led) -> dict[str, Any]:
             continue
         seen.add(mv)
         legal = list({(c.source_kind, c.detail): c for o in check_opts for c in MS.sources(species, mv, move_level, led, o)}.values())
+        if not MS.options_of(led).allow_egg_moves and (not legal or m.source_kind == "egg"):
+            eggs = _egg_alternatives(species, mv, move_level, led, check_opts)
+            if eggs or (m.source_kind == "egg" and legal):
+                other = f"; legal without egg moves: {', '.join(sorted({c.source_kind for c in legal}))}" if legal else ""
+                v.append(Violation("EGG_MOVE_NOT_ALLOWED",
+                                   f"{tag}: {mv} is an egg move here"
+                                   + (f" ({eggs[0].detail})" if eggs else " (declared source_kind 'egg')")
+                                   + " and egg moves are not allowed; pass --allow-egg-moves (allow_egg_moves) to "
+                                     f"allow them{other}",
+                                   _src()["egg_option"] + _src()["moves"]))
+                continue
         if not legal:
             why = []
             for o in check_opts:
@@ -490,6 +523,16 @@ def _validate_build(slot: int, b: Build, led) -> dict[str, Any]:
             else:
                 res["items"][item] += 1
     return res
+
+
+def _egg_alternatives(species: str, mv: str, level: int, led, check_opts) -> list[MoveChoice]:
+    """Egg-move sources the move would have with allow_egg_moves on (same options otherwise)."""
+    import dataclasses
+
+    on = led.with_options(dataclasses.replace(MS.options_of(led), allow_egg_moves=True))
+    ids = {o.id for o in check_opts}
+    opts = [o for o in MS.source_options(species, on) if o.id in ids]
+    return [c for o in opts for c in MS.sources(species, mv, level, on, o) if c.source_kind == "egg"]
 
 
 def format_violations(vs: list[Violation]) -> str:

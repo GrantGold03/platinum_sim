@@ -32,6 +32,15 @@ def led():
     return build_ledger()
 
 
+@pytest.fixture(scope="module")
+def egg_led(led):
+    """Egg moves allowed (LegalityOptions; off by default since 2026-10-08). The V8 result and the
+    Luxray egg-move test were made with egg moves legal."""
+    from platsim.legality.models import LegalityOptions
+
+    return led.with_options(LegalityOptions(allow_egg_moves=True))
+
+
 def _opt(real, slot=0):
     return real.options[slot]
 
@@ -61,8 +70,10 @@ def test_pre_evolution_catch_beats_breeding_when_no_egg_move(led):
     assert _opt(real).acquired == "SPECIES_STARAVIA"
 
 
-def test_luxray_with_egg_moves_is_bred_without_them_is_caught(led):
+def test_luxray_with_egg_moves_is_bred_without_them_is_caught(led, egg_led):
     eggs = R.MemberSpec("SPECIES_LUXRAY", "own", ("MOVE_THUNDERBOLT", "MOVE_ICE_FANG", "MOVE_CRUNCH", "MOVE_FIRE_FANG"))
+    assert isinstance(R.realize((eggs,), [55], led), R.Refusal)  # default: egg moves off, never built
+    led = egg_led
     real = R.realize((eggs,), [55], led)
     assert not isinstance(real, R.Refusal)
     assert _opt(real).kind == MS.BREED
@@ -114,7 +125,8 @@ def test_single_copy_tm_only_when_no_unlimited_source(led):
     assert real_lo.team.builds[0].moves[0].source_kind == "tm" and real_lo.uses.get("TM18") == 1
 
 
-def test_validator_from_showdown_prefers_simplest_source(led):
+def test_validator_from_showdown_prefers_simplest_source(egg_led):
+    led = egg_led
     team = TeamCandidate.from_dict(json.loads(V8_TEAM.read_text()))
     from platsim.legality.models import export_team
     from platsim.legality.validator import load_team, showdown_name
@@ -136,7 +148,8 @@ def _ref_exists(r: str) -> bool:
     return (DECOMP_ROOT / path).is_file()
 
 
-def test_every_held_item_of_the_real_v8_result_has_a_named_source(led):
+def test_every_held_item_of_the_real_v8_result_has_a_named_source(egg_led):
+    led = egg_led
     d = json.loads(V8_TEAM.read_text())
     team = TeamCandidate.from_dict(d)
     assert validate(team, led) == []  # positive control: the recorded team is legal

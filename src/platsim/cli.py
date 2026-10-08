@@ -10,6 +10,22 @@ from pathlib import Path
 from platsim.pins import PinError
 
 
+def _add_legality_flags(p: argparse.ArgumentParser) -> None:
+    """Optional legality rules (legality/models.LegalityOptions); both off by default."""
+    p.add_argument("--allow-egg-moves", action="store_true",
+                   help="allow egg moves (Day-Care breeding with a father that knows the move); default off")
+    p.add_argument("--allow-trade-evolutions", action="store_true",
+                   help="allow trade evolutions (need a second cartridge; an item-trade evolution's held item must be "
+                        "obtainable before the Champion and is used up); default off (FR-005)")
+
+
+def _legality(args: argparse.Namespace):
+    from platsim.legality.models import LegalityOptions
+
+    return LegalityOptions(allow_egg_moves=bool(args.allow_egg_moves),
+                           allow_trade_evolutions=bool(args.allow_trade_evolutions))
+
+
 def _add_extract(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("extract", help="extract game data from the decomp into data/generated/")
     p.add_argument("--check", action="store_true",
@@ -49,6 +65,7 @@ def _add_validate(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("validate", help="legality check of a team (FR-003..FR-008c); exit 2 if illegal")
     p.add_argument("team", type=Path, help="team file: JSON (TeamCandidate / {'team': [...]}) or Showdown export text")
     p.add_argument("--json", action="store_true", help="print the violations as JSON")
+    _add_legality_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         import json
@@ -59,12 +76,16 @@ def _add_validate(sub: argparse._SubParsersAction) -> None:
             print(f"platsim validate: no such file: {args.team}", file=sys.stderr)
             return 1
         try:
-            violations = validate(str(args.team))
+            violations = validate(str(args.team), options=_legality(args))
         except (ValueError, KeyError) as e:
             print(f"platsim validate: cannot read {args.team}: {e}", file=sys.stderr)
             return 1
+        opts = _legality(args)
+        if not args.json:
+            print("legality options: " + ", ".join(f"{k}={'on' if v else 'off'}" for k, v in opts.to_dict().items()))
         if args.json:
             print(json.dumps({"team": str(args.team), "legal": not violations,
+                              "legality_options": _legality(args).to_dict(),
                               "violations": [v.to_dict() for v in violations]}, indent=2))
         elif violations:
             print(format_violations(violations))
@@ -91,6 +112,7 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--min-clear", type=float, default=0.75, help="qualification threshold (default 0.75, FR-015)")
     p.add_argument("--max-runs", type=int, default=20000, help="cap on full gauntlets when extending to the CI target")
     p.add_argument("--out", type=Path, default=None, help="output directory (default runs/evaluate-<time>-<hash>/)")
+    _add_legality_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         from platsim.evaluate import InvalidTeamInput, UsageError, evaluate, summary_text
@@ -102,7 +124,7 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
         try:
             report, paths = evaluate(args.team, runs=args.runs, seed=args.seed, workers=args.workers,
                                      player_policy=args.player_policy, budget=args.budget, threshold=args.min_clear,
-                                     max_runs=args.max_runs, out_dir=args.out)
+                                     max_runs=args.max_runs, out_dir=args.out, legality=_legality(args))
         except InvalidTeamInput as e:
             if e.violations:
                 print(format_violations(e.violations), file=sys.stderr)
@@ -134,6 +156,7 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--force-new", action="store_true",
                    help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
                         "checkpoint was made by different code or data, which is never resumed")
+    _add_legality_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         from platsim.optimizer.api import InvalidRequest, OptimizeRequest, run_optimization
@@ -143,7 +166,7 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
             return 2
         req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
                               budget=args.budget, workers=args.workers, out_dir=args.out,
-                              force_new=args.force_new)
+                              force_new=args.force_new, legality=_legality(args))
         try:
             res = run_optimization(req)
         except InvalidRequest as e:

@@ -10,7 +10,10 @@ small amount of plain JS.
 2. Clicking a result adds it to a 6-slot team; slots can be removed. Duplicates are allowed
    (the game allows them).
 3. With 6 species chosen, "Optimize" submits a job. Options: minimum clear rate (default 75%) and
-   seed.
+   seed. Two checkboxes, both unchecked by default: "Allow egg moves" and "Allow trade evolutions".
+   The trade-evolution box also changes which species the search shows as available (a species
+   reachable only by trade evolution is then marked "trade evolution: needs a second cartridge for
+   the trade"). Egg moves never change species availability.
 4. While the job runs, the page polls and shows the stage, runs done, and the best result so far.
 5. When done, the page shows the team table (same columns as the spreadsheet) with a download link
    for `.xlsx` and `.csv`.
@@ -19,8 +22,8 @@ small amount of plain JS.
 | Method | Path | Request | Response |
 |---|---|---|---|
 | GET | `/` | | page |
-| GET | `/api/species?q=gar` | | `[{key, name, types, available, reason?}]` (≤ 25) |
-| POST | `/api/jobs` | `{species: [6 keys], min_clear?: float, seed?: str, budget?: str}` | `201 {id}`; `422` with per-species reasons if invalid |
+| GET | `/api/species?q=gar&excluded=1&trade_evolutions=0` | `trade_evolutions=1`: availability with trade evolutions allowed | `[{key, name, types, available, reason?, reason_code?, trade_evolution?, note?}]` (≤ 25) |
+| POST | `/api/jobs` | `{species: [6 keys], min_clear?: float, seed?: str, budget?: str, allow_egg_moves?: bool, allow_trade_evolutions?: bool}` (flags default `false`; a non-boolean gives `422`) | `201 {id}`; `422` with per-species reasons if invalid (species are checked under `allow_trade_evolutions`) |
 | GET | `/api/jobs/{id}` | | `Job` (see data-model) |
 | GET | `/api/jobs/{id}/result.json` · `/result.xlsx` · `/result.csv` · `/team.txt` | | file; `409` until done |
 

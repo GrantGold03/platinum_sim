@@ -76,12 +76,12 @@ def _log(msg: str) -> None:
     print(f"platsim evaluate: {msg}", file=sys.stderr, flush=True)
 
 
-def load_and_validate(path: Path):
-    """(TeamCandidate, ledger) or raise InvalidTeamInput."""
+def load_and_validate(path: Path, legality=None):
+    """(TeamCandidate, ledger view with the legality options) or raise InvalidTeamInput."""
     from platsim.availability.ledger import build_ledger
     from platsim.legality.validator import load_team, validate
 
-    led = build_ledger()
+    led = build_ledger().with_options(legality)
     try:
         team, finals, read = load_team(path, led)
     except (ValueError, KeyError, json.JSONDecodeError) as e:
@@ -92,6 +92,12 @@ def load_and_validate(path: Path):
     if team is None or violations:
         raise InvalidTeamInput(f"{path}: ILLEGAL - {len(violations)} violation(s)", violations)
     return team, led
+
+
+def _legality_of(led):
+    from platsim.legality.movesources import options_of
+
+    return options_of(led)
 
 
 def worker_team(team, led) -> list[dict]:
@@ -237,8 +243,10 @@ def default_out_dir(team_path: Path, master: str, runs: int, policy: str) -> Pat
 
 def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", workers: int | None = None,
              player_policy: str = DEFAULT_PLAYER_POLICY, budget: str = "standard", threshold: float = 0.75,
-             max_runs: int = DEFAULT_MAX_RUNS, out_dir: Path | None = None, pool=None) -> tuple[EvaluationReport, dict]:
-    """Run the evaluation and write the reports. Returns (report, {kind: path})."""
+             max_runs: int = DEFAULT_MAX_RUNS, out_dir: Path | None = None, pool=None,
+             legality=None) -> tuple[EvaluationReport, dict]:
+    """Run the evaluation and write the reports. Returns (report, {kind: path}). `legality`
+    (models.LegalityOptions, default both off) selects egg moves / trade evolutions."""
     from platsim.legality.validator import showdown_name
     from platsim.report import write_all
     from platsim.sim.pool import WorkerPool
@@ -252,7 +260,7 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
     except ValueError as e:
         raise UsageError(str(e)) from e
     master = str(seed)
-    team, led = load_and_validate(team_path)
+    team, led = load_and_validate(team_path, legality)
     _log(f"{team_path}: legal; {runs} runs, seed {master!r}, player {player_policy}, opponent {OPPONENT_POLICY}, "
          f"budget {preset.name}")
 
@@ -332,6 +340,8 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
     if not means:
         warnings.append("No run cleared the gauntlet: expected final levels are not defined.")
     provenance = {
+        # LegalityOptions the team was validated under (the ledger view's options).
+        "legality_options": _legality_of(led).to_dict(),
         "worker": {k: hello.get(k) for k in ("decomp_commit", "showdown_commit", "decomp_data_hash",
                                              "divergence_ledger_version", "divergence_patches_applied",
                                              "pp_restore_between_battles")},

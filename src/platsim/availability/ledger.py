@@ -35,6 +35,7 @@ from platsim.availability import gates as G
 from platsim.availability import sources as S
 from platsim.decomp._util import ref
 from platsim.decomp.constants import rel
+from platsim.legality.models import LegalityOptions
 from platsim.pins import DECOMP_COMMIT, DECOMP_ROOT
 
 PP = DECOMP_ROOT
@@ -105,12 +106,27 @@ def _base_phase(e: S.Entry, reached: frozenset[str]) -> Classified:
     return Classified(e, phase, reasons, uncertain, natdex)
 
 
-@dataclass
+@dataclass(eq=False)
 class Ledger:
     entries: list[Classified]
     national_dex: dict
     reached: frozenset[str]
     derived: dict = field(default_factory=dict)
+    # Legality options (legality/models.LegalityOptions) this view applies; the ledger's own facts
+    # (entries, phases, copies, species_sources) never depend on them.
+    options: LegalityOptions = field(default_factory=LegalityOptions)
+
+    def with_options(self, options: LegalityOptions | None) -> Ledger:
+        """A view of this ledger with other legality options: same entries and shared `derived`
+        caches (option-dependent caches key on the options). One view object per options value, so
+        callers that memoise per ledger object (optimizer) separate option sets automatically."""
+        if options is None or options == self.options:
+            return self
+        views = self.derived.setdefault("_option_views", {})
+        views.setdefault(self.options, self)
+        if options not in views:
+            views[options] = Ledger(self.entries, self.national_dex, self.reached, self.derived, options)
+        return views[options]
 
     # -- queries -------------------------------------------------------------------------
 
