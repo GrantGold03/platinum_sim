@@ -126,13 +126,15 @@ class _Runs:
 
 def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, max_runs: int,
                        target: float | None, player_policy: str, borderline_threshold: float | None = None,
-                       log: str = "summary", on_batch=None) -> _Runs:
+                       borderline_max_runs: int | None = None, log: str = "summary", on_batch=None) -> _Runs:
     """Full gauntlets for run indices 0, 1, ... (see module doc, step 3).
 
     `borderline_threshold` (optimizer confirm stage, research R8 "Qualification rule"): after the CI
     target is met, while the clear-rate Wilson interval still straddles the threshold
     (lo < threshold <= hi), more runs are added up to `max_runs`, stopping at the FIRST n where it no
-    longer straddles. Runs are consumed in index order, so the result is independent of batching and
+    longer straddles, or at `borderline_max_runs` total runs (if given, and never above `max_runs`): a
+    team still straddling there is left `borderline` (not qualified) instead of being run toward
+    `max_runs`. Runs are consumed in index order, so the result is independent of batching and
     worker count. `on_batch(n, wins)` is called after each batch (progress only)."""
     def req(i: int) -> dict:
         return {"op": "gauntlet", "team": team, "seed": derive_seed(master, i, 0), "player_policy": player_policy,
@@ -182,9 +184,10 @@ def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, ma
         return lo < borderline_threshold <= hi
 
     if borderline_threshold is not None:
-        while straddles(wins, n) and n < max_runs:
+        cap = max_runs if borderline_max_runs is None else min(max_runs, borderline_max_runs)
+        while straddles(wins, n) and n < cap:
             extended = True
-            size = min(max(n // 2, MIN_BATCH), max_runs - n)
+            size = min(max(n // 2, MIN_BATCH), cap - n)
             _log(f"clear-rate CI straddles the threshold {borderline_threshold} at n={n}: adding up to {size} runs")
             rs = pool.map([req(i) for i in range(n, n + size)])
             check(rs)
@@ -196,6 +199,9 @@ def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, ma
                     break
             if on_batch:
                 on_batch(n, wins)
+        if straddles(wins, n):
+            _log(f"clear-rate CI still straddles the threshold {borderline_threshold} at the borderline cap "
+                 f"n={n}: borderline (not qualified)")
     return _Runs(results, extended, None if target is None else wilson_half_width(wins, n) <= target)
 
 
@@ -288,7 +294,8 @@ class TeamEvaluation:
 
 def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0", player_policy: str = DEFAULT_PLAYER_POLICY,
                   budget: str = "standard", threshold: float = 0.75, max_runs: int = DEFAULT_MAX_RUNS,
-                  extend_borderline: bool = False, full: _Runs | None = None, on_batch=None) -> tuple[EvaluationReport, TeamEvaluation]:
+                  extend_borderline: bool = False, borderline_max_runs: int | None = None, full: _Runs | None = None,
+                  on_batch=None) -> tuple[EvaluationReport, TeamEvaluation]:
     """The evaluation of an already validated TeamCandidate on an open pool (steps 2-6 of the module
     doc); used by `evaluate` and by the optimizer's confirm stage (T065). `extend_borderline` adds runs
     while the clear-rate CI straddles the threshold (R8; up to `max_runs`). `full` reuses full-gauntlet
@@ -308,6 +315,7 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         full = run_full_gauntlets(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
                                   target=preset.ci_half_width, player_policy=player_policy,
                                   borderline_threshold=threshold if extend_borderline else None,
+                                  borderline_max_runs=borderline_max_runs,
                                   on_batch=on_batch)
     t_full = time.perf_counter() - t0
     results = full.results
@@ -348,7 +356,7 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         "divergence_ledger_file_version": div_file_version,
         "runs_requested": runs,
         "runs_extended_for_ci_target": full.extended,
-        **({"runs_extended_while_borderline": True} if extend_borderline else {}),
+        **({"runs_extended_while_borderline": True, "borderline_max_runs": borderline_max_runs} if extend_borderline else {}),
         "clear_ci_half_width": hw,
         "clear_ci_target": target,
         "stop_on_loss": True,

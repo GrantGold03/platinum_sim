@@ -557,6 +557,7 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
         prog("confirm", runs_planned=preset.confirm_min, detail=f"winner at levels {lv} ({POLICY}, >= {preset.confirm_min} runs)")
         rep, ev = evaluate_team(real.team, led, pool, runs=preset.confirm_min, seed=master, player_policy=POLICY,
                                 budget=preset.name, threshold=thr, max_runs=max_runs, extend_borderline=extend,
+                                borderline_max_runs=preset.borderline_max_runs,
                                 on_batch=lambda n, w: prog("confirm", runs_done=n, runs_planned=preset.confirm_min,
                                                            best={"levels": lv, "clear_rate": round(w / n, 4)},
                                                            detail=f"{w}/{n} cleared"))

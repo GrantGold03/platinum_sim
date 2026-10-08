@@ -371,6 +371,10 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
   | `quick` | 50 → 100 → 200 | 100 | 500 | none | **no**: labelled `quick` in every output, for testing only |
 
   Only `standard` and `thorough` can produce a result marked `qualified`.
+- **Borderline cap** (2026-10-08): while the confirmation CI straddles the threshold, runs are added only up to a total
+  of **4,000** (`standard`) or **10,000** (`thorough`); `quick` never extends. A team still undecided at the cap is
+  `borderline`, so it does not qualify and the optimizer moves up one level. Before this change the extension could run
+  to 20,000 runs: a team at 74.96% spent about 2.5 h in `runs/final-defaults`.
 - **Never silently loosened**: lower run counts only via an explicit `--budget` flag, and the
   report shows the loosened settings.
 - **Policy per stage** (user decision 2026-10-07, after T056 measured expectimax2-v1 at about 1.6 gauntlets/s on 16

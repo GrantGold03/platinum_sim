@@ -839,3 +839,17 @@ evolutions off; player expectimax2-v2.
   patch. The single-copy TMs used are TM23, TM26, TM71 and TM80.
 - **Follow-up recommended**: borderline extension spends up to 20,000 runs on a team whose rate is essentially at the
   threshold. Cap the extension much lower (e.g. 5,000) and treat a team still undecided as not qualifying.
+
+## 2026-10-08: borderline-extension cap (coordinator)
+
+```
+$ uv run pytest -q tests/unit/test_borderline_cap.py → 3 passed, exit 0
+$ uv run pytest -q tests/unit tests/integration/test_evaluate.py -k "not v7" → 242 passed, 1 deselected, exit 0
+```
+- **Change**: `BudgetPreset.borderline_max_runs` is standard 4,000, thorough 10,000, quick none. `run_full_gauntlets`
+  stops extending at that total and logs "borderline (not qualified)". The optimizer's confirm stage passes the
+  preset cap, and the cap is recorded in provenance.
+- **Test**: a stand-in team clearing exactly 75% stops at 4,000 runs and stays straddling. As a positive control,
+  without the cap it runs to 20,000.
+- **Effect**: worst-case confirmation per candidate drops from about 2.5 h to about 15 min of extra runs on 16 workers
+  (about 2.3 gauntlets/s). A team that close to 75% now moves on to the +1 fallback.
