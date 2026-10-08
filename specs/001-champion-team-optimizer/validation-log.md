@@ -556,3 +556,34 @@ $ uv run platsim divergences --check → exit 0
   attacker at 0 HP gets none (`battle_script.c:2204`, `:9740`). Exp is now paid when the action finishes and per
   end-of-turn step. Node cases 16–21 cover this; the positive controls fail with the old rule.
 - **UNVERIFIED**: Future Sight / Perish Song payout timing (ledgered); no cartridge comparison.
+
+## 2026-10-07: US2 — T069 loss causes, T070 `platsim evaluate`, T071 tests; new legal reference team (agent; re-run by the coordinator)
+
+```
+$ uv run platsim validate tests/fixtures/reference_team.json → legal (no violations), exit 0
+$ cd sim && node --test test/*.test.mjs → tests 308, pass 308, fail 0, exit 0
+$ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7" → 232 passed, 1 deselected, exit 0 (630 s)
+```
+- **Fixtures**:
+  - The old illegal team is now `tests/fixtures/policy_benchmark_team.json`, used only by T056; the recorded benchmark
+    numbers remain reproducible.
+  - The new legal `reference_team.json` is all level 60, IV 15 / EV 85 / Hardy, no items: Infernape, Staraptor, Luxray,
+    Garchomp, Gyarados, Gardevoir. Sources and move labels come from the validator's own legal options.
+- **Evaluate**:
+  - It validates first and exits 2 on an illegal team.
+  - `--runs` is a minimum: runs are added in index order until the CI target is met.
+  - Cynthia gets a top-up.
+  - Loss causes come from replaying each lost battle from its saved state; the replay must reproduce the log hash.
+  - Output is result.json, xlsx, csv and team.txt, with full provenance.
+- **Agent's real 2,000-run V7 test** (expectimax2-v1 vs decomp-ai, seed `fixed`, standard budget; 1,083 s on 16 workers;
+  byte-identical on 7 workers):
+  - gauntlet 0.7930, CI [0.7747, 0.8102], half-width 0.0177;
+  - Cynthia P(win | reached) 0.7946, CI [0.7763, 0.8117], 2,001 battles;
+  - expected final average level 60.32, largest gap 2.0;
+  - qualified;
+  - top loss causes: Cynthia's Garchomp 186, Lucario 71, Togekiss 66.
+- **Report fix**: the csv report printed move-source prefixes twice; now fixed.
+- **UNVERIFIED / open**:
+  - the worker's hello does not fingerprint the `sim/` code;
+  - evaluate does not add runs to settle a borderline result;
+  - the held-item source column says "not recorded".

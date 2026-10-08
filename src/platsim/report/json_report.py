@@ -13,6 +13,8 @@ not carry (all optional, all defaulting to "not recorded" in the spreadsheet rat
 - `no_qualifying`: set instead of `team` when no team met the threshold (spec.md Edge Cases,
   SC-001): best clear rate reached and at which levels. A failing team is never reported as the
   result.
+- `provenance`: extra run provenance (worker hello data hash, run-count rule, Cynthia top-up
+  details, ...); free-form dict, written to result.json and the Provenance sheet.
 - `warnings`: human-readable warnings. `budget_preset == "quick"` always adds QUICK_WARNING
   (research.md R8: `quick` is labelled in every output and never `qualified`).
 
@@ -221,6 +223,7 @@ class EvaluationReport:
     divergences: list[DivergenceEntry] = field(default_factory=list)
     no_qualifying: NoQualifying | None = None
     warnings: list[str] = field(default_factory=list)
+    provenance: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.budget_preset not in BUDGET_PRESETS:
@@ -282,6 +285,7 @@ class EvaluationReport:
             "held_item_sources": list(self.held_item_sources),
             "resources": [r.to_dict() for r in self.resources],
             "divergences": [d.to_dict() for d in self.divergences],
+            "provenance": dict(self.provenance),
         }
 
     @classmethod
@@ -318,6 +322,7 @@ class EvaluationReport:
             if d.get("no_qualifying")
             else None,
             warnings=list(d.get("warnings", [])),
+            provenance=dict(d.get("provenance", {})),
         )
 
     def to_json(self, **kwargs: Any) -> str:

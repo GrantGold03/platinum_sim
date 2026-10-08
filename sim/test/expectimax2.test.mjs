@@ -15,7 +15,7 @@ import { DECOMP_AI } from '../ai/opponent.mjs';
 import { expectimax2, makeContext, scoreActions, _internal } from '../policy/expectimax2.mjs';
 import { B, gd, leagueBattle } from './ai_fixtures.mjs';
 
-const TEAM = JSON.parse(readFileSync(new URL('../../tests/fixtures/reference_team.json', import.meta.url), 'utf8')).team;
+const TEAM = JSON.parse(readFileSync(new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url), 'utf8')).team;
 const key = (a) => `${a.kind}${a.slot ?? ''}${a.idx ?? ''}`;
 
 test('AI on a shadow of the current state == AI on the live battle (same seeds)', (t) => {

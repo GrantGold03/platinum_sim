@@ -51,6 +51,12 @@ def move_source(m: MoveChoice) -> str:
     """Human-readable source text for the "Move N source" column (spreadsheet.md examples)."""
     detail = (m.detail or "").strip()
     kind = m.source_kind
+    # Validator-built details (legality/movesources.py) already carry the kind's prefix
+    # ("Level-up Lv 41", "Pre-evolution level-up (Monferno Lv 19)", "Move relearner - ...",
+    # "Egg move (...)"): use those as they are instead of prefixing them twice.
+    for prefix in ("Level-up", "Pre-evolution level-up", "Move relearner", "Egg move"):
+        if detail.lower().startswith(prefix.lower()):
+            return detail
     if kind == "level_up":
         text = f"Level-up {detail}" if detail else ""
     elif kind == "pre_evo_level_up":

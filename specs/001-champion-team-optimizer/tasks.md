@@ -577,20 +577,20 @@ with their output recorded.
 twice gives identical reports, with per-trainer rates and CIs, expected final levels and loss
 causes. An illegal team exits 2 with its violations.
 
-- [ ] T069 [P] [US2] `src/platsim/report/losses.py`: from gauntlet results (`log: summary`),
+- [X] T069 [P] [US2] `src/platsim/report/losses.py`: from gauntlet results (`log: summary`),
   tally which opponent Pokémon were on the field when the player's last member fainted, per
   trainer. Test with synthetic results.
-- [ ] T070 [US2] `platsim evaluate TEAM` in `src/platsim/cli.py`:
+- [X] T070 [US2] `platsim evaluate TEAM` in `src/platsim/cli.py`:
   - accepts JSON or Showdown export;
   - validate first (exit 2 on violations);
   - run N paired gauntlets through `pool.py`;
   - stats via `stats.py`;
   - Cynthia top-up via T057;
   - write the reports via T055 with loss causes, plus `team.txt` (Showdown export, via T027).
-- [ ] T071 [US2] `tests/integration/test_evaluate.py` (quickstart V7): determinism across two runs;
+- [X] T071 [US2] `tests/integration/test_evaluate.py` (quickstart V7): determinism across two runs;
   CI half-width ≤ 2 points at 2,000 runs; an illegal fixture exits 2.
 
-- [ ] T072 [US2] `tests/integration/test_final_levels.py` (SC-006):
+- [X] T072 [US2] `tests/integration/test_final_levels.py` (SC-006):
   - add `exp_gain(...)` to `src/platsim/decomp/exp.py`: an independent Python implementation of
     the decomp exp formula (same `file:line` refs as T036);
   - run 200 seeded gauntlets of `tests/fixtures/reference_team.json` with `log: "full"`, recompute

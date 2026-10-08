@@ -1,0 +1,287 @@
+{
+  "_comment": "Legal reference team (T069-T071; replaces the illegal T056 team, now tests/fixtures/policy_benchmark_team.json). Same species and moves as that benchmark team except Alakazam (trade-only, FR-005) -> Gardevoir. Every source, move source/detail and ability was taken from `uv run platsim validate` output (the validator lists the legal options from the T024 ledger and res/pokemon/<species>/data.json learnsets); the file passes `platsim validate` with exit 0. IV 15 / EV 85 / Hardy (FR-008), no held items. Uniform level 60: level scan with expectimax2-v1 vs decomp-ai, stop_on_loss, 300 full gauntlets each, seed master 'ref-level-scan', 16 workers (2026-10-07): L58 141/300 = 0.47 (losses: Cynthia 150, Lucian 5, Bertha 4); L60 243/300 = 0.81 (losses: Cynthia 57). L60 keeps the clear rate inside 0.40-0.85 and far enough from 0.5 that 2,000 runs meet the +/-0.02 CI target.",
+  "builds": [
+    {
+      "species": "infernape",
+      "source": "gift:SPECIES_CHIMCHAR@MAP_HEADER_ROUTE_201",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 41"
+        },
+        {
+          "move": "flame_wheel",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Monferno Lv 19)"
+        },
+        {
+          "move": "mach_punch",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Monferno Lv 14)"
+        },
+        {
+          "move": "taunt",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Chimchar Lv 9)"
+        }
+      ],
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "staraptor",
+      "source": "wild_slot:SPECIES_STARAVIA@MAP_HEADER_ROUTE_209",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "brave_bird",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 49"
+        },
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 34"
+        },
+        {
+          "move": "aerial_ace",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Staravia Lv 28)"
+        },
+        {
+          "move": "double_team",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Starly Lv 13)"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "luxray",
+      "source": "wild_slot:SPECIES_SHINX@MAP_HEADER_ROUTE_202",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "thunder_fang",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 35"
+        },
+        {
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 42"
+        },
+        {
+          "move": "spark",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Shinx Lv 13)"
+        },
+        {
+          "move": "scary_face",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 49"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "tie_default",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "garchomp",
+      "source": "wild_slot:SPECIES_GIBLE@MAP_HEADER_WAYWARD_CAVE_B1F",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "dragon_claw",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Gabite Lv 33)"
+        },
+        {
+          "move": "dig",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Gabite Lv 40)"
+        },
+        {
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 48"
+        },
+        {
+          "move": "fire_fang",
+          "source_kind": "relearner",
+          "detail": "Move relearner - Pastoria City (1 Heart Scale; Garchomp Lv 1 move)"
+        }
+      ],
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gyarados",
+      "source": "wild_slot:SPECIES_MAGIKARP@MAP_HEADER_CANALAVE_CITY",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "aqua_tail",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 35"
+        },
+        {
+          "move": "ice_fang",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 32"
+        },
+        {
+          "move": "dragon_dance",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 44"
+        },
+        {
+          "move": "bite",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 20"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gardevoir",
+      "source": "wild_slot:SPECIES_RALTS@MAP_HEADER_ROUTE_208",
+      "start_level": 60,
+      "moves": [
+        {
+          "move": "psychic",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 33"
+        },
+        {
+          "move": "calm_mind",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Kirlia Lv 25)"
+        },
+        {
+          "move": "magical_leaf",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Kirlia Lv 22)"
+        },
+        {
+          "move": "wish",
+          "source_kind": "relearner",
+          "detail": "Move relearner - Pastoria City (1 Heart Scale; Gardevoir Lv 17 move)"
+        }
+      ],
+      "ability": "ABILITY_SYNCHRONIZE",
+      "ability_reason": "tie_default",
+      "held_item": null,
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    }
+  ]
+}

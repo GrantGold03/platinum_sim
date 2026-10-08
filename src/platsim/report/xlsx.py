@@ -8,6 +8,8 @@ which comes from full runs only (research.md R8 "Champion share").
 
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -141,6 +143,8 @@ def _provenance_sheet(ws: Worksheet, r: EvaluationReport) -> None:
     _kv(ws, "Budget preset", r.budget_preset)
     _kv(ws, "Runs (full gauntlets)", r.n_runs)
     _kv(ws, "Champion battles (full runs + top-up)", r.champion_battles)
+    for key, value in r.provenance.items():
+        _kv(ws, key, value if isinstance(value, (str, int, float, bool)) else json.dumps(value, sort_keys=True))
 
 
 def _divergences_sheet(ws: Worksheet, r: EvaluationReport) -> None:

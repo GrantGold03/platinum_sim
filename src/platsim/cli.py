@@ -76,8 +76,52 @@ def _add_validate(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=run)
 
 
+def _add_evaluate(sub: argparse._SubParsersAction) -> None:
+    from platsim.budget import DEFAULT_PRESET, PRESETS
+
+    p = sub.add_parser("evaluate", help="battle-test a fixed team (User Story 2); exit 2 if the team is illegal")
+    p.add_argument("team", type=Path, help="team file: JSON (TeamCandidate / {'team': [...]}) or Showdown export text")
+    p.add_argument("--runs", type=int, default=2000,
+                   help="minimum full gauntlets (default 2000); more are added until the budget CI target is met")
+    p.add_argument("--seed", default="0", help="master seed (any string; default '0')")
+    p.add_argument("--workers", type=int, default=None, help="worker processes (default: CPU count)")
+    p.add_argument("--player-policy", default="expectimax2-v1", help="player policy (default expectimax2-v1)")
+    p.add_argument("--budget", choices=sorted(PRESETS), default=DEFAULT_PRESET,
+                   help="budget preset (research R8): CI target for the gauntlet and Cynthia (default standard)")
+    p.add_argument("--min-clear", type=float, default=0.75, help="qualification threshold (default 0.75, FR-015)")
+    p.add_argument("--max-runs", type=int, default=20000, help="cap on full gauntlets when extending to the CI target")
+    p.add_argument("--out", type=Path, default=None, help="output directory (default runs/evaluate-<time>-<hash>/)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.evaluate import InvalidTeamInput, UsageError, evaluate, summary_text
+        from platsim.legality.validator import format_violations
+
+        if not args.team.is_file():
+            print(f"platsim evaluate: no such file: {args.team}", file=sys.stderr)
+            return 2
+        try:
+            report, paths = evaluate(args.team, runs=args.runs, seed=args.seed, workers=args.workers,
+                                     player_policy=args.player_policy, budget=args.budget, threshold=args.min_clear,
+                                     max_runs=args.max_runs, out_dir=args.out)
+        except InvalidTeamInput as e:
+            if e.violations:
+                print(format_violations(e.violations), file=sys.stderr)
+            print(f"platsim evaluate: {e}", file=sys.stderr)
+            return 2
+        except UsageError as e:
+            print(f"platsim evaluate: {e}", file=sys.stderr)
+            return 2
+        print(summary_text(report))
+        for kind, path in paths.items():
+            print(f"{kind}: {path}")
+        return 0
+
+    p.set_defaults(func=run)
+
+
 # Later tasks append (e.g. validate T031, divergences T053, optimize, serve).
-_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences, _add_validate]
+_SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences, _add_validate,
+                                                                 _add_evaluate]
 
 
 def build_parser() -> argparse.ArgumentParser:

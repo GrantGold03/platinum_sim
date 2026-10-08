@@ -1,6 +1,6 @@
 """T056: policy strength benchmark (research R7, spec FR-013, Constitution IV).
 
-On the reference team (tests/fixtures/reference_team.json) run N paired full-League gauntlets
+On the policy benchmark team (tests/fixtures/policy_benchmark_team.json) run N paired full-League gauntlets
 (same seeds, `stop_on_loss` true, opponent policy `decomp-ai`) for the player policies
 `greedy-v1` and `expectimax2-v1`, through the worker pool (src/platsim/sim/pool.py). The paired
 clear outcomes are compared with the exact McNemar test (src/platsim/stats.py); the test passes
@@ -23,7 +23,11 @@ from platsim.sim.pool import WorkerPool
 from platsim.sim.seeds import derive_seed
 from platsim.stats import mcnemar_exact, wilson_ci
 
-FIXTURE = pins.REPO_ROOT / "tests" / "fixtures" / "reference_team.json"
+# This team is NOT legal (Alakazam is trade-only, its sources are placeholders; see the T028-T031
+# entry in validation-log.md). It is used only to compare player policies, and it keeps the recorded
+# T056 numbers reproducible. It was named reference_team.json until T069-T071, which replaced
+# reference_team.json with a legal team.
+FIXTURE = pins.REPO_ROOT / "tests" / "fixtures" / "policy_benchmark_team.json"
 SPECIES = pins.REPO_ROOT / "data" / "generated" / "species.json"
 POLICIES = ("greedy-v1", "expectimax2-v1")
 OPPONENT = "decomp-ai"

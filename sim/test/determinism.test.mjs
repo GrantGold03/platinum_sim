@@ -23,7 +23,7 @@ import { DECOMP_AI } from '../ai/opponent.mjs';
 import { gd } from './ai_fixtures.mjs';
 import { readFileSync } from 'node:fs';
 
-const FIXTURE = new URL('../../tests/fixtures/reference_team.json', import.meta.url);
+const FIXTURE = new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url);
 const TEAM = JSON.parse(readFileSync(FIXTURE, 'utf8')).team;
 const POLICIES = ['greedy-v1', 'expectimax2-v1'];
 const N = 200;
