@@ -498,13 +498,13 @@ qualifying team" report. Running it again gives identical output. The web flow V
 
 ### Tests for User Story 1
 
-- [ ] T058 [P] [US1] `tests/integration/test_optimize_small.py`: optimize with `--budget quick` on a
+- [X] T058 [P] [US1] `tests/integration/test_optimize_small.py`: optimize with `--budget quick` on a
   fixed six-species set and seed. Assert:
   - the output passes `validator.validate`;
   - the report has every provenance field;
   - the `quick` budget is labelled in the output;
   - two runs give identical JSON.
-- [ ] T059 [P] [US1] `tests/integration/test_web.py` (FastAPI TestClient):
+- [X] T059 [P] [US1] `tests/integration/test_web.py` (FastAPI TestClient):
   - species search returns Garchomp for `gar`, and the post-game-only species are flagged;
   - POST with 5 species gives 422;
   - a valid POST gives 201;
@@ -520,40 +520,40 @@ qualifying team" report. Running it again gives identical output. The web flow V
     difference and records `ability_reason`.
   - Test with a positive control: an ability known to be referenced in battle code yields
     has-effect with refs.
-- [ ] T061 [P] [US1] `src/platsim/optimizer/candidates.py`: for each member, enumerate:
+- [X] T061 [P] [US1] `src/platsim/optimizer/candidates.py`: for each member, enumerate:
   - sources (wild / gift / NPC trade, FR-008b);
   - legal moves at a level via `legality/movesources.py`;
   - prune moves per research R8 (strictly dominated: same type, category and accuracy class,
     lower power, no secondary effect);
   - held items from the ledger.
-- [ ] T062 [US1] `src/platsim/optimizer/resources.py`: assign single-copy TMs and limited items
+- [X] T062 [US1] `src/platsim/optimizer/resources.py`: assign single-copy TMs and limited items
   across the team (a member may only take a copy if one is left). Candidates that violate this are
   never generated.
-- [ ] T063 [US1] `src/platsim/optimizer/screen.py` (screening policy `greedy-v1`; research R8 "Policy per stage"): successive halving over candidate teams at a
+- [X] T063 [US1] `src/platsim/optimizer/screen.py` (screening policy `greedy-v1`; research R8 "Policy per stage"): successive halving over candidate teams at a
   fixed level vector, with paired seeds. Rounds of 100 → 200 → 400 runs, keeping the top third.
-- [ ] T064 [US1] `src/platsim/optimizer/levels.py` (policy `expectimax2-v1`; all qualification and reported rates use it):
+- [X] T064 [US1] `src/platsim/optimizer/levels.py` (policy `expectimax2-v1`; all qualification and reported rates use it):
   - bisection on a uniform start-level offset to the lowest level that meets the threshold;
   - then per-member descent while the final gap stays ≤ 10 and the threshold holds;
   - the objective is the simulated expected final average level (FR-016);
   - borderline handling per research R8.
-- [ ] T065 [US1] `src/platsim/optimizer/run.py`: orchestrate prune → ability screen → screen →
+- [X] T065 [US1] `src/platsim/optimizer/run.py`: orchestrate prune → ability screen → screen →
   level search → confirm (run counts per the budget preset in `FD/research.md` R8; paired runs on
   the winner and runner-up, FR-019) → Cynthia top-up via T057 for the winner.
   - Checkpoint to `runs/<job-id>/state.json` after each stage and resume from it.
   - Run `validator.validate` on the final team; a violation is a hard error.
   - Emit a "no qualifying team" report with the best rate and levels when nothing qualifies.
-- [ ] T066 [US1] `platsim optimize` in `src/platsim/cli.py` per `FD/contracts/cli.md`: species
+- [X] T066 [US1] `platsim optimize` in `src/platsim/cli.py` per `FD/contracts/cli.md`: species
   name/key resolution with closest-match errors, `--min-clear`, `--seed`, `--workers`, `--budget`.
   Writes JSON, xlsx, csv and `team.txt` (Showdown export, via T027) into `runs/<job-id>/`, as the
   constitution's Interface rule requires. T058 asserts `team.txt` exists and re-imports to the
   same team.
-- [ ] T067 [US1] `src/platsim/web/app.py` per `FD/contracts/http-api.md`:
+- [X] T067 [US1] `src/platsim/web/app.py` per `FD/contracts/http-api.md`:
   - bind to 127.0.0.1;
   - `/api/species` reads the ledger;
   - a single-job FIFO queue runs `optimizer.run` in a background thread with progress callbacks;
   - job state is persisted in `runs/<id>/job.json`;
   - `platsim serve` subcommand.
-- [ ] T068 [P] [US1] `src/platsim/web/static/index.html`, `style.css`, `app.js` (plain JS, no
+- [X] T068 [P] [US1] `src/platsim/web/static/index.html`, `style.css`, `app.js` (plain JS, no
   framework):
   - search-as-you-type list, with a toggle to show excluded species and their reasons;
   - six slots with remove;

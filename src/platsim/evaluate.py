@@ -117,10 +117,18 @@ class _Runs:
 
 
 def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, max_runs: int,
-                       target: float | None, player_policy: str) -> _Runs:
+                       target: float | None, player_policy: str, borderline_threshold: float | None = None,
+                       log: str = "summary", on_batch=None) -> _Runs:
+    """Full gauntlets for run indices 0, 1, ... (see module doc, step 3).
+
+    `borderline_threshold` (optimizer confirm stage, research R8 "Qualification rule"): after the CI
+    target is met, while the clear-rate Wilson interval still straddles the threshold
+    (lo < threshold <= hi), more runs are added up to `max_runs`, stopping at the FIRST n where it no
+    longer straddles. Runs are consumed in index order, so the result is independent of batching and
+    worker count. `on_batch(n, wins)` is called after each batch (progress only)."""
     def req(i: int) -> dict:
         return {"op": "gauntlet", "team": team, "seed": derive_seed(master, i, 0), "player_policy": player_policy,
-                "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "summary"}
+                "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": log}
 
     def check(rs: list[dict]) -> None:
         for i, r in enumerate(rs):
@@ -140,12 +148,12 @@ def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, ma
         dt = time.perf_counter() - t0
         _log(f"full gauntlets {len(results)}/{min_runs} ({len(results) / dt:.2f}/s, "
              f"cleared {sum(r['cleared'] for r in results)})")
+        if on_batch:
+            on_batch(len(results), sum(bool(r["cleared"]) for r in results))
     wins = sum(bool(r["cleared"]) for r in results)
-    if target is None:
-        return _Runs(results, False, None)
     n = len(results)
     extended = False
-    while wilson_half_width(wins, n) > target and n < max_runs:
+    while target is not None and wilson_half_width(wins, n) > target and n < max_runs:
         extended = True
         p_hat = wins / n
         size = min(max(runs_needed(p_hat, target) - n, MIN_BATCH), max_runs - n)
@@ -158,7 +166,29 @@ def run_full_gauntlets(pool, team: list[dict], *, master: str, min_runs: int, ma
             wins += bool(r["cleared"])
             if wilson_half_width(wins, n) <= target:
                 break
-    return _Runs(results, extended, wilson_half_width(wins, n) <= target)
+        if on_batch:
+            on_batch(n, wins)
+
+    def straddles(w: int, k: int) -> bool:
+        lo, hi = wilson_ci(w, k)
+        return lo < borderline_threshold <= hi
+
+    if borderline_threshold is not None:
+        while straddles(wins, n) and n < max_runs:
+            extended = True
+            size = min(max(n // 2, MIN_BATCH), max_runs - n)
+            _log(f"clear-rate CI straddles the threshold {borderline_threshold} at n={n}: adding up to {size} runs")
+            rs = pool.map([req(i) for i in range(n, n + size)])
+            check(rs)
+            for r in rs:
+                results.append(r)
+                n += 1
+                wins += bool(r["cleared"])
+                if not straddles(wins, n):
+                    break
+            if on_batch:
+                on_batch(n, wins)
+    return _Runs(results, extended, None if target is None else wilson_half_width(wins, n) <= target)
 
 
 def per_battle_stats(results: list[dict]) -> dict[str, BattleStat]:
@@ -201,8 +231,6 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
     """Run the evaluation and write the reports. Returns (report, {kind: path})."""
     from platsim.legality.validator import showdown_name
     from platsim.report import write_all
-    from platsim.report.losses import collect_loss_causes
-    from platsim.sim.champion import champion_topup
     from platsim.sim.pool import WorkerPool
 
     if runs < 1:
@@ -215,7 +243,6 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
         raise UsageError(str(e)) from e
     master = str(seed)
     team, led = load_and_validate(team_path)
-    wteam = worker_team(team, led)
     _log(f"{team_path}: legal; {runs} runs, seed {master!r}, player {player_policy}, opponent {OPPONENT_POLICY}, "
          f"budget {preset.name}")
 
@@ -223,29 +250,60 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
     if own_pool:
         pool = WorkerPool(workers)
     try:
-        hello = pool.hello
-        for need, key in ((player_policy, "policies"), (OPPONENT_POLICY, "opponent_policies")):
-            if need not in hello[key]:
-                raise UsageError(f"policy {need!r} is not offered by the worker (known: {hello[key]})")
-        t0 = time.perf_counter()
-        full = run_full_gauntlets(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
-                                  target=preset.ci_half_width, player_policy=player_policy)
-        t_full = time.perf_counter() - t0
-        results = full.results
-        n = len(results)
-        wins = sum(bool(r["cleared"]) for r in results)
-        _log(f"full runs: {n} in {t_full:.1f}s; cleared {wins}/{n}; Cynthia top-up ...")
-        t1 = time.perf_counter()
-        champ = champion_topup(pool, wteam, results, master_seed=master, budget=preset.name)
-        t_champ = time.perf_counter() - t1
-        _log(f"Cynthia: status {champ.status}, {champ.battles} battles ({champ.topup_battles} top-up) in "
-             f"{t_champ:.1f}s; replaying lost battles for loss causes ...")
-        t2 = time.perf_counter()
-        causes = collect_loss_causes(pool.map, wteam, results, GAUNTLET)
-        t_loss = time.perf_counter() - t2
+        report, _ = evaluate_team(team, led, pool, runs=runs, seed=master, player_policy=player_policy,
+                                  budget=preset.name, threshold=threshold, max_runs=max_runs)
     finally:
         if own_pool:
             pool.close()
+    out = Path(out_dir) if out_dir else default_out_dir(team_path, master, runs, player_policy)
+    paths = write_all(report, out, showdown_name)
+    _log(f"wrote {out}")
+    return report, paths
+
+
+@dataclass
+class TeamEvaluation:
+    report: EvaluationReport
+    results: list[dict]  # full gauntlet responses in run order
+    timing: dict  # seconds per phase (NOT written to result.json: it would break determinism)
+
+
+def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0", player_policy: str = DEFAULT_PLAYER_POLICY,
+                  budget: str = "standard", threshold: float = 0.75, max_runs: int = DEFAULT_MAX_RUNS,
+                  extend_borderline: bool = False, full: _Runs | None = None, on_batch=None) -> tuple[EvaluationReport, TeamEvaluation]:
+    """The evaluation of an already validated TeamCandidate on an open pool (steps 2-6 of the module
+    doc); used by `evaluate` and by the optimizer's confirm stage (T065). `extend_borderline` adds runs
+    while the clear-rate CI straddles the threshold (R8; up to `max_runs`). `full` reuses full-gauntlet
+    results already computed with the same team, seed and policy (they are not re-run)."""
+    from platsim.report.losses import collect_loss_causes
+    from platsim.sim.champion import champion_topup
+
+    preset = get_preset(budget)
+    master = str(seed)
+    wteam = worker_team(team, led)
+    hello = pool.hello
+    for need, key in ((player_policy, "policies"), (OPPONENT_POLICY, "opponent_policies")):
+        if need not in hello[key]:
+            raise UsageError(f"policy {need!r} is not offered by the worker (known: {hello[key]})")
+    t0 = time.perf_counter()
+    if full is None:
+        full = run_full_gauntlets(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
+                                  target=preset.ci_half_width, player_policy=player_policy,
+                                  borderline_threshold=threshold if extend_borderline else None,
+                                  on_batch=on_batch)
+    t_full = time.perf_counter() - t0
+    results = full.results
+    n = len(results)
+    wins = sum(bool(r["cleared"]) for r in results)
+    _log(f"full runs: {n} in {t_full:.1f}s; cleared {wins}/{n}; Cynthia top-up ...")
+    t1 = time.perf_counter()
+    champ = champion_topup(pool, wteam, results, master_seed=master, budget=preset.name)
+    t_champ = time.perf_counter() - t1
+    _log(f"Cynthia: status {champ.status}, {champ.battles} battles ({champ.topup_battles} top-up) in "
+         f"{t_champ:.1f}s; replaying lost battles for loss causes ...")
+    t2 = time.perf_counter()
+    causes = collect_loss_causes(pool.map, wteam, results, GAUNTLET)
+    t_loss = time.perf_counter() - t2
 
     clear_ci = wilson_ci(wins, n)
     hw = wilson_half_width(wins, n)
@@ -270,6 +328,7 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
         "divergence_ledger_file_version": div_file_version,
         "runs_requested": runs,
         "runs_extended_for_ci_target": full.extended,
+        **({"runs_extended_while_borderline": True} if extend_borderline else {}),
         "clear_ci_half_width": hw,
         "clear_ci_target": target,
         "stop_on_loss": True,
@@ -295,11 +354,10 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
         divergence_ledger_version=hello["divergence_ledger_version"],
         obtained_from=[b.source for b in team.builds], divergences=divs, warnings=warnings, provenance=provenance,
     )
-    out = Path(out_dir) if out_dir else default_out_dir(team_path, master, runs, player_policy)
-    paths = write_all(report, out, showdown_name)
-    _log(f"timing: full runs {t_full:.1f}s ({n / t_full:.2f} gauntlets/s), Cynthia top-up {t_champ:.1f}s, "
-         f"loss replays {t_loss:.1f}s; wrote {out}")
-    return report, paths
+    _log(f"timing: full runs {t_full:.1f}s ({n / max(t_full, 1e-9):.2f} gauntlets/s), Cynthia top-up {t_champ:.1f}s, "
+         f"loss replays {t_loss:.1f}s")
+    return report, TeamEvaluation(report, results, {"full_runs_s": t_full, "champion_topup_s": t_champ,
+                                                    "loss_replays_s": t_loss})
 
 
 def summary_text(r: EvaluationReport) -> str:
@@ -321,5 +379,6 @@ def summary_text(r: EvaluationReport) -> str:
     return "\n".join(lines)
 
 
-__all__ = ["DEFAULT_PLAYER_POLICY", "DEFAULT_RUNS", "InvalidTeamInput", "UsageError", "evaluate", "load_and_validate",
+__all__ = ["DEFAULT_PLAYER_POLICY", "DEFAULT_RUNS", "InvalidTeamInput", "TeamEvaluation", "UsageError", "evaluate",
+           "evaluate_team", "load_and_validate", "run_full_gauntlets",
            "summary_text", "worker_team"]

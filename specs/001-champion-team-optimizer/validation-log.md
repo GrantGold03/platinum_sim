@@ -650,3 +650,32 @@ $ uv run pytest -q tests/unit/test_abilities.py tests/integration/test_ability_s
 - **Divergence added**: `mech-pickup-honey-gather-after-battle` (accepted). The after-battle item from Pickup and
   Honey Gather (`battle_script.c:7797/:7825`) is not simulated.
 - **UNVERIFIED**: the tested_better branch has been exercised only with a stub pool.
+
+## 2026-10-08: US1 — T061–T066 optimizer + `platsim optimize`, T058 (agent; spot-checked by the coordinator)
+
+- **Agent's T058 run**: `PLATSIM_OPTIMIZE_WORKERS=8 uv run pytest -s -q tests/integration/test_optimize_small.py` → 1 passed in
+  9523 s, exit 0. Two quick runs on 8 and 7 workers gave byte-identical result.json; the team passed the validator; its
+  `team.txt` re-imports to the same team.
+- **Agent's standard run**: `uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --budget standard --seed std-ref-1 --workers 16`
+  → exit 0 in 162 min. Output is in `runs/optimize-36cef906f4d5/`.
+- **Coordinator checks on that output**:
+  - `uv run platsim validate runs/optimize-36cef906f4d5/team.txt` → legal, exit 0.
+  - result.json: n_runs 2000, clear 0.8615 [0.8457, 0.8759], expected average final level 59.864, gap 4.0, qualified,
+    not borderline, expectimax2-v1 vs decomp-ai, standard budget, Cynthia 0.8626 over 2,001 battles.
+  - Start levels: Infernape 59, Staraptor 59, Luxray 59, Garchomp 61, Gyarados 60, Gardevoir 59. The hand-built
+    all-L60 reference team scored 60.32 on the same metric.
+  - `uv run pytest -q tests/unit tests/integration/test_web.py tests/integration/test_evaluate.py -k "not v7"` → 193
+    passed, 1 deselected, exit 0.
+- **Design**: described in module docstrings.
+  - Stages: greedy calibration, ability screen, greedy successive halving over 81 teams, expectimax2 bisection on a
+    uniform level, a setup-move check (200 paired runs), balanced descent, confirmation through `evaluate_team`,
+    then the paired runner-up (McNemar p = 0.0029).
+  - Candidate movesets come from a coverage heuristic, which is never used for legality.
+- **Findings**:
+  1. **Policy reversal (must investigate)**: on one quick-run screening finalist at L58, with the same 40 seeds, greedy
+     cleared 32/40 and expectimax2 cleared 8/40. This contradicts T056 on the benchmark team.
+  2. Winner's curse in the level search: the first confirmation failed (0.7295) and the +1 fallback qualified. The
+     fallback is load-bearing.
+  3. Resume after a mid-stage kill is unverified.
+- **Web**: T059, T067 and T068 are now ticked. The `serve` command is registered, and the real-optimizer web flow is
+  run in quickstart V9 (T076).

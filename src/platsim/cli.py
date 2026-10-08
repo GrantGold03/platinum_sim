@@ -119,9 +119,56 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=run)
 
 
+def _add_optimize(sub: argparse._SubParsersAction) -> None:
+    from platsim.budget import DEFAULT_PRESET, PRESETS
+
+    p = sub.add_parser("optimize", help="optimize six species for the lowest average level after Cynthia (User Story 1)")
+    p.add_argument("species", nargs="+", help="six species (display names or keys, e.g. Garchomp / garchomp)")
+    p.add_argument("--min-clear", type=float, default=0.75, help="required full-gauntlet clear rate (default 0.75, FR-015)")
+    p.add_argument("--seed", default="default", help="master seed (any string; default 'default')")
+    p.add_argument("--workers", type=int, default=None, help="worker processes (default: CPU count; never changes results)")
+    p.add_argument("--budget", choices=sorted(PRESETS), default=DEFAULT_PRESET,
+                   help="simulation budget preset (research R8; 'quick' is for testing and never qualifies)")
+    p.add_argument("--out", type=Path, default=None,
+                   help="output directory (default runs/optimize-<hash of the request>/; re-running resumes from its state.json)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.optimizer.api import InvalidRequest, OptimizeRequest, run_optimization
+
+        if len(args.species) != 6:
+            print(f"platsim optimize: exactly 6 species are required, got {len(args.species)}", file=sys.stderr)
+            return 2
+        req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
+                              budget=args.budget, workers=args.workers, out_dir=args.out)
+        try:
+            res = run_optimization(req)
+        except InvalidRequest as e:
+            for name, why in e.reasons.items():
+                print(f"  {name}: {why}", file=sys.stderr)
+            print(f"platsim optimize: {e}", file=sys.stderr)
+            return 2
+        from platsim.report.json_report import EvaluationReport
+
+        rep = EvaluationReport.from_json((res.out_dir / "result.json").read_text(encoding="utf-8"))
+        if rep.no_qualifying is not None:
+            nq = rep.no_qualifying
+            print(f"{nq.message}: best clear rate {nq.best_clear_rate:.4f} [{nq.best_clear_ci95[0]:.4f}, "
+                  f"{nq.best_clear_ci95[1]:.4f}] over {nq.best_n_runs} runs at start levels {nq.best_levels}")
+        else:
+            from platsim.evaluate import summary_text
+
+            print("start levels " + " / ".join(f"{b.species} {b.start_level}" for b in rep.team.builds))
+            print(summary_text(rep))
+        for name in ("result.json", "result.xlsx", "result.csv", "team.txt", "state.json"):
+            print(f"{name}: {res.out_dir / name}")
+        return 0
+
+    p.set_defaults(func=run)
+
+
 # Later tasks append (e.g. validate T031, divergences T053, optimize, serve).
 _SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences, _add_validate,
-                                                                 _add_evaluate]
+                                                                 _add_evaluate, _add_optimize]
 
 
 def _add_serve(sub: argparse._SubParsersAction) -> None:
