@@ -38,6 +38,11 @@ with the decomp"
 - Q: Which player policy does the optimizer use at each stage? → A: Screen candidates with greedy-v1, then run the
   level search and confirmation with expectimax2-v1. Run time is not a hard constraint.
 - Q: Is it acceptable that Leftovers has no pre-Champion source? → A: Yes.
+
+### Session 2026-10-08
+
+- Q: Are egg moves legal? → A: Only behind an optional flag (`--allow-egg-moves`), default off.
+- Q: Are trade evolutions legal? → A: Only behind an optional flag (`--allow-trade-evolutions`), default off.
 - Q: Do the player's Pokemon have PP Ups or PP Max applied? → A: No. Every move has base PP.
 - Q: The game allows the National Dex before the first Champion win (it needs all 210 Sinnoh species seen,
   which includes losing to the League once). Are National Dex sources allowed? → A: No. Treat them as not allowed.
@@ -171,7 +176,13 @@ divergence ledger with its resolution.
   team MUST equal the number obtainable before the Champion according to the game data; TMs sold in
   shops (including for Game Corner coins) MUST be treated as purchasable in any quantity.
 - **FR-005**: Species and evolutions requiring trades with another game or cartridge MUST be
-  forbidden. Only what one Platinum cartridge can obtain alone, before the Champion, is allowed.
+  forbidden by default; an optional `allow_trade_evolutions` setting (default off) permits trade
+  evolutions (FR-005a). Only what one Platinum cartridge can obtain alone, before the Champion, is allowed.
+- **FR-005a**: With `allow_trade_evolutions` on, species reached by trade evolution are legal; an
+  item-trade evolution's held item MUST be obtainable pre-Champion and is consumed. A Pokemon traded
+  away and back keeps the player as original trainer, so it gets no traded-exp boost. Egg moves are
+  legal only with the optional `allow_egg_moves` setting (default off). Both settings MUST be recorded
+  in every result.
 - **FR-006**: Held items MUST be limited to those obtainable pre-Champion, respecting the number of
   copies obtainable; single-copy items can be held by at most one member.
 - **FR-006a**: Items held by wild Pokemon obtainable pre-Champion MUST count as item sources (repeatable

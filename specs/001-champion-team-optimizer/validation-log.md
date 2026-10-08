@@ -759,3 +759,24 @@ $ echo '{"id":1,"op":"hello"}' | node sim/worker.mjs → … "sim_code_hash":"sh
 - **UNVERIFIED**: `test_optimize_small` (a real-pool optimize after the reorder) was not rerun; it is exercised by
   the planned full optimize rerun.
 - **Closes**: the T077 gap under Principle IV.
+
+## 2026-10-08: held-item source text + simplest-source preference + `platsim report --rerender` (agent; re-run by the coordinator)
+
+```
+$ uv run pytest -q tests/unit/test_source_preference.py → 10 passed, exit 0
+$ uv run platsim report --rerender runs/t076/v8 --out runs/t076/v8-rerendered → "7 source change(s); battle numbers unchanged", exit 0 (agent)
+$ uv run platsim validate runs/t076/v8-rerendered/team.txt → legal, exit 0
+$ diff -q runs/t076/v8/team.txt runs/t076/v8-rerendered/team.txt → identical (battle sets unchanged)
+$ grep -c "?" runs/t076/v8-rerendered/result.csv → 0
+```
+- **Fix A**: held items now name their real ledger source: berry patch, wild held item, Underground (with Trainer ID
+  parity) or a shop. An item with no nameable source raises `NoNamedSource` instead of printing "?". Sitrus Berry →
+  Berry patch at Fuego Ironworks Outside (unlimited).
+- **Fix B**: species and move sources follow a documented preference order.
+  - Species: the species itself, then a pre-evolution evolved, then an NPC trade (never switched silently), then a
+    Day Care egg.
+  - Moves: level-up, then unlimited TM/HM, then tutor, then relearner, then egg, then a single-copy TM.
+  - On V8: 5 of 6 members now come from a gift or a wild catch; only Luxray, which needs egg moves, comes from an egg.
+- **Agent's broader run**: 224 tests passed (unit, evaluate, web).
+- **Open**: the TM04 source is listed as "Gift - Unused Eterna City Condominiums…". It is being checked as part of the
+  flags task.
