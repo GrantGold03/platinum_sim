@@ -1,4 +1,40 @@
-// Player policy `expectimax2-v1` (T050, research R7, spec FR-013): model-based 2-ply expectimax.
+// Player policies `expectimax2-v1` (T050, research R7, spec FR-013) and `expectimax2-v2` (the
+// default strong player since the policy-reversal fix): model-based 2-ply expectimax. One search,
+// two versions; they differ only in the options listed under VERSIONS. Everything below describes
+// both unless it says otherwise.
+//
+// VERSIONS (V1_OPTS / V2_OPTS):
+//   expectimax2-v1  W_ALIVE 1.0, W_FR 0.45, no koStop. Kept registered, unchanged, so recorded
+//                   results (T056, the T058 / US1 optimizer runs) stay reproducible.
+//   expectimax2-v2  koStop (see HORIZON), W_ALIVE 0.25, W_FR 0.10. Why: on a quick-run screening
+//                   finalist (L58 Infernape/Staraptor/Luxray/Garchomp/Gyarados/Gardevoir with plates
+//                   and Sitrus Berries) v1 cleared 109/400 vs greedy-v1 348/400 (McNemar p = 4e-60),
+//                   nearly all losses to Cynthia. Measured cause: in 1027 Cynthia decisions on 40
+//                   losing-heavy runs v1 switched voluntarily 516 times where greedy attacked, 248 of
+//                   them with the foe at 25-50% HP (switch loops instead of finishing a damaged
+//                   Spiritomb), and it picked weaker or immune moves to keep a foe out of the KO /
+//                   Full Restore range. Two model errors produced this:
+//                   (1) the horizon (HORIZON below);
+//                   (2) the leaf weights. A logistic fit of P(win this battle) on leaf features over
+//                   78,585 decisions of 1,600 greedy-v1 gauntlets on four teams (bias, sum of HP
+//                   fractions, alive count per side, usable Full Restores) gives an alive weight of
+//                   0.18-0.27 per member relative to 1.0 per full HP bar and a Full Restore weight of
+//                   about 0.07 (-0.05 in Cynthia-only data). v1's 1.0 / 0.45 overvalued keeping a
+//                   damaged member alive (retreat by switching, taking the hit on a healthy member)
+//                   and making the AI burn a Full Restore. v2 uses 0.25 / 0.10 (inside / near the fit).
+//                   Ablation on 200 paired runs of that team: koStop alone with v1 weights 138/200,
+//                   v2 weights without koStop 135/200, both 171/200 (greedy 169/200).
+//
+// HORIZON (v2 koStop). After a KO the side that lost a member sends in a replacement it chooses
+// (the AI's PostKOSwitchIn picks a counter). With a fixed 2-ply horizon a KO at ply 1 lets that
+// replacement act inside the search, while a KO delayed to ply 2 (after a switch, a weaker move, or
+// letting the AI waste its turn on a Full Restore) never shows it. v1 therefore preferred delaying
+// KOs indefinitely: e.g. Infernape 71/179 vs Spiritomb 65/143 scored Flamethrower (a KO) 0.256 and
+// "switch to Garchomp" 0.691, then Garchomp switched to Luxray, and so on. v2 values a ply-1 branch
+// in which an active member fainted by the leaf right away (a KO ends the line), so no line is
+// credited for pushing the replacement's turn beyond the horizon. Symmetric: a branch in which OUR
+// active fainted at ply 1 also stops there. Heuristic status: this is a search-depth rule, not a game
+// fact; its effect is measured (VERSIONS), not derived.
 //
 // WHAT IT DOES (one decision):
 //   1. Actions: the legal moves of the Showdown request (`active[0].moves`, not `disabled`) and,
@@ -10,7 +46,7 @@
 //      ShouldUseItem (Full Restore) / TrainerAI_Main, and BattleAI_PostKOSwitchIn for
 //      replacements) is RUN on the state. Its RNG is NOT the real AI stream: the policy does not
 //      know the opponent's RNG (a human cannot), so it draws K independent sample streams
-//      (AIRng seeded from sha256(prngSeed|expectimax2-v1) mixed with the turn, depth, sample index
+//      (AIRng seeded from sha256(prngSeed|<policy name>) mixed with the turn, depth, sample index
 //      and a state hash) and uses the empirical distribution of the AI's choices. The real AI
 //      stream, the real AI state and the real battle PRNG are never read for prediction and never
 //      advanced (sim/test/determinism.test.mjs checks the battle PRNG and AI RNG are untouched).
@@ -33,15 +69,16 @@
 //      resulting state, after post-KO replacements (the opponent's from the AI's PostKOSwitchIn,
 //      ours by a damage-race heuristic), the best of our MOVES (switches are not searched at ply 2)
 //      vs the AI's predicted reply on that hypothetical state; then the leaf evaluation.
-//      Q(a) = E_opp E_outcomes[ max_a' E_opp' E_outcomes'[ leaf ] ]. Ties go to the first action
+//      Q(a) = E_opp E_outcomes[ max_a' E_opp' E_outcomes'[ leaf ] ] (v2: a ply-1 outcome in which
+//      an active member fainted is valued leaf(outcome), see HORIZON). Ties go to the first action
 //      in request order (moves, then switches by party position): deterministic.
 //
 // LEAF EVALUATION (from the player's point of view; higher is better), on the state after ply 2:
 //   + sum over our members of value(m)  - sum over the opponent's members of value(m)
-//     value(m) = 0 if fainted, else W_ALIVE (1.0) + hp/maxhp - statusPenalty(m)
+//     value(m) = 0 if fainted, else W_ALIVE (v1 1.0, v2 0.25) + hp/maxhp - statusPenalty(m)
 //     statusPenalty: slp 0.25, frz 0.40, par 0.15, brn 0.15 (0.30 if its best move is physical),
 //     psn 0.08, tox 0.12  (a status on the opponent therefore counts for us)
-//   - opponent Full Restores: W_FR (0.45) per Full Restore the AI could still use. If the opponent's
+//   - opponent Full Restores: W_FR (v1 0.45, v2 0.10) per Full Restore the AI could still use. If the opponent's
 //     active is alive below maxHP/4 (the AI's own trigger, TAI:4099-4104) and the slot rule
 //     (TAI:4092) lets it use one, the leaf assumes it will: that member is valued at full HP and
 //     one Full Restore is spent.
@@ -122,6 +159,14 @@ import { compareBattlerSpeed } from '../ai/cmds/battler.mjs';
 import { WEIGHT_TO_POWER, speciesWeightHg } from '../ai/calcdamage.mjs';
 
 export const EXPECTIMAX2 = 'expectimax2-v1';
+export const EXPECTIMAX2_V2 = 'expectimax2-v2';
+
+// Per-version model options (see the header, VERSIONS). v1 = the recorded expectimax2-v1 behaviour.
+//   koStop  a ply-1 branch in which an active member fainted is valued by the leaf at once (HORIZON)
+//   wAlive  leaf value of being alive, per member (PARAMS.W_ALIVE when absent)
+//   wFR     leaf value of one usable opponent Full Restore (PARAMS.W_FR when absent)
+export const V1_OPTS = Object.freeze({ koStop: false });
+export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0 };
@@ -253,15 +298,17 @@ function cheapHash(str) {
 
 const battleStates = new WeakMap();
 
-function mirrorFor(battle, trainer) {
-  let st = battleStates.get(battle);
+function mirrorFor(battle, trainer, name) {
+  let per = battleStates.get(battle);
+  if (!per) { per = new Map(); battleStates.set(battle, per); }
+  let st = per.get(name);
   if (!st) {
     // A private mirror of the AI's memory, rebuilt from the public log by the same processLog the
     // real AI uses. Its RNG is a throwaway stream (only its 4 initial speedRand draws use it).
     const mirror = createAIState(battle, { trainer, aiSide: 'p2', rng: new AIRng(0) });
-    const seedBase = parseInt(createHash('sha256').update(`${Array.isArray(battle.prngSeed) ? battle.prngSeed.join(',') : String(battle.prngSeed)}|${EXPECTIMAX2}`).digest('hex').slice(0, 8), 16) >>> 0;
+    const seedBase = parseInt(createHash('sha256').update(`${Array.isArray(battle.prngSeed) ? battle.prngSeed.join(',') : String(battle.prngSeed)}|${name}`).digest('hex').slice(0, 8), 16) >>> 0;
     st = { mirror, seedBase };
-    battleStates.set(battle, st);
+    per.set(name, st);
   }
   return st;
 }
@@ -982,15 +1029,16 @@ export function leafValue(X, S) {
   if (myAlive === 0) v -= P.WIN;
   let fr = oppAlive > 0 ? frUsable(S) : 0;
   const oa = activeOf(S, 1);
-  for (const m of S.sides[0].mons) if (m.hp > 0) v += P.W_ALIVE + m.hp / m.maxhp - statusPenalty(X, m);
+  const wAlive = X.opts.wAlive ?? P.W_ALIVE;
+  for (const m of S.sides[0].mons) if (m.hp > 0) v += wAlive + m.hp / m.maxhp - statusPenalty(X, m);
   for (const m of S.sides[1].mons) {
     if (m.hp <= 0) continue;
     let frac = m.hp / m.maxhp;
     let pen = statusPenalty(X, m);
     if (m === oa && fr > 0 && m.hp < Math.trunc(m.maxhp / 4)) { frac = 1; pen = 0; fr--; }
-    v -= P.W_ALIVE + frac - pen;
+    v -= wAlive + frac - pen;
   }
-  v -= P.W_FR * fr;
+  v -= (X.opts.wFR ?? P.W_FR) * fr;
   const ma = activeOf(S, 0);
   if (ma && ma.hp > 0) { v += boostValue(ma); if (ma.recharge) v -= 0.1; }
   if (oa && oa.hp > 0) { v -= boostValue(oa); if (oa.recharge) v += 0.1; }
@@ -1077,10 +1125,14 @@ function valuePly2(X, S) {
   return best;
 }
 
+// koStop (v2, HORIZON): a ply-1 branch in which an active member fainted ends the line there.
+const activeFainted = (S) => { const a = activeOf(S, 0), o = activeOf(S, 1); return !a || a.hp <= 0 || !o || o.hp <= 0; };
 function qValue(X, S, a, opp) {
   let q = 0;
   for (const { p, act } of opp) {
-    for (const br of resolveTurn(X, S, a, act)) q += p * br.p * valuePly2(X, br.S);
+    for (const br of resolveTurn(X, S, a, act)) {
+      q += p * br.p * (X.opts.koStop && activeFainted(br.S) ? leafValue(X, br.S) : valuePly2(X, br.S));
+    }
   }
   return q;
 }
@@ -1103,9 +1155,9 @@ function rootState(X) {
 }
 
 /** Builds the decision context. Reads the live battle; never writes it. */
-export function makeContext({ gd, battle, side, trainer }) {
+export function makeContext({ gd, battle, side, trainer }, opts = V1_OPTS, name = EXPECTIMAX2) {
   if (side.id !== 'p1') throw new Error('expectimax2: the policy plays p1');
-  const ms = mirrorFor(battle, trainer);
+  const ms = mirrorFor(battle, trainer, name);
   const mirror = ms.mirror;
   // Catch the private mirror's AI memory up with the public log (same mapping as the real AI).
   processLog(mirror);
@@ -1119,7 +1171,7 @@ export function makeContext({ gd, battle, side, trainer }) {
     moveHit: mirror.moveHit.slice(), moveHitBattler: mirror.moveHitBattler.slice(),
     items: { ...items, trainerItems: items.trainerItems.slice() },
     static: new Map(), dmg: new Map(), pred: new Map(), views: new Map(),
-    nodes: 0,
+    nodes: 0, opts,
   };
   X.oppTrapped = !!battle.p2.activeRequest?.active?.[0]?.trapped; // the opponent's pending request (read only)
   X.root = rootState(X);
@@ -1128,9 +1180,9 @@ export function makeContext({ gd, battle, side, trainer }) {
 }
 
 /** Scores of every legal action of `request` (exported for tests). */
-export function scoreActions(ctx) {
+export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
   const { side, request } = ctx;
-  const X = makeContext(ctx);
+  const X = makeContext(ctx, opts, name);
   const S = X.root;
   const acts = [];
   if (request.forceSwitch) {
@@ -1169,19 +1221,25 @@ export function scoreActions(ctx) {
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
 export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle };
 
-export const expectimax2 = {
-  name: EXPECTIMAX2,
-  choose(ctx) {
-    const { request } = ctx;
-    if (!request || request.wait || request.teamPreview) return 'default';
-    if (!request.forceSwitch && !request.active?.[0]) return 'default';
-    const t0 = performance.now();
-    const { acts, scores } = scoreActions(ctx);
-    STATS.decisions++;
-    STATS.ms += performance.now() - t0;
-    if (!acts.length) return 'default';
-    let bi = 0;
-    for (let i = 1; i < scores.length; i++) if (scores[i] > scores[bi]) bi = i;
-    return acts[bi].choice;
-  },
-};
+/** A player policy object for one version: `name` also seeds its private AI sample streams. */
+export function makeExpectimax2(name, opts) {
+  return {
+    name,
+    choose(ctx) {
+      const { request } = ctx;
+      if (!request || request.wait || request.teamPreview) return 'default';
+      if (!request.forceSwitch && !request.active?.[0]) return 'default';
+      const t0 = performance.now();
+      const { acts, scores } = scoreActions(ctx, opts, name);
+      STATS.decisions++;
+      STATS.ms += performance.now() - t0;
+      if (!acts.length) return 'default';
+      let bi = 0;
+      for (let i = 1; i < scores.length; i++) if (scores[i] > scores[bi]) bi = i;
+      return acts[bi].choice;
+    },
+  };
+}
+
+export const expectimax2 = makeExpectimax2(EXPECTIMAX2, V1_OPTS); // kept for recorded results
+export const expectimax2v2 = makeExpectimax2(EXPECTIMAX2_V2, V2_OPTS); // the default strong player

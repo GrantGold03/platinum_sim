@@ -45,11 +45,11 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
    pairwise in at least 2 moves become the member's moveset candidates. The best `RANKED` combos are
    kept in order: when a team cannot be built because an earlier member took the last copy of a TM or
    item, `resources.repair` falls back to that member's next-best combo that can be built.
-6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v1
+6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v2
    player models (its SELF_BOOSTS table, parsed from sim/policy/expectimax2.mjs so the two cannot
    drift), one extra moveset = the best 3-move coverage subset + the best such boost move (score:
    stages of the member's better attacking stat x1, Speed x0.5, defenses x0.25). greedy-v1 never uses
-   status moves, so setup variants are NOT screened by greedy: they are tested with expectimax2-v1 in
+   status moves, so setup variants are NOT screened by greedy: they are tested with expectimax2-v2 in
    the optimizer's setup check (run.py), and kept only if significantly better.
    Fewer than 4 attacks available: the set is filled with the best boost move, then shortened.
 

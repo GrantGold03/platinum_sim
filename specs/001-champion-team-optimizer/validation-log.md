@@ -679,3 +679,18 @@ $ uv run pytest -q tests/unit/test_abilities.py tests/integration/test_ability_s
   3. Resume after a mid-stage kill is unverified.
 - **Web**: T059, T067 and T068 are now ticked. The `serve` command is registered, and the real-optimizer web flow is
   run in quickstart V9 (T076).
+
+## 2026-10-08: expectimax2-v2 — fixes the policy reversal (agent; re-run by the coordinator)
+
+```
+$ cd sim && node --test test/*.test.mjs → tests 312, pass 312, fail 0, exit 0
+$ PLATSIM_STRENGTH_N=200 PLATSIM_REVERSAL_N=400 uv run pytest -q -s tests/integration/test_policy_strength.py → 3 passed, exit 0
+  benchmark: greedy 30/200, v1 104/200, v2 176/200; v2 vs greedy p=2.03e-39; v2 vs v1 p=1.28e-15
+  reversal team (tests/fixtures/policy_reversal_team.json): v2 353/400 vs greedy 344/400, p=0.407 (indistinguishable)
+```
+- **Agent's acceptance** on 600 fresh seeds is recorded in research R7 – v2 correction.
+- **Determinism**: v1 is unchanged (400/400 identical per-seed records).
+- **Defaults**: v2 is now the default player in evaluate, the optimizer, the CLI and the web app. Optimizer
+  `STATE_VERSION` is 3, so v1 checkpoints are never resumed under v2.
+- **Stale results**: the earlier US1 optimize results (`runs/optimize-*`) and the V7 evaluation were produced with v1.
+  They are superseded and are rerun under v2 in T076.

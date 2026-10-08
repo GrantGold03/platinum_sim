@@ -302,6 +302,23 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
 - **Known model gaps** are listed in the header of `sim/policy/expectimax2.mjs`: unmodelled status/setup moves, weather
   never expiring, hazards, multi-hit moves, and so on.
 
+### R7 – v2 correction (2026-10-08)
+
+- **Problem**: v1 was not uniformly stronger than greedy. On optimizer screening finalists (400 paired seeds)
+  greedy-v1 cleared 348 vs v1 109, and on the optimizer's own winner 394 vs 348.
+- **Causes**:
+  1. The search horizon rewarded delaying KOs. A ply-1 KO lets the AI's replacement act inside the search, while a
+     ply-2 KO never shows it, so v1 switched instead of attacking 516 of 1,027 times.
+  2. The leaf weights were mis-scaled. A logistic fit on 78,585 decisions gives the value of keeping a member alive
+     as about 0.25 and a Full Restore as about 0.10, against v1's 1.0 and 0.45.
+- **Fix**: `expectimax2-v2` values a ply-1 KO branch at the leaf immediately (koStop) and uses the fitted weights. It
+  is now the default; v1 stays registered unchanged so recorded results remain reproducible.
+- **Acceptance** (600 fresh paired seeds, `x2v2-accept`): v2 is not significantly worse than greedy on any team,
+  and is significantly better on the reference team (568 vs 442, p = 1.8e-23) and the benchmark team (519 vs 100,
+  p = 9.3e-111). On the reversal team it is at parity (504 vs 522, p = 0.16; 353 vs 344 on another 400 seeds).
+- **Throughput**: about 2.6 gauntlets/s on 16 workers (v1 about 1.7).
+- **Caveat**: v2's leaf weights were fitted on greedy-played games.
+
 ## R8. Simulation budget and search strategy
 
 **Facts**: 16 cores and 30 GB RAM on this machine. Showdown has no published throughput figure.

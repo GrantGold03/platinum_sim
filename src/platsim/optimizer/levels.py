@@ -1,5 +1,5 @@
 """Start-level search (T064; spec FR-015, FR-016; research.md R8 "Search" step 3, "Qualification rule",
-"Policy per stage": the level search uses `expectimax2-v1`).
+"Policy per stage": the level search uses the strong player, now `expectimax2-v2`).
 
 Level vectors
 -------------
@@ -10,7 +10,7 @@ real constraint, is checked on simulated final levels).
 
 Testing one level vector (`LevelSearch.test`)
 ---------------------------------------------
-Full gauntlets with expectimax2-v1 vs decomp-ai, stop_on_loss. Run i uses request seed
+Full gauntlets with expectimax2-v2 vs decomp-ai, stop_on_loss. Run i uses request seed
 derive_seed(f"{seed}|levels", i, 0) for EVERY vector, so all points are paired. Runs are added in
 order: first `n0`, then doubling up to `cap` (standard 200 -> 800, thorough 400 -> 1,600, quick
 50 -> 100). After each batch:
@@ -52,7 +52,7 @@ from dataclasses import asdict, dataclass
 from platsim.sim.seeds import derive_seed
 from platsim.stats import wilson_ci
 
-POLICY = "expectimax2-v1"
+POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
 OPPONENT_POLICY = "decomp-ai"
 MAX_GAP = 10
 LEVEL_RUNS = {"standard": (200, 800), "thorough": (400, 1600), "quick": (50, 100)}

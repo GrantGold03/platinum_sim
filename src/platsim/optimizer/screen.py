@@ -14,7 +14,7 @@
 - `stop_on_loss` true, `log` "none", opponent `decomp-ai`. Results are consumed in request order, so the
   outcome does not depend on the number of workers.
 
-Screening ranks; it never qualifies a team. Qualification and every reported rate use expectimax2-v1
+Screening ranks; it never qualifies a team. Qualification and every reported rate use expectimax2-v2
 (levels.py, run.py).
 """
 

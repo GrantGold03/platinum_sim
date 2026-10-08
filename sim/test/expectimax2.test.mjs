@@ -1,4 +1,4 @@
-// T050: expectimax2-v1 checks.
+// T050: expectimax2-v1 checks (1-2); expectimax2-v2 checks at the end.
 //  1. Hypothetical-state model vs live battle: at real p1 decision points the game AI run on a
 //     SHADOW copy of the current state (the path ply 2 uses) chooses exactly what it chooses on
 //     the live battle through the live adapter, for the same RNG seeds. Positive control: on a
@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { runGauntlet, PLAYER_POLICIES, registerPlayerPolicy } from '../gauntlet.mjs';
 import { AIRng } from '../ai/choose.mjs';
 import { DECOMP_AI } from '../ai/opponent.mjs';
-import { expectimax2, makeContext, scoreActions, _internal } from '../policy/expectimax2.mjs';
+import { expectimax2, makeContext, scoreActions, _internal, PARAMS, V1_OPTS, V2_OPTS } from '../policy/expectimax2.mjs';
 import { B, gd, leagueBattle } from './ai_fixtures.mjs';
 
 const TEAM = JSON.parse(readFileSync(new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url), 'utf8')).team;
@@ -68,4 +68,45 @@ test('hand position: finite scores for every action; the super-effective move is
   // Flame Wheel (Fire) is 2x on Bug/Flying; Close Combat and Mach Punch (Fighting) are 0.25x.
   assert.equal(expectimax2.choose(ctx), 'move 2');
   assert.ok(scores[1] > scores[0] && scores[1] > scores[2], JSON.stringify(scores));
+});
+
+// expectimax2-v2 (VERSIONS / HORIZON in sim/policy/expectimax2.mjs). The position is the start of
+// the measured switch loop on the smoke-run finalist: Cynthia's Spiritomb (lead) at 65/143 HP vs our
+// Infernape at 71/179; Flamethrower (Flame Plate) KOs Spiritomb in most rolls and Infernape moves
+// first. v1 delays the KO (switches out: the replacement's turn would be inside its horizon); v2 takes
+// the KO with a Fire move. The v1 half is the positive control that the position shows the bug.
+function spiritombPosition() {
+  const { battle, trainer, p1, p2 } = leagueBattle('champion_cynthia', [
+    B('infernape', 59, ['fire_blast', 'flamethrower', 'close_combat', 'fire_punch'], 'ABILITY_BLAZE', 'flame_plate'),
+    B('staraptor', 58, ['brave_bird', 'pluck', 'wing_attack', 'close_combat'], 'ABILITY_INTIMIDATE', 'sky_plate'),
+    B('luxray', 58, ['thunderbolt', 'ice_fang', 'crunch', 'fire_fang'], 'ABILITY_RIVALRY', 'zap_plate'),
+    B('garchomp', 59, ['earthquake', 'dragon_claw', 'stone_edge', 'aerial_ace'], 'ABILITY_SAND_VEIL', 'sitrus_berry'),
+    B('gyarados', 58, ['aqua_tail', 'waterfall', 'ice_fang', 'strength'], 'ABILITY_INTIMIDATE', 'sitrus_berry'),
+    B('gardevoir', 58, ['psychic', 'shadow_ball', 'magical_leaf', 'ice_punch'], 'ABILITY_SYNCHRONIZE', 'mind_plate'),
+  ]);
+  assert.equal(p2.active[0].species.id, 'spiritomb');
+  p1.active[0].hp = 71;
+  p2.active[0].hp = 65;
+  battle.makeRequest();
+  return { gd, battle, side: p1, request: p1.activeRequest, trainer };
+}
+
+test('v2 takes the KO that v1 delays by switching (horizon fix); v1 still switches (control)', () => {
+  const v1 = PLAYER_POLICIES.get('expectimax2-v1');
+  const v2 = PLAYER_POLICIES.get('expectimax2-v2');
+  assert.ok(v1 && v2 && v1 !== v2);
+  const c1 = v1.choose(spiritombPosition());
+  const c2 = v2.choose(spiritombPosition());
+  assert.match(c1, /^switch /, `v1 chose ${c1}`);
+  const ctx = spiritombPosition();
+  const fire = new Set(['fireblast', 'flamethrower', 'firepunch']);
+  const slot = Number(c2.split(' ')[1]) - 1;
+  assert.ok(c2.startsWith('move ') && fire.has(ctx.side.active[0].moveSlots[slot].id), `v2 chose ${c2}`);
+});
+
+test('v2 options: koStop and the fitted leaf weights; v1 options are the recorded ones', () => {
+  assert.deepEqual({ ...V1_OPTS }, { koStop: false });
+  assert.deepEqual({ ...V2_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1 });
+  assert.equal(PARAMS.W_ALIVE, 1.0); // v1's weight, used when an option is absent
+  assert.equal(PARAMS.W_FR, 0.45);
 });

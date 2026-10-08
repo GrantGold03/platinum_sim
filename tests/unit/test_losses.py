@@ -72,7 +72,7 @@ def _battle(trainer, won, h, end=None):
 
 def _result(battles):
     return {"ok": True, "cleared": all(b["won"] for b in battles) and len(battles) == 5, "battles": battles,
-            "player_policy": "expectimax2-v1", "opponent_policy": "decomp-ai", "turn_limit": 1000}
+            "player_policy": "expectimax2-v2", "opponent_policy": "decomp-ai", "turn_limit": 1000}
 
 
 RESULTS = [
@@ -89,7 +89,7 @@ def test_lost_battles_and_replay_requests():
     reqs = replay_requests([{"species": "luxray"}], RESULTS, lost)
     assert reqs[0]["trainers"] == ["bertha"] and reqs[0]["seeds"] == ["sodium,bertha"]
     assert reqs[0]["start_state"] == {"levels": [58]} and reqs[0]["log"] == "full"
-    assert reqs[1]["player_policy"] == "expectimax2-v1" and reqs[1]["opponent_policy"] == "decomp-ai"
+    assert reqs[1]["player_policy"] == "expectimax2-v2" and reqs[1]["opponent_policy"] == "decomp-ai"
 
 
 def test_collect_with_fake_runner_and_hash_check():

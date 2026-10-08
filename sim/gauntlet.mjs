@@ -13,8 +13,9 @@
 // Seeds: battle i of a request uses deriveSeed(request.seed, 0, i) (sim/seeds.mjs), unless the
 // request passes `seeds` (one per trainer). Every battle's seed is echoed in the result.
 //
-// Policies. The player may request `greedy-v1` (T049, sim/policy/greedy.mjs) or
-// `expectimax2-v1` (T050, sim/policy/expectimax2.mjs); the opponent defaults to `decomp-ai`
+// Policies. The player may request `greedy-v1` (T049, sim/policy/greedy.mjs),
+// `expectimax2-v2` (the strong player, sim/policy/expectimax2.mjs) or `expectimax2-v1` (T050, kept
+// for reproducing recorded results; see the VERSIONS note there); the opponent defaults to `decomp-ai`
 // (T045-T047). The player defaults to `placeholder-default`, which sends Showdown's `default`
 // choice (first legal move / first legal switch). It is NOT a player policy; its name is reported
 // in every result (`player_policy`, `opponent_policy`) so no result produced with it can be
@@ -27,7 +28,7 @@ import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
 import { greedy } from './policy/greedy.mjs';
-import { expectimax2 } from './policy/expectimax2.mjs';
+import { expectimax2, expectimax2v2 } from './policy/expectimax2.mjs';
 import { decompAI } from './ai/opponent.mjs';
 
 export const PLACEHOLDER = 'placeholder-default';
@@ -38,6 +39,7 @@ export const registerPlayerPolicy = (p) => PLAYER_POLICIES.set(p.name, p);
 export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
 registerPlayerPolicy(expectimax2); // `expectimax2-v1` (T050, sim/policy/expectimax2.mjs, research R7)
+registerPlayerPolicy(expectimax2v2); // `expectimax2-v2` (sim/policy/expectimax2.mjs VERSIONS / HORIZON)
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)

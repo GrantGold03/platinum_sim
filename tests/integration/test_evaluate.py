@@ -56,7 +56,7 @@ def test_determinism_fast(tmp_path):
     _same_json(tmp_path / "a", tmp_path / "b")
     r = json.loads((tmp_path / "a" / "result.json").read_text())
     assert r["n_runs"] == int(n) and r["budget_preset"] == "quick" and not r["qualified"]
-    assert r["player_policy"] == "expectimax2-v1" and r["opponent_policy"] == "decomp-ai"
+    assert r["player_policy"] == "expectimax2-v2" and r["opponent_policy"] == "decomp-ai"
     for f in ("result.json", "result.xlsx", "result.csv", "team.txt"):
         assert (tmp_path / "a" / f).is_file()
     # team.txt is a Showdown export that re-imports to a legal team

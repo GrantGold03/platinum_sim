@@ -1,7 +1,7 @@
 // T051: determinism of the gauntlet for both player policies (Constitution IV) and FR-011.
 //
 //  1. The same gauntlet request run twice gives byte-identical output (JSON of the full result,
-//     including the full Showdown logs), for `greedy-v1` and for `expectimax2-v1`; a different
+//     including the full Showdown logs), for `greedy-v1`, `expectimax2-v1` and `expectimax2-v2`; a different
 //     seed changes the output (positive control).
 //  2. Over 200 gauntlets per policy, every p1 choice is `move N` or `switch N`, never an item or
 //     anything else (FR-011: no bag items).
@@ -10,7 +10,7 @@
 //     Pokemon's hp / status / boosts / item / PP / volatiles are unchanged. A deliberately bad
 //     policy that draws one number from the battle PRNG is caught by the same check (positive
 //     control).
-// The 200 expectimax2-v1 gauntlets run in worker threads (this file re-imports itself as the
+// The 200 expectimax2 gauntlets per version run in worker threads (this file re-imports itself as the
 // worker) so the test takes minutes, not tens of minutes.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,7 +25,7 @@ import { readFileSync } from 'node:fs';
 
 const FIXTURE = new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url);
 const TEAM = JSON.parse(readFileSync(FIXTURE, 'utf8')).team;
-const POLICIES = ['greedy-v1', 'expectimax2-v1'];
+const POLICIES = ['greedy-v1', 'expectimax2-v1', 'expectimax2-v2'];
 const N = 200;
 const digest = (r) => createHash('sha256').update(JSON.stringify(r)).digest('hex');
 const req = (pol, seed, extra = {}) => ({ team: TEAM, seed, player_policy: pol, opponent_policy: DECOMP_AI, ...extra });

@@ -16,7 +16,7 @@ Stages (each checkpointed in <out>/state.json; a re-run with the same request re
 2. calibrate (greedy-v1): the lowest uniform level U_g at which the baseline clears >= 50% with
    greedy-v1 (bisection; `rounds[0]` runs per point; seeds derive_seed(f"{seed}|calibrate", i, 0)),
    so the screen is run where candidates differ. Pass B then rebuilds the candidates with move legality
-   at ref = U_g - 5 (heuristic: expectimax2-v1 needs fewer levels than greedy-v1, R7, and the level
+   at ref = U_g - 5 (heuristic: expectimax2-v2 needs fewer levels than greedy-v1, R7, and the level
    search will go below U_g; moves are kept legal there). Screening vector: max(U_g, member minimum).
 3. ability_screen (abilities.choose_ability, T060, greedy-v1, FR-008c) on the pass-B baseline, per
    member; the result applies to every candidate with that member's source variant. A finalist member
@@ -24,14 +24,14 @@ Stages (each checkpointed in <out>/state.json; a re-run with the same request re
 4. screen (screen.py, greedy-v1): successive halving over up to N_CANDIDATES teams = the baseline,
    every single-member variation (moveset x item x source variant), then seeded random combinations;
    rounds and the top-third rule from the budget preset; finalists = best two.
-5. level_search (levels.py, expectimax2-v1): bisection on the uniform level, then the setup check,
+5. level_search (levels.py, expectimax2-v2): bisection on the uniform level, then the setup check,
    then the balanced per-member descent; each point PASS/FAIL by the sequential rule in levels.py.
-   setup check (expectimax2-v1): for each member with a modelled setup moveset (candidates.py step 6),
+   setup check (expectimax2-v2): for each member with a modelled setup moveset (candidates.py step 6),
    the team with that set vs the current team at the bisection levels, `ability_screen` paired runs
    (seeds derive_seed(f"{seed}|setup", i, 0)), McNemar exact; adopted only if significantly better
    (alpha 0.05), otherwise the attack set is kept (FR-019: not "better" without support).
 6. confirm (evaluate.evaluate_team, the `platsim evaluate` path): the winner at its final levels,
-   >= `confirm_min` expectimax2-v1 runs, more until the CI target is met and, for qualifying presets,
+   >= `confirm_min` expectimax2-v2 runs, more until the CI target is met and, for qualifying presets,
    more while the CI straddles the threshold (up to 4 x confirm_min); Cynthia top-up (T057); loss causes.
    If the confirmed rate misses the threshold or is borderline, every start level is raised by 1; if
    only the final gap (> 10) fails, the lowest members are raised by 1; the confirm is repeated at most
@@ -67,12 +67,12 @@ from platsim.optimizer.screen import ScreenResult, successive_halving
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import mcnemar_exact, wilson_ci
 
-STATE_VERSION = 2  # 2: balanced descent (levels.py)
+STATE_VERSION = 3  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2 (a v1 state is not resumed)
 CALIBRATION_TARGET = 0.5
 REF_MARGIN = 5
 N_CANDIDATES = 81
 MAX_CONFIRM_BUMPS = 2
-POLICY = "expectimax2-v1"
+POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
 SCREEN_POLICY = "greedy-v1"
 OPPONENT = "decomp-ai"
 
