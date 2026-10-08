@@ -587,3 +587,11 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7
   - the worker's hello does not fingerprint the `sim/` code;
   - evaluate does not add runs to settle a borderline result;
   - the held-item source column says "not recorded".
+
+**Coordinator rerun of V7 on committed code (`0cf53c4`)**: `uv run pytest -q -s tests/integration/test_evaluate.py -k v7` →
+1 passed, exit 0, 2,317 s.
+- Cleared 1586/2000 (0.7930); Cynthia 0.7950 [0.7767, 0.8121] over 1,995 full-run battles; Cynthia P(win | reached)
+  0.7946 [0.7763, 0.8117] over 2,001 battles; expected final average level 60.32; gap 2.0; qualified True,
+  borderline False.
+- These are identical to the agent's run, and run 2 on 7 workers was byte-identical (SC-003, SC-004).
+- Throughput was 2.09 gauntlets/s with expectimax2-v1 on 16 workers.

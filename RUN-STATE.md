@@ -22,11 +22,9 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
   and expectimax2-v1 (52.0% vs 15.8%, p=3.6e-129), pool, Cynthia top-up, divergence ledger, report writers.
 
 ## Next
+- **US2 complete (T069–T072)**; paused at the user's request. Next is US1 (T058–T068: optimizer + web UI), then US3 and Polish.
 - **Checkpoint B reached** (all of T001–T057 done; see validation-log). The user reviews it before Phase 3+.
 - In progress: wild held items as a ledger source, with Munchlax excluded (spec FR-006a, user decision 2026-10-07).
-- Open user decision: the game auto-learns a level-up move when a mon has fewer than 4 moves (`battle_script.c:10021-10035`),
-  while the spec says always decline.
-- Replace `tests/fixtures/reference_team.json` with a legal team (it is currently illegal: Alakazam is trade-only).
 - Budget concern: `expectimax2-v1` runs at about 1.6 gauntlets/s on 16 workers, so 2,000 confirmation runs take about 20 min
   per finalist. The optimizer's search must screen with greedy-v1 and confirm with expectimax2-v1, or the budget must be
   revisited before T060+.
