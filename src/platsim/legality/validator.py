@@ -208,9 +208,10 @@ def _team_from_dict(d: dict[str, Any]) -> tuple[TeamCandidate | None, list[int] 
 
 def from_showdown(sets: list[ShowdownSet], ledger=None) -> TeamCandidate:
     """Showdown text carries no provenance (source, move sources, ability_reason). For each member
-    try every source option; per move take the first legal source (preferring ones that consume
-    nothing), and keep the first option under which the member has no violation of its own. If
-    none works, the first option is kept so the validator reports why. Team-wide copy limits are
+    try every source option; per move take the best legal source by `movesources.move_source_key`,
+    and keep the simplest option (`movesources.option_sort_key`: the species itself < a
+    pre-evolution then evolve < NPC trade < Day-Care egg) under which the member has no violation
+    of its own. If none works, the first option is kept so the validator reports why. Team-wide copy limits are
     checked afterwards on the chosen sources (a different TM choice could in principle avoid a
     TM_COPIES violation reported here)."""
     from platsim.availability.ledger import build_ledger
@@ -225,13 +226,16 @@ def from_showdown(sets: list[ShowdownSet], ledger=None) -> TeamCandidate:
             mcs = []
             for mv in s.moves:
                 cs = MS.sources(species, _resolve(_move_index(), mv) or mv, s.level, led, o)
-                cs.sort(key=lambda c: (bool(MS.uses_of(c)), c.source_kind == "relearner"))
+                cs.sort(key=lambda c: MS.move_source_key(c, led))
                 mcs.append(cs[0] if cs else MoveChoice(mv, "level_up", "unresolved (no legal source found)"))
             reason = "fixed_by_trade" if o.fixed_mon else "tie_default"
-            cands.append(Build(species=species, source=o.id, start_level=s.level, moves=mcs, ability=s.ability,
-                               ability_reason=reason, held_item=s.item, nature=s.nature or "",
-                               ivs=dict(s.ivs), evs=dict(s.evs)))
-        pick = next((b for b in cands if not _validate_build(slot, b, led)["violations"]), None)
+            cands.append((MS.option_sort_key(o, MS.move_cost(mcs, led)),
+                          Build(species=species, source=o.id, start_level=s.level, moves=mcs, ability=s.ability,
+                                ability_reason=reason, held_item=s.item, nature=s.nature or "",
+                                ivs=dict(s.ivs), evs=dict(s.evs))))
+        valid = [(k, b) for k, b in cands if not _validate_build(slot, b, led)["violations"]]
+        pick = min(valid, key=lambda kb: kb[0])[1] if valid else None
+        cands = [b for _, b in cands]
         if pick is None:
             pick = cands[0] if cands else Build(
                 species=species, source="none", start_level=s.level,
@@ -419,7 +423,7 @@ def _validate_build(slot: int, b: Build, led) -> dict[str, Any]:
                                _src()["moves"] + [s for c in legal[:2] for s in (c.availability_ref or "").split("; ") if s]))
             continue
         # prefer the declared detail when it names one of the legal choices
-        chosen = next((c for c in match if c.detail == m.detail), None) or min(match, key=lambda c: bool(MS.uses_of(c)))
+        chosen = next((c for c in match if c.detail == m.detail), None) or min(match, key=lambda c: MS.move_source_key(c, led))
         for k, n in MS.uses_of(chosen).items():
             if re.fullmatch(r"(TM|HM)\d\d", k):
                 res["tm"][k] += n

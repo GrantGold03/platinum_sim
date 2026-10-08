@@ -208,6 +208,35 @@ def _add_explain(sub: argparse._SubParsersAction) -> None:
 _SUBCOMMANDS.append(_add_explain)
 
 
+def _add_report(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("report", help="re-render an existing run's report (source text only; no battle is re-run)")
+    p.add_argument("--rerender", type=Path, required=True, metavar="RUN_DIR",
+                   help="run directory holding result.json; its files are never modified")
+    p.add_argument("--out", type=Path, default=None, help="output directory (default <RUN_DIR>-rerendered; must not exist "
+                   "with report files in it)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.legality.movesources import NoNamedSource
+        from platsim.report.rerender import RerenderError, rerender
+
+        try:
+            _rep, paths, changes = rerender(args.rerender, args.out)
+        except (RerenderError, NoNamedSource) as e:
+            print(f"platsim report: {e}", file=sys.stderr)
+            return 2
+        print(f"re-rendered {args.rerender} ({len(changes)} source change(s); battle numbers unchanged)")
+        for c in changes:
+            print(f"  {c}")
+        for kind, path in paths.items():
+            print(f"{kind}: {path}")
+        return 0
+
+    p.set_defaults(func=run)
+
+
+_SUBCOMMANDS.append(_add_report)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="platsim")
     sub = parser.add_subparsers(dest="command", required=True)

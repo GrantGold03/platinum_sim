@@ -6,20 +6,23 @@ start-level vector, or returns a `Refusal` naming why it cannot be built. A cand
 a copy limit is therefore never generated:
 
 - Members are processed in slot order. For each member every source option of its variant that exists
-  at its level (`SourceOption.min_level`) is tried, in (min_level, id) order; a one-time source
+  at its level (`SourceOption.min_level`) is tried; a one-time source
   (gift / static / starter choice, `quantity` / `exclusive_group`) already taken by an earlier member is
   skipped (validator SOURCE_EXHAUSTED).
-- For each move, the legal sources at that level (`movesources.sources`) are tried cheapest first:
-  sources consuming nothing (level-up, pre-evolution level-up, HM, unlimited TM, Draco Meteor tutor),
-  then sources consuming only unlimited items (relearner Heart Scale, shard tutors with unlimited
-  shards), then sources consuming limited copies (single-copy TMs, finite shards / Heart Scales). A
+- For each move, the legal sources at that level (`movesources.sources`) are tried in the documented
+  preference order `movesources.move_source_key` (no limited copy before a limited copy; then
+  level-up / pre-evolution level-up < unlimited TM/HM < tutor < move relearner < egg move). A
   source is taken only if every copy it consumes is still left (`ledger.tm_copies` /
   `ledger.item_copies` minus copies already assigned to earlier members).
 - Evolution items consumed on the chosen path (`SourceOption.consumes`) and the held item are counted
   the same way. An NPC-trade mon that arrives holding its own copy of an item uses that copy (the
   validator's rule).
-- Among the options that work, the one using the fewest limited copies, then the lowest minimum
-  level, then the smallest id, is chosen.
+- Among the options that work, the one using the fewest limited copies is chosen, then the simplest
+  source by `movesources.option_sort_key` (the species itself < a pre-evolution then evolve <
+  Day-Care egg, which is therefore used only when an egg move or a breeding-only path needs it;
+  ties: cheaper move sources, fewer evolutions, lowest minimum level, id). NPC trades are never
+  ranked against non-trade options here: a variant holds either one NPC-trade option or none
+  (candidates.variants), so trade vs non-trade stays an explicit optimizer choice (FR-008b).
 
 Which member gets a contested copy is decided by slot order. That is a heuristic over candidates
 (the screen tries other candidates too); legality is re-checked by the independent validator.
@@ -43,7 +46,6 @@ from platsim.legality.models import Build, MoveChoice, TeamCandidate, default_ev
 from platsim.optimizer import candidates as C
 
 UNLIMITED = MS.UNLIMITED
-_KIND_ORDER = {"level_up": 0, "pre_evo_level_up": 0, "hm": 1, "tm": 1, "tutor": 2, "relearner": 3, "egg": 4}
 
 
 @dataclass(frozen=True)
@@ -111,12 +113,6 @@ def copies(res: str, led) -> int | str:
     return _COPIES[k]
 
 
-def _cost_class(uses: dict[str, int], led) -> int:
-    if not uses:
-        return 0
-    return 2 if any(copies(r, led) != UNLIMITED for r in uses) else 1
-
-
 def _affordable(uses: dict[str, int], used: Counter, led) -> bool:
     for r, n in uses.items():
         have = copies(r, led)
@@ -154,14 +150,16 @@ def _sources(species: str, move: str, level: int, opt, led) -> list:
     k = (id(led), species, move, level, opt.id)
     if k not in _SOURCES:
         cs = MS.sources(species, move, level, led, opt)
-        _SOURCES[k] = sorted(cs, key=lambda c: (_cost_class(MS.uses_of(c), led), _KIND_ORDER.get(c.source_kind, 9), c.detail))
+        _SOURCES[k] = sorted(cs, key=lambda c: MS.move_source_key(c, led))
     return _SOURCES[k]
 
 
-def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list[MoveChoice], Counter] | None:
-    """Move choices + limited copies this member consumes under `opt`, or None."""
+def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list[MoveChoice], Counter, int] | None:
+    """Move choices + limited copies this member consumes under `opt` + the picks' `movesources.move_cost`,
+    or None."""
     local: Counter = Counter()
     choices: list[MoveChoice] = []
+    picks: list[MoveChoice] = []
     mv = load_moves()
     for move in spec.moves:
         cs = _sources(spec.species, move, level, opt, led)
@@ -170,6 +168,7 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list
             return None
         for r, n in MS.uses_of(pick).items():
             local[r] += n
+        picks.append(pick)
         choices.append(MoveChoice(mv[move].key, pick.source_kind, pick.detail, pick.availability_ref))
     for it, n in opt.consumes:
         local[it] += n
@@ -182,7 +181,7 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list
             if copies(item_const, led) == 0 or not _affordable({item_const: 1}, used + local, led):
                 return None
             local[item_const] += 1
-    return choices, local
+    return choices, local, MS.move_cost(picks, led)
 
 
 def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
@@ -195,7 +194,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
     for slot, (spec, level) in enumerate(zip(specs, levels)):
         variant = variant_of(spec, led)
         best = None
-        for opt in sorted(variant.options(led), key=lambda o: (o.min_level, o.id)):
+        for opt in variant.options(led):
             if level < opt.min_level:
                 continue
             if opt.exclusive_group and opt.exclusive_group in groups:
@@ -206,14 +205,14 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
             if r is None:
                 continue
             limited = sum(n for res, n in r[1].items() if copies(res, led) != UNLIMITED)
-            key = (limited, opt.min_level, opt.id)
+            key = (limited, *MS.option_sort_key(opt, r[2]))
             if best is None or key < best[0]:
                 best = (key, opt, r)
         if best is None:
             return Refusal(slot, f"slot {slot + 1} {C.display_name(spec.species)}: no source option of variant "
                                  f"{spec.variant!r} makes {list(spec.moves)} + item {spec.item} legal at Lv {level} "
                                  "with the copies left after earlier members")
-        _, opt, (choices, local) = best
+        _, opt, (choices, local, _cost) = best
         for res, n in local.items():
             used[res] += n
             who.setdefault(res, []).append(slot)

@@ -6,7 +6,8 @@ not carry (all optional, all defaulting to "not recorded" in the spreadsheet rat
 
 - `objective`: the optimizer's objective, stated in output (Constitution IV, FR-016).
 - `obtained_from[6]`, `held_item_sources[6]`: display text for the Team sheet's "Obtained from"
-  and "Held item source" columns (Build.source is only an availability ref).
+  and "Held item source" columns (Build.source is only an availability ref);
+  `held_item_source_refs[6]`: the decomp `path:line` refs behind each held-item source (report/sources.py).
 - `resources`: the Resources sheet rows (who uses each single-copy TM / limited item, copies used,
   copies available).
 - `divergences`: the ledger entries that apply to this run (Divergences sheet).
@@ -229,6 +230,7 @@ class EvaluationReport:
     objective: str = DEFAULT_OBJECTIVE
     obtained_from: list[str] = field(default_factory=list)
     held_item_sources: list[str | None] = field(default_factory=list)
+    held_item_source_refs: list[list[str]] = field(default_factory=list)
     resources: list[ResourceLine] = field(default_factory=list)
     divergences: list[DivergenceEntry] = field(default_factory=list)
     no_qualifying: NoQualifying | None = None
@@ -253,7 +255,7 @@ class EvaluationReport:
             self.warnings = [QUICK_WARNING, *self.warnings]
         if self.team is not None:
             n = len(self.team.builds)
-            for name in ("obtained_from", "held_item_sources"):
+            for name in ("obtained_from", "held_item_sources", "held_item_source_refs"):
                 v = getattr(self, name)
                 if v and len(v) != n:
                     raise ValueError(f"{name} has {len(v)} entries for {n} team members")
@@ -299,6 +301,7 @@ class EvaluationReport:
             "python_version": self.python_version,
             "obtained_from": list(self.obtained_from),
             "held_item_sources": list(self.held_item_sources),
+            "held_item_source_refs": [list(r) for r in self.held_item_source_refs],
             "resources": [r.to_dict() for r in self.resources],
             "divergences": [d.to_dict() for d in self.divergences],
             "provenance": dict(self.provenance),
@@ -338,6 +341,7 @@ class EvaluationReport:
             objective=d.get("objective", DEFAULT_OBJECTIVE),
             obtained_from=list(d.get("obtained_from", [])),
             held_item_sources=list(d.get("held_item_sources", [])),
+            held_item_source_refs=[list(r) for r in d.get("held_item_source_refs", [])],
             resources=[ResourceLine.from_dict(r) for r in d.get("resources", [])],
             divergences=[DivergenceEntry.from_dict(x) for x in d.get("divergences", [])],
             no_qualifying=NoQualifying.from_dict(d["no_qualifying"])

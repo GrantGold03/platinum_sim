@@ -80,6 +80,10 @@ POKEMON_H = PP / "include" / "constants" / "pokemon.h"
 
 UNLIMITED = "unlimited"
 ACQUIRE_KINDS = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
+# Display labels of the acquisition kinds ("Obtained from" column, contracts/spreadsheet.md).
+ACQUIRE_LABELS = {"wild_slot": "Wild", "gift": "Gift", "egg": "Gift egg", "static": "Static encounter",
+                  "roamer": "Roamer", "npc_trade": "NPC trade"}
+BREED = "breed"  # SourceOption.kind of Day-Care breeding
 TRADE_METHODS = frozenset({"EVO_TRADE", "EVO_TRADE_WITH_HELD_ITEM"})
 # Methods whose int param is a level threshold ("param <= monLevel" in
 # Pokemon_GetEvolutionTargetSpecies, pokemon.c). Classified from the C below, see _level_methods().
@@ -341,7 +345,8 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
         else:
             continue  # level unknown: conservative, not an option
         oid = f"{e.kind}:{species}@{e.map_header}"
-        detail = f"{e.kind.replace('_', ' ')} - {human_map(e.map_header)}" + (f" ({e.detail})" if e.detail else "")
+        what = ", ".join(x for x in (species_name(species), e.detail) if x)
+        detail = f"{ACQUIRE_LABELS.get(e.kind, e.kind)} - {human_map(e.map_header)} ({what})"
         add(SourceOption(oid, e.kind, species, e.map_header, lo, hi, (Stage(species, lo),), e.fixed_mon,
                          e.quantity, e.exclusive_group, (), detail, tuple(e.src)))
     for o in _breed_options(species, led):
@@ -454,7 +459,7 @@ def _breed_options(species: str, led) -> list[SourceOption]:
     mothers, ditto = bm
     via = ", ".join(species_name(m) for m in mothers[:3]) + ("" if mothers else "") + (" or Ditto" if ditto else "")
     lvl = int(re.search(r"#define EGG_POKEMON_LEVEL\s+(\d+)", POKEMON_H.read_text()).group(1))
-    return [SourceOption(f"breed:{species}@{map_header_for_script('scripts_pokemon_day_care')[0]}", "breed", species,
+    return [SourceOption(f"breed:{species}@{map_header_for_script('scripts_pokemon_day_care')[0]}", BREED, species,
                          map_header_for_script("scripts_pokemon_day_care")[0], lvl, lvl, (Stage(species, lvl),),
                          None, UNLIMITED, None, (), f"Day Care egg (mother: {via})", tuple(refs()["breed"]),
                          tuple(mothers))]
@@ -488,7 +493,8 @@ def _where(led, item: str) -> tuple[str, list[str]]:
     entries = [c for c in led.pre(subject=item) if c.entry.kind in labels]
     entries.sort(key=lambda c: (c.entry.quantity != UNLIMITED, c.entry.kind != "shop"))
     if not entries:
-        return "?", []
+        # Never a display placeholder: a copy that cannot be named is not a legal copy.
+        raise NoNamedSource(f"{item} has copies in the ledger but no nameable pre-Champion source")
     e = entries[0].entry
     return f"{labels[e.kind]} - {human_map(e.map_header)}", list(e.src[:1])
 
@@ -626,7 +632,9 @@ def _choices(opt: SourceOption, move: str, level: int, led, allow_egg: bool = Tr
 
 
 def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
-    """A pre-Champion father for `move` (see module doc), preferring sources that consume nothing.
+    """A pre-Champion father for `move` (see module doc). The father's own source follows the move
+    preference order (`move_source_key`: no limited copy first, then level-up < TM/HM < tutor <
+    relearner), then the simplest father source (`option_class`), then the species constant.
     Returns (SPECIES_*, MoveChoice of the father's own source) or None."""
     key = ("legality_father", egg_species, move)
     if key in led.derived:
@@ -641,13 +649,9 @@ def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
             continue
         for o in source_options(const, led):
             for c in _choices(o, move, 100, led, allow_egg=False):
-                score = 0 if not uses_of(c) or c.source_kind == "relearner" else 1
+                score = (*move_source_key(c, led)[:2], OPTION_RANK[option_class(o)], const)
                 if best is None or score < best[0]:
                     best = (score, const, c)
-            if best and best[0] == 0:
-                break
-        if best and best[0] == 0:
-            break
     res = None if best is None else (best[1], best[2])
     led.derived[key] = res
     return res
@@ -677,5 +681,147 @@ def explain(species: str, move: str, level: int, ledger, option: SourceOption | 
     return list(dict.fromkeys(why)) or [f"{species_name(species)} cannot learn {move} by any method in the decomp data"]
 
 
+# ---------------------------------------------------------------------------------------------
+# Source preference: the simplest legal source first
+#
+# A member usually has several legal ways to be obtained and to know each move. Which one is
+# *reported* (and used for team-wide copy accounting) follows this documented order. Sources never
+# change a battle, EXCEPT an NPC trade (fixed IVs/nature/ability, boosted exp, FR-008a): so trade
+# vs non-trade is never decided here - it is an explicit optimizer choice (FR-008b,
+# optimizer/candidates.Variant), and a caller that ranks trade and non-trade options together
+# (validator.from_showdown) gets non-trade first.
+#
+# Species source (`option_sort_key`), best first:
+#   0 the member species itself from a wild slot / gift / gift egg / static / roamer entry;
+#   1 such an entry for a pre-evolution, then evolve (fewer evolutions first);
+#   2 NPC trade (only reached when a caller mixes trade and non-trade options, see above);
+#   3 Day-Care egg: only when no other option makes the member legal (an egg move, or a
+#     breeding-only path). Callers can drop BREED options entirely (a future "no egg sources" flag).
+#   Ties: the cheaper move sources (`move_cost`), then fewer evolutions, the lowest minimum level, id.
+#
+# Move source (`move_source_key`), best first:
+#   sources consuming no limited copy before any source consuming one (team-wide copy limits,
+#   FR-004/FR-006: a single-copy TM is spent only when nothing unlimited works), then by kind:
+#   level-up / pre-evolution level-up < TM/HM (unlimited) < tutor < move relearner < egg move.
+#   So the full order is: level-up < unlimited TM/HM < tutor < relearner < egg (no limited copy)
+#   < single-copy TM < other limited sources < egg whose father needs a limited copy.
+
+OPTION_RANK = {"own": 0, "pre_evolution": 1, "npc_trade": 2, BREED: 3}
+MOVE_KIND_ORDER = {"level_up": 0, "pre_evo_level_up": 0, "tm": 1, "hm": 1, "tutor": 2, "relearner": 3, "egg": 4}
+
+
+def option_class(opt: SourceOption) -> str:
+    if opt.kind == BREED:
+        return BREED
+    if opt.kind == "npc_trade":
+        return "npc_trade"
+    return "own" if len(opt.stages) == 1 else "pre_evolution"
+
+
+def option_sort_key(opt: SourceOption, move_cost: int = 0) -> tuple:
+    return (OPTION_RANK[option_class(opt)], move_cost, len(opt.stages), opt.min_level, opt.id)
+
+
+def resource_copies(res: str, led) -> int | str:
+    """Pre-Champion copies of a resource named in `uses_of` ("TM26" or "ITEM_*")."""
+    return led.tm_copies(res) if re.fullmatch(r"(TM|HM)\d\d", res) else led.item_copies(res)
+
+
+def consumes_limited(choice: MoveChoice, led) -> bool:
+    return any(resource_copies(r, led) != UNLIMITED for r in uses_of(choice))
+
+
+def move_source_key(choice: MoveChoice, led) -> tuple:
+    return (int(consumes_limited(choice, led)), MOVE_KIND_ORDER.get(choice.source_kind, 9), choice.detail)
+
+
+def move_cost(choices, led) -> int:
+    """Sum of the move-source ranks of `choices` (option tie-break in `option_sort_key`)."""
+    return sum(10 * k[0] + k[1] for k in (move_source_key(c, led) for c in choices))
+
+
+# ---------------------------------------------------------------------------------------------
+# Held-item sources (FR-002b "held item and its source", FR-006/FR-006a)
+
+
+class NoNamedSource(ValueError):
+    """An item the ledger counts as obtainable but whose source cannot be named: a legality error
+    (the copy count would be unsupported), never a display placeholder."""
+
+
+ITEM_SOURCE_LABELS = {"shop": "Shop", "game_corner": "Game Corner", "berry_tree": "Berry patch",
+                      "npc_item_gift": "Gift", "item_ball": "Item ball", "hidden_item": "Hidden item",
+                      "underground": "Underground mining", "wild_held_item": "Wild held item"}
+_ITEM_SOURCE_ORDER = tuple(ITEM_SOURCE_LABELS)  # display preference among sources of equal quantity
+
+
+@dataclass(frozen=True)
+class ItemSource:
+    kind: str
+    text: str  # "<Kind> - <where>" without the quantity
+    quantity: int | str
+    src: tuple[str, ...]
+
+    @property
+    def label(self) -> str:
+        return f"{self.text} ({_copies_text(self.quantity)})"
+
+
+def _copies_text(n: int | str) -> str:
+    return UNLIMITED if n == UNLIMITED else f"{n} cop{'y' if int(n) == 1 else 'ies'}"
+
+
+def item_const(item: str) -> str:
+    return item if item.startswith("ITEM_") else f"ITEM_{item.upper()}"
+
+
+def item_sources(item: str, led) -> list[ItemSource]:
+    """Every named pre-Champion source of `item` (ledger), one per (kind, map, wild holder), best
+    first: unlimited before finite, then ITEM_SOURCE_LABELS order, then text."""
+    item = item_const(item)
+    groups: dict[tuple, list] = {}
+    for c in led.pre(subject=item):
+        e = c.entry
+        if e.kind in ITEM_SOURCE_LABELS:
+            groups.setdefault((e.kind, e.map_header, getattr(e, "via_species", None)), []).append(e)
+    out = []
+    for (kind, header, via), es in groups.items():
+        if kind == "wild_held_item" and via:
+            text = f"{ITEM_SOURCE_LABELS[kind]} - {species_name(via)} at {human_map(header)}"
+        elif kind == "underground":
+            parities = {p for e in es for p in ("odd", "even") if f"{p} TID" in (e.detail or "")}
+            only = f" ({parities.pop()} Trainer ID only)" if len(parities) == 1 else ""
+            text = f"{ITEM_SOURCE_LABELS[kind]} - {human_map(header)}{only}"
+        else:
+            text = f"{ITEM_SOURCE_LABELS[kind]} - {human_map(header)}"
+        qty = UNLIMITED if any(e.quantity == UNLIMITED for e in es) else sum(int(e.quantity) for e in es)
+        src = tuple(dict.fromkeys(s for e in es for s in e.src[:2]))
+        out.append(ItemSource(kind, text, qty, src))
+    out.sort(key=lambda s: (s.quantity != UNLIMITED, _ITEM_SOURCE_ORDER.index(s.kind), s.text))
+    return out
+
+
+def held_item_source(item: str, led, option: SourceOption | None = None) -> tuple[str, list[str]]:
+    """("Held item source" text, src refs) for a held item. Raises NoNamedSource if the ledger has
+    no copy or no nameable source (a legality error, never shown as '?')."""
+    const = item_const(item)
+    if option is not None and option.fixed_mon and option.fixed_mon.get("held_item") == const:
+        return f"Held by the NPC-trade Pokemon on arrival ({option.detail})", list(option.fixed_mon.get("src", []))[:2]
+    copies = led.item_copies(const)
+    srcs = item_sources(const, led)
+    if copies == 0 or not srcs:
+        raise NoNamedSource(f"{const}: no named pre-Champion source in the availability ledger (copies: {copies}); "
+                            "this is a legality error (FR-006), not a display issue")
+    if copies == UNLIMITED and srcs[0].quantity == UNLIMITED:
+        return srcs[0].label, list(srcs[0].src)
+    if copies == UNLIMITED:  # finite berry copies, replanted at a reachable berry patch (ledger.item_copies)
+        patch = led.pre(kind="berry_tree")[0].entry
+        return ("; ".join(s.label for s in srcs) + " - replanted for unlimited copies",
+                [r for s in srcs for r in s.src] + list(patch.src[-1:]))
+    return "; ".join(s.label for s in srcs), [r for s in srcs for r in s.src]
+
+
 __all__ = ["SourceOption", "Stage", "source_options", "min_level", "sources", "explain", "uses_of",
-           "relearner_available", "daycare_available", "find_father", "refs", "egg_groups", "gender_ratio"]
+           "relearner_available", "daycare_available", "find_father", "refs", "egg_groups", "gender_ratio",
+           "BREED", "OPTION_RANK", "MOVE_KIND_ORDER", "option_class", "option_sort_key", "move_source_key", "move_cost",
+           "consumes_limited", "resource_copies", "NoNamedSource", "ItemSource", "item_sources", "held_item_source"]

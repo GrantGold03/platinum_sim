@@ -1,0 +1,316 @@
+{
+  "_source": "team of runs/t076/v8/result.json (V8 optimize result, t076), copied verbatim; sources as recorded by that run",
+  "builds": [
+    {
+      "species": "infernape",
+      "source": "breed:SPECIES_CHIMCHAR@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 56,
+      "moves": [
+        {
+          "move": "fire_blast",
+          "source_kind": "tm",
+          "detail": "TM38 - Shop - Veilstone Store 3F (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm38.json:1"
+        },
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 41",
+          "availability_ref": "res/pokemon/infernape/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "focus_blast",
+          "source_kind": "tm",
+          "detail": "TM52 - Shop - Veilstone Store 3F (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm52.json:1"
+        },
+        {
+          "move": "flame_wheel",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Monferno Lv 19)",
+          "availability_ref": "res/pokemon/monferno/data.json:35; src/pokemon.c:3528"
+        }
+      ],
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "held_item": "sitrus_berry",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "staraptor",
+      "source": "breed:SPECIES_STARLY@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 54,
+      "moves": [
+        {
+          "move": "brave_bird",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 49",
+          "availability_ref": "res/pokemon/staraptor/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "aerial_ace",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Staravia Lv 28)",
+          "availability_ref": "res/pokemon/staravia/data.json:35; src/pokemon.c:3528"
+        },
+        {
+          "move": "close_combat",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 34",
+          "availability_ref": "res/pokemon/staraptor/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "agility",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 41",
+          "availability_ref": "res/pokemon/staraptor/data.json:35; src/pokemon.c:270"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": "sky_plate",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "luxray",
+      "source": "breed:SPECIES_SHINX@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 55,
+      "moves": [
+        {
+          "move": "thunderbolt",
+          "source_kind": "tm",
+          "detail": "TM24 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm24.json:1"
+        },
+        {
+          "move": "ice_fang",
+          "source_kind": "egg",
+          "detail": "Egg move (father: Floatzel - Move relearner - Pastoria City (1 Heart Scale; Floatzel Lv 1 move))",
+          "availability_ref": "src/overlay005/daycare.c:472; src/overlay005/daycare.c:492; src/overlay005/daycare.c:445; src/overlay005/daycare.c:817; res/pokemon/shinx/data.json:35; res/pokemon/floatzel/data.json:35; res/field/scripts/scripts_pastoria_city_east_house.s:15; res/field/scripts/scripts_pastoria_city_east_house.s:53; res/field/scripts/scripts_pastoria_city_east_house.s:59; src/move_reminder_data.c:50; include/data/map_headers.h:2886"
+        },
+        {
+          "move": "crunch",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 42",
+          "availability_ref": "res/pokemon/luxray/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "fire_fang",
+          "source_kind": "egg",
+          "detail": "Egg move (father: Flareon - Level-up Lv 43)",
+          "availability_ref": "src/overlay005/daycare.c:472; src/overlay005/daycare.c:492; src/overlay005/daycare.c:445; src/overlay005/daycare.c:817; res/pokemon/shinx/data.json:35; res/pokemon/flareon/data.json:35; src/pokemon.c:270"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "tested_better",
+      "held_item": "zap_plate",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "garchomp",
+      "source": "breed:SPECIES_GIBLE@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 56,
+      "moves": [
+        {
+          "move": "earthquake",
+          "source_kind": "tm",
+          "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)",
+          "availability_ref": "res/field/events/events_wayward_cave_1f.json:53; res/items/data/tm26.json:1"
+        },
+        {
+          "move": "dragon_claw",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Gabite Lv 33)",
+          "availability_ref": "res/pokemon/gabite/data.json:35; src/pokemon.c:3528"
+        },
+        {
+          "move": "rock_slide",
+          "source_kind": "tm",
+          "detail": "TM80 - Item ball - Mt Coronet 2F (1 copy)",
+          "availability_ref": "res/field/events/events_mt_coronet_2f.json:51; res/items/data/tm80.json:1"
+        },
+        {
+          "move": "fire_blast",
+          "source_kind": "tm",
+          "detail": "TM38 - Shop - Veilstone Store 3F (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm38.json:1"
+        }
+      ],
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "held_item": "earth_plate",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gyarados",
+      "source": "breed:SPECIES_MAGIKARP@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 56,
+      "moves": [
+        {
+          "move": "aqua_tail",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 35",
+          "availability_ref": "res/pokemon/gyarados/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "waterfall",
+          "source_kind": "hm",
+          "detail": "HM07 - Gift - Sunyshore City (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_sunyshore_city.s:444; res/items/data/hm07.json:1"
+        },
+        {
+          "move": "stone_edge",
+          "source_kind": "tm",
+          "detail": "TM71 - Item ball - Victory Road 2F (1 copy)",
+          "availability_ref": "res/field/events/events_victory_road_2f.json:66; res/items/data/tm71.json:1"
+        },
+        {
+          "move": "ice_fang",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 32",
+          "availability_ref": "res/pokemon/gyarados/data.json:35; src/pokemon.c:270"
+        }
+      ],
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "held_item": "sitrus_berry",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    },
+    {
+      "species": "gardevoir",
+      "source": "breed:SPECIES_RALTS@MAP_HEADER_POKEMON_DAY_CARE",
+      "start_level": 57,
+      "moves": [
+        {
+          "move": "psychic",
+          "source_kind": "level_up",
+          "detail": "Level-up Lv 33",
+          "availability_ref": "res/pokemon/gardevoir/data.json:35; src/pokemon.c:270"
+        },
+        {
+          "move": "thunderbolt",
+          "source_kind": "tm",
+          "detail": "TM24 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+          "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm24.json:1"
+        },
+        {
+          "move": "icy_wind",
+          "source_kind": "tutor",
+          "detail": "Route 212 tutor (0R/6B/0Y/2G)",
+          "availability_ref": "res/pokemon/move_tutors.json:27; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+        },
+        {
+          "move": "magical_leaf",
+          "source_kind": "pre_evo_level_up",
+          "detail": "Pre-evolution level-up (Kirlia Lv 22)",
+          "availability_ref": "res/pokemon/kirlia/data.json:35; src/pokemon.c:3528"
+        }
+      ],
+      "ability": "ABILITY_SYNCHRONIZE",
+      "ability_reason": "tie_default",
+      "held_item": "mind_plate",
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 15,
+        "atk": 15,
+        "def": 15,
+        "spa": 15,
+        "spd": 15,
+        "spe": 15
+      },
+      "evs": {
+        "hp": 85,
+        "atk": 85,
+        "def": 85,
+        "spa": 85,
+        "spd": 85,
+        "spe": 85
+      }
+    }
+  ],
+  "resource_use": {
+    "TM26": 1,
+    "TM71": 1,
+    "TM80": 1
+  }
+}

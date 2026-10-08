@@ -362,8 +362,11 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
                "loss_cause_replay_seed": "the lost battle's own seed"},
         decomp_commit=hello["decomp_commit"], showdown_commit=hello["showdown_commit"],
         divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
-        obtained_from=[b.source for b in team.builds], divergences=divs, warnings=warnings, provenance=provenance,
+        divergences=divs, warnings=warnings, provenance=provenance,
     )
+    from platsim.report.sources import team_sources
+
+    report.obtained_from, report.held_item_sources, report.held_item_source_refs = team_sources(team, led)
     _log(f"timing: full runs {t_full:.1f}s ({n / max(t_full, 1e-9):.2f} gauntlets/s), Cynthia top-up {t_champ:.1f}s, "
          f"loss replays {t_loss:.1f}s")
     return report, TeamEvaluation(report, results, {"full_runs_s": t_full, "champion_topup_s": t_champ,

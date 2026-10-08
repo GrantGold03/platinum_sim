@@ -15,6 +15,7 @@ All commands:
 | `platsim optimize S1 … S6` | Optimize six species (User Story 1) | `--min-clear 0.75`, `--seed S`, `--workers W`, `--budget {standard\|thorough\|quick}` (presets in research.md R8; `quick` is labelled and never `qualified`) | EvaluationReport JSON + xlsx/csv + `team.txt` (Showdown export), or "no qualifying team" report |
 | `platsim explain SUBJECT` | Trace a legality fact (User Story 3) | `tm26`, `species:garchomp`, `trainer:cynthia` | availability entries with source refs |
 | `platsim serve` | Start the web UI | `--port 8000` | |
+| `platsim report --rerender RUN_DIR` | Regenerate an existing run's report with the current source-selection code; no battle is re-simulated (battle-relevant sets and NPC-trade status are checked unchanged; the validator re-runs) | `--out DIR` (default `RUN_DIR-rerendered`; never `RUN_DIR`, never over existing report files) | result.json/xlsx/csv + `team.txt` with numbers copied unchanged and `provenance.rerender` (source run, its result.json sha256, re-rendering code hash) |
 
 Species arguments accept display names or keys (`Garchomp`, `garchomp`). The command fails on
 ambiguity or on an unknown name, listing the closest matches.

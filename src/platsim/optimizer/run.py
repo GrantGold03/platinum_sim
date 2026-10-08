@@ -648,7 +648,6 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
 
 
 def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, abilities) -> bool:
-    from platsim.legality import movesources as MS
     from platsim.legality.validator import format_violations, showdown_name, validate
     from platsim.report import write_all
 
@@ -657,18 +656,9 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
     if v:
         raise RuntimeError("the optimized team FAILED the independent legality validator (Constitution III):\n"
                            + format_violations(v))
-    rep.obtained_from = [o.detail for o in real.options]
-    srcs = []
-    for b, o in zip(real.team.builds, real.options):
-        if not b.held_item:
-            srcs.append(None)
-        elif o.fixed_mon and o.fixed_mon.get("held_item") == f"ITEM_{b.held_item.upper()}":
-            srcs.append("Held by the NPC-trade Pokemon on arrival")
-        else:
-            where, _ = MS._where(led, f"ITEM_{b.held_item.upper()}")
-            n = R.copies(f"ITEM_{b.held_item.upper()}", led)
-            srcs.append(f"{where} ({n if n == 'unlimited' else str(n) + ' cop' + ('y' if n == 1 else 'ies')})")
-    rep.held_item_sources = srcs
+    from platsim.report.sources import team_sources
+
+    rep.obtained_from, rep.held_item_sources, rep.held_item_source_refs = team_sources(real.team, led)
     rep.resources = R.resource_lines(real, led)
     rep.provenance["optimizer"] = _optimizer_provenance(req, preset, state, {
         "final_levels_start": list(levels), "runner_up_comparison": comparison,
