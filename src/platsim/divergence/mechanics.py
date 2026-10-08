@@ -182,7 +182,7 @@ _ENTRIES: list[dict] = [
         "decomp_ref": (
             "pokeplatinum/src/battle/battle_script.c:7797, :7825 (BtlCmd_GenerateEndOfBattleItem); "
             "pokeplatinum/res/battle/scripts/subscripts/subscript_battle_won.s:72"),
-        "showdown_ref": "pokemon-showdown/data/abilities.ts (pickup/honeygather: no end-of-battle item in a single battle)",
+        "showdown_ref": "pokemon-showdown/data/mods/gen4/abilities.ts:319 (pickup), pokemon-showdown/data/abilities.ts:1869 (honeygather): no end-of-battle item",
         "resolution": "accepted",
         "impact": (
             "Only an item gained between League rooms; it never changes a battle in progress. The "

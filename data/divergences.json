@@ -1,5 +1,5 @@
 {
- "version": "sha256:29776c6f106f7be1",
+ "version": "sha256:8fc3728d461fba56",
  "entries": [
   {
    "id": "data-move-assist-target",
@@ -754,6 +754,16 @@
    "resolution": "corrected",
    "impact": "Corrected by the `decomp-ai` opponent policy (T045-T048), now the default. Remaining UNVERIFIED reconstructions from Showdown's log: the AI's knowledge of the player's ability and item, the move that last hit it, and last-move success; Gyro Ball speed values are recomputed per decision. No cartridge comparison has been made. Showdown-mismatch counters (invalidChoice, trappedSwitch, lockMismatch) are reported per run.",
    "test_id": "sim/test/ai_choose/ai_switch/ai_items/ai_golden/ai_gauntlet.test.mjs"
+  },
+  {
+   "id": "mech-pickup-honey-gather-after-battle",
+   "area": "mechanics",
+   "description": "Pickup and Honey Gather can give the holder an item after a won battle, trainer battles included (BtlCmd_GenerateEndOfBattleItem). The gauntlet does not model end-of-battle item generation, so these abilities have no effect in simulation.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_script.c:7797, :7825 (BtlCmd_GenerateEndOfBattleItem); pokeplatinum/res/battle/scripts/subscripts/subscript_battle_won.s:72",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/abilities.ts:319 (pickup), pokemon-showdown/data/abilities.ts:1869 (honeygather): no end-of-battle item",
+   "resolution": "accepted",
+   "impact": "Only an item gained between League rooms; it never changes a battle in progress. The ability screen will see a tie for these and keep slot 1 (FR-008c).",
+   "test_id": "tests/unit/test_abilities.py (Pickup/Honey Gather classified has-effect)"
   },
   {
    "id": "mech-rng",
