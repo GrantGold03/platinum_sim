@@ -302,6 +302,11 @@ teams. `expectimax2-v1` must beat greedy by a statistically supported margin, or
 - **Known model gaps** are listed in the header of `sim/policy/expectimax2.mjs`: unmodelled status/setup moves, weather
   never expiring, hazards, multi-hit moves, and so on.
 
+> **Note (2026-10-08, T076)**: the "R7 – Measured (T056)" numbers above were produced on an earlier engine. Rerun
+> with the same seeds after later fixes (exp payout ordering, NPC-trade boost, auto-learn, new data files), greedy-v1
+> clears 298/2000 (was 316) and expectimax2-v1 1020/2000 (was 1040). The conclusion is unchanged. Results are
+> reproducible per code version only; the worker does not yet fingerprint the `sim/` code in its hello.
+
 ### R7 – v2 correction (2026-10-08)
 
 - **Problem**: v1 was not uniformly stronger than greedy. On optimizer screening finalists (400 paired seeds)

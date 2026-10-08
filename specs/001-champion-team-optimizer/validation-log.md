@@ -694,3 +694,48 @@ $ PLATSIM_STRENGTH_N=200 PLATSIM_REVERSAL_N=400 uv run pytest -q -s tests/integr
   `STATE_VERSION` is 3, so v1 checkpoints are never resumed under v2.
 - **Stale results**: the earlier US1 optimize results (`runs/optimize-*`) and the V7 evaluation were produced with v1.
   They are superseded and are rerun under v2 in T076.
+
+## 2026-10-08: T076 — quickstart V1–V9 on current code (default player expectimax2-v2; agent, outputs spot-checked by the coordinator)
+
+All logs are in `runs/t076/`.
+
+| # | Result | Exit |
+|---|---|---|
+| V1 | `PLATSIM_STRENGTH_N=2000 uv run pytest -q -s -rs` → 301 passed (7,813 s); `cd sim && node --test test/*.test.mjs` → 312/312 | 0 / 0 |
+| V2 | `extract --check` → up to date (10 files); `divergences --check` → 73 entries, sha256:8fc3728d461fba56 | 0 / 0 |
+| V3 | `explain trainer:cynthia` → party, 4× Full Restore, AI flags, every line with a ref | 0 |
+| V4 | `explain species:abra` → Kazza trade pre-Champion, IVs 15/15/15/20/25/25, Quiet, ×1.5; `species:magikarp` → Foppa trade post-game, fishing pre-Champion | 0 / 0 |
+| V5 | `validate illegal_postgame_tutor.json` → MOVE_NOT_LEARNABLE: Blast Burn via the Route 228 tutor (post-game) | 2 |
+| V6 | `validate illegal_trade_evo.json` → SPECIES_TRADE_EVOLUTION (Gengar) | 2 |
+| V7 | `evaluate reference_team.json --runs 2000 --seed fixed`, on 16 and 8 workers → result.json byte-identical. Clear 1889/2000 = 0.9445 [0.9336, 0.9537]; Cynthia 0.945; average final level 60.35; qualified. About 13 min each. | 0 / 0 |
+| V8 | `optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed` (standard budget) → **qualified**. Start levels 56/54/55/56/56/57; average final level **56.10**; gap 4. Clear 2142/2796 = 0.7661 [0.75005, 0.7814]: runs were added because the CI straddled the threshold at 2,000. Cynthia 0.798. `validate team.txt` → legal. 2 h 07 min. | 0 |
+| V9 | `serve` driven over HTTP: page and static files 200; species 503 during the ~35 s warm-up, then 200; a Gengar POST gives 422; a quick-budget job passes through all stages, 409 before done, 4 downloads 200, team.txt legal, `qualified=False` as required for quick. | 0 |
+
+- **Coordinator check**: the V7, V8 and V9 result.json headline fields were read directly (see the session report).
+  `cmp` of the V7 w16 and w8 result.json is identical.
+- **Throughput** (16 workers): greedy-v1 55.8 gauntlets/s, expectimax2-v1 1.79/s, expectimax2-v2 2.6–2.8/s.
+- **Quickstart fixes**: the expected texts for V5 and V6 now match the real output; the V1 command now uses the
+  working Node glob; the benchmark line names v2.
+- **Findings**:
+  - T056's recorded numbers shifted after later engine fixes (noted in research R7).
+  - V8 qualified with a CI lower bound only 0.00005 above 0.75.
+  - The Sitrus Berry source shows "? (unlimited)" in the item-source column.
+  - The browser UI has never been opened in a real browser.
+
+## 2026-10-08: T077 — constitution compliance review (coordinator)
+
+| Principle | Status | Evidence |
+|---|---|---|
+| I. Decomp is ground truth | Compliant | `extract --check` reproduces all 10 generated files from the pinned decomp. Availability phases are derived from game gates, with two project rules: National Dex excluded and Munchlax excluded, both user decisions recorded in spec FR-003a / FR-006a. Test expectations cite `path:line`. **Caveat**: non-game heuristics (expectimax2 leaf weights, candidate moveset ranking) are documented as heuristics, never used as game facts or for legality. |
+| II. Showdown is the engine | Compliant | `check_pins()` passes: both vendored repos are at their pins with no edits. The ledger has 73 entries, 0 without a resolution, and 5 runtime Dex patches. The opponent policy (`decomp-ai`) is named in every result. |
+| III. Legality of every output | Compliant | The validator is independent: no `platsim.optimizer` import (grep: 0; subprocess test). It runs on every optimize output, and V8 and V9 `team.txt` validate as legal. |
+| IV. Reproducible, honest stats | Compliant, with a gap | Seeds are derived; V7 is byte-identical across worker counts; Wilson CIs and runs are added until the target is met; McNemar is used for comparisons; provenance appears in every result. **Gap**: results are reproducible per code version, but the worker's hello does not fingerprint `sim/` code (follow-up recommended). |
+| V. Verified claims, positive controls | Compliant | Every task has real outputs in this log, with positive controls throughout. Unverified items are labelled. No cartridge comparison has been made. |
+| Technical constraints | Compliant | Runs offline after setup. `git ls-files` matches 0 `.nds` files. Generated data is reproducible and git-ignored. |
+
+**Recommended follow-ups (not blocking)**:
+1. Add a `sim/` code hash to the worker hello and the result provenance.
+2. Fix the "? (unlimited)" held-item source text.
+3. Do a real-browser check of the web page.
+4. Test optimizer resume after a mid-stage kill.
+5. Compare against the cartridge or an emulator for AI fidelity.

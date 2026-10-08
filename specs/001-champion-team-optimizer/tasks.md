@@ -627,15 +627,15 @@ causes. An illegal team exits 2 with its violations.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T075 [P] `README.md`: what the tool does, setup (quickstart prerequisites), CLI and web usage,
+- [X] T075 [P] `README.md`: what the tool does, setup (quickstart prerequisites), CLI and web usage,
   how to read the spreadsheet, and the provenance and divergence concepts.
-- [ ] T076 Run every scenario V1–V9 in `FD/quickstart.md` and record the commands and real outputs
+- [X] T076 Run every scenario V1–V9 in `FD/quickstart.md` and record the commands and real outputs
   in `FD/validation-log.md`. Record the quickstart benchmarks (runs/s per policy, full optimize
   wall time) in `FD/research.md` R8.
-- [ ] T077 Constitution compliance review against `.specify/memory/constitution.md` Principles I–V.
+- [X] T077 Constitution compliance review against `.specify/memory/constitution.md` Principles I–V.
   Record findings in `FD/validation-log.md`, and fix or justify each in plan.md Complexity
   Tracking.
-- [ ] T078 Final `RUN-STATE.md` update: done, open risks (AI fidelity without an emulator), next
+- [X] T078 Final `RUN-STATE.md` update: done, open risks (AI fidelity without an emulator), next
   steps.
 
 ---

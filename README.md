@@ -20,8 +20,13 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   applied at runtime.
 - **Opponents use the game's own trainer AI.** The decomp's AI script (`trainer_ai/script.s`) is run
   by an interpreter (`decomp-ai`), and that includes Cynthia's 4× Full Restore.
-- **The player uses a named look-ahead policy**, `expectimax2-v1`. In 2,000 paired runs it cleared
-  52.0% against 15.8% for the `greedy-v1` baseline (p = 3.6e-129, research R7).
+- **The player uses a named look-ahead policy**, `expectimax2-v2` (the default everywhere since
+  2026-10-08). It replaced `expectimax2-v1`, which lost to `greedy-v1` on some optimizer teams because
+  its search rewarded delaying KOs and its leaf weights were mis-scaled (research R7 – v2 correction).
+  In 600 fresh paired runs v2 beat greedy on the reference team (568 vs 442, p = 1.8e-23) and was at
+  parity on the team where v1 had lost. `expectimax2-v1` stays registered for comparison.
+  On the T056 benchmark team (2,000 paired runs, rerun 2026-10-08) v2 cleared 1,706, v1 1,020 and
+  greedy 298.
 - **Legality** (checked by an independent validator on every output):
   - Nothing post-game: the cutoff is the first Champion win, decided by the game's own story gates.
   - One cartridge only. No trades with another game, so trade evolutions are rejected. In-game NPC
@@ -72,10 +77,10 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
 | `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v1`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs`, `--out` (default `runs/evaluate-<time>-<hash>/`) |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs`, `--out` (default `runs/evaluate-<time>-<hash>/`) |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` |
-| `optimize S1 … S6` | **Being finalised.** It is not registered in the CLI yet (`uv run platsim optimize --help` exits 2 with "invalid choice"). Planned flags: `--min-clear`, `--seed`, `--workers`, `--budget` ([contracts/cli.md](specs/001-champion-team-optimizer/contracts/cli.md)) |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes) |
 
 Examples. The outputs below were captured from real runs.
 
@@ -104,25 +109,65 @@ TM26 - TM26 (ITEM_TM26)  [generated/items.txt:354, res/items/data/tm26.json:1]
   purchasable pre-Champion: no  ...
   - [pre_champion] item_ball at Wayward Cave 1F ..., quantity 1  [..., res/field/scripts/scripts_visible_items.s:564]
 
-$ uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed
+$ uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed --workers 16
+platsim evaluate: full runs: 2000 in 709.0s; cleared 1889/2000; Cynthia top-up ...
+runs 2000  player expectimax2-v2  opponent decomp-ai  budget standard
+gauntlet clear rate 0.9445  95% CI [0.9336, 0.9537]  half-width 0.0101
+Cynthia P(win | reached) 0.9450  [0.9342, 0.9542]  battles 2001
+expected final levels 60.84 / 60.43 / 60.00 / 60.44 / 60.41 / 60.00  avg 60.35  gap max 2.0
+threshold 0.75  qualified True  borderline False
+  loss cause: cynthia garchomp 47
+  loss cause: cynthia roserade 24                                                          # exit 0, 769 s wall
 ```
 
-For that last `evaluate` command, the recorded run (validation-log, expectimax2-v1 against decomp-ai
-on 16 workers) gave:
-- gauntlet 0.7930 [0.7747, 0.8102];
-- Cynthia P(win | reached) 0.7946 over 2,001 battles;
-- expected final average level 60.32, gap 2.0, **qualified**;
-- top loss causes: Cynthia's Garchomp, Lucario, Togekiss.
+That run (T076, 2026-10-08) was repeated with `--workers 8` and produced a byte-identical
+`result.json` (same sha256). `evaluate` writes `result.json`, `result.xlsx`, `result.csv` and
+`team.txt` (a Showdown export). The older expectimax2-v1 figure for this team (0.7930) is superseded.
 
-The output was byte-identical when rerun on 7 workers. `evaluate` writes `result.json`,
-`result.xlsx`, `result.csv` and `team.txt` (a Showdown export).
+```console
+$ uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed
+platsim optimize: [calibrate] greedy-v1 at U=58: 53/100 cleared
+platsim optimize: [screen] 81 candidate teams at levels [58, 58, 58, 58, 58, 58]
+platsim optimize: [level_search] levels [57, 57, 57, 57, 57, 57]: 166/200 cleared -> pass, avg final 57.41
+  ...
+platsim optimize: [confirm] winner at levels [56, 54, 55, 56, 56, 57] (expectimax2-v2, >= 2000 runs)
+platsim evaluate: clear-rate CI straddles the threshold 0.75 at n=2000: adding up to 1000 runs
+platsim optimize: [done] wrote runs/t076/v8 (qualified=True)
+start levels infernape 56 / staraptor 54 / luxray 55 / garchomp 56 / gyarados 56 / gardevoir 57
+runs 2796  player expectimax2-v2  opponent decomp-ai  budget standard
+gauntlet clear rate 0.7661  95% CI [0.7500, 0.7814]  half-width 0.0157
+Cynthia P(win | reached) 0.7984  [0.7831, 0.8128]  battles 2797
+expected final levels 56.95 / 54.38 / 55.02 / 57.22 / 56.03 / 57.01  avg 56.10  gap max 4.0
+threshold 0.75  qualified True  borderline False
+WARNING: Winner and runner-up are statistically indistinguishable on paired runs (FR-019); the winner is the screening winner.
+                                                                                 # exit 0, 2 h 07 min wall, 16 workers
+```
 
-`explain` builds the availability ledger on every call, which takes about 35 s.
+In that run (T076; the `--out runs/t076/v8` flag was added to name the folder) the winning team was
+Infernape (Fire Blast / Close Combat / Focus Blast / Flame Wheel @ Sitrus Berry), Staraptor (Brave
+Bird / Aerial Ace / Close Combat / Agility @ Sky Plate), Luxray (Thunderbolt / Ice Fang / Crunch /
+Fire Fang @ Zap Plate, Intimidate tested better), Garchomp (Earthquake / Dragon Claw / Rock Slide /
+Fire Blast @ Earth Plate), Gyarados (Aqua Tail / Waterfall / Stone Edge / Ice Fang @ Sitrus Berry) and
+Gardevoir (Psychic / Thunderbolt / Icy Wind / Magical Leaf @ Mind Plate). Its `team.txt` passes
+`platsim validate` (exit 0). For comparison, the hand-built all-L60 reference team above ends at
+an average of 60.35. Stage times: level search 4,942 s, confirmation 2,363 s, screening 266 s.
+
+`explain species:…` (and other ledger subjects) builds the availability ledger on every call (`trainer:cynthia` took 1 s), which takes about 35 s idle (56–76 s measured in T076 while an optimize used every core); `validate` does the same (75 s in T076).
 
 **Web UI:** run `uv run platsim serve` and open http://127.0.0.1:8000. You can search species, fill six
-slots, start a job, watch its progress, and download `.xlsx`/`.csv`. The jobs it runs call the
-optimizer, which is still being finalised (`platsim.optimizer.run` does not exist yet). So far the UI
-has only been tested against a stub optimizer.
+slots, start a job, watch its progress, and download `result.xlsx`, `result.csv`, `result.json` and
+`team.txt`. Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`.
+- For about the first 35 s after start the species search returns 503 while the availability ledger
+  builds; it then answers normally.
+- The HTTP API is `GET /api/species?q=`, `POST /api/jobs` (`{"species": [...6], "budget": "quick" |
+  "standard" | "thorough", "seed": "...", "min_clear": 0.75}`), `GET /api/jobs/{id}` (status and
+  progress stage) and `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}` (409 until
+  the job is done). A team with an unusable species is refused with 422 and a reason per species.
+- T076 drove this flow over HTTP (no browser was available, so the page's JavaScript was not run): a
+  `quick` job for the six species above went through resolve → prune → calibrate → ability_screen →
+  screen → level_search → setup_check → confirm → done in 25.6 min. It cleared 424/500 (0.848
+  [0.814, 0.877]) at levels 58/58/59/58/58/58 (avg final 58.58), correctly not `qualified` because
+  of the QUICK BUDGET label, and its downloaded `team.txt` passes `platsim validate`.
 
 ## Reading the result spreadsheet (`result.xlsx`)
 
@@ -150,23 +195,34 @@ has only been tested against a stub optimizer.
 
 ## Budget presets and run times
 
-| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v1) | CI half-width target |
+| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v2) | CI half-width target |
 |---|---|---|---|---|
 | `standard` (default) | 100 → 200 → 400 | 200 | ≥ 2,000, more until the target is met | ±2 points |
 | `thorough` | 200 → 400 → 800 | 400 | ≥ 5,000, more until the target is met | ±1.5 points |
 | `quick` (testing only) | 50 → 100 → 200 | 100 | 500 | none, never qualifies |
 
-Measured throughput on this machine (Ryzen 7 5700X3D, 16 threads, 16 workers):
+Measured throughput on this machine (Ryzen 7 5700X3D, 16 threads), all vs decomp-ai, from the T076
+runs on 2026-10-08:
 
 | Setup | Throughput |
 |---|---|
-| `expectimax2-v1` vs decomp-ai | **~2 gauntlets/s** (2.09 measured; 1.64 in the T056 benchmark) |
-| `greedy-v1` | 52.2 gauntlets/s |
-| Bare engine | 59 gauntlets/s ceiling |
+| `expectimax2-v2` (default player) | **2.5–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (optimizer confirmation); 2.74 on 8 workers |
+| `expectimax2-v1` | 1.79 gauntlets/s (T056 benchmark team, 16 workers) |
+| `greedy-v1` | 55.8 gauntlets/s (T056 benchmark team, 16 workers) |
+| Bare engine | 59 gauntlets/s ceiling (T008 spike, no AI or policy) |
 
-- A 2,000-run standard `evaluate` takes **about 16–18 min**. The one measured run took 1,083 s.
-- Derived from the 2.09/s rate, not measured: a `thorough` confirmation (≥ 5,000 runs) takes about
-  40 min per finalist, and a `quick` confirmation (500 runs) about 4 min.
+Measured run times:
+
+| Run | Wall time |
+|---|---|
+| `evaluate` reference team, 2,000 runs, standard | 769 s on 16 workers, 790 s on 8 |
+| `optimize` six species, `standard`, 16 workers | 2 h 07 min (level search 82 min, confirmation 39 min) |
+| `optimize` same six species, `quick`, via the web UI, 16 workers | 25.6 min |
+| `optimize` `quick` in `test_optimize_small.py` (same species, seed `t058`) | 1,638 s (first run, 16 workers) |
+
+- Derived from about 2.6/s, not measured: a `thorough` confirmation (≥ 5,000 runs) takes about
+  32 min per finalist.
+- 8 workers run almost as fast as 16 on this 8-core / 16-thread CPU.
 - Run counts are only lowered when you pass an explicit `--budget`, and that choice is shown in the report.
 
 ## Provenance and the divergence ledger
@@ -196,12 +252,15 @@ Measured throughput on this machine (Ryzen 7 5700X3D, 16 threads, 16 workers):
   - alternate forms are rejected;
   - field-move gating is not modelled;
   - 48 "uncertain" entries are treated as unavailable.
-- `expectimax2-v1` has known model gaps (listed in the header of `sim/policy/expectimax2.mjs`):
-  unmodelled status/setup moves, weather that never expires, hazards, and multi-hit moves.
+- `expectimax2-v2` keeps v1's model gaps (listed in the header of `sim/policy/expectimax2.mjs`):
+  unmodelled status/setup moves, weather that never expires, hazards, and multi-hit moves. Its leaf
+  weights were fitted on greedy-played games.
 - The after-battle items from Pickup and Honey Gather are not simulated (accepted divergence).
-- `evaluate` does not add runs to settle a borderline result. The held-item source column can read
-  "not recorded".
-- `optimize` and the web UI's real optimizer run are not finished yet (see Commands).
+- When the clear-rate CI straddles the threshold, `evaluate` adds up to 1,000 more runs (seen in the
+  T076 optimize run: 2,000 → 2,796). The held-item source column can read `? (unlimited)`, for
+  example for Sitrus Berry in the T076 optimize result.
+- The optimizer's winner and runner-up were statistically indistinguishable in both T076 runs; the
+  report says so (FR-019). Resuming after a mid-stage kill is unverified.
 
 ## Repository layout
 
@@ -212,13 +271,13 @@ src/platsim/          Python: everything that is not battle-time
   legality/           independent validator
   divergence/         Showdown-vs-decomp comparison and ledger
   sim/                Node worker pool client, seeds, Cynthia top-up
-  optimizer/          ability screening, candidates, resources (search in progress)
+  optimizer/          candidates, ability screen, successive-halving screen, level search, confirm (run.py)
   report/             result.json / xlsx / csv / team.txt writers, loss causes
   web/                FastAPI app + static page
   budget.py stats.py evaluate.py explain.py extract.py cli.py
 sim/                  Node: Showdown worker, gauntlet, exp/level-up, damage port
   ai/                 decomp trainer-AI parser + interpreter
-  policy/             greedy-v1, expectimax2-v1
+  policy/             greedy-v1, expectimax2-v1, expectimax2-v2 (default)
   spikes/  test/
 data/divergences.json divergence ledger;  data/generated/ (git-ignored, from `extract`)
 tests/                pytest unit/, integration/, fixtures/
@@ -232,12 +291,15 @@ pokeplatinum/ pokemon-showdown/   vendored at pinned commits, not edited, git-ig
 ```bash
 uv run pytest -q                                           # Python suites
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
-(cd sim && node --test test/*.test.mjs)                    # Node suites (308 tests, ~3 min here)
+(cd sim && node --test test/*.test.mjs)                    # Node suites (312 tests)
 ```
 
-The full pytest run includes two long tests, each 2,000 expectimax2 gauntlets. The last recorded
-run without them took 630 s (232 passed). These environment variables shrink or redirect the long
-tests:
+The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
+3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
+gauntlets) and two `quick` optimizes. On 2026-10-08 (T076) `PLATSIM_STRENGTH_N=2000 uv run pytest -q -s`
+gave **301 passed in 7,813 s (2 h 10 min), exit 0**, and the Node suite gave **312 pass, 0 fail, exit 0
+in 580 s** (that Node time was measured while an optimize run used all 16 cores). These environment
+variables shrink or redirect the long tests:
 
 | Variable | Default | Used by |
 |---|---|---|
@@ -245,6 +307,7 @@ tests:
 | `PLATSIM_EVALUATE_N`, `PLATSIM_EVALUATE_WORKERS` | 2000, CPU count | `test_evaluate.py` V7 |
 | `PLATSIM_EVALUATE_FAST_N` | 40 | `test_evaluate.py` fast check |
 | `PLATSIM_T072_N`, `PLATSIM_T072_FIXTURE`, `PLATSIM_T072_WORKERS` | 200, `reference_team.json`, CPU count | `test_final_levels.py` |
+| `PLATSIM_OPTIMIZE_WORKERS` | CPU count (second run uses 7) | `test_optimize_small.py` (T058) |
 
 For example: `PLATSIM_STRENGTH_N=160 uv run pytest -q -s tests/integration/test_policy_strength.py`.
 pytest puts its temp files under `/dev/shm/platsim-pytest-<pid>` and removes them at exit.

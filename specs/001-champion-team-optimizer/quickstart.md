@@ -30,17 +30,17 @@ uv run platsim divergences                       # must exit 0 (no unresolved en
 
 | # | Run | Expected |
 |---|---|---|
-| V1 | `uv run pytest` and `node --test sim/` | All suites pass. Output pasted into the task log (Constitution V). |
+| V1 | `uv run pytest` and `cd sim && node --test test/*.test.mjs` | All suites pass. Output pasted into the task log (Constitution V). |
 | V2 | `uv run platsim extract --check` | Exit 0: generated data reproduces exactly from the pinned decomp. |
 | V3 | `uv run platsim explain trainer:cynthia` | Spiritomb 58, Roserade 58, Togekiss 60, Lucario 60, Milotic 58, Garchomp 62 (Sitrus Berry); 4× Full Restore; AI flags `AI_FLAG_BASIC`, `AI_FLAG_EVAL_ATTACK`, `AI_FLAG_EXPERT`; each with a `champion_cynthia.json` reference. |
 | V4 | `uv run platsim explain species:abra` | Lists the Oreburgh NPC trade (fixed IVs 15/15/15/20/25/25 in decomp order HP/Atk/Def/Spe/SpA/SpD, Quiet, boosted exp) as pre-Champion. `explain species:magikarp` lists the Route 226 Foppa trade as **post-game** (Route 226 House is unreachable before the Champion), while Magikarp itself stays pre-Champion via fishing. |
-| V5 | `uv run platsim validate tests/fixtures/illegal_postgame_tutor.json` | Exit 2 and names "Survival Area tutor: post-game (FLAG_GAME_COMPLETED gate, scripts_snowpoint_city.s:178)". |
-| V6 | `uv run platsim validate tests/fixtures/illegal_trade_evo.json` (e.g. Gengar) | Exit 2, "requires trade evolution (FR-005)". |
+| V5 | `uv run platsim validate tests/fixtures/illegal_postgame_tutor.json` | Exit 2 with one violation: `MOVE_NOT_LEARNABLE` for Infernape's Blast Burn, naming "Route 228 starter tutor (MAP_HEADER_ROUTE_228_NORTH_HOUSE) is post-game: not available before the Champion (ledger)". |
+| V6 | `uv run platsim validate tests/fixtures/illegal_trade_evo.json` (e.g. Gengar) | Exit 2 with one violation: `SPECIES_TRADE_EVOLUTION`, "Gengar is only reachable by trade evolution from Haunter (EVO_TRADE), which needs a second cartridge (FR-005)". |
 | V7 | `uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed` twice | Identical JSON both times. Clear rate CI half-width ≤ 2 points. |
 | V8 | `uv run platsim optimize <six species> --seed fixed` | Either a qualifying team (clear ≥ 75%, gap ≤ 10, passes `validate`) or a "no qualifying team" report with the best rate found. xlsx has Team / Evaluation / Resources / Provenance / Divergences sheets, and every move has a source. `team.txt` (Showdown export) is written. Cynthia's win rate is reported separately with CI half-width ≤ 2 points. |
 | V9 | `uv run platsim serve`, open http://127.0.0.1:8000 | Search "gar" shows Garchomp, add six species, Optimize, progress updates, then the table and xlsx download appear. |
 
 ## Benchmarks to record (not pass/fail; feed the plan's budget)
 
-- Gauntlet runs per second per worker for `greedy-v1` and `expectimax2-v1`.
+- Gauntlet runs per second per worker for `greedy-v1` and `expectimax2-v2` (the default player).
 - Wall time of one full optimize on 16 workers.

@@ -17,17 +17,21 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
 - 2026-10-07: spec, plan, tasks, and analysis fixes committed (`4ed6c45`).
 - 2026-10-07: Phase 1 setup (T001–T007). See validation-log.
 - 2026-10-07: Phase 2a spikes T008–T010; **Checkpoint A reached**. Numbers are in research.md R5/R8.
+- 2026-10-08: US2 (evaluate), US1 (optimizer + web; player fixed as expectimax2-v2), US3 (explain), Polish (README, quickstart V1–V9, constitution review).
 - 2026-10-07: Phase 2 complete (T011–T057): decomp readers, availability ledger (no National Dex, per the user),
   legality validator, Showdown worker with decomp stats/PP/exp, the decomp trainer AI (default opponent), greedy-v1
   and expectimax2-v1 (52.0% vs 15.8%, p=3.6e-129), pool, Cynthia top-up, divergence ledger, report writers.
 
 ## Next
-- **US2 complete (T069–T072)**; paused at the user's request. Next is US1 (T058–T068: optimizer + web UI), then US3 and Polish.
-- **Checkpoint B reached** (all of T001–T057 done; see validation-log). The user reviews it before Phase 3+.
-- In progress: wild held items as a ledger source, with Munchlax excluded (spec FR-006a, user decision 2026-10-07).
-- Budget concern: `expectimax2-v1` runs at about 1.6 gauntlets/s on 16 workers, so 2,000 confirmation runs take about 20 min
-  per finalist. The optimizer's search must screen with greedy-v1 and confirm with expectimax2-v1, or the budget must be
-  revisited before T060+.
+- **All 78 tasks are complete** (2026-10-08). The feature works end to end: extract, validate, evaluate, optimize, explain, serve.
+- **Headline result** (V8): the six reference species qualify at average final level **56.10** (clear 0.766, CI lower bound
+  0.75005). The hand-built all-L60 team clears 0.9445.
+- **Optional follow-ups** (see validation-log T077):
+  - `sim/` code hash in provenance;
+  - fix the "? (unlimited)" item-source text;
+  - real-browser UI check;
+  - optimize resume test;
+  - cartridge or emulator comparison.
 
 ## Traps
 - Battle mechanics also live in `res/battle/scripts/**/*.s` subscripts that compare RAW numbers (e.g. resist berries in `subscript_type_resist_berry.s`). Never conclude "not in the decomp" from a name-only grep.
