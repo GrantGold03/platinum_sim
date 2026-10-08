@@ -611,11 +611,11 @@ causes. An illegal team exits 2 with its violations.
 **Independent Test**: quickstart V3 and V4 outputs match the expected values, each line with a
 `file:line` ref. Divergence entries are queryable.
 
-- [ ] T073 [US3] `platsim explain SUBJECT` in `src/platsim/cli.py`:
+- [X] T073 [US3] `platsim explain SUBJECT` in `src/platsim/cli.py`:
   - subjects `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`,
     `divergence:<id>`;
   - prints availability entries (phase, quantity, gates) or trainer details, each with `src` refs.
-- [ ] T074 [US3] `tests/integration/test_explain.py`:
+- [X] T074 [US3] `tests/integration/test_explain.py`:
   - Cynthia's party output (V3);
   - Abra pre-Champion trade and Magikarp Foppa post-game (V4);
   - a Game Corner TM shows "unlimited";

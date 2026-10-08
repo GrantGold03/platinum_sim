@@ -611,3 +611,24 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7
   - quickstart V9 (the browser flow) has not been run;
   - the 503 path while the ledger warms up was not observed.
 - **Not yet ticked**: T067 needs the `serve` registration in `cli.py`, which is committed together with `explain`.
+
+## 2026-10-07: US3 — T073/T074 `platsim explain` (agent; re-run by the coordinator)
+
+```
+$ uv run pytest -q tests/integration/test_explain.py → 24 passed, exit 0
+$ uv run platsim explain species:magikarp → exit 0; the Foppa trade shows [post_game] (Route 226 House unreachable)
+```
+- **V3** (`trainer:cynthia`): party, bag (4× Full Restore), AI flags, and the computed nature and ability, every line
+  with a `path:line` ref.
+- **V4** (`species:abra`): the Kazza trade is pre-Champion, with fixed IVs 15/15/15/20/25/25 (decomp order), Quiet and
+  ×1.5 exp. `species:magikarp`: Foppa is post-game, while fishing is pre-Champion.
+- **Controls**:
+  - TM90 shows unlimited (Game Corner);
+  - TM28 shows 3, equal to `ledger.tm_copies`;
+  - HM03 shows unlimited;
+  - the Poké Radar shows National Dex exclusion;
+  - Munchlax shows excluded;
+  - the Endure divergence shows `corrected`;
+  - unknown subjects exit 2 with suggestions.
+- **Quickstart** V3 and V4 wording was corrected (constant names, IV order, why Foppa is post-game).
+- **Note**: each call builds the ledger, about 35 s.

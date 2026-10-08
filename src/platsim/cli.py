@@ -124,6 +124,39 @@ _SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract
                                                                  _add_evaluate]
 
 
+def _add_serve(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("serve", help="local web page and HTTP API (contracts/http-api.md); binds to 127.0.0.1 only")
+    p.add_argument("--port", type=int, default=8000, help="port on 127.0.0.1 (default 8000)")
+    p.add_argument("--runs-dir", type=Path, default=None, help="job directory (default: runs/)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.web.app import DEFAULT_RUNS_DIR, serve
+
+        return serve(port=args.port, runs_dir=args.runs_dir or DEFAULT_RUNS_DIR)
+
+    p.set_defaults(func=run)
+
+
+_SUBCOMMANDS.append(_add_serve)
+
+
+def _add_explain(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("explain", help="trace a legality fact or opponent detail to the decomp (User Story 3)")
+    p.add_argument("subject", help="tmNN, hmNN, species:<key>, item:<key>, move:<key>, trainer:<key>, divergence:<id>")
+    p.add_argument("--json", action="store_true", help="print the explanation as JSON")
+    p.add_argument("--level", type=int, default=100, help="move:<key> only: level the learners are checked at (default 100)")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim import explain
+
+        return explain.main(args.subject, as_json=args.json, level=args.level)
+
+    p.set_defaults(func=run)
+
+
+_SUBCOMMANDS.append(_add_explain)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="platsim")
     sub = parser.add_subparsers(dest="command", required=True)
