@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Platinum Team Optimizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site">
+    <h1>Platinum Team Optimizer</h1>
+    <p class="lede">Pick six species obtainable before the Champion. The optimizer finds the lowest-level
+      legal build that clears the Elite Four and Cynthia at your minimum clear rate.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="pick-h">
+      <h2 id="pick-h">1. Choose species</h2>
+      <label class="field" for="search">Search species
+        <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. gar"
+               aria-describedby="search-status" aria-controls="results">
+      </label>
+      <label class="check" for="show-excluded">
+        <input id="show-excluded" type="checkbox">
+        Show excluded species (with the reason)
+      </label>
+      <p id="search-status" class="muted" role="status" aria-live="polite"></p>
+      <ul id="results" class="results" aria-label="Search results"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="team-h">
+      <h2 id="team-h">2. Team <span id="team-count" class="muted">(0/6)</span></h2>
+      <ol id="slots" class="slots" aria-label="Team slots"></ol>
+      <p class="muted small">Duplicates are allowed.</p>
+    </section>
+
+    <section class="card" aria-labelledby="opt-h">
+      <h2 id="opt-h">3. Optimize</h2>
+      <form id="opt-form" novalidate>
+        <div class="row">
+          <label class="field" for="min-clear">Minimum clear rate (%)
+            <input id="min-clear" type="number" min="1" max="100" step="1" value="75" inputmode="numeric" required>
+          </label>
+          <label class="field" for="seed">Seed
+            <input id="seed" type="text" value="default" autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+        <button id="optimize" type="submit" class="primary" disabled>Optimize</button>
+        <div id="form-error" class="error" role="alert" hidden></div>
+      </form>
+    </section>
+
+    <section id="progress-card" class="card" aria-labelledby="prog-h" hidden>
+      <h2 id="prog-h">Progress</h2>
+      <dl id="progress" class="kv" aria-live="polite"></dl>
+      <div id="job-error" class="error" role="alert" hidden></div>
+    </section>
+
+    <section id="result-card" class="card" aria-labelledby="res-h" hidden>
+      <h2 id="res-h">Result</h2>
+      <div id="summary"></div>
+      <p id="downloads" class="downloads"></p>
+      <div class="table-wrap">
+        <table id="result-table">
+          <caption class="sr-only">Optimized team, one row per member (same columns as result.xlsx)</caption>
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="muted small">Local only (127.0.0.1). Game data from the pokeplatinum decomp; battles in Pokemon Showdown.</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

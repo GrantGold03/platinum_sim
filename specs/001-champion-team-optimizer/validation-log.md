@@ -595,3 +595,19 @@ $ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7
   borderline False.
 - These are identical to the agent's run, and run 2 on 7 workers was byte-identical (SC-003, SC-004).
 - Throughput was 2.09 gauntlets/s with expectimax2-v1 on 16 workers.
+
+## 2026-10-07: T059 / T067 / T068 web UI (agent; re-run by the coordinator)
+
+`uv run pytest -q tests/integration/test_web.py` → 7 passed, 1 warning (Starlette test client notice), exit 0.
+- **Server**: `create_app` runs a single-job FIFO queue with `runs/<id>/job.json` state. It binds to 127.0.0.1 only;
+  the agent confirmed this with `ss`. Result files return 409 until the job is done.
+- **Species catalog**: a species counts as available when the validator's `source_options` finds a source. Excluded
+  species carry reason codes (Munchlax, trade evolution, post-game, National Dex, …), and a 422 response gives a
+  reason per species.
+- **Page**: plain HTML/CSS/JS with search, six slots, a progress panel polling every 2 s, the result table and
+  downloads; it uses a card layout below 760 px and supports light and dark themes.
+- **UNVERIFIED**:
+  - tested only against a stub optimizer (the real optimizer has not landed yet);
+  - quickstart V9 (the browser flow) has not been run;
+  - the 503 path while the ledger warms up was not observed.
+- **Not yet ticked**: T067 needs the `serve` registration in `cli.py`, which is committed together with `explain`.
