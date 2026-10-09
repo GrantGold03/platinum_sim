@@ -28,6 +28,10 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
   average final level **58.23** (start 58/57/57/58/58/59, clear 0.8645). Output in `runs/final-defaults/`. The earlier
   56.10 used egg moves and the old TM counts and is superseded.
 - **Optional follow-ups** (see validation-log T077):
+  - two stale comments in `sim/` (`sim/policy/greedy.mjs:2` calls v1 the strong player; `sim/gauntlet.mjs:41` names only
+    v1). Deliberately left alone: any `sim/` edit changes `sim_code_hash`, so fix them with the next real sim change;
+  - with `--allow-trade-evolutions`, an NPC-trade pre-evolution (e.g. Gaspar's Haunter) is not offered as a source for
+    the trade evolution (Gengar). Allowing it would need the Everstone removed and the NPC OT kept, so the traded-exp boost still applies;
   - `sim/` code hash in provenance;
   - fix the "? (unlimited)" item-source text;
   - real-browser UI check;

@@ -36,7 +36,8 @@ with the decomp"
 - Q: Should level-up moves be auto-learned when a member has fewer than 4 moves, as the game does? → A: Yes, follow
   the game.
 - Q: Which player policy does the optimizer use at each stage? → A: Screen candidates with greedy-v1, then run the
-  level search and confirmation with expectimax2-v1. Run time is not a hard constraint.
+  level search and confirmation with expectimax2-v1. Run time is not a hard constraint. (Since 2026-10-08 the
+  look-ahead policy is `expectimax2-v2`, which fixed a v1 weakness; see research R7 – v2 correction.)
 - Q: Is it acceptable that Leftovers has no pre-Champion source? → A: Yes.
 
 ### Session 2026-10-08

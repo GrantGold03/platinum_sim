@@ -52,7 +52,8 @@ No other third-party battle or data libraries.
 
 **Performance Goals**:
 - Measured in spike T-spike-1 before the budget is fixed.
-- Working target: ≥ 30 gauntlet runs/s across 16 workers with `expectimax2-v1` (**UNVERIFIED**).
+- Working target: ≥ 30 gauntlet runs/s across 16 workers with `expectimax2-v1` (**UNVERIFIED**). Measured later: about
+  1.7/s for v1 and 2.6–2.8/s for `expectimax2-v2`, the default since 2026-10-08 (research R7, R8).
 - Final evaluation ≥ 2,000 runs per finalist.
 
 **Constraints**:
@@ -152,7 +153,7 @@ pokeplatinum/  pokemon-showdown/   # vendored, pinned, not edited
 2. **Data**: extractors + known-value tests → availability ledger + controls → legality validator.
 3. **Engine**: worker + seeds + determinism → exp/level-up → damage port + cross-check → AI
    interpreter (Basic → EvalAttack → Expert → SetupFirstTurn) → Full Restore → divergence ledger.
-4. **Evaluate** (User Story 2, MVP): greedy policy first, then `expectimax2-v1` with its strength
+4. **Evaluate** (User Story 2, MVP): greedy policy first, then `expectimax2-v1` (superseded by `-v2`) with its strength
    benchmark.
 5. **Optimize** (User Story 1): pruning, ability screening, successive halving, level search,
    confirmation.

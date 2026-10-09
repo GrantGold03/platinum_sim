@@ -111,7 +111,7 @@ the worker contract's `start_state` shape). It is present when `log` is `summary
 | expected_final_levels[6], expected_avg_final_level, final_level_gap_max | |
 | loss_causes | top opponent mons present at losses |
 | threshold, qualified, borderline | FR-015 |
-| player_policy, opponent_policy | e.g. `expectimax2-v1`, `decomp-ai@c248fb3` |
+| player_policy, opponent_policy | e.g. `expectimax2-v2`, `decomp-ai` |
 | seeds | master seed + derivation scheme |
 | decomp_commit, showdown_commit, divergence_ledger_version | |
 | sim_code_hash, platsim_code_hash | content hashes of the code that produced the result (`src/platsim/version.py`): `sim/**/*.mjs` + `sim/package.json` excluding `sim/test/`, `sim/spikes/` (reported by every worker's `hello`; the pool requires them to agree); `src/platsim/**/*.py` + `pyproject.toml` |

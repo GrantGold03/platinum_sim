@@ -853,3 +853,20 @@ $ uv run pytest -q tests/unit tests/integration/test_evaluate.py -k "not v7" →
   without the cap it runs to 20,000.
 - **Effect**: worst-case confirmation per candidate drops from about 2.5 h to about 15 min of extra runs on 16 workers
   (about 2.3 gauntlets/s). A team that close to 75% now moves on to the +1 fallback.
+
+## 2026-10-08: final stale-reference sweep (coordinator + README agent)
+
+- **Web server**: stopped; port 8000 closed and no server process.
+- **Docs**: searched README, RUN-STATE, spec, plan, research, data-model, quickstart and the contracts for superseded
+  numbers, policy names and features.
+  - **README** (agent): flags, `report --rerender`, `--force-new`, code-versioning provenance, the borderline cap,
+    source preference, the ledger fixes, and the `optimize` example now showing the default-rules `runs/final-defaults`
+    result (avg 58.23). The 56.10 egg-move result is marked superseded. The agent's checks: every `--help` exits 0;
+    `validate` on reference_team and final-defaults/team.txt exits 0; `extract --check` and `divergences --check` exit
+    0; the Node suite gives 314 pass.
+  - **spec.md** Clarifications, **data-model.md** and **plan.md**: the expectimax2 references now note v2 as the
+    default.
+- **Code**: no TODO or FIXME markers. Two stale comments in `sim/` were deliberately not changed, because editing them
+  would change `sim_code_hash` (see RUN-STATE).
+- **Edge case noted**: with trade evolutions allowed, an NPC-trade pre-evolution is not offered as a source for the
+  evolved species (RUN-STATE follow-up).

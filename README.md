@@ -29,9 +29,22 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   greedy 298.
 - **Legality** (checked by an independent validator on every output):
   - Nothing post-game: the cutoff is the first Champion win, decided by the game's own story gates.
-  - One cartridge only. No trades with another game, so trade evolutions are rejected. In-game NPC
-    trades are allowed and get boosted exp.
-  - **No National Dex sources**, so no Poké Radar (user decision). Event-only items are unobtainable.
+  - One cartridge only. No trades with another game, so trade evolutions are rejected by default.
+    In-game NPC trades are allowed and get boosted exp.
+  - **Egg moves are off by default.** A Day Care egg is still a legal species source.
+  - Two optional flags, both **off by default**, relax this (spec FR-005/FR-005a): `--allow-egg-moves`
+    and `--allow-trade-evolutions` on `validate`, `evaluate` and `optimize` (and two checkboxes on
+    the web page). With trade evolutions on, an item-trade evolution uses up a pre-Champion copy of
+    the item. A trade-evolved Pokémon gets **no traded-exp boost**, because the player stays its
+    original trainer. Both settings are recorded in `provenance.legality_options`.
+  - **No National Dex sources**, so no Poké Radar (user decision). This matters because Platinum
+    actually grants the National Dex before the first Champion win (all 210 Sinnoh species seen,
+    including some seen only in a lost League battle; research R2). Event-only items are unobtainable.
+  - **Unreachable maps don't count.** A warp whose tile and all four neighbours are walls can't be
+    stepped on, so it is cut from reachability (warp-on-wall rule, research R2). This makes TM04 and
+    Focus Band unavailable.
+  - **One-time gifts are counted once.** Copies that share the same one-time flag (item ball,
+    hidden item or NPC received-flag) count as one acquisition, so TM65, TM28 and TM86 each have 1 copy.
   - **Munchlax is excluded** completely, which also excludes the Leftovers it holds and Snorlax.
   - **TMs are single-use.** Each TM has as many copies as the game gives before the Champion. Shop
     and Game Corner TMs are unlimited.
@@ -76,11 +89,20 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 |---|---|---|
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
-| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs`, `--out` (default `runs/evaluate-<time>-<hash>/`) |
-| `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` |
-| `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes) |
+| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, `--allow-egg-moves`, `--allow-trade-evolutions` |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), `--allow-egg-moves`, `--allow-trade-evolutions` |
+| `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
+| `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, `--allow-egg-moves`, `--allow-trade-evolutions` |
+| `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
+
+- **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
+  If the checkpoint came from different code, data, ledger, pins, runtime or legality options, the
+  resume is refused, and the error suggests `--force-new`. `--force-new` moves the old checkpoint to
+  `superseded-N/` and starts over. A change in `repo_commit` or `repo_dirty` alone is only logged.
+- **`report --rerender`** uses the run's recorded legality options. A run that has none predates
+  the flags; those runs were made with egg moves allowed and trade evolutions off. The new report
+  records `provenance.rerender`, which gives the source run and its `result.json` sha256.
 
 Examples. The outputs below were captured from real runs.
 
@@ -93,12 +115,14 @@ $ uv run platsim divergences --check
 exp/corrected=3, mechanics/accepted=10, mechanics/corrected=2); 5 Dex patches; version sha256:8fc3728d461fba56
 
 $ uv run platsim validate tests/fixtures/reference_team.json
+legality options: allow_egg_moves=off, allow_trade_evolutions=off
 tests/fixtures/reference_team.json: legal (no violations)                                  # exit 0
 
 $ uv run platsim validate tests/fixtures/illegal_trade_evo.json
+legality options: allow_egg_moves=off, allow_trade_evolutions=off
 SPECIES_TRADE_EVOLUTION: member 6 (gengar): Gengar is only reachable by trade evolution from Haunter
-(EVO_TRADE), which needs a second cartridge (FR-005)
-    src: src/pokemon.c:3727, specs/001-champion-team-optimizer/spec.md:173, res/pokemon/haunter/data.json:110
+(EVO_TRADE), which needs a second cartridge (FR-005; enable allow_trade_evolutions / --allow-trade-evolutions to allow it)
+    src: src/pokemon.c:3727, specs/001-champion-team-optimizer/spec.md:179, res/pokemon/haunter/data.json:110
 tests/fixtures/illegal_trade_evo.json: ILLEGAL - 1 violation(s)                            # exit 2
 
 $ uv run platsim explain tm26
@@ -108,6 +132,12 @@ TM26 - TM26 (ITEM_TM26)  [generated/items.txt:354, res/items/data/tm26.json:1]
   copies used by optimizer (TM/HM pre-Champion copies): 1  ...
   purchasable pre-Champion: no  ...
   - [pre_champion] item_ball at Wayward Cave 1F ..., quantity 1  [..., res/field/scripts/scripts_visible_items.s:564]
+      one-time flag: FLAG_OBTAINED_WAYWARD_CAVE_1F_TM26 (entries sharing it are one acquisition)  [...]
+
+$ uv run platsim explain tm65
+  ...
+  copies used by optimizer (TM/HM pre-Champion copies): 1  ...
+  shared one-time flag FLAG_RECEIVED_FANTINA_TM65: 2 pre-Champion entries, counted once (max quantity 1, not the sum 2)  ...
 
 $ uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed --workers 16
 platsim evaluate: full runs: 2000 in 709.0s; cleared 1889/2000; Cynthia top-up ...
@@ -120,37 +150,61 @@ threshold 0.75  qualified True  borderline False
   loss cause: cynthia roserade 24                                                          # exit 0, 769 s wall
 ```
 
-That run (T076, 2026-10-08) was repeated with `--workers 8` and produced a byte-identical
-`result.json` (same sha256). `evaluate` writes `result.json`, `result.xlsx`, `result.csv` and
-`team.txt` (a Showdown export). The older expectimax2-v1 figure for this team (0.7930) is superseded.
+That run (T076, 2026-10-08, before the legality flags and code hashes were added) was repeated with
+`--workers 8` and produced a byte-identical `result.json` (same sha256). `evaluate` writes
+`result.json`, `result.xlsx`, `result.csv` and `team.txt` (a Showdown export). The older
+expectimax2-v1 figure for this team (0.7930) is superseded.
 
 ```console
-$ uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed
-platsim optimize: [calibrate] greedy-v1 at U=58: 53/100 cleared
+$ uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed --workers 16 --out runs/final-defaults
+platsim optimize: [calibrate] greedy-v1 at U=58: 59/100 cleared
 platsim optimize: [screen] 81 candidate teams at levels [58, 58, 58, 58, 58, 58]
-platsim optimize: [level_search] levels [57, 57, 57, 57, 57, 57]: 166/200 cleared -> pass, avg final 57.41
+platsim optimize: [level_search] levels [57, 56, 56, 57, 57, 58]: 618/800 cleared -> pass, avg final 57.25
   ...
-platsim optimize: [confirm] winner at levels [56, 54, 55, 56, 56, 57] (expectimax2-v2, >= 2000 runs)
+platsim optimize: [confirm] winner at levels [57, 56, 56, 57, 57, 58] (expectimax2-v2, >= 2000 runs)
 platsim evaluate: clear-rate CI straddles the threshold 0.75 at n=2000: adding up to 1000 runs
-platsim optimize: [done] wrote runs/t076/v8 (qualified=True)
-start levels infernape 56 / staraptor 54 / luxray 55 / garchomp 56 / gyarados 56 / gardevoir 57
-runs 2796  player expectimax2-v2  opponent decomp-ai  budget standard
-gauntlet clear rate 0.7661  95% CI [0.7500, 0.7814]  half-width 0.0157
-Cynthia P(win | reached) 0.7984  [0.7831, 0.8128]  battles 2797
-expected final levels 56.95 / 54.38 / 55.02 / 57.22 / 56.03 / 57.01  avg 56.10  gap max 4.0
+  ...
+platsim evaluate: full runs: 20000 in 8905.3s; cleared 14991/20000; Cynthia top-up ...
+platsim optimize: [confirm] winner at levels [58, 57, 57, 58, 58, 59] (expectimax2-v2, >= 2000 runs)
+platsim evaluate: full runs: 2000 in 935.4s; cleared 1729/2000; Cynthia top-up ...
+platsim optimize: [done] wrote runs/final-defaults (qualified=True)
+start levels infernape 58 / staraptor 57 / luxray 57 / garchomp 58 / gyarados 58 / gardevoir 59
+runs 2000  player expectimax2-v2  opponent decomp-ai  budget standard
+gauntlet clear rate 0.8645  95% CI [0.8488, 0.8788]  half-width 0.0150
+Cynthia P(win | reached) 0.8676  [0.8520, 0.8817]  battles 2001
+expected final levels 58.79 / 57.00 / 57.00 / 59.51 / 58.03 / 59.03  avg 58.23  gap max 4.0
 threshold 0.75  qualified True  borderline False
 WARNING: Winner and runner-up are statistically indistinguishable on paired runs (FR-019); the winner is the screening winner.
-                                                                                 # exit 0, 2 h 07 min wall, 16 workers
+                                                                                 # exit 0, 4 h 39 min wall (4:38:49), 16 workers
 ```
 
-In that run (T076; the `--out runs/t076/v8` flag was added to name the folder) the winning team was
-Infernape (Fire Blast / Close Combat / Focus Blast / Flame Wheel @ Sitrus Berry), Staraptor (Brave
-Bird / Aerial Ace / Close Combat / Agility @ Sky Plate), Luxray (Thunderbolt / Ice Fang / Crunch /
-Fire Fang @ Zap Plate, Intimidate tested better), Garchomp (Earthquake / Dragon Claw / Rock Slide /
-Fire Blast @ Earth Plate), Gyarados (Aqua Tail / Waterfall / Stone Edge / Ice Fang @ Sitrus Berry) and
-Gardevoir (Psychic / Thunderbolt / Icy Wind / Magical Leaf @ Mind Plate). Its `team.txt` passes
-`platsim validate` (exit 0). For comparison, the hand-built all-L60 reference team above ends at
-an average of 60.35. Stage times: level search 4,942 s, confirmation 2,363 s, screening 266 s.
+This run (2026-10-08, default rules: no egg moves, no trade evolutions; commit `ed92a56`, `repo_dirty`
+false) is the current headline result. The first confirmation, at 57/56/56/57/57/58, sat right at the
+threshold: 14,991 of 20,000 cleared (74.96%). It spent about 2.5 h extending before it failed, and then
+the +1 fallback qualified. The 4,000-run borderline cap added afterwards (see Budget presets) would
+have sent this run to the fallback much sooner. Its new wall time has not been measured.
+
+The winning team:
+
+| Member | Moves | Item |
+|---|---|---|
+| Infernape | Fire Blast / Close Combat / Focus Blast / Flame Wheel | Sitrus Berry |
+| Staraptor | Brave Bird / Close Combat / Giga Impact / Take Down | Sky Plate |
+| Luxray | Thunderbolt / Thunder / Crunch / Iron Tail | Zap Plate |
+| Garchomp | Earthquake / Dragon Claw / Rock Slide / Fire Blast | Earth Plate |
+| Gyarados | Aqua Tail / Waterfall / Stone Edge / Ice Fang | Sitrus Berry |
+| Gardevoir | Psychic / Thunderbolt / Icy Wind / Magical Leaf | Mind Plate |
+
+- **Sources:** Chimchar is the starter gift and the other five are wild catches; no member is an egg.
+  Sitrus Berry comes from the berry patch at Fuego Ironworks, and the Plates come from Underground
+  mining.
+- **Single-copy TMs used:** TM23, TM26, TM71 and TM80.
+- `uv run platsim validate runs/final-defaults/team.txt` exits 0.
+- For comparison, the hand-built all-L60 reference team above ends at an average of 60.35.
+- **Superseded:** the earlier T076 result (avg 56.10, `runs/t076/v8`) gave Luxray the egg moves Ice
+  Fang and Fire Fang and used the old TM counts. It is not legal under the current defaults:
+  validating `tests/fixtures/t076_v8_team.json` reports `EGG_MOVE_NOT_ALLOWED` unless
+  `--allow-egg-moves` is passed.
 
 `explain species:…` (and other ledger subjects) builds the availability ledger on every call (`trainer:cynthia` took 1 s), which takes about 35 s idle (56–76 s measured in T076 while an optimize used every core); `validate` does the same (75 s in T076).
 
@@ -159,11 +213,16 @@ slots, start a job, watch its progress, and download `result.xlsx`, `result.csv`
 `team.txt`. Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`.
 - For about the first 35 s after start the species search returns 503 while the availability ledger
   builds; it then answers normally.
-- The HTTP API is `GET /api/species?q=`, `POST /api/jobs` (`{"species": [...6], "budget": "quick" |
-  "standard" | "thorough", "seed": "...", "min_clear": 0.75}`), `GET /api/jobs/{id}` (status and
-  progress stage) and `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}` (409 until
-  the job is done). A team with an unusable species is refused with 422 and a reason per species.
-- T076 drove this flow over HTTP (no browser was available, so the page's JavaScript was not run): a
+- The page has two checkboxes, both unchecked by default: **Allow egg moves** and **Allow trade
+  evolutions**. The trade-evolution box also changes which species the search shows as available.
+- The HTTP API is `GET /api/species?q=` (add `&trade_evolutions=1` for availability with trade
+  evolutions allowed), `POST /api/jobs` (`{"species": [...6], "budget": "quick" | "standard" |
+  "thorough", "seed": "...", "min_clear": 0.75, "allow_egg_moves": false, "allow_trade_evolutions":
+  false}`; a non-boolean flag gives 422), `GET /api/jobs/{id}` (status and progress stage) and
+  `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}` (409 until the job is done). A
+  team with an unusable species is refused with 422 and a reason per species.
+- T076 drove this flow over HTTP. That was before the legality flags existed, and egg moves were
+  allowed then. No browser was available, so the page's JavaScript was not run. In that test a
   `quick` job for the six species above went through resolve → prune → calibrate → ability_screen →
   screen → level_search → setup_check → confirm → done in 25.6 min. It cleared 424/500 (0.848
   [0.814, 0.877]) at levels 58/58/59/58/58/58 (avg final 58.58), correctly not `qualified` because
@@ -176,37 +235,54 @@ slots, start a job, watch its progress, and download `result.xlsx`, `result.csv`
 | **Team** (also `result.csv`) | One row per member: Slot, Species, Obtained from, Start level, Final level (expected), Ability, Ability choice, Held item, Held item source, Nature, IVs, EVs, Move 1–4, Move 1–4 source |
 | **Evaluation** | Status, qualified/borderline, threshold, budget preset, runs, gauntlet clear rate with 95% CI, Champion win rate, expected final levels and gap, per-trainer clear rates, top loss causes |
 | **Resources** | For each single-copy TM and limited item: who uses it, copies used, copies available |
-| **Provenance** | Decomp and Showdown commits, ledger version, player and opponent policy, master seed, budget preset |
+| **Provenance** | Decomp and Showdown commits, ledger version, code hashes, repo commit and dirty flag, Node and Python versions, player and opponent policy, master seed, budget preset, legality options |
 | **Divergences** | Every ledger entry that applies to this run, with its resolution and impact |
 
 - **Move source** strings look like `Level-up Lv 48`, `Pre-evolution level-up (Gabite Lv 40)`,
-  `TM26 – <where the copy comes from>`, `<place> tutor (<shard cost>)`, `Egg move` or
-  `Move relearner – …`.
+  `TM26 - Item ball - Wayward Cave 1F (1 copy)`, `<place> tutor (<shard cost>)`, `Egg move` (only
+  with `--allow-egg-moves`) or `Move relearner – …`.
+- **Simplest source wins.** When several sources work, the report names the simplest one:
+  - species: the species itself, then a pre-evolution evolved, then an NPC trade (never switched
+    silently), then a Day Care egg;
+  - moves: level-up, then an unlimited TM/HM, then a tutor, then the relearner, then an egg move,
+    then a single-copy TM.
+- **Held item source** always names a real source, for example `Berry patch - Fuego Ironworks Outside
+  (unlimited)` or `Underground mining - Underground (unlimited)`. An item with no nameable source is
+  an error, so the column never prints `?`. To refresh an older run's text, use
+  `platsim report --rerender`.
 - **Ability choice** is one of `tested_better`, `tie_default`, `other_no_battle_effect`,
   `single_ability` or `fixed_by_trade`.
 - **Cynthia's rate is conditional:** it is P(win | reached Cynthia). It is computed from full runs
   plus top-up battles, which start from team states recorded after Lucian. It is not the gauntlet
   rate. The gauntlet clear rate comes from full runs only.
 - **qualified**: clear rate ≥ threshold, and the CI half-width is within the preset's target.
-  **borderline**: the CI straddles the threshold. A "no qualifying team" result reports the best
+  **borderline**: the CI still straddles the threshold at the preset's borderline cap. A borderline
+  result is never qualified. A "no qualifying team" result reports the best
   clear rate it reached, and at which levels, instead of a failing team.
 - **Quick budget:** every output from the `quick` preset carries a `QUICK BUDGET` warning, and a
   quick result can never be `qualified`.
 
 ## Budget presets and run times
 
-| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v2) | CI half-width target |
-|---|---|---|---|---|
-| `standard` (default) | 100 → 200 → 400 | 200 | ≥ 2,000, more until the target is met | ±2 points |
-| `thorough` | 200 → 400 → 800 | 400 | ≥ 5,000, more until the target is met | ±1.5 points |
-| `quick` (testing only) | 50 → 100 → 200 | 100 | 500 | none, never qualifies |
+| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v2) | CI half-width target | Borderline cap (total runs) |
+|---|---|---|---|---|---|
+| `standard` (default) | 100 → 200 → 400 | 200 | ≥ 2,000, more until the target is met | ±2 points | 4,000 |
+| `thorough` | 200 → 400 → 800 | 400 | ≥ 5,000, more until the target is met | ±1.5 points | 10,000 |
+| `quick` (testing only) | 50 → 100 → 200 | 100 | 500 | none, never qualifies | none (never extends) |
+
+**Borderline cap** (research R8): sometimes the optimizer's confirmation CI straddles the threshold.
+When that happens it adds runs, but only up to the cap. A team still undecided at the cap is
+`borderline (not qualified)`, and the optimizer moves on to the +1-level fallback. Before the cap,
+this extension could reach 20,000 runs: about 2.5 h in `runs/final-defaults`. With the cap, the
+worst-case extra time per candidate is estimated at about 15 min on 16 workers (derived from
+about 2.3 gauntlets/s, not measured). The cap is recorded in provenance.
 
 Measured throughput on this machine (Ryzen 7 5700X3D, 16 threads), all vs decomp-ai, from the T076
 runs on 2026-10-08:
 
 | Setup | Throughput |
 |---|---|
-| `expectimax2-v2` (default player) | **2.5–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (optimizer confirmation); 2.74 on 8 workers |
+| `expectimax2-v2` (default player) | **2.1–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (T076 optimizer confirmation), 2.14–2.25 (`runs/final-defaults` confirmation); 2.74 on 8 workers |
 | `expectimax2-v1` | 1.79 gauntlets/s (T056 benchmark team, 16 workers) |
 | `greedy-v1` | 55.8 gauntlets/s (T056 benchmark team, 16 workers) |
 | Bare engine | 59 gauntlets/s ceiling (T008 spike, no AI or policy) |
@@ -216,7 +292,8 @@ Measured run times:
 | Run | Wall time |
 |---|---|
 | `evaluate` reference team, 2,000 runs, standard | 769 s on 16 workers, 790 s on 8 |
-| `optimize` six species, `standard`, 16 workers | 2 h 07 min (level search 82 min, confirmation 39 min) |
+| `optimize` six species, `standard`, 16 workers (`runs/final-defaults`, before the borderline cap) | 4 h 39 min, of which about 2.5 h was the 20,000-run borderline extension |
+| `optimize` same, superseded T076 rules (egg moves allowed) | 2 h 07 min (level search 82 min, confirmation 39 min) |
 | `optimize` same six species, `quick`, via the web UI, 16 workers | 25.6 min |
 | `optimize` `quick` in `test_optimize_small.py` (same species, seed `t058`) | 1,638 s (first run, 16 workers) |
 
@@ -233,8 +310,16 @@ Measured run times:
 - `data/divergences.json` lists every known Showdown-vs-game difference, in four areas: data,
   mechanics, ai and exp. Each entry is either **corrected** (patched into Showdown at worker startup)
   or **accepted** (with its impact stated). `divergences` exits non-zero if any entry is unresolved.
-- Every report records seeds, the decomp and Showdown commits, the ledger version, both policies and
-  the budget preset. The same inputs and seed reproduce identical output, whatever the worker count.
+- Every report records seeds, the decomp and Showdown commits, the ledger version, both policies, the
+  budget preset and the legality options. It also records code versions:
+  - `sim_code_hash` covers `sim/**/*.mjs` and `package.json`, excluding tests and spikes;
+  - `platsim_code_hash` covers `src/platsim/**/*.py` and `pyproject.toml`;
+  - `repo_commit`, `repo_dirty`, `node_version` and `python_version`.
+
+  All pool workers must agree on `sim_code_hash` and the Node version.
+- The same inputs and seed reproduce identical output, whatever the worker count.
+- `optimize` stores this fingerprint in `state.json` and refuses to resume a checkpoint whose
+  fingerprint differs. Use `--force-new` to start over.
 
 ## Known limitations and UNVERIFIED items
 
@@ -247,7 +332,8 @@ Measured run times:
 - **There is no Leftovers before the Champion.** Its only sources are Munchlax, which is excluded,
   and a post-game item ball. The user accepted this.
 - **Availability is an under-approximation**:
-  - breeding is not derived as a species source;
+  - the availability ledger does not list bred species. Day Care breeding is added as a species
+    source by the legality layer;
   - Pickup, Thief and Covet are not modelled;
   - alternate forms are rejected;
   - field-move gating is not modelled;
@@ -256,11 +342,17 @@ Measured run times:
   unmodelled status/setup moves, weather that never expires, hazards, and multi-hit moves. Its leaf
   weights were fitted on greedy-played games.
 - The after-battle items from Pickup and Honey Gather are not simulated (accepted divergence).
-- When the clear-rate CI straddles the threshold, `evaluate` adds up to 1,000 more runs (seen in the
-  T076 optimize run: 2,000 → 2,796). The held-item source column can read `? (unlimited)`, for
-  example for Sitrus Berry in the T076 optimize result.
-- The optimizer's winner and runner-up were statistically indistinguishable in both T076 runs; the
-  report says so (FR-019). Resuming after a mid-stage kill is unverified.
+- **Known gaps in the item/TM ledger**:
+  - Some DP-leftover rooms (for example the old Hearthome gym leader room) are still reachable in
+    the map graph. Their warp tiles are walkable but cut off from the arrival tile, and no
+    connectivity check catches this yet. Their copies are deduplicated by flag anyway.
+  - About 60 NPC gift sites have no detectable received flag, so they are counted without
+    deduplication.
+- The optimizer's winner and runner-up were statistically indistinguishable in the T076 runs and in
+  `runs/final-defaults`; the report says so (FR-019).
+- **Unverified:**
+  - resuming after a mid-stage kill;
+  - a full optimize run under the borderline cap.
 
 ## Repository layout
 
@@ -291,15 +383,19 @@ pokeplatinum/ pokemon-showdown/   vendored at pinned commits, not edited, git-ig
 ```bash
 uv run pytest -q                                           # Python suites
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
-(cd sim && node --test test/*.test.mjs)                    # Node suites (312 tests)
+(cd sim && node --test test/*.test.mjs)                    # Node suites (314 tests)
 ```
 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
-gauntlets) and two `quick` optimizes. On 2026-10-08 (T076) `PLATSIM_STRENGTH_N=2000 uv run pytest -q -s`
-gave **301 passed in 7,813 s (2 h 10 min), exit 0**, and the Node suite gave **312 pass, 0 fail, exit 0
-in 580 s** (that Node time was measured while an optimize run used all 16 cores). These environment
-variables shrink or redirect the long tests:
+gauntlets) and two `quick` optimizes.
+- **Full pytest:** the last full run was on 2026-10-08 (T076), before the legality-flag,
+  source-preference, dedupe and borderline-cap tests were added. `PLATSIM_STRENGTH_N=2000 uv run
+  pytest -q -s` gave **301 passed in 7,813 s (2 h 10 min), exit 0**. The current full suite has not
+  been rerun since; the newer subsets that were run are in the validation log.
+- **Node suite:** on current code it gave **314 pass, 0 fail, exit 0 in 285 s**.
+
+These environment variables shrink or redirect the long tests:
 
 | Variable | Default | Used by |
 |---|---|---|
