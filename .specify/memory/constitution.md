@@ -1,18 +1,20 @@
 <!--
 Sync Impact Report
-- Version change: (unversioned template) → 1.0.0
-- Modified principles: n/a (initial ratification; all placeholders replaced)
-  - [PRINCIPLE_1_NAME] → I. Decomp Is Ground Truth (NON-NEGOTIABLE)
-  - [PRINCIPLE_2_NAME] → II. Showdown Is the Battle Engine
-  - [PRINCIPLE_3_NAME] → III. In-Game Legality of Every Output
-  - [PRINCIPLE_4_NAME] → IV. Reproducible, Statistically Honest Evaluation
-  - [PRINCIPLE_5_NAME] → V. Verified Claims With Positive Controls
-- Added sections: Technical Constraints; Development Workflow & Quality Gates; Governance
+- Version change: 1.0.0 → 1.1.0 (MINOR: materially expanded guidance in Principle IV)
+- Modified principles:
+  - IV. Reproducible, Statistically Honest Evaluation: added the "report files vs. views" bullet;
+    the objective-function bullet now names the report files as the "output".
+- Added sections: none
 - Removed sections: none
-- Templates reviewed (read at runtime, not modified by this command):
-  - .specify/templates/plan-template.md (Constitution Check gate) — compatible
-  - .specify/templates/spec-template.md — compatible
-  - .specify/templates/tasks-template.md — compatible
+- Reason: feature 002-webui-redesign (spec FR-017, FR-018, FR-021) summarises results on the web
+  page. The constitution's Technical Constraints already define the output as the Showdown export
+  plus the JSON report carrying the provenance; this amendment states that explicitly and sets the
+  minimum a summarising view must keep. Raised as finding C1 by /speckit-analyze on 2026-10-09.
+- Templates reviewed:
+  - .specify/templates/plan-template.md (Constitution Check gate) — compatible, no change
+  - .specify/templates/spec-template.md — compatible, no change
+  - .specify/templates/tasks-template.md — compatible, no change
+- Prior history: 1.0.0 initial ratification 2026-10-07 (all template placeholders replaced).
 - Deferred TODOs: none
 -->
 
@@ -75,10 +77,19 @@ Rationale: an optimal team that cannot be built in the game is worthless to the 
   identical results.
 - Every reported result MUST include: number of battles, win rate with a confidence interval,
   opponent set, opponent policy, seeds, decomp commit, and Showdown commit.
+- The report files are the reported result. These are the JSON report and the spreadsheet, CSV
+  and Showdown export written next to it. They MUST carry everything listed above. An
+  interactive view, such as the web UI or a terminal summary, MAY show a shorter summary of a
+  result. If it does, then:
+  - every win rate it shows MUST have its confidence interval and battle count either on the
+    view or one interaction away (hover or focus);
+  - it MUST link to, or name, that result's report files;
+  - it MUST NOT attribute provenance (versions, commits, seeds) to a result that the result did
+    not itself record.
 - Comparisons between candidate teams MUST use the same opponents and seeds (paired evaluation).
   A candidate MUST NOT be reported as "better" unless the difference is statistically supported;
   otherwise it is reported as indistinguishable.
-- The optimizer's objective function MUST be stated in output and in the feature spec.
+- The optimizer's objective function MUST be stated in the report files and in the feature spec.
 
 Rationale: battle outcomes are stochastic. Without fixed seeds and intervals, the optimizer
 chases noise and its rankings cannot be trusted or reproduced.
@@ -138,4 +149,4 @@ controls are what distinguish them.
 - Compliance: every `/speckit-plan` Constitution Check and every code review MUST verify
   Principles I–V. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-07
+**Version**: 1.1.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-09

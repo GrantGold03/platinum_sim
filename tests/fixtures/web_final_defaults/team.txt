@@ -1,0 +1,65 @@
+Infernape @ Sitrus Berry
+Ability: Blaze
+Level: 58
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Fire Blast
+- Close Combat
+- Focus Blast
+- Flame Wheel
+
+Staraptor @ Sky Plate
+Ability: Intimidate
+Level: 57
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Brave Bird
+- Close Combat
+- Giga Impact
+- Take Down
+
+Luxray @ Zap Plate
+Ability: Rivalry
+Level: 57
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Thunderbolt
+- Thunder
+- Crunch
+- Iron Tail
+
+Garchomp @ Earth Plate
+Ability: Sand Veil
+Level: 58
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Earthquake
+- Dragon Claw
+- Rock Slide
+- Fire Blast
+
+Gyarados @ Sitrus Berry
+Ability: Intimidate
+Level: 58
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Aqua Tail
+- Waterfall
+- Stone Edge
+- Ice Fang
+
+Gardevoir @ Mind Plate
+Ability: Synchronize
+Level: 59
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Psychic
+- Thunderbolt
+- Icy Wind
+- Magical Leaf

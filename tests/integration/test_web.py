@@ -15,93 +15,13 @@ validator's source rule (~35 s once per session). Game facts used here:
 from __future__ import annotations
 
 import json
-import threading
-import time
 
 import pytest
 from fastapi.testclient import TestClient
 
-from platsim.legality.models import Build, MoveChoice, TeamCandidate
+from _web_helpers import RESULT_NAMES, StubRunner, _available_team, _wait
 from platsim.legality.models import LegalityOptions
-from platsim.optimizer.api import OptimizeRequest, OptimizeResult, Progress
-from platsim.report import write_all
-from platsim.report.json_report import BattleStat, EvaluationReport
 from platsim.web import app as webapp
-from platsim.web.species_catalog import build_catalog
-
-RESULT_NAMES = ("result.json", "result.xlsx", "result.csv", "team.txt")
-
-
-@pytest.fixture(scope="module")
-def ledger():
-    from platsim.availability.ledger import build_ledger
-
-    return build_ledger()
-
-
-@pytest.fixture(scope="module")
-def catalog(ledger):
-    return build_catalog(ledger)
-
-
-def _synthetic_report(species: tuple[str, ...]) -> EvaluationReport:
-    builds = [
-        Build(species=sp, source=f"avail:synthetic:{i}", start_level=40 + i,
-              moves=[MoveChoice(f"synthetic_move_{i}_{j}", "level_up", f"Lv {30 + j}") for j in range(4)],
-              ability=f"synthetic_ability_{i}", ability_reason="single_ability", held_item=f"synthetic_item_{i}")
-        for i, sp in enumerate(species)
-    ]
-    return EvaluationReport(
-        team=TeamCandidate(builds=builds), n_runs=100, clear_rate=0.8, clear_ci95=(0.71, 0.87),
-        per_battle={"synthetic_trainer": BattleStat(0.9, (0.8, 0.95), 100)}, champion_rate=0.85,
-        champion_ci95=(0.8, 0.9), champion_battles=120, budget_preset="standard",
-        expected_final_levels=[45.0 + i for i in range(6)], expected_avg_final_level=47.5, final_level_gap_max=5.0,
-        loss_causes=[], threshold=0.75, qualified=True, borderline=False, player_policy="synthetic-player",
-        opponent_policy="synthetic-opponent", seeds={"master": 1, "scheme": "synthetic"},
-        decomp_commit="synthetic-decomp", showdown_commit="synthetic-showdown", divergence_ledger_version="synthetic-1",
-        obtained_from=[f"Synthetic source {i}" for i in range(6)],
-        held_item_sources=[f"Synthetic item source {i}" for i in range(6)],
-    )
-
-
-class StubRunner:
-    """Records call order; each call blocks until `release` is set (tests that need to observe the
-    queued/running states), reports progress, then writes real result files."""
-
-    def __init__(self, block: bool = False):
-        self.calls: list[OptimizeRequest] = []
-        self.release = threading.Event()
-        self.started = threading.Event()
-        if not block:
-            self.release.set()
-
-    def __call__(self, req: OptimizeRequest, progress=None) -> OptimizeResult:
-        self.calls.append(req)
-        self.started.set()
-        if progress:
-            progress(Progress(stage="screen", runs_done=10, runs_planned=40,
-                              best_so_far={"clear_rate": 0.5, "levels": [40] * 6}))
-        assert self.release.wait(30), "stub was never released"
-        if progress:
-            progress(Progress(stage="confirm", runs_done=40, runs_planned=40))
-        write_all(_synthetic_report(req.species), req.out_dir)
-        return OptimizeResult(out_dir=req.out_dir, qualified=True)
-
-
-def _available_team(catalog) -> list[str]:
-    keys = [s.key for s in catalog.species if s.available][:6]
-    assert len(keys) == 6
-    return keys
-
-
-def _wait(client, jid, statuses, timeout=20.0) -> dict:
-    end = time.monotonic() + timeout
-    while time.monotonic() < end:
-        job = client.get(f"/api/jobs/{jid}").json()
-        if job["status"] in statuses:
-            return job
-        time.sleep(0.05)
-    raise AssertionError(f"job {jid} did not reach {statuses}: {job}")
 
 
 def test_page_is_served(tmp_path, catalog):
@@ -184,9 +104,9 @@ def test_job_lifecycle_and_results(tmp_path, catalog):
     req = stub.calls[0]
     assert req.species == tuple(team) and req.min_clear == 0.8 and req.seed == "fixed" and req.out_dir == tmp_path / jid
     assert req.legality == LegalityOptions()  # both optional rules off by default
-    assert job["table"]["headers"][:3] == ["Slot", "Species", "Obtained from"]
-    assert "Move 1 source" in job["table"]["headers"] and len(job["table"]["rows"]) == 6
-    assert job["summary"]["qualified"] is True and job["summary"]["n_runs"] == 100
+    assert "table" not in job and len(job["team"]) == 6  # 002: shaped view replaces the CSV table
+    assert all(len(m["moves"]) == 4 and all(mv["source"] for mv in m["moves"]) for m in job["team"])
+    assert job["summary"]["verdict"] == "qualified" and job["summary"]["n_runs"] == 100
     for name in RESULT_NAMES:
         r = client.get(f"/api/jobs/{jid}/{name}")
         assert r.status_code == 200, name
@@ -288,3 +208,103 @@ def test_legality_options_page_search_and_jobs(tmp_path, catalog):
     assert job["status"] == "done", job
     assert job["options"]["allow_egg_moves"] is True and job["options"]["allow_trade_evolutions"] is True
     assert stub.calls[-1].legality == LegalityOptions(allow_egg_moves=True, allow_trade_evolutions=True)
+
+
+def test_budget_and_species_icons(tmp_path, catalog):
+    """002 T015: species items carry their icon URL (FR-004); the chosen budget reaches the job (FR-005)."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    gar = next(s for s in client.get("/api/species", params={"q": "garch"}).json() if s["key"] == "garchomp")
+    assert gar["sprite_icon"] == "/api/sprites/garchomp/icon.png"
+    assert client.get(gar["sprite_icon"]).status_code == 200
+    team = _available_team(catalog)
+    a = client.post("/api/jobs", json={"species": team, "budget": "thorough"}).json()["id"]
+    b = client.post("/api/jobs", json={"species": team}).json()["id"]
+    for jid, budget in ((a, "thorough"), (b, "standard")):
+        _wait(client, jid, {"done", "failed"})
+        assert json.loads((tmp_path / jid / "job.json").read_text())["options"]["budget"] == budget
+
+
+def test_running_view_fields(tmp_path, catalog):
+    """002 T022 (thread mode): elapsed_s / eta_s / stage_started / platsim_version while running;
+    stage_started survives same-stage updates (P3-01, P4-03); verdict stored when done (P3-02)."""
+    import importlib.metadata
+    import time
+
+    import _fake_runners
+
+    _fake_runners.HOLD.clear()
+    client = TestClient(webapp.create_app(runner=_fake_runners.two_beat_runner, runs_dir=tmp_path, catalog=catalog))
+    jid = client.post("/api/jobs", json={"species": _available_team(catalog)}).json()["id"]
+    first = None
+    end = time.monotonic() + 10
+    while time.monotonic() < end:  # first "screen" update (runs_done 1)
+        job = client.get(f"/api/jobs/{jid}").json()
+        if job["progress"].get("stage") == "screen" and job["progress"].get("runs_done") == 1:
+            first = job
+            break
+        time.sleep(0.02)
+    assert first, "never saw the first screen update"
+    job = _wait(client, jid, {"running"})
+    end = time.monotonic() + 10
+    while time.monotonic() < end and job["progress"].get("runs_done") != 2:
+        time.sleep(0.05)
+        job = client.get(f"/api/jobs/{jid}").json()
+    assert job["progress"]["runs_done"] == 2
+    assert job["progress"]["stage_started"] == first["progress"]["stage_started"]  # carried forward, not reset
+    assert "eta_s" in job and job["elapsed_s"] > 0
+    assert job["platsim_version"] == importlib.metadata.version("platsim")
+    _fake_runners.HOLD.set()
+    done = _wait(client, jid, {"done", "failed"})
+    assert done["status"] == "done", done
+    stored = json.loads((tmp_path / jid / "job.json").read_text())
+    assert stored["verdict"] == "qualified"
+    assert done["elapsed_s"] == client.get(f"/api/jobs/{jid}").json()["elapsed_s"]  # fixed once finished
+
+
+def test_job_list_labels_and_cap(tmp_path, catalog):
+    """002 T030: GET /api/jobs newest first with labels (FR-015); failed / cancelled views (FR-016);
+    the list is capped at 50 (SC-005)."""
+    import time
+
+    import _fake_runners
+    from _web_helpers import copy_fixture_run
+
+    _fake_runners.HOLD.clear()
+    runs = tmp_path / "a"
+    client = TestClient(webapp.create_app(runner=_fake_runners.seed_switch_runner, isolate=False, runs_dir=runs,
+                                          catalog=catalog))
+    team = _available_team(catalog)
+    ids = {}
+    for seed in ("ok1", "ok2", "fail"):
+        ids[seed] = client.post("/api/jobs", json={"species": team, "seed": seed}).json()["id"]
+        _wait(client, ids[seed], {"done", "failed"})
+        time.sleep(1.05)  # distinct `created` seconds keep "newest first" unambiguous
+    ids["hold"] = client.post("/api/jobs", json={"species": team, "seed": "hold"}).json()["id"]
+    _wait(client, ids["hold"], {"running"})
+    ids["queued"] = client.post("/api/jobs", json={"species": team, "seed": "q"}).json()["id"]
+    r = client.post(f"/api/jobs/{ids['queued']}/cancel")
+    assert r.status_code == 200 and r.json()["status"] == "cancelled"
+    _fake_runners.HOLD.set()
+    _wait(client, ids["hold"], {"done", "failed"})
+
+    listed = client.get("/api/jobs").json()
+    order = [j["id"] for j in listed]
+    assert order == [ids["queued"], ids["hold"], ids["fail"], ids["ok2"], ids["ok1"]]
+    by_id = {j["id"]: j for j in listed}
+    assert by_id[ids["ok1"]]["label"].endswith("· qualified")
+    assert by_id[ids["fail"]]["label"].endswith("· failed")
+    assert by_id[ids["queued"]]["label"].endswith("· cancelled")
+    names = [catalog.get(k).name for k in team]
+    assert by_id[ids["ok1"]]["label"].startswith(", ".join(names))
+    failed = client.get(f"/api/jobs/{ids['fail']}").json()
+    assert "synthetic failure" in failed["error"] and "team" not in failed
+    assert client.get(f"/api/jobs/{ids['queued']}").json()["error"] == "cancelled by user"
+
+    # Cap: 51 finished copies of the fixture run, each in a folder named by its id.
+    big = tmp_path / "big"
+    for i in range(51):
+        copy_fixture_run(big, job_id=f"job-20261008T{i // 60:02d}{i % 60:02d}00Z-{i:06x}",
+                         created=f"2026-10-08T{i // 60:02d}:{i % 60:02d}:00Z")
+    listed = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=big, catalog=catalog)).get("/api/jobs").json()
+    assert len(listed) == 50 and listed[0]["id"] == "job-20261008T005000Z-000032"
+    assert all(j["label"].endswith("· qualified") for j in listed)

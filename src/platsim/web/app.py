@@ -17,11 +17,14 @@
   `allow_trade_evolutions` (JSON booleans, default false), stored in the job's `options` and passed
   to the optimizer as OptimizeRequest.legality. GET /api/species takes `trade_evolutions=1` to
   report availability with trade evolutions allowed (egg moves never change availability).
+- 002 redesign: with `isolate` (the default for the real optimizer), each job runs in a spawned child
+  with its own process group (web/job_process.py), so POST /api/jobs/{id}/cancel stops it and its Node
+  workers within seconds. Server shutdown (lifespan hook, atexit) stops the running job and records it
+  as failed ("server stopped while running"). The child also kills its own group if the server dies.
 """
 
 from __future__ import annotations
 
-import csv
 import json
 import os
 import queue
@@ -29,20 +32,27 @@ import re
 import secrets
 import threading
 import time
+import atexit
 import traceback
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 from fastapi import Body, FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from platsim.budget import DEFAULT_PRESET, PRESETS
 from platsim.legality.models import LegalityOptions
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest, OptimizeResult, Progress, run_optimization
 from platsim.pins import REPO_ROOT
+from platsim.web import job_process
+from platsim.web.eta import StageHistory, eta_seconds
+from platsim.web.result_view import build_result_view
+from platsim.web.sprites import sprite_png
 
 HOST = "127.0.0.1"  # contracts/http-api.md: local only
 DEFAULT_RUNS_DIR = REPO_ROOT / "runs"
@@ -68,6 +78,37 @@ def _now() -> str:
 
 def _jsonable(x: Any) -> Any:
     return json.loads(json.dumps(x, default=str))
+
+
+def _platsim_version() -> str | None:
+    """The installed platsim version, recorded on a job when it starts running (002 R5): a job
+    queued across an upgrade shows the version it actually ran with."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("platsim")
+    except PackageNotFoundError:
+        return None
+
+
+def _parse_time(s: str | None) -> float | None:
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+    except ValueError:
+        return None
+
+
+def _verdict_of(result_json: Path) -> str | None:
+    """qualified / borderline / not_qualified from a result.json; None if it can't be read."""
+    try:
+        d = json.loads(Path(result_json).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if d.get("qualified"):
+        return "qualified"
+    return "borderline" if d.get("borderline") else "not_qualified"
 
 
 class JobStore:
@@ -168,14 +209,20 @@ class JobStore:
 
 
 class JobRunner:
-    """One background thread; FIFO over job ids."""
+    """One background thread; FIFO over job ids. With `isolate`, each job runs in its own process
+    group (job_process.run_in_process) and can be cancelled."""
 
-    def __init__(self, store: JobStore, runner: Runner):
+    def __init__(self, store: JobStore, runner: Runner, isolate: bool = False, history: StageHistory | None = None):
         self.store = store
         self.runner = runner
+        self.isolate = isolate
+        self.history = history
         self.q: queue.Queue[str | None] = queue.Queue()
         self.thread: threading.Thread | None = None
         self.current: str | None = None
+        self.current_pid: int | None = None
+        self.cancel_events: dict[str, threading.Event] = {}
+        self.shutting_down = False
 
     def start(self) -> None:
         if self.thread is None:
@@ -188,10 +235,55 @@ class JobRunner:
     def stop(self) -> None:
         self.q.put(None)
 
+    def shutdown(self, timeout: float = 10.0) -> None:
+        """Stop the running job and the job thread (server shutdown). The running job is recorded as
+        failed ("server stopped while running"); queued jobs stay queued for the next start."""
+        self.shutting_down = True
+        for ev in list(self.cancel_events.values()):
+            ev.set()
+        self.stop()
+        t = self.thread
+        if t is not None and t.is_alive() and t is not threading.current_thread():
+            t.join(timeout)
+        if t is not None and t.is_alive():  # the join timed out: record it and kill the group ourselves
+            jid, pid = self.current, self.current_pid
+            if pid:
+                try:
+                    os.killpg(pid, 9)
+                except OSError:
+                    pass
+            if jid:
+                with self.store.lock:
+                    job = self.store.get(jid)
+                    if job and job["status"] == "running":
+                        self.store.update(jid, status="failed", finished=_now(), error="server stopped while running")
+
+    def cancel(self, jid: str) -> tuple[int, dict]:
+        """(HTTP status, body) for POST /api/jobs/{id}/cancel (contracts/http-api.md)."""
+        with self.store.lock:
+            job = self.store.get(jid)
+            if job is None:
+                return 404, {"detail": f"no job {jid!r}"}
+            if job["status"] == "queued":
+                self.store.update(jid, status="cancelled", finished=_now(), error="cancelled by user",
+                                  progress={**job["progress"], "stage": "cancelled"})
+                return 200, {"id": jid, "status": "cancelled"}
+            if job["status"] == "running":
+                at = _now()
+                self.store.update(jid, cancel_requested=at)
+                ev = self.cancel_events.get(jid)
+                if ev is not None:
+                    ev.set()
+                return 202, {"id": jid, "status": "running", "cancel_requested": at}
+            return 409, {"detail": f"job {jid} is {job['status']}"}
+
+    def _set_pid(self, pid: int) -> None:
+        self.current_pid = pid
+
     def _loop(self) -> None:
         while True:
             jid = self.q.get()
-            if jid is None:
+            if jid is None or self.shutting_down:
                 return
             try:
                 self.run_one(jid)
@@ -200,27 +292,46 @@ class JobRunner:
 
     def run_one(self, jid: str) -> None:
         store = self.store
-        job = store.get(jid)
-        if job is None or job["status"] != "queued":
-            return
-        self.current = jid
-        opts = job["options"]
-        legality = LegalityOptions(allow_egg_moves=bool(opts.get("allow_egg_moves", False)),
-                                   allow_trade_evolutions=bool(opts.get("allow_trade_evolutions", False)))
-        req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]), seed=str(opts["seed"]),
-                              budget=str(opts["budget"]), out_dir=store.path(jid), legality=legality)
-        store.update(jid, status="running", started=_now(),
-                     progress={**job["progress"], "stage": "starting"})
-        last_stage = ["starting"]
+        event = threading.Event()  # exists before the job is visible as running (analysis P4-05)
+        # The queued -> running step happens under the store lock, so a cancel can't land between
+        # the check and the write and be lost (analysis P4-05).
+        with store.lock:
+            job = store.get(jid)
+            if job is None or job["status"] != "queued":
+                return
+            self.cancel_events[jid] = event
+            self.current = jid
+            opts = job["options"]
+            legality = LegalityOptions(allow_egg_moves=bool(opts.get("allow_egg_moves", False)),
+                                       allow_trade_evolutions=bool(opts.get("allow_trade_evolutions", False)))
+            req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]),
+                                  seed=str(opts["seed"]), budget=str(opts["budget"]), out_dir=store.path(jid),
+                                  legality=legality)
+            started = _now()
+            # stage_started and seen_stages are web-side fields: a Progress update replaces the whole
+            # progress dict, so they are carried forward here (002 T005, analysis P3-01 / P4-09).
+            track = {"stage": "starting", "stage_started": started, "seen_stages": ["starting"]}
+            store.update(jid, status="running", started=started, platsim_version=_platsim_version(),
+                         progress={**job["progress"], "stage": "starting", "stage_started": started,
+                                   "seen_stages": ["starting"]})
 
         def on_progress(p: Progress) -> None:
             prog = _jsonable(asdict(p))
-            stage_changed = prog.get("stage") != last_stage[0]
-            last_stage[0] = prog.get("stage")
+            stage = prog.get("stage")
+            stage_changed = stage != track["stage"]
+            if stage_changed:
+                track["stage"], track["stage_started"] = stage, _now()
+                if stage not in track["seen_stages"]:
+                    track["seen_stages"] = [*track["seen_stages"], stage]
+            prog["stage_started"] = track["stage_started"]
+            prog["seen_stages"] = list(track["seen_stages"])
             store.update(jid, force_write=stage_changed, progress=prog)
 
         try:
-            result = self.runner(req, on_progress)
+            if self.isolate:
+                result = job_process.run_in_process(self.runner, req, on_progress, event, on_start=self._set_pid)
+            else:
+                result = self.runner(req, on_progress)
             out = Path(result.out_dir)
             paths = {RESULT_KIND[name]: str(out / fname) for name, (fname, _) in RESULT_FILES.items()}
             missing = [p for p in paths.values() if not Path(p).is_file()]
@@ -228,7 +339,12 @@ class JobRunner:
                 raise RuntimeError(f"optimizer finished but did not write: {', '.join(missing)}")
             final_progress = {**store.get(jid)["progress"], "stage": "done"}
             store.update(jid, status="done", finished=_now(), result_paths=paths, qualified=bool(result.qualified),
-                         progress=final_progress)
+                         verdict=_verdict_of(Path(paths["json"])), progress=final_progress)
+        except job_process.JobCancelled:
+            status, why = (("failed", "server stopped while running") if self.shutting_down
+                           else ("cancelled", "cancelled by user"))
+            store.update(jid, status=status, finished=_now(), error=why,
+                         progress={**store.get(jid)["progress"], "stage": status})
         except InvalidRequest as e:
             store.update(jid, status="failed", finished=_now(), error=str(e),
                          progress={**store.get(jid)["progress"], "stage": "failed"},
@@ -239,6 +355,10 @@ class JobRunner:
                          traceback=traceback.format_exc(limit=8))
         finally:
             self.current = None
+            self.current_pid = None
+            self.cancel_events.pop(jid, None)
+            if self.history is not None:
+                self.history.refresh()
 
 
 class CatalogHolder:
@@ -280,43 +400,26 @@ class CatalogHolder:
         raise HTTPException(503, detail="species data is loading (first start takes about a minute); retry shortly")
 
 
-def _read_table(csv_path: Path) -> dict | None:
-    try:
-        with csv_path.open(newline="", encoding="utf-8") as f:
-            rows = list(csv.reader(f))
-    except OSError:
-        return None
-    if not rows:
-        return None
-    return {"headers": rows[0], "rows": rows[1:]}
-
-
-SUMMARY_KEYS = ("qualified", "borderline", "threshold", "objective", "n_runs", "clear_rate", "clear_ci95",
-                "champion_rate", "champion_ci95", "expected_avg_final_level", "final_level_gap_max", "budget_preset",
-                "warnings", "no_qualifying", "player_policy", "opponent_policy", "seeds", "decomp_commit",
-                "showdown_commit", "divergence_ledger_version", "sim_code_hash", "platsim_code_hash", "repo_commit",
-                "repo_dirty", "node_version", "python_version")
-
-
-def _read_summary(json_path: Path) -> dict | None:
-    try:
-        d = json.loads(json_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    out = {k: d.get(k) for k in SUMMARY_KEYS}
-    out["legality_options"] = (d.get("provenance") or {}).get("legality_options")
-    return out
-
-
 def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT_RUNS_DIR, catalog=None,
-               catalog_builder: Callable[[], Any] | None = None, start_worker: bool = True) -> FastAPI:
+               catalog_builder: Callable[[], Any] | None = None, start_worker: bool = True,
+               isolate: bool | None = None) -> FastAPI:
     """Build the app. `runner` defaults to the real optimizer; `catalog` (a SpeciesCatalog) may be
     passed pre-built, otherwise it is built in a background thread. `start_worker=False` leaves
-    the job thread stopped (tests drive `app.state.jobs.run_one` themselves)."""
-    app = FastAPI(title="platsim", docs_url=None, redoc_url=None, openapi_url=None)
+    the job thread stopped (tests drive `app.state.jobs.run_one` themselves). `isolate=None` runs
+    the real optimizer in a child process and test stubs in the job thread."""
+    if isolate is None:
+        isolate = runner is run_optimization
     store = JobStore(Path(runs_dir))
-    jobs = JobRunner(store, runner)
+    jobs = JobRunner(store, runner, isolate=isolate, history=StageHistory.load(runs_dir))
     holder = CatalogHolder(catalog, catalog_builder)
+    atexit.register(jobs.shutdown)
+
+    @asynccontextmanager
+    async def lifespan(_app):
+        yield
+        await run_in_threadpool(jobs.shutdown)
+
+    app = FastAPI(title="platsim", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.store, app.state.jobs, app.state.catalog = store, jobs, holder
 
     for jid in store.load_existing():
@@ -356,16 +459,28 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
     @app.get("/api/jobs")
     def list_jobs() -> list[dict]:
         with store.lock:
-            return [_view(store, jobs, j) for j in reversed(store.order)][:50]
+            return [_view(store, jobs, j, holder) for j in reversed(store.order)][:50]
 
     @app.get("/api/jobs/{job_id}")
     def get_job(job_id: str) -> dict:
         job = _job_or_404(store, job_id)
-        view = _view(store, jobs, job_id)
+        view = _view(store, jobs, job_id, holder)
         if job["status"] == "done" and job.get("result_paths"):
-            view["summary"] = _read_summary(Path(job["result_paths"]["json"]))
-            view["table"] = _read_table(Path(job["result_paths"]["csv"]))
+            view.update(build_result_view(job) or {})
         return view
+
+    @app.post("/api/jobs/{job_id}/cancel")
+    def cancel(job_id: str) -> JSONResponse:
+        _job_or_404(store, job_id)
+        code, body = jobs.cancel(job_id)
+        return JSONResponse(body, status_code=code)
+
+    @app.get("/api/sprites/{species}/{kind}.png")
+    def sprite(species: str, kind: str) -> Response:
+        data = sprite_png(species, kind)
+        if data is None:
+            raise HTTPException(404, detail=f"no {kind!r} sprite for {species!r}")
+        return Response(data, media_type="image/png", headers={"Cache-Control": "max-age=86400"})
 
     @app.get("/api/jobs/{job_id}/{name}")
     def get_result(job_id: str, name: str) -> FileResponse:
@@ -416,9 +531,39 @@ def _job_or_404(store: JobStore, job_id: str) -> dict:
     return job
 
 
-def _view(store: JobStore, jobs: JobRunner, job_id: str) -> dict:
+_VERDICT_CACHE: dict[str, str] = {}
+
+
+def _label(job: dict, holder: CatalogHolder | None) -> str:
+    """"<6 species names> · <verdict or status>" (FR-015). The page adds the local time."""
+    cat = holder.catalog if holder is not None else None
+    names = []
+    for k in job.get("species") or []:
+        info = cat.get(k) if cat is not None else None
+        names.append(info.name if info is not None else k)
+    what = job["status"]
+    if what == "done":
+        what = job.get("verdict") or _VERDICT_CACHE.get(job["id"])
+        if what is None:  # older jobs: read once from result.json; unreadable -> "done" (P5-03)
+            what = _verdict_of(Path((job.get("result_paths") or {}).get("json") or "")) or "done"
+            _VERDICT_CACHE[job["id"]] = what
+    return f"{', '.join(names)} · {what.replace('_', ' ')}"
+
+
+def _view(store: JobStore, jobs: JobRunner, job_id: str, holder: CatalogHolder | None = None) -> dict:
     job = store.get(job_id)
     view = {k: v for k, v in job.items() if k != "traceback"}
+    view["label"] = _label(job, holder)
+    view.setdefault("platsim_version", None)
+    started, finished = _parse_time(job.get("started")), _parse_time(job.get("finished"))
+    now = time.time()
+    view["elapsed_s"] = (finished - started) if (started and finished) else (now - started) if started else None
+    if job["status"] == "running":
+        p = job.get("progress") or {}
+        stage_t = _parse_time(p.get("stage_started")) or started or now
+        view["eta_s"] = (eta_seconds(jobs.history, job["options"].get("budget", DEFAULT_PRESET), p.get("stage"),
+                                     p.get("runs_done"), p.get("runs_planned"), now - stage_t, p.get("seen_stages"))
+                         if jobs.history is not None else None)
     if job["status"] == "queued":
         q = store.queued_ids()
         view["queue_position"] = q.index(job_id) + 1 if job_id in q else None

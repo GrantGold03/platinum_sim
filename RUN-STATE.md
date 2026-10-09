@@ -50,3 +50,51 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
   rebuilds.
 - Dex data must be patched before the first `Dex.*.get()` (results are cached).
 - `pokeplatinum` has no build dir: read sources (`res/`, `generated/*.txt`), not headers.
+
+# 002 Web UI redesign (started 2026-10-09)
+
+## Goal
+Redesign the `platsim serve` page with the specification in `specs/002-webui-redesign/spec.md`:
+- run setup on the left and results on the right;
+- a short summary, a per-trainer chart and sprite team cards;
+- a run picker;
+- progress with an ETA and Cancel.
+
+Reports must stay byte-identical (FR-030).
+
+## Method
+The plan is `specs/002-webui-redesign/plan.md` and the task list is `tasks.md` (T001–T037).
+Tests are written before the code. Each web job runs in a spawned child process with its own
+process group, so Cancel can stop it and its Node workers within 10 s. Sprites come from the
+decomp PNGs, with transparency added when they are served. The constitution was amended to v1.1.0
+(Principle IV: report files vs. views).
+
+## Done
+- 2026-10-09: spec, plan and tasks written, plus 5 analyze passes (the last had no critical or high findings).
+- 2026-10-09: T001: the `playwright` dev dependency and the `browser` marker were added.
+- 2026-10-09: T002–T005 (Phase 1 and 2): baseline recorded (8 passed, report hashes in validation-log), fixture `tests/fixtures/web_final_defaults/` created, test helpers split, job state extended. The web tests still give 8 passed.
+- 2026-10-09: US1 + US2 (T006–T019): result view, sprites, two-column page, budget, seed tooltip. 11 + 9 tests pass, and screenshots were checked at 1920 and 360 px.
+- 2026-10-09: US3 (T020–T029): eta.py, job_process.py (spawn + setsid + parent-death guard), cancel endpoint, shutdown hook. Cancel, shutdown (SIGINT 0.2 s, SIGKILL 0.1 s) and child-vs-in-process determinism (byte-identical) all pass.
+
+- 2026-10-09: US4 (T030–T031), browser walkthrough (T032), report hashes unchanged (T034).
+- 2026-10-09: T033 full suite: 381 passed, 2 deselected in 2:27:51; browser 2 passed. FR/SC map in validation-log.
+- 2026-10-09: T035 real quick jobs via `platsim serve`: cancel of a running job took 0.2 s with all 16 worker pids gone; job B (`runs/job-20261009T193751Z-1fdb5e`) is byte-identical to the CLI result.json (cmp exit 0). The status line was stale after a finish; fixed and covered by a new browser test (3 passed).
+- 2026-10-09: T036 README, T037. 002 is complete and committed on branch `002-webui-redesign`, not merged.
+
+## Next
+- The user does hands-on testing of `platsim serve` before merging `002-webui-redesign` into main.
+  Do NOT merge without their go-ahead.
+- Open: FR-028 control labels are not asserted by any test (validation-log T033 table).
+- The "real-browser UI check" gap is closed: `uv run pytest -m browser tests/browser/`.
+
+## Traps
+- Any edit under `src/platsim/web/*.py` changes `platsim_code_hash`. An unfinished `state.json`
+  written before such an edit refuses to resume without `--force-new` (research R8). All five
+  existing `runs/*/state.json` files have finished, so none is affected today.
+- A web job runs in its own session (`setsid`), so Ctrl-C on the server no longer reaches it.
+  The shutdown hook and the parent-death guard (T026/T027) must be in place, or the job keeps
+  running after the server stops (analysis U1).
+- pyproject is still 0.1.0, so the version label doesn't change between runs (R5).
+- `/proc/<pid>/task/<pid>/children` doesn't exist on this kernel; use `pgrep -P` to find child processes.
+- The id `results` is already used by the species list (`index.html`), so the new right column
+  is `#results-col`.

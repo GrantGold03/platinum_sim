@@ -208,25 +208,69 @@ The winning team:
 
 `explain species:…` (and other ledger subjects) builds the availability ledger on every call (`trainer:cynthia` took 1 s), which takes about 35 s idle (56–76 s measured in T076 while an optimize used every core); `validate` does the same (75 s in T076).
 
-**Web UI:** run `uv run platsim serve` and open http://127.0.0.1:8000. You can search species, fill six
-slots, start a job, watch its progress, and download `result.xlsx`, `result.csv`, `result.json` and
-`team.txt`. Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`.
+**Web UI:** run `uv run platsim serve` and open http://127.0.0.1:8000.
+
+The page has two columns.
+- **Left: run setup.**
+  - The legality checkboxes.
+  - The species search. The list appears once you type.
+  - Six team slots, each showing the species' icon.
+  - The minimum clear rate.
+  - A **budget** selector: quick, standard (the default) or thorough.
+  - The seed. Hover over or focus the word "Seed" for an explanation.
+- **Right: results.**
+  - **Progress:** shown only while a job is queued or running. It shows the stage, the elapsed
+    time, an estimate ("about N min left", or "estimating…"), and a **Cancel** button for the
+    running job and for each queued one.
+  - **Run picker:** always opens on the newest finished run, and switches to a newer one when it
+    finishes. Failed and cancelled runs show their reason.
+  - **The run itself:**
+    - a short summary: the verdict, and the clear rate. Hover over or focus the clear rate for its
+      95% interval and run count;
+    - "58.23 (level gap of 4)"-style final levels, the threshold, budget, legality options,
+      warnings and platsim version;
+    - a per-trainer clear-rate chart, with intervals;
+    - six cards with decomp sprites. Hover over or focus a move for its source;
+    - the four downloads.
+
+Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`. The
+picker lists the web jobs the server knows about, up to 50. Command-line runs such as
+`runs/final-defaults` are not listed.
+
 - For about the first 35 s after start the species search returns 503 while the availability ledger
   builds; it then answers normally.
-- The page has two checkboxes, both unchecked by default: **Allow egg moves** and **Allow trade
-  evolutions**. The trade-evolution box also changes which species the search shows as available.
-- The HTTP API is `GET /api/species?q=` (add `&trade_evolutions=1` for availability with trade
-  evolutions allowed), `POST /api/jobs` (`{"species": [...6], "budget": "quick" | "standard" |
-  "thorough", "seed": "...", "min_clear": 0.75, "allow_egg_moves": false, "allow_trade_evolutions":
-  false}`; a non-boolean flag gives 422), `GET /api/jobs/{id}` (status and progress stage) and
-  `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}` (409 until the job is done). A
-  team with an unusable species is refused with 422 and a reason per species.
+- **Each web job runs in its own process group**, a spawned child, so Cancel stops it and its Node
+  workers within seconds.
+  - The child builds the availability ledger again, which adds about 35 s to the start of every job.
+  - Stopping the server stops the running job and records it as failed ("server stopped while
+    running"). If the server is killed, the child stops itself.
+- Sprites come from the vendored decomp (`pokeplatinum/res/pokemon/<species>/`). They are made
+  transparent when served, with nothing downloaded. The page works offline.
+- The page shows a summary. The report files (`result.json`, `result.xlsx`, `result.csv`,
+  `team.txt`) remain the full record, with every provenance field (constitution 1.1.0, Principle IV).
+- **The HTTP API:**
+  - `GET /api/species?q=`: add `&trade_evolutions=1` for availability with trade evolutions
+    allowed. Each item includes `sprite_icon`.
+  - `POST /api/jobs` with `{"species": [...6], "budget": "quick" | "standard" | "thorough",
+    "seed": "...", "min_clear": 0.75, "allow_egg_moves": false, "allow_trade_evolutions": false}`.
+    - A non-boolean flag gives 422.
+    - A team with an unusable species is refused with 422 and a reason per species.
+  - `GET /api/jobs`: the newest 50, each with a `label`, `elapsed_s` and (while running) `eta_s`.
+  - `GET /api/jobs/{id}`: once done, it adds `summary`, `per_trainer`, `team` and `downloads`.
+  - `POST /api/jobs/{id}/cancel`:
+    - 200 for a queued job;
+    - 202 for a running one, which then becomes `cancelled`;
+    - 409 once finished.
+  - `GET /api/sprites/{species}/{front|icon}.png`.
+  - `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}`: 409 until the job is done.
 - T076 drove this flow over HTTP. That was before the legality flags existed, and egg moves were
-  allowed then. No browser was available, so the page's JavaScript was not run. In that test a
+  allowed then. In that test a
   `quick` job for the six species above went through resolve → prune → calibrate → ability_screen →
   screen → level_search → setup_check → confirm → done in 25.6 min. It cleared 424/500 (0.848
   [0.814, 0.877]) at levels 58/58/59/58/58/58 (avg final 58.58), correctly not `qualified` because
   of the QUICK BUDGET label, and its downloaded `team.txt` passes `platsim validate`.
+- The redesigned page is checked in a real browser by `uv run pytest -m browser tests/browser/`
+  (Playwright driving the system Chrome; feature 002).
 
 ## Reading the result spreadsheet (`result.xlsx`)
 

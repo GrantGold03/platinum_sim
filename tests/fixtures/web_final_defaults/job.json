@@ -1,0 +1,38 @@
+{
+  "id": "job-20261008T000000Z-f1f1f1",
+  "status": "done",
+  "species": [
+    "infernape",
+    "staraptor",
+    "luxray",
+    "garchomp",
+    "gyarados",
+    "gardevoir"
+  ],
+  "options": {
+    "min_clear": 0.75,
+    "seed": "default",
+    "budget": "standard",
+    "allow_egg_moves": false,
+    "allow_trade_evolutions": false
+  },
+  "progress": {
+    "stage": "done",
+    "runs_done": 0,
+    "runs_planned": null,
+    "best_so_far": null,
+    "detail": "frozen fixture",
+    "extra": {}
+  },
+  "result_paths": {
+    "json": "tests/fixtures/web_final_defaults/result.json",
+    "xlsx": "tests/fixtures/web_final_defaults/result.xlsx",
+    "csv": "tests/fixtures/web_final_defaults/result.csv",
+    "team": "tests/fixtures/web_final_defaults/team.txt"
+  },
+  "qualified": true,
+  "error": null,
+  "created": "2026-10-08T00:00:00Z",
+  "started": "2026-10-08T00:00:00Z",
+  "finished": "2026-10-08T04:38:48Z"
+}

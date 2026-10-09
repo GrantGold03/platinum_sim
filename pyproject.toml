@@ -16,6 +16,7 @@ platsim = "platsim.cli:main"
 dev = [
     "pytest",
     "httpx",
+    "playwright",
 ]
 
 [build-system]
@@ -29,3 +30,6 @@ packages = ["src/platsim"]
 testpaths = ["tests"]
 # No .pytest_cache in the repo. Per-process temp dir under /dev/shm: see tests/conftest.py.
 addopts = "-p no:cacheprovider"
+markers = [
+    "browser: real-browser tests (system Chrome via Playwright)",
+]

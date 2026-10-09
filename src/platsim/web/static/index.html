@@ -14,73 +14,102 @@
       legal build that clears the Elite Four and Cynthia at your minimum clear rate.</p>
   </header>
 
-  <main>
-    <section class="card" aria-labelledby="pick-h">
-      <h2 id="pick-h">1. Choose species</h2>
-      <fieldset class="rules">
-        <legend>Optional rules (both off by default)</legend>
-        <label class="check" for="allow-egg-moves">
-          <input id="allow-egg-moves" type="checkbox">
-          Allow egg moves (Day-Care breeding)
-        </label>
-        <label class="check" for="allow-trade-evolutions">
-          <input id="allow-trade-evolutions" type="checkbox" aria-describedby="trade-help">
-          Allow trade evolutions
-        </label>
-        <p id="trade-help" class="muted small">Trade evolutions need a second cartridge to trade with; an
-          item-trade evolution uses up its held item, which must be obtainable before the Champion.</p>
-      </fieldset>
-      <label class="field" for="search">Search species
-        <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. gar"
-               aria-describedby="search-status" aria-controls="results">
-      </label>
-      <label class="check" for="show-excluded">
-        <input id="show-excluded" type="checkbox">
-        Show excluded species (with the reason)
-      </label>
-      <p id="search-status" class="muted" role="status" aria-live="polite"></p>
-      <ul id="results" class="results" aria-label="Search results"></ul>
-    </section>
-
-    <section class="card" aria-labelledby="team-h">
-      <h2 id="team-h">2. Team <span id="team-count" class="muted">(0/6)</span></h2>
-      <ol id="slots" class="slots" aria-label="Team slots"></ol>
-      <p class="muted small">Duplicates are allowed.</p>
-    </section>
-
-    <section class="card" aria-labelledby="opt-h">
-      <h2 id="opt-h">3. Optimize</h2>
-      <form id="opt-form" novalidate>
-        <div class="row">
-          <label class="field" for="min-clear">Minimum clear rate (%)
-            <input id="min-clear" type="number" min="1" max="100" step="1" value="75" inputmode="numeric" required>
+  <main class="layout">
+    <!-- Left: everything needed to start a run (FR-001). -->
+    <section id="setup" aria-label="Run setup">
+      <section class="card" aria-labelledby="pick-h">
+        <h2 id="pick-h">1. Choose species</h2>
+        <fieldset class="rules">
+          <legend>Optional rules (both off by default)</legend>
+          <label class="check" for="allow-egg-moves">
+            <input id="allow-egg-moves" type="checkbox">
+            Allow egg moves (Day-Care breeding)
           </label>
-          <label class="field" for="seed">Seed
-            <input id="seed" type="text" value="default" autocomplete="off" spellcheck="false">
+          <label class="check" for="allow-trade-evolutions">
+            <input id="allow-trade-evolutions" type="checkbox" aria-describedby="trade-help">
+            Allow trade evolutions
+          </label>
+          <p id="trade-help" class="muted small">Trade evolutions need a second cartridge to trade with; an
+            item-trade evolution uses up its held item, which must be obtainable before the Champion.</p>
+        </fieldset>
+        <label class="field" for="search">Search species
+          <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. gar"
+                 aria-describedby="search-status" aria-controls="results">
+        </label>
+        <label class="check" for="show-excluded">
+          <input id="show-excluded" type="checkbox">
+          Show excluded species (with the reason)
+        </label>
+        <p id="search-status" class="muted" role="status" aria-live="polite"></p>
+        <!-- Hidden until the player types (FR-003). -->
+        <ul id="results" class="results" aria-label="Search results" hidden></ul>
+      </section>
+
+      <section class="card" aria-labelledby="team-h">
+        <h2 id="team-h">2. Team <span id="team-count" class="muted">(0/6)</span>
+          <span class="muted small">· duplicates are allowed</span></h2>
+        <ol id="slots" class="slots" aria-label="Team slots"></ol>
+      </section>
+
+      <section class="card" aria-labelledby="opt-h">
+        <h2 id="opt-h">3. Optimize</h2>
+        <form id="opt-form" novalidate>
+          <div class="row">
+            <label class="field" for="min-clear">Minimum clear rate (%)
+              <input id="min-clear" type="number" min="1" max="100" step="1" value="75" inputmode="numeric" required>
+            </label>
+            <label class="field" for="budget">Budget
+              <select id="budget">
+                <option value="quick">quick (500 runs, test only)</option>
+                <option value="standard" selected>standard (2,000+ runs)</option>
+                <option value="thorough">thorough (5,000+ runs)</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <span class="tip-wrap">
+              <span id="seed-term" class="term" tabindex="0" aria-describedby="seed-tip">Seed</span>
+              <span id="seed-tip" class="tip" role="tooltip">The seed fixes the random battles. The same team, options
+                and seed always give the same result. A different seed gives an independent sample.</span>
+            </span>
+            <input id="seed" type="text" value="default" autocomplete="off" spellcheck="false" aria-labelledby="seed-term">
+          </div>
+          <button id="optimize" type="submit" class="primary" disabled>Optimize</button>
+          <div id="form-error" class="error" role="alert" hidden></div>
+        </form>
+      </section>
+    </section>
+
+    <!-- Right: progress (only while a job is queued or running) and results. -->
+    <section id="results-col" aria-label="Results">
+      <p id="run-status" class="run-status" role="status" aria-live="polite"></p>
+
+      <section id="progress-card" class="card" aria-labelledby="prog-h" hidden>
+        <h2 id="prog-h">Progress</h2>
+        <div id="progress"></div>
+        <ol id="queue" class="queue" aria-label="Queued runs"></ol>
+      </section>
+
+      <section id="result-card" class="card" aria-labelledby="res-h">
+        <div class="result-head">
+          <h2 id="res-h">Result</h2>
+          <label class="picker" for="run-picker">Run
+            <select id="run-picker"></select>
           </label>
         </div>
-        <button id="optimize" type="submit" class="primary" disabled>Optimize</button>
-        <div id="form-error" class="error" role="alert" hidden></div>
-      </form>
-    </section>
-
-    <section id="progress-card" class="card" aria-labelledby="prog-h" hidden>
-      <h2 id="prog-h">Progress</h2>
-      <dl id="progress" class="kv" aria-live="polite"></dl>
-      <div id="job-error" class="error" role="alert" hidden></div>
-    </section>
-
-    <section id="result-card" class="card" aria-labelledby="res-h" hidden>
-      <h2 id="res-h">Result</h2>
-      <div id="summary"></div>
-      <p id="downloads" class="downloads"></p>
-      <div class="table-wrap">
-        <table id="result-table">
-          <caption class="sr-only">Optimized team, one row per member (same columns as result.xlsx)</caption>
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+        <p id="no-runs" class="muted">No runs have finished yet.</p>
+        <div id="run-message" class="error" role="alert" hidden></div>
+        <div id="result" hidden>
+          <div id="summary"></div>
+          <figure id="chart" class="chart">
+            <figcaption>Clear rate by trainer</figcaption>
+            <div id="chart-body"></div>
+            <div id="chart-tip" class="chart-tip" role="tooltip" hidden></div>
+          </figure>
+          <div id="team-cards" class="team-cards"></div>
+          <p id="downloads" class="downloads"></p>
+        </div>
+      </section>
     </section>
   </main>
 

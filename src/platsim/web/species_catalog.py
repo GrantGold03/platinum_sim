@@ -81,7 +81,8 @@ class SpeciesInfo:
 
     def to_json(self, allow_trade_evolutions: bool = False) -> dict:
         available, reason, code = self.status(allow_trade_evolutions)
-        d = {"key": self.key, "name": self.name, "types": list(self.types), "available": available}
+        d = {"key": self.key, "name": self.name, "types": list(self.types), "available": available,
+             "sprite_icon": f"/api/sprites/{self.key}/icon.png"}
         if not available:
             d["reason"] = reason
             d["reason_code"] = code
