@@ -38,7 +38,7 @@ uv run platsim divergences                       # must exit 0 (no unresolved en
 | V6 | `uv run platsim validate tests/fixtures/illegal_trade_evo.json` (e.g. Gengar) | Exit 2 with one violation: `SPECIES_TRADE_EVOLUTION`, "Gengar is only reachable by trade evolution from Haunter (EVO_TRADE), which needs a second cartridge (FR-005)". |
 | V7 | `uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed` twice | Identical JSON both times. Clear rate CI half-width ≤ 2 points. |
 | V8 | `uv run platsim optimize <six species> --seed fixed` | Either a qualifying team (clear ≥ 75%, gap ≤ 10, passes `validate`) or a "no qualifying team" report with the best rate found. xlsx has Team / Evaluation / Resources / Provenance / Divergences sheets, and every move has a source. `team.txt` (Showdown export) is written. Cynthia's win rate is reported separately with CI half-width ≤ 2 points. |
-| V9 | `uv run platsim serve`, open http://127.0.0.1:8000 | Search "gar" shows Garchomp, add six species, Optimize, progress updates, then the table and xlsx download appear. |
+| V9 | `uv run platsim serve`, open http://127.0.0.1:8000 | Search "gar" shows Garchomp, add six species, Optimize, progress updates, then the table and xlsx download appear. (Superseded by the 002 redesign: see `specs/002-webui-redesign/quickstart.md` V5–V7.) |
 
 ## Benchmarks to record (not pass/fail; feed the plan's budget)
 

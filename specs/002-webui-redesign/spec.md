@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-09
 
-**Status**: Draft
+**Status**: Implemented on branch `002-webui-redesign` (2026-10-10); awaiting user testing before merge
 
 **Input**: User description: the user's change list (an uncommitted note, folded in here in full), covering
 layout, runs and progress, team results, the result summary, and options for the local web UI

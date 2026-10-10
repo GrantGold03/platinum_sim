@@ -34,7 +34,6 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
     the trade evolution (Gengar). Allowing it would need the Everstone removed and the NPC OT kept, so the traded-exp boost still applies;
   - `sim/` code hash in provenance;
   - fix the "? (unlimited)" item-source text;
-  - real-browser UI check;
   - optimize resume test;
   - cartridge or emulator comparison.
 
@@ -82,10 +81,47 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - 2026-10-10: /speckit-converge found 4 gaps, now fixed (T038–T041): control-name check, full "obtained from" text, ability-tie label for more than two abilities, empty-runs test. Browser 4 passed, web 21 passed.
 - 2026-10-09: T036 README, T037. 002 is complete and committed on branch `002-webui-redesign`, not merged.
 
-## Next
-- The user does hands-on testing of `platsim serve` before merging `002-webui-redesign` into main.
-  Do NOT merge without their go-ahead.
-- The "real-browser UI check" gap is closed: `uv run pytest -m browser tests/browser/`.
+## Next: user testing, then merge (handoff written 2026-10-10)
+- **State:** all 41 tasks (T001–T041) are done and committed on branch `002-webui-redesign`.
+  - `c872971` is the redesign; `25b41b1` has the converge fixes; a later docs commit refreshes stale docs.
+  - `main` is still at `f55e5d8`, so the branch is a fast-forward of main. There is no git
+    remote, so nothing has been pushed.
+- **Do NOT merge without the user's go-ahead.** The user does hands-on testing first, in a new session.
+- **To test:**
+  - `git switch 002-webui-redesign`, then `uv run platsim serve`, then open http://127.0.0.1:8000.
+  - The search returns 503 for about 35 s while the ledger builds.
+  - Each web job adds about 35 s at its start (the child rebuilds the ledger).
+  - Stop with Ctrl-C. Shutdown stops a running job and records it as failed ("server stopped while running").
+- **Web jobs in `runs/`** (the picker lists only these; CLI runs like `final-defaults` are not listed):
+  - `job-20261008T115114Z-feb186`: the T076 quick job, from before 002;
+  - `job-20261008T235244Z-2d8f18`: a standard job, qualified;
+  - `job-20261009T193750Z-a1822a`: the T035 throwaway (6× Garchomp), cancelled;
+  - `job-20261009T193751Z-1fdb5e`: the T035 reference quick job, not qualified (quick never qualifies),
+    byte-identical to the CLI.
+- **Things the user may notice (by design, or open questions rather than spec defects):**
+  - The status line keeps its last message (e.g. "Run cancelled") while an older run is picked.
+  - The version always reads "platsim 0.1.0" until `pyproject` is bumped (R5). Runs from before
+    002 say "platsim version not recorded".
+  - The ETA is rough. Confirm-stage time on standard varied 1.3k–11.4k s (R2).
+  - The final-defaults warning text contains "(FR-019)". That is feature 001's requirement id,
+    and it comes from `result.json`, not the page.
+  - Cards are taller because the full "obtained from" text now wraps (T039).
+- **After user testing:**
+  - Fix any findings on the branch.
+  - Run the web subset + browser tests (about 2 min): `uv run pytest -q tests/integration/test_web*.py`
+    and `uv run pytest -q -m browser tests/browser/`.
+  - Merge only on the user's go-ahead (`git switch main && git merge --ff-only 002-webui-redesign`).
+- **Not in any commit, on purpose** (not part of 002; leave them alone unless the user asks):
+  - `.claude/skills/speckit-assess-*`
+  - `.specify/extensions.yml`, `.specify/extensions/`, `.specify/assessments/`
+  - the deleted `.claude/scheduled_tasks.lock`
+- **Lost with the old session's scratchpad** (results already in
+  `specs/002-webui-redesign/validation-log.md`):
+  - the screenshots;
+  - the CLI comparison output (sha256 `d71fbb32…` is recorded);
+  - the Playwright driver for quickstart V7. To redo V7, follow quickstart V7 by hand, or rewrite
+    the driver: serve, then submit A and B via the page, `pgrep -f sim/worker.mjs`, click
+    `#progress button.danger`, poll `/api/jobs/<id>`.
 
 ## Traps
 - Any edit under `src/platsim/web/*.py` changes `platsim_code_hash`. An unfinished `state.json`

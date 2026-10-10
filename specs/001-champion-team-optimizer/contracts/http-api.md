@@ -18,6 +18,12 @@ small amount of plain JS.
 5. When done, the page shows the team table (same columns as the spreadsheet) with a download link
    for `.xlsx` and `.csv`.
 
+> **Superseded by feature 002 (web UI redesign).** Steps 4–5 describe the original page. The
+> current page shows progress with elapsed time, an ETA and Cancel, and replaces the table with a
+> summary, a per-trainer chart and team cards. The current endpoints, including
+> `POST /api/jobs/{id}/cancel` and `GET /api/sprites/...`, are in
+> `specs/002-webui-redesign/contracts/http-api.md` and `contracts/ui.md`.
+
 ## Endpoints
 | Method | Path | Request | Response |
 |---|---|---|---|

@@ -409,14 +409,14 @@ src/platsim/          Python: everything that is not battle-time
   sim/                Node worker pool client, seeds, Cynthia top-up
   optimizer/          candidates, ability screen, successive-halving screen, level search, confirm (run.py)
   report/             result.json / xlsx / csv / team.txt writers, loss causes
-  web/                FastAPI app + static page
+  web/                FastAPI app, job process/cancel, result view, sprites, ETA + static page
   budget.py stats.py evaluate.py explain.py extract.py cli.py
 sim/                  Node: Showdown worker, gauntlet, exp/level-up, damage port
   ai/                 decomp trainer-AI parser + interpreter
   policy/             greedy-v1, expectimax2-v1, expectimax2-v2 (default)
   spikes/  test/
 data/divergences.json divergence ledger;  data/generated/ (git-ignored, from `extract`)
-tests/                pytest unit/, integration/, fixtures/
+tests/                pytest unit/, integration/, browser/ (Playwright), fixtures/
 specs/                spec, plan, research, contracts, tasks, validation log
 runs/                 job outputs (git-ignored)
 pokeplatinum/ pokemon-showdown/   vendored at pinned commits, not edited, git-ignored
@@ -425,7 +425,8 @@ pokeplatinum/ pokemon-showdown/   vendored at pinned commits, not edited, git-ig
 ## Running tests
 
 ```bash
-uv run pytest -q                                           # Python suites
+uv run pytest -q                                           # Python suites (includes the browser tests)
+uv run pytest -q -m browser tests/browser/                 # web page in the system Chrome (about 1 min)
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
 (cd sim && node --test test/*.test.mjs)                    # Node suites (314 tests)
 ```
@@ -433,10 +434,12 @@ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7" 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-10-08 (T076), before the legality-flag,
-  source-preference, dedupe and borderline-cap tests were added. `PLATSIM_STRENGTH_N=2000 uv run
-  pytest -q -s` gave **301 passed in 7,813 s (2 h 10 min), exit 0**. The current full suite has not
-  been rerun since; the newer subsets that were run are in the validation log.
+- **Full pytest:** the last full run was on 2026-10-09 (feature 002, T033): `uv run pytest -q -m
+  "not browser"` gave **381 passed, 2 deselected in 8,872 s (2 h 28 min), exit 0**, then `uv run
+  pytest -q -m browser tests/browser/` gave 2 passed. Later 002 changes were checked with the web
+  and browser subsets (21 and 4 passed); see `specs/002-webui-redesign/validation-log.md`.
+- **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
+  otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
 - **Node suite:** on current code it gave **314 pass, 0 fail, exit 0 in 285 s**.
 
 These environment variables shrink or redirect the long tests:
@@ -448,6 +451,7 @@ These environment variables shrink or redirect the long tests:
 | `PLATSIM_EVALUATE_FAST_N` | 40 | `test_evaluate.py` fast check |
 | `PLATSIM_T072_N`, `PLATSIM_T072_FIXTURE`, `PLATSIM_T072_WORKERS` | 200, `reference_team.json`, CPU count | `test_final_levels.py` |
 | `PLATSIM_OPTIMIZE_WORKERS` | CPU count (second run uses 7) | `test_optimize_small.py` (T058) |
+| `PLATSIM_SCREENSHOT_DIR` | unset (no screenshots) | `tests/browser/test_page.py`: saves light, dark and 360 px screenshots |
 
 For example: `PLATSIM_STRENGTH_N=160 uv run pytest -q -s tests/integration/test_policy_strength.py`.
 pytest puts its temp files under `/dev/shm/platsim-pytest-<pid>` and removes them at exit.
