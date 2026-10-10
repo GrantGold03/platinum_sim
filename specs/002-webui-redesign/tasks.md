@@ -478,3 +478,10 @@ After Phase 2, in parallel:
 
 Each checkpoint records real test output in `validation-log.md`. Nothing is marked done without
 running its check.
+
+## Phase 8: Convergence
+
+- [X] T038 In `tests/browser/test_page.py::test_page_walkthrough`, assert that every `input`, `select` and `button` inside `#setup` and `#results-col` has a non-empty accessible name (Playwright `locator.evaluate` on `labels`/`aria-labelledby`/`aria-label`/text), with a positive control that a planted unlabelled control is caught. Then update the FR-028 row of the T033 table in `validation-log.md` per SC-006 / FR-028 (partial)
+- [X] T039 Make the full "obtained from" text on each team card reachable without a mouse. Today `src/platsim/web/static/app.js:465` puts it in a single line cut off with "…" and shows the full text only through `title`. Either wrap it to at most two lines (`style.css:269`) or make it focusable with the same `.tip` used for move sources. Cover it in the walkthrough, per FR-023 (partial)
+- [X] T040 In `src/platsim/web/result_view.py::_ability`, show "<chosen> (no significant difference)" when the species has more than one other ability. Today it joins every ability with "/". Keep "<A>/<B> (no significant difference)" for exactly two. Add a case to `tests/integration/test_web_result_view.py` with a stubbed three-ability species, per Edge Cases: ability tie with more than two abilities (contradicts)
+- [X] T041 Add a browser check that an empty runs directory shows "No runs have finished yet." and no summary, chart or cards (`#no-runs` visible, `#result` hidden), per US4/AC4 (partial)

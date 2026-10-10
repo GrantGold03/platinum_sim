@@ -79,12 +79,12 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - 2026-10-09: US4 (T030–T031), browser walkthrough (T032), report hashes unchanged (T034).
 - 2026-10-09: T033 full suite: 381 passed, 2 deselected in 2:27:51; browser 2 passed. FR/SC map in validation-log.
 - 2026-10-09: T035 real quick jobs via `platsim serve`: cancel of a running job took 0.2 s with all 16 worker pids gone; job B (`runs/job-20261009T193751Z-1fdb5e`) is byte-identical to the CLI result.json (cmp exit 0). The status line was stale after a finish; fixed and covered by a new browser test (3 passed).
+- 2026-10-10: /speckit-converge found 4 gaps, now fixed (T038–T041): control-name check, full "obtained from" text, ability-tie label for more than two abilities, empty-runs test. Browser 4 passed, web 21 passed.
 - 2026-10-09: T036 README, T037. 002 is complete and committed on branch `002-webui-redesign`, not merged.
 
 ## Next
 - The user does hands-on testing of `platsim serve` before merging `002-webui-redesign` into main.
   Do NOT merge without their go-ahead.
-- Open: FR-028 control labels are not asserted by any test (validation-log T033 table).
 - The "real-browser UI check" gap is closed: `uv run pytest -m browser tests/browser/`.
 
 ## Traps

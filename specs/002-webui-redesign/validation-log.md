@@ -212,7 +212,7 @@ passed in the runs above, apart from rows marked pending or partial.
 | FR-025 | `test_result_view`: "Rivalry/Intimidate (no significant difference)", single "Blaze"; walkthrough: Luxray card | pass |
 | FR-026 | walkthrough: no "move 1 source"; move tip on hover and on keyboard focus | pass |
 | FR-027 | walkthrough: 5 bar groups, aria-label has % and "1,990 battles", tip on focus; `test_older_run_without_per_trainer` | pass |
-| FR-028 | walkthrough: keyboard reaches clear rate, chart bar, move chip; light and dark screenshots viewed | partial: `aria-live` regions exist in `index.html` (lines 43, 85), but no test asserts announcements or labels |
+| FR-028 | walkthrough: keyboard reaches clear rate, chart bar, move chip; light and dark screenshots viewed; every control in `#setup`/`#results-col` has an accessible name (T038, with a planted unlabelled input as the positive control); status announcements by `test_finish_is_announced_and_shown` and the cancel walkthrough | pass (after T038) |
 | FR-029 | walkthrough: every request went to 127.0.0.1, with sprites and `/api/jobs` seen (positive control); `test_web_sprites.py` | pass |
 | FR-030 | T034: four report hashes identical to the T002 baseline; `test_result_view` byte-compares the downloads | pass |
 | SC-001 | walkthrough: `#optimize`, `#summary`, `#chart` all within 1080 px | pass (proxy; the "10 seconds" is a human measure) |
@@ -285,3 +285,32 @@ With this run, the FR-014 "switches when a new run finishes", SC-004 (real job) 
 run) rows of the T033 table pass. FR-028 stays partial: `aria-live` announcements are now
 exercised by `test_finish_is_announced_and_shown` and the cancel walkthrough, but control labels
 are not asserted.
+
+## Phase 8: Convergence (T038–T041), 2026-10-10
+
+`/speckit-converge` found 4 gaps (1 medium, 3 low). All are fixed:
+
+- **T040** (Edge Cases, ability tie with more than two abilities). Test first:
+  `test_ability_tie_label` failed on the three-ability case
+  (`AssertionError: assert 'Keen Eye/Tan...t difference)' == 'Keen Eye (no...t difference)'`).
+  `result_view._ability` now joins only when exactly one other ability exists. Then
+  `uv run pytest -q tests/integration/test_web_result_view.py` exited with code 0: `3 passed`.
+  The real Luxray and Gardevoir ties still read "A/B (no significant difference)".
+- **T039** (FR-023): the "obtained from" line wraps in full instead of being cut off with
+  "…" (`style.css` `.mon > .obtained`; the `title` attribute is gone). The walkthrough now
+  checks that each card's text equals the API's `obtained_from` and is not clipped. Positive
+  control: at least one source wraps onto a second line. Negative control: with the old CSS put
+  back, the walkthrough failed (`AssertionError` listing all six as not fitting,
+  `1 failed, 3 deselected in 35.96s`). The fix was then restored and checked with `cmp`.
+  In the screenshot the full sources are visible, and the summary and chart still fit in 1080 px.
+- **T038** (FR-028, SC-006): the walkthrough checks that every `input`/`select`/`button` in both
+  columns has an accessible name. Positive control: a planted `<input id="planted">` is the only
+  item reported.
+- **T041** (US4/AC4): `test_no_runs_yet`. An empty runs directory shows "No runs have finished
+  yet." and no result. Positive control: `#no-runs` is hidden in the walkthrough, where a run
+  exists.
+
+`PLATSIM_SCREENSHOT_DIR=<scratchpad>/shots uv run pytest -q -m browser tests/browser/` exited with code 0:
+`4 passed in 47.65s`. The web integration tests
+(`test_web.py`, `_result_view`, `_sprites`, `_eta`, `_cancel`, `_shutdown`) exited with code 0:
+`21 passed, 1 warning in 42.73s`.

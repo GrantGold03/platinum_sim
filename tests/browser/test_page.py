@@ -85,6 +85,18 @@ def _tab_until(page, predicate_js: str, limit: int = 120) -> bool:
     return False
 
 
+CONTROLS = "#setup input, #setup select, #setup button, #results-col input, #results-col select, #results-col button"
+UNNAMED_JS = """() => [...document.querySelectorAll('""" + CONTROLS + """')]
+  .filter(c => {
+    const byIds = (c.getAttribute('aria-labelledby') || '').split(/\\s+/).filter(Boolean)
+      .map(id => (document.getElementById(id) || {}).textContent || '').join(' ');
+    const byLabels = [...(c.labels || [])].map(l => l.textContent).join(' ');
+    const own = c.tagName === 'BUTTON' ? c.textContent : '';
+    return !((c.getAttribute('aria-label') || '') + byIds + byLabels + own).trim();
+  })
+  .map(c => c.outerHTML.slice(0, 120))"""
+
+
 def _wait_text(page, selector, needle, timeout=15):
     page.locator(selector).filter(has_text=needle).first.wait_for(timeout=timeout * 1000)
 
@@ -140,6 +152,15 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         widths = page.eval_on_selector_all(".sprite-front img", "els => els.map(e => e.naturalWidth)")
         assert widths == [160] * 6, widths
 
+        # The "obtained from" text is shown in full, not cut off (FR-023, T039).
+        team = page.request.get(base + f"/api/jobs/{FIXTURE_ID}").json()["team"]
+        shown = page.eval_on_selector_all(".mon .obtained", "els => els.map(e => [e.textContent, e.scrollWidth <= e.clientWidth + 1, e.getBoundingClientRect().height])")
+        assert [t for t, _, _ in shown] == [m["obtained_from"] for m in team]
+        assert all(fits for _, fits, _ in shown), shown
+        line = page.evaluate("parseFloat(getComputedStyle(document.querySelector('.mon .obtained')).lineHeight)")
+        assert any(h > 1.5 * line for _, _, h in shown), "positive control: at least one source wraps onto a second line"
+        assert not _visible(page, "#no-runs")  # positive control for T041
+
         move = page.locator(".move").first
         move_tip = page.locator(".mon .tip").first
         move.hover()
@@ -182,6 +203,13 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         add.click()
         assert page.inner_text("#team-count") == "(6/6)" and add.is_disabled()  # duplicates; 7th refused
         assert page.is_enabled("#optimize")
+
+        # Every control on the page has an accessible name (FR-028, T038), with a positive control.
+        page.evaluate("document.getElementById('setup').append(Object.assign(document.createElement('input'), {id: 'planted'}))")
+        assert page.evaluate(UNNAMED_JS) == ['<input id="planted">'], "positive control: an unlabelled input is caught"
+        page.evaluate("document.getElementById('planted').remove()")
+        assert page.locator("#results li button").count() and page.locator("#slots button").count()
+        assert page.evaluate(UNNAMED_JS) == []
 
         page.check("#show-excluded")
         page.fill("#search", "munchlax")
@@ -305,4 +333,16 @@ def test_finish_is_announced_and_shown(tmp_path, catalog, chrome):
         assert newest["status"] == "done" and newest["id"] != FIXTURE_ID
         page.wait_for_function(f"document.getElementById('run-picker').value === {json.dumps(newest['id'])}")
         assert newest["label"] in page.inner_text("#run-status")
+        page.close()
+
+
+def test_no_runs_yet(tmp_path, catalog, chrome):
+    """An empty runs directory says no runs have finished yet, with no result shown (US4/AC4, T041)."""
+    with served(tmp_path, catalog) as (base, _app):
+        page = chrome.new_page()
+        page.goto(base + "/")
+        page.locator("#no-runs").wait_for(state="visible", timeout=15000)
+        assert page.inner_text("#no-runs").strip() == "No runs have finished yet."
+        assert not _visible(page, "#result") and page.locator(".mon").count() == 0
+        assert page.request.get(base + "/api/jobs").json() == []
         page.close()

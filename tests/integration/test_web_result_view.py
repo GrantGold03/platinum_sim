@@ -58,3 +58,22 @@ def test_result_view_older_run_without_per_battle(tmp_path, catalog):
     jid = copy_fixture_run(tmp_path, drop_keys=("per_battle",))
     job = TestClient(make_app(tmp_path, catalog)).get(f"/api/jobs/{jid}").json()
     assert job["per_trainer"] == [] and job["summary"]["verdict"] == "qualified"
+
+
+def test_ability_tie_label(monkeypatch):
+    """002 T040 (spec Edge Cases): two abilities -> "A/B (no significant difference)"; more than two,
+    or no second ability found -> the chosen ability alone, plus "(no significant difference)"."""
+    from platsim.web import result_view
+
+    monkeypatch.setattr(result_view, "_species_abilities", lambda: {
+        "two": ["ABILITY_KEEN_EYE", "ABILITY_TANGLED_FEET"],
+        "three": ["ABILITY_KEEN_EYE", "ABILITY_TANGLED_FEET", "ABILITY_BIG_PECKS"],
+        "one": ["ABILITY_KEEN_EYE"],
+    })
+    tie = lambda sp: {"ability_reason": "tie_default", "ability": "ABILITY_KEEN_EYE", "species": sp}  # noqa: E731
+    assert result_view._ability(tie("two"), "Keen Eye") == "Keen Eye/Tangled Feet (no significant difference)"
+    assert result_view._ability(tie("three"), "Keen Eye") == "Keen Eye (no significant difference)"
+    assert result_view._ability(tie("one"), "Keen Eye") == "Keen Eye (no significant difference)"
+    assert result_view._ability(tie("missing"), "Keen Eye") == "Keen Eye (no significant difference)"
+    better = {"ability_reason": "better", "ability": "ABILITY_KEEN_EYE", "species": "two"}
+    assert result_view._ability(better, "Keen Eye") == "Keen Eye"

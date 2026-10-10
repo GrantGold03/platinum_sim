@@ -462,7 +462,7 @@
         el("span", { class: "field levels", text: `Lv ${m.start_level} → ${m.final_level}` }),
         el("span", { class: "field ability" }, el("span", { class: "label", text: "Ability: " }), m.ability || "—"),
         el("span", { class: "field item" }, el("span", { class: "label", text: "Item: " }), m.held_item || "none"),
-        el("span", { class: "field obtained", title: m.obtained_from || "", text: m.obtained_from || "" }),
+        el("span", { class: "field obtained", text: m.obtained_from || "" }),
         moves));
     }
   }

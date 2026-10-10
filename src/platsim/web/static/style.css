@@ -266,7 +266,7 @@ footer { margin-top: 8px; }
 .mon > .levels { grid-area: levels; color: var(--muted); align-self: start; }
 .mon > .ability { grid-area: ability; }
 .mon > .item { grid-area: item; }
-.mon > .obtained { grid-area: obtained; color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mon > .obtained { grid-area: obtained; color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
 .mon > .moves { grid-area: moves; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .mon .label { color: var(--muted); }
 .move { display: inline-block; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; font-size: 0.85rem; cursor: help; }

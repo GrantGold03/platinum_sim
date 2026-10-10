@@ -34,9 +34,9 @@ def _ability(build: dict, csv_value: str) -> str:
         return csv_value
     chosen = build.get("ability")
     others = [a for a in _species_abilities().get(build.get("species"), []) if a != chosen]
-    if not others:
+    if len(others) != 1:  # spec Edge Cases: no second ability found, or more than two
         return f"{csv_value} {TIE}"
-    return "/".join([csv_value, *(_ability_name(a) for a in others)]) + f" {TIE}"
+    return f"{csv_value}/{_ability_name(others[0])} {TIE}"
 
 
 def _verdict(d: dict) -> str:
