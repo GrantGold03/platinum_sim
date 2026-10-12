@@ -22,14 +22,14 @@ works offline.
     `national_dex`, `unavailable`, `pre_evolution_unavailable`. (`excluded`, `unobtainable` and
     `no_source` are gone.)
   - `reason` follows the data model table. It never contains a requirement id or "species".
-- **503 while loading**: `detail` reads "Pokemon data is loading…".
+- **503 while loading**: `detail` reads "Pokémon data is loading…".
 
 ## `POST /api/jobs` (changed)
 
 - **Body**: accepts the three new rule keys. Each must be a boolean, or the request gets a 422.
 - **Stored rules**: `job.options` holds all five keys.
-- **Errors**: 422 `detail` and `reasons` texts use "pokemon" and contain no requirement ids. An unknown
-  name reads "unknown pokemon".
+- **Errors**: 422 `detail` and `reasons` texts use "Pokémon" and contain no requirement ids. An unknown
+  name reads "unknown Pokémon".
 
 ## `GET /api/jobs/{id}` (changed)
 

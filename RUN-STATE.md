@@ -81,12 +81,12 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - 2026-10-10: /speckit-converge found 4 gaps, now fixed (T038–T041): control-name check, full "obtained from" text, ability-tie label for more than two abilities, empty-runs test. Browser 4 passed, web 21 passed.
 - 2026-10-09: T036 README, T037. 002 is complete and committed on branch `002-webui-redesign`, not merged.
 
-## Next: user testing, then merge (handoff written 2026-10-10)
+## 002 handoff (written 2026-10-10; resolved 2026-10-11: tested, then merged into main with 003)
 - **State:** all 41 tasks (T001–T041) are done and committed on branch `002-webui-redesign`.
   - `c872971` is the redesign; `25b41b1` has the converge fixes; a later docs commit refreshes stale docs.
   - `main` is still at `f55e5d8`, so the branch is a fast-forward of main. There is no git
     remote, so nothing has been pushed.
-- **Do NOT merge without the user's go-ahead.** The user does hands-on testing first, in a new session.
+- (Historical.) The user tested and gave the go-ahead; main was fast-forwarded on 2026-10-11 (see the 003 section).
 - **To test:**
   - `git switch 002-webui-redesign`, then `uv run platsim serve`, then open http://127.0.0.1:8000.
   - The search returns 503 for about 35 s while the ledger builds.
@@ -100,10 +100,10 @@ decomp PNGs, with transparency added when they are served. The constitution was 
     byte-identical to the CLI.
 - **Things the user may notice (by design, or open questions rather than spec defects):**
   - The status line keeps its last message (e.g. "Run cancelled") while an older run is picked.
-  - The version always reads "platsim 0.1.0" until `pyproject` is bumped (R5). Runs from before
+  - (Resolved: 0.2.0 since 003.) The version always read "platsim 0.1.0" until `pyproject` was bumped (R5). Runs from before
     002 say "platsim version not recorded".
   - The ETA is rough. Confirm-stage time on standard varied 1.3k–11.4k s (R2).
-  - The final-defaults warning text contains "(FR-019)". That is feature 001's requirement id,
+  - (Resolved in 003: the page cleans requirement ids from recorded text.) The final-defaults warning text contains "(FR-019)". That is feature 001's requirement id,
     and it comes from `result.json`, not the page.
   - Cards are taller because the full "obtained from" text now wraps (T039).
 - **After user testing:**
@@ -130,7 +130,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - A web job runs in its own session (`setsid`), so Ctrl-C on the server no longer reaches it.
   The shutdown hook and the parent-death guard (T026/T027) must be in place, or the job keeps
   running after the server stops (analysis U1).
-- pyproject is still 0.1.0, so the version label doesn't change between runs (R5).
+- Bump `pyproject.toml` with each feature, or the page's version label doesn't change between runs (R5). It is 0.2.0 since 003.
 - `/proc/<pid>/task/<pid>/children` doesn't exist on this kernel; use `pgrep -P` to find child processes.
 - The id `results` is already used by the species list (`index.html`), so the new right column
   is `#results-col`.
@@ -138,8 +138,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 # 003 Web UI refinements (started 2026-10-11)
 - Source: `webui_changes.md`, removed after the merge; see `git show 24df0df:webui_changes.md` (the user's notes from testing 002). Spec: `specs/003-webui-refinements/spec.md`,
   with both clarifications answered. `.specify/feature.json` now points at 003.
-- No branch has been made yet. The work sits on `002-webui-redesign`, and 002 is still not merged. The user's
-  intent is to make these changes before merging.
+- No separate branch was made: 003 was built on `002-webui-redesign` (the user's choice) and merged with it.
 - It reverses 001's Munchlax exclusion (`ledger.EXCLUDED_SPECIES`). Leftovers is allowed only when Munchlax or
   Snorlax is on the team.
 - 2026-10-11: spec clarified (post-game pokemon and post-game items are separate rules; reports carry the new
@@ -173,22 +172,21 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - 2026-10-11: T060 passed. The web job `runs/job-20261011T222457Z-c4aa1b` and the CLI run (seed t058, quick)
   give byte-identical result.json (`cmp` exit 0, sha256 b665cfa9…). It has five legality keys and platsim 0.2.0,
   and every T001 baseline hash is OK. T001–T062 are all done.
-- Now: the user is testing on `uv run platsim serve` (port 8000).
 - 2026-10-11: user follow-up: "Pokémon" spelling in all page text, and the double box on trainer hover (SVG
   <title> native tooltip) removed. Web 35 passed, browser 4 passed; server on :8000 restarted with the change.
 - 2026-10-11: committed as 24df0df on 002-webui-redesign; main fast-forwarded to it on the user's go-ahead
   (f55e5d8..24df0df, includes the 002 commits). Not pushed.
 - Open for the user: story rank is per map. Route 218 and Ravaged Path rank 0 by their early edge, though their
   grass is later.
-- Traps found in research:
+- Traps found in research (all fixed in 003 unless noted; kept for the reasoning):
   - Honey-tree entries had level=None, so movesources skipped them as wild sources and named a level-1 Day Care
     egg instead (corrected R5, analysis H3). Fixed: levels 5–15 are parsed from the decomp.
-  - `Ledger.species_sources` and `breed_mothers` caches are not keyed on options (R2).
-  - POST also covers maps that are never reachable (UNUSED_*, condominium) (R3).
-  - Encounter rates are lost in `_merge_wild` (R8).
-  - The map graph treats sea water as land, so hop counts are useless (R9).
-  - The Battle Frontier BP exchange (`scrcmd.c` `ScrCmd_PokeMartFrontier`) is not extracted, so TM04, TM08, TM61
-    and TM73 look as if they have no source at all. They are post-game. Sweep for other unextracted post-game
-    shops (R3).
+  - `Ledger.species_sources` and `breed_mothers` caches were not keyed on options (R2). Fixed: keyed on options.
+  - POST also covered maps that are never reachable (UNUSED_*, condominium) (R3). Fixed: `Classified.unreachable`.
+  - Encounter rates were lost in `_merge_wild` (R8). Fixed: `rate_percent` is summed.
+  - `mapgraph.py` treats sea water as land, so its hop counts are useless for story order (R9). Still true; story order
+    comes from `story_rank.py`, which has its own Surf- and badge-aware graph. Don't use mapgraph hops for it.
+  - The Battle Frontier BP exchange (`scrcmd.c` `ScrCmd_PokeMartFrontier`) was not extracted, so TM04, TM08, TM61
+    and TM73 looked as if they had no source at all (R3). Fixed: `frontier_exchange_entries` (41 items, post-game).
   - Wild Gabite is only on Victory Road, but Gible is in Wayward Cave B1F (17–20, pre-Champion). The earliest
     location wins across evolution stages (user, 2026-10-11), so Garchomp is named from Gible.

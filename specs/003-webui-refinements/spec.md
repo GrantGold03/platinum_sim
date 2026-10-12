@@ -52,7 +52,7 @@ and read the list and its reasons.
 ### User Story 2 - Choose which pokemon pools are allowed (Priority: P1)
 
 The player can widen what a run may use with three new optional rules: "Allow post-game exclusive
-pokemon", "Allow post-game items and moves" and "Allow pokemon unobtainable in Platinum". All are off
+Pokémon", "Allow post-game items and moves" and "Allow Pokémon unobtainable in Platinum". All are off
 by default. Munchlax
 and Snorlax are now usable by default. Leftovers can be held only when one of them is on the team.
 
@@ -71,13 +71,13 @@ run's recorded options and the team's held items.
 3. **Given** a team with neither Munchlax nor Snorlax and post-game items not allowed, **When** the
    run finishes, **Then** no team member holds Leftovers. With post-game items allowed, at most one
    member holds it.
-4. **Given** "Allow post-game exclusive pokemon" is off, **When** the player searches a pokemon
+4. **Given** "Allow post-game exclusive Pokémon" is off, **When** the player searches a pokemon
    obtainable only after the Champion, **Then** it is crossed out with a post-game reason. **When**
    the rule is on, **Then** it is usable.
-5. **Given** "Allow pokemon unobtainable in Platinum" is off, **When** the player searches a pokemon
+5. **Given** "Allow Pokémon unobtainable in Platinum" is off, **When** the player searches a pokemon
    with reason "Unavailable in Platinum", **Then** it is crossed out. **When** the rule is on,
    **Then** it is usable.
-6. **Given** "Allow post-game items and moves" is on and "Allow post-game exclusive pokemon" is off,
+6. **Given** "Allow post-game items and moves" is on and "Allow post-game exclusive Pokémon" is off,
    **When** the player searches a post-game-only pokemon, **Then** it is still crossed out, and a
    finished run may use post-game held items and moves on its usable pokemon.
 7. **Given** a run started with any new rule on, **When** its result is shown or its report is
@@ -219,7 +219,7 @@ colours and the toggle.
   items and moves" is on, the single post-game Leftovers (the Victory Road item ball) counts as one
   copy that one member may hold. The legality validator MUST
   enforce this rule independently of the optimizer.
-- **FR-010**: Setup MUST offer "Allow post-game exclusive pokemon", off by default. When it is on,
+- **FR-010**: Setup MUST offer "Allow post-game exclusive Pokémon", off by default. When it is on,
   pokemon whose only sources are after the Champion (including sources that need the National Dex)
   MUST be usable. This rule unlocks pokemon only; it does not unlock post-game items, TMs or move
   tutors.
@@ -227,7 +227,7 @@ colours and the toggle.
   When it is on, items, TMs and move tutors that can only be obtained after the Champion MUST count
   as sources for held items and moves. It is independent of FR-010: either rule can be on without
   the other.
-- **FR-011**: Setup MUST offer "Allow pokemon unobtainable in Platinum", off by default (allowed by
+- **FR-011**: Setup MUST offer "Allow Pokémon unobtainable in Platinum", off by default (allowed by
   constitution v1.2.0, Principle III). When it is
   on, pokemon with the reason "Unavailable in Platinum" MUST be usable. Their moves are still
   limited to what they can learn in the game data.
@@ -330,7 +330,7 @@ colours and the toggle.
   "no source in the game data". A pokemon blocked only because its pre-evolution is blocked keeps a
   "evolves from X" reason.
 - Post-game reasons include the current "needs the National Dex" reason. National Dex sources become
-  usable when "Allow post-game exclusive pokemon" is on.
+  usable when "Allow post-game exclusive Pokémon" is on.
 - Leftovers: wild Munchlax and Snorlax always hold Leftovers in the game data (both held-item slots).
   Several Munchlax can be caught, so any number of members may hold it once Munchlax or Snorlax is on
   the team. No other source is recognised; the rule is "on the team", not "caught at some point".
@@ -350,7 +350,7 @@ colours and the toggle.
 
 ### Session 2026-10-11
 
-- Q: What should "Allow post-game exclusive pokemon" unlock? → A: Make pokemon and resources two
+- Q: What should "Allow post-game exclusive Pokémon" unlock? → A: Make pokemon and resources two
   separate options. The pokemon rule unlocks pokemon only (FR-010); a separate "Allow post-game
   items and moves" rule unlocks post-game items, TMs and tutors (FR-010a). Both are off by default.
 - Q: With post-game items allowed, does the post-game Victory Road Leftovers count without Munchlax

@@ -5,7 +5,7 @@ Each scenario says how to check one part of the feature. Contracts: [http-api](c
 
 ## Prerequisites
 
-- Branch `002-webui-redesign` (003 is built on it, by the user's choice).
+- `main` (003 was built on branch `002-webui-redesign`, by the user's choice, and merged on 2026-10-11).
 - `uv sync`.
 - The system Chrome is needed for the browser tests (see the README).
 - Regenerate the generated data after any ledger change: `uv run platsim extract`. Then

@@ -229,9 +229,9 @@ The page has two columns.
   the browser remembers the pick.
 - **Left: run setup.**
   - The five rule checkboxes. Hover over or focus "Allow trade evolutions" for what it means.
-  - The pokemon search. The list appears once you type. Pokemon that can't be used are always
+  - The Pokémon search. The list appears once you type. Pokémon that can't be used are always
     listed, crossed out with a short reason (e.g. "Unavailable in Platinum").
-  - Six team slots, each showing the species' icon.
+  - Six team slots, each showing the Pokémon's icon.
   - The minimum clear rate.
   - A **budget** selector: quick, standard (the default) or thorough.
   - The seed. Hover over or focus the word "Seed" for an explanation.
@@ -251,14 +251,15 @@ The page has two columns.
     - a per-trainer clear-rate chart, with intervals. Hover over, focus or tap a trainer for their
       sprite and team;
     - the four downloads.
-  - The page never shows requirement ids or the word "species". Text that comes from older
+  - The page never shows requirement ids or the word "species", and always spells "Pokémon".
+    The chart shows one pop-up per trainer, with no second browser tooltip. Text that comes from older
     report files is cleaned when shown; the files themselves are not changed.
 
 Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`. The
 picker lists the web jobs the server knows about, up to 50. Command-line runs such as
 `runs/final-defaults` are not listed.
 
-- For about the first 35 s after start the species search returns 503 while the availability ledger
+- For about the first 35 s after start the Pokémon search returns 503 while the availability ledger
   builds; it then answers normally.
 - **Each web job runs in its own process group**, a spawned child, so Cancel stops it and its Node
   workers within seconds.

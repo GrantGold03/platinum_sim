@@ -6,16 +6,18 @@ This file lists only the changes. Everything else is as in `specs/002-webui-rede
 
 - **Rule**: no shown text has a requirement id or the word "species". This covers text nodes, `title`,
   `aria-label`, `placeholder`, tooltips, `option` labels and `alert`/`confirm` text.
+- The word is always spelled "Pokémon" in page text (FR-002 as amended 2026-10-11); the unaccented
+  "pokemon" is rejected by the browser wording scan.
 - Changed labels:
 
   | Before | After |
   |---|---|
-  | "Pick six species obtainable before the Champion…" | "Pick six pokemon obtainable before the Champion…" |
-  | "1. Choose species" | "1. Choose pokemon" |
-  | "Search species" | "Search pokemon" |
-  | "Loading species data…" | "Loading pokemon data…" |
-  | "Choose exactly six species." | "Choose exactly six pokemon." |
-  | "No species match “q”." | "No pokemon match “q”." (only shown when no name matches) |
+  | "Pick six species obtainable before the Champion…" | "Pick six Pokémon for the Elite 4 and Champion fight…" |
+  | "1. Choose species" | "1. Choose Pokémon" |
+  | "Search species" | "Search Pokémon" |
+  | "Loading species data…" | "Loading Pokémon data…" |
+  | "Choose exactly six species." | "Choose exactly six Pokémon." |
+  | "No species match “q”." | "No Pokémon match “q”." (only shown when no name matches) |
 
 ## Header
 
@@ -37,9 +39,9 @@ This file lists only the changes. Everything else is as in `specs/002-webui-rede
 - **Rule checkboxes** (all unchecked on load), in this order:
   1. Allow egg moves
   2. Allow trade evolutions
-  3. Allow post-game exclusive pokemon
+  3. Allow post-game exclusive Pokémon
   4. Allow post-game items and moves
-  5. Allow pokemon unobtainable in Platinum
+  5. Allow Pokémon unobtainable in Platinum
 - The fieldset legend reads "Optional rules (all off by default)".
 - **Trade-evolution note**: `#trade-help` is now the tooltip of "Allow trade evolutions". It is shown
   on hover and focus only, and is still linked by `aria-describedby`.
