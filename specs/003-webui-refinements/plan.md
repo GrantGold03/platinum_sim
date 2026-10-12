@@ -4,7 +4,7 @@
 **Date**: 2026-10-11 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `specs/003-webui-refinements/spec.md` (source:
-`webui_changes.md`).
+`webui_changes.md`; removed after the merge, see `git show 24df0df:webui_changes.md`).
 
 ## Summary
 

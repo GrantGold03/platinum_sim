@@ -6,7 +6,7 @@ description: "Task list for 003 Web UI Refinements"
 
 **Input**: the design documents in `specs/003-webui-refinements/`: plan.md, spec.md, research.md
 (R1–R14), data-model.md, contracts/http-api.md, contracts/ui.md and quickstart.md (V1–V8). The
-source list is `webui_changes.md` at the repo root.
+source list is `webui_changes.md` (removed after the merge; `git show 24df0df:webui_changes.md`).
 
 **Tests**: included. The constitution requires a green local suite and positive controls (Principle V).
 The spec's success criteria SC-001 to SC-007 are automated checks.

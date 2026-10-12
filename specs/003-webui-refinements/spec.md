@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: the change list in `webui_changes.md` (repo root), written after hands-on
+**Input**: User description: the change list in `webui_changes.md` (repo root until removed after the merge; `git show 24df0df:webui_changes.md`), written after hands-on
 testing of the 002 redesign. It covers: wording (no requirement numbers, "pokemon" not "species"),
 an Elite Four / Champion hover preview, swapping the roster and the per-trainer chart, clearer
 "obtained from" text, always showing excluded pokemon, allowing Munchlax/Snorlax (and Leftovers only

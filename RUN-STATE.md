@@ -136,7 +136,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   is `#results-col`.
 
 # 003 Web UI refinements (started 2026-10-11)
-- Source: `webui_changes.md` (the user's notes from testing 002). Spec: `specs/003-webui-refinements/spec.md`,
+- Source: `webui_changes.md`, removed after the merge; see `git show 24df0df:webui_changes.md` (the user's notes from testing 002). Spec: `specs/003-webui-refinements/spec.md`,
   with both clarifications answered. `.specify/feature.json` now points at 003.
 - No branch has been made yet. The work sits on `002-webui-redesign`, and 002 is still not merged. The user's
   intent is to make these changes before merging.
