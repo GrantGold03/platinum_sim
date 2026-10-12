@@ -1,6 +1,6 @@
 [project]
 name = "platsim"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pokemon Platinum Champion team optimizer, checked against the pokeplatinum decomp and battle-tested with Pokemon Showdown"
 requires-python = ">=3.14"
 dependencies = [

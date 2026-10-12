@@ -1,20 +1,23 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: materially expanded guidance in Principle IV)
+- Version change: 1.1.0 → 1.2.0 (MINOR: materially expanded guidance in Principle III)
 - Modified principles:
-  - IV. Reproducible, Statistically Honest Evaluation: added the "report files vs. views" bullet;
-    the objective-function bullet now names the report files as the "output".
+  - III. In-Game Legality of Every Output: the first bullet now admits explicit rules; a new bullet
+    sets the conditions under which an explicit, off-by-default rule may widen the output beyond
+    the pre-Champion single-cartridge game.
 - Added sections: none
 - Removed sections: none
-- Reason: feature 002-webui-redesign (spec FR-017, FR-018, FR-021) summarises results on the web
-  page. The constitution's Technical Constraints already define the output as the Showdown export
-  plus the JSON report carrying the provenance; this amendment states that explicitly and sets the
-  minimum a summarising view must keep. Raised as finding C1 by /speckit-analyze on 2026-10-09.
+- Reason: feature 003-webui-refinements adds opt-in rules (post-game pokemon, post-game items and
+  moves, pokemon not obtainable in Platinum: spec FR-010, FR-010a, FR-011). The last one outputs
+  teams that the cartridge cannot produce. Raised as finding C1 by /speckit-analyze on 2026-10-11;
+  the user chose to amend rather than drop the rule. The existing trade-evolution option is also
+  covered by the new bullet.
 - Templates reviewed:
   - .specify/templates/plan-template.md (Constitution Check gate) — compatible, no change
   - .specify/templates/spec-template.md — compatible, no change
   - .specify/templates/tasks-template.md — compatible, no change
-- Prior history: 1.0.0 initial ratification 2026-10-07 (all template placeholders replaced).
+- Prior history: 1.1.0 (2026-10-09, Principle IV report files vs. views, feature 002);
+  1.0.0 initial ratification 2026-10-07.
 - Deferred TODOs: none
 -->
 
@@ -59,13 +62,23 @@ Its data is not the cartridge's data, so the seams must be explicit.
 
 ### III. In-Game Legality of Every Output
 
-- Every team the tool outputs MUST be obtainable in Platinum per decomp data: each move learnable
+- Every team the tool outputs MUST be obtainable in Platinum per decomp data, unless an explicit
+  rule (see below) allows otherwise: each move learnable
   by that species (or a pre-evolution) by a decomp-listed method, abilities valid for the species,
   held items obtainable in Platinum, IVs 0–31, EVs ≤255 per stat and ≤510 total.
 - Legality MUST be enforced by a validator that is independent of the optimizer and runs on
   every output. The optimizer MUST NOT be trusted to stay legal on its own.
 - Optional constraints (level cap, item availability by story progress, banned methods) MUST be
   explicit inputs, never silent assumptions.
+- A rule MAY widen the output beyond the pre-Champion single-cartridge game (for example post-game
+  content, trade evolutions, or pokemon not obtainable in Platinum), only if it is an explicit
+  input that is off by default. When such a rule is on:
+  - the validator MUST enforce it;
+  - each affected source in the report files MUST be labelled with the rule that allowed it;
+  - the report's legality options MUST record that the rule was on.
+
+  A team that depends on such a rule MUST NOT be described as obtainable before the Champion on a
+  single cartridge.
 - An illegal input species or an input that cannot form a legal set MUST fail with a clear error
   naming the reason, not a degraded result.
 
@@ -149,4 +162,4 @@ controls are what distinguish them.
 - Compliance: every `/speckit-plan` Constitution Check and every code review MUST verify
   Principles I–V. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-09
+**Version**: 1.2.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-11

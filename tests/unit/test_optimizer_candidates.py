@@ -51,11 +51,13 @@ def test_resolve_species_errors(led):
     assert C.resolve_species(["Garchomp", "garchomp", "SPECIES_LUXRAY", "luxray", "gyarados", "Gardevoir"], led)[0] == \
         "SPECIES_GARCHOMP"
     with pytest.raises(InvalidRequest) as e:
-        C.resolve_species(["garchmop", "gengar", "munchlax", "luxray", "gyarados", "gardevoir"], led)
+        C.resolve_species(["garchmop", "gengar", "bulbasaur", "luxray", "gyarados", "gardevoir"], led)
     r = e.value.reasons
     assert "Garchomp" in r["garchmop"]
     assert "trade evolution" in r["gengar"]
-    assert "excluded" in r["munchlax"]
+    assert "bulbasaur" in r  # no source in Platinum (003: Munchlax is no longer excluded)
+    assert list(C.resolve_species(["munchlax", "snorlax", "luxray", "gyarados", "gardevoir", "garchomp"], led))[:2] == \
+        ["SPECIES_MUNCHLAX", "SPECIES_SNORLAX"]
     with pytest.raises(InvalidRequest):
         C.resolve_species(["garchomp"], led)
 

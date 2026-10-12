@@ -39,7 +39,7 @@ The element ids are `#setup` (left) and `#results-col` (right). `#results` is al
 | Progress | Rendered only while any job is queued or running. It shows the running job (elapsed time ticking every 1 s on the client from `started`, and the ETA from `eta_s`: "about N min left" or "estimating…"), then a list of the queued jobs, each shown as "position N · <species>". If nothing is running, the first queued job shows as "waiting to start" | FR-008–FR-010 |
 | Cancel | One button for the running job, and one for each queued job. Each uses a `confirm()` dialog, then POST cancel. The button is disabled while waiting. The status is announced through `aria-live` | FR-011, FR-012 |
 | Status line | `#run-status` (`aria-live`), above the result. Announces "Run queued.", "Run started.", "Run finished: <label>", "Run failed: <reason>" and "Run cancelled". The last message stays until the next one, even when an older run is picked | FR-028 |
-| Run picker | `<select>` filled from `GET /api/jobs`. Shows the newest `done` job on load and whenever a new job finishes. A pick is not remembered, and nothing goes into `localStorage` | FR-014, FR-015 |
+| Run picker | `<select>` filled from `GET /api/jobs`. Shows the newest `done` job on load and whenever a new job finishes. A pick is not remembered, and nothing goes into `localStorage` (003: the run picker still stores nothing; only the theme choice is stored) | FR-014, FR-015 |
 | Failed or cancelled run | The panel shows the status and `error` instead of the result | FR-016 |
 | Clear rate | Shown as `NN.N%`. It is focusable (`tabindex=0`), and on hover or focus it shows a tooltip "95% interval A–B% · N runs", also referenced by `aria-describedby` | FR-017 |
 | Team card | Sprite, species, "Lv start → final", ability, held item, the full "obtained from" text (wrapped, never cut off), and the four moves | FR-023 |
@@ -62,7 +62,7 @@ These are not displayed anywhere on the page:
 
 ## Kept
 
-- Dark mode via the existing `prefers-color-scheme` variables
+- Dark mode via the existing `prefers-color-scheme` variables. *Superseded for the theme by 003 (2026-10-11): a top-right toggle stores the choice in `localStorage`; with no stored choice, `prefers-color-scheme` still decides.*
 - `aria-live` status regions
 - Labelled controls
 - Visible focus outline

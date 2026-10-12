@@ -1158,16 +1158,18 @@ class MapGraph:
         self._by_src: dict[str, list[Edge]] = {}
         for e in self.edges:
             self._by_src.setdefault(e.src, []).append(e)
-        self._cache: dict[tuple[str, bool], dict[str, list[Edge]]] = {}
+        self._cache: dict[tuple[str, bool, bool], dict[str, list[Edge]]] = {}
 
-    def reachable(self, start: str = START, strict: bool = True) -> dict[str, list[Edge]]:
+    def reachable(self, start: str = START, strict: bool = True, post_game: bool = False) -> dict[str, list[Edge]]:
         """Header -> the edge path that first reached it (empty for the start).
 
         `strict=True` cuts `uncertain` edges (use for phase decisions); `strict=False` opens them.
         Fixpoint: a `conditional` edge opens once one of its openers is pre-game and runs in a
         reached map (or in a shared script file).
+        `post_game=True` (003 research R3) also uses `post_game` edges and post-game openers: the maps
+        it still cannot reach can never be entered at all (e.g. the UNUSED_* map headers).
         """
-        key = (start, strict)
+        key = (start, strict, post_game)
         if key in self._cache:
             return self._cache[key]
         reached: dict[str, list[Edge]] = {start: []}
@@ -1178,7 +1180,7 @@ class MapGraph:
             while frontier:
                 cur = frontier.pop()
                 for e in self._by_src.get(cur, ()):
-                    if e.dst in reached or not self._usable(e, reached, strict):
+                    if e.dst in reached or not self._usable(e, reached, strict, post_game):
                         continue
                     reached[e.dst] = reached[cur] + [e]
                     frontier.append(e.dst)
@@ -1187,21 +1189,21 @@ class MapGraph:
         return reached
 
     @staticmethod
-    def _usable(e: Edge, reached: dict, strict: bool) -> bool:
+    def _usable(e: Edge, reached: dict, strict: bool, post_game: bool = False) -> bool:
         if e.status == "open":
             return True
         if e.status == "post_game":
-            return False
+            return post_game
         if e.status == "uncertain":
             if strict:
                 return False
-            return not e.openers or MapGraph._opened(e, reached)
-        return MapGraph._opened(e, reached)
+            return not e.openers or MapGraph._opened(e, reached, post_game)
+        return MapGraph._opened(e, reached, post_game)
 
     @staticmethod
-    def _opened(e: Edge, reached: dict) -> bool:
+    def _opened(e: Edge, reached: dict, post_game: bool = False) -> bool:
         for o in e.openers:
-            if not o.gates.reachable or o.gates.post_game:
+            if not o.gates.reachable or (o.gates.post_game and not post_game):
                 continue
             if o.maps is None or any(m in reached for m in o.maps):
                 return True

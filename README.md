@@ -32,11 +32,21 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   - One cartridge only. No trades with another game, so trade evolutions are rejected by default.
     In-game NPC trades are allowed and get boosted exp.
   - **Egg moves are off by default.** A Day Care egg is still a legal species source.
-  - Two optional flags, both **off by default**, relax this (spec FR-005/FR-005a): `--allow-egg-moves`
-    and `--allow-trade-evolutions` on `validate`, `evaluate` and `optimize` (and two checkboxes on
-    the web page). With trade evolutions on, an item-trade evolution uses up a pre-Champion copy of
-    the item. A trade-evolved Pokémon gets **no traded-exp boost**, because the player stays its
-    original trainer. Both settings are recorded in `provenance.legality_options`.
+  - Five optional rules, all **off by default**, relax this. Each is a flag on `validate`,
+    `evaluate` and `optimize` and a checkbox on the web page. All five are recorded in
+    `provenance.legality_options`, and the validator enforces them (constitution 1.2.0, Principle III).
+    - `--allow-egg-moves` and `--allow-trade-evolutions` (001 FR-005/FR-005a). With trade evolutions
+      on, an item-trade evolution uses up a copy of the item. A trade-evolved Pokémon gets **no
+      traded-exp boost**, because the player stays its original trainer.
+    - `--allow-post-game-pokemon` (003): post-game encounters, National Dex ones included, count as
+      pokemon sources.
+    - `--allow-post-game-items` (003): post-game items, TMs and move tutors count, including the
+      Battle Frontier BP exchange (TM04, TM08, TM61, TM73, Focus Band and more).
+    - `--allow-unobtainable-pokemon` (003): other-cartridge (dual-slot) encounters count. A pokemon
+      with no source at all gets a made-up level-1 source, labelled "Unavailable in Platinum
+      (allowed by rule)" in every report.
+    - Entries on maps the decomp labels `UNUSED_*` that can't be reached even after the Champion
+      never count under any rule.
   - **No National Dex sources**, so no Poké Radar (user decision). This matters because Platinum
     actually grants the National Dex before the first Champion win (all 210 Sinnoh species seen,
     including some seen only in a lost League battle; research R2). Event-only items are unobtainable.
@@ -45,7 +55,11 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     Focus Band unavailable.
   - **One-time gifts are counted once.** Copies that share the same one-time flag (item ball,
     hidden item or NPC received-flag) count as one acquisition, so TM65, TM28 and TM86 each have 1 copy.
-  - **Munchlax is excluded** completely, which also excludes the Leftovers it holds and Snorlax.
+  - **Munchlax and Snorlax are allowed** (003; this reverses 001's exclusion). Munchlax comes from
+    honey trees at levels 5–15 (only some trees, depending on Trainer ID) and always holds
+    **Leftovers**. So Leftovers may be held by any number of members **only when Munchlax or
+    Snorlax is on the team**. With post-game items allowed, the Victory Road item ball adds one copy
+    for any team.
   - **TMs are single-use.** Each TM has as many copies as the game gives before the Champion. Shop
     and Game Corner TMs are unlimited.
   - **No bag items in battle.** Only held items have an effect. Between battles the team is healed
@@ -89,11 +103,11 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 |---|---|---|
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
-| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, `--allow-egg-moves`, `--allow-trade-evolutions` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), `--allow-egg-moves`, `--allow-trade-evolutions` |
+| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules) |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, `--allow-egg-moves`, `--allow-trade-evolutions` |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
 - **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
@@ -211,9 +225,12 @@ The winning team:
 **Web UI:** run `uv run platsim serve` and open http://127.0.0.1:8000.
 
 The page has two columns.
+- A **light/dark toggle** sits top right. It follows the system setting until you pick one, and
+  the browser remembers the pick.
 - **Left: run setup.**
-  - The legality checkboxes.
-  - The species search. The list appears once you type.
+  - The five rule checkboxes. Hover over or focus "Allow trade evolutions" for what it means.
+  - The pokemon search. The list appears once you type. Pokemon that can't be used are always
+    listed, crossed out with a short reason (e.g. "Unavailable in Platinum").
   - Six team slots, each showing the species' icon.
   - The minimum clear rate.
   - A **budget** selector: quick, standard (the default) or thorough.
@@ -228,10 +245,14 @@ The page has two columns.
     - a short summary: the verdict, and the clear rate. Hover over or focus the clear rate for its
       95% interval and run count;
     - "58.23 (level gap of 4)"-style final levels, the threshold, budget, legality options,
-      warnings and platsim version;
-    - a per-trainer clear-rate chart, with intervals;
-    - six cards with decomp sprites. Hover over or focus a move for its source;
+      warnings and platsim version (0.2.0 since feature 003; older runs show the version they recorded);
+    - six cards with decomp sprites. Move names are coloured by type; hover over or focus a move
+      for its type and source;
+    - a per-trainer clear-rate chart, with intervals. Hover over, focus or tap a trainer for their
+      sprite and team;
     - the four downloads.
+  - The page never shows requirement ids or the word "species". Text that comes from older
+    report files is cleaned when shown; the files themselves are not changed.
 
 Jobs run the real optimizer one at a time (FIFO) and are stored under `runs/<job id>/`. The
 picker lists the web jobs the server knows about, up to 50. Command-line runs such as
@@ -249,10 +270,11 @@ picker lists the web jobs the server knows about, up to 50. Command-line runs su
 - The page shows a summary. The report files (`result.json`, `result.xlsx`, `result.csv`,
   `team.txt`) remain the full record, with every provenance field (constitution 1.1.0, Principle IV).
 - **The HTTP API:**
-  - `GET /api/species?q=`: add `&trade_evolutions=1` for availability with trade evolutions
-    allowed. Each item includes `sprite_icon`.
+  - `GET /api/species?q=`: add `trade_evolutions`, `post_game_pokemon`, `post_game_items` or
+    `unobtainable_pokemon` `=1` for availability under those rules. Each item includes `sprite_icon`.
   - `POST /api/jobs` with `{"species": [...6], "budget": "quick" | "standard" | "thorough",
-    "seed": "...", "min_clear": 0.75, "allow_egg_moves": false, "allow_trade_evolutions": false}`.
+    "seed": "...", "min_clear": 0.75, "allow_egg_moves": false, "allow_trade_evolutions": false,
+    "allow_post_game_pokemon": false, "allow_post_game_items": false, "allow_unobtainable_pokemon": false}`.
     - A non-boolean flag gives 422.
     - A team with an unusable species is refused with 422 and a reason per species.
   - `GET /api/jobs`: the newest 50, each with a `label`, `elapsed_s` and (while running) `eta_s`.
@@ -262,6 +284,8 @@ picker lists the web jobs the server knows about, up to 50. Command-line runs su
     - 202 for a running one, which then becomes `cancelled`;
     - 409 once finished.
   - `GET /api/sprites/{species}/{front|icon}.png`.
+  - `GET /api/league`: the five first-run League trainers with their party's pokemon keys (003).
+  - `GET /api/trainer-sprites/{aaron|bertha|flint|lucian|cynthia}.png` (003).
   - `GET /api/jobs/{id}/{result.json|result.xlsx|result.csv|team.txt}`: 409 until the job is done.
 - T076 drove this flow over HTTP. That was before the legality flags existed, and egg moves were
   allowed then. In that test a
@@ -285,11 +309,23 @@ picker lists the web jobs the server knows about, up to 50. Command-line runs su
 - **Move source** strings look like `Level-up Lv 48`, `Pre-evolution level-up (Gabite Lv 40)`,
   `TM26 - Item ball - Wayward Cave 1F (1 copy)`, `<place> tutor (<shard cost>)`, `Egg move` (only
   with `--allow-egg-moves`) or `Move relearner – …`.
-- **Simplest source wins.** When several sources work, the report names the simplest one:
-  - species: the species itself, then a pre-evolution evolved, then an NPC trade (never switched
-    silently), then a Day Care egg;
-  - moves: level-up, then an unlimited TM/HM, then a tutor, then the relearner, then an egg move,
-    then a single-copy TM.
+- **"Obtained from" names the earliest place** (003). Examples: `Gift - Route 201 (Chimchar, starter)
+  -> Monferno at level 14 -> Infernape at level 36` and `Wild - Wayward Cave B1F (Gible, grass) ->
+  Gabite at level 24 -> Garchomp at level 48`.
+  - Among the sources that are legal at the member's level, the one on the map that needs the
+    fewest gym badges wins, across evolution stages.
+    - Badge counts come from `data/generated/story_rank.json`, which models field-move badges,
+      obstacles, water and story blockers from the decomp.
+    - Known gaps: story gates driven by script variables, ledges you can only jump down, and
+      Strength puzzles.
+  - A location where every method is a 1% encounter is used only if nothing else qualifies.
+  - A Day Care egg comes last.
+  - Evolutions name their level, item, move, partner or place. The text never contains internal
+    codes.
+  - Reports written before 003 keep their recorded text; `platsim report --rerender` refreshes it.
+- **Moves** use the simplest source:
+  - level-up, then an unlimited TM/HM, then a tutor, then the relearner, then an egg move, then a
+    single-copy TM.
 - **Held item source** always names a real source, for example `Berry patch - Fuego Ironworks Outside
   (unlimited)` or `Underground mining - Underground (unlimited)`. An item with no nameable source is
   an error, so the column never prints `?`. To refresh an older run's text, use
@@ -373,8 +409,8 @@ Measured run times:
 - The trainer AI's **memory** (which player abilities and items it knows, the move that last hit,
   whether the last move succeeded) is **reconstructed from Showdown's battle log**. Also unverified:
   Gyro Ball speed values, double-KO visibility, and Future Sight / Perish Song exp timing.
-- **There is no Leftovers before the Champion.** Its only sources are Munchlax, which is excluded,
-  and a post-game item ball. The user accepted this.
+- **Leftovers needs Munchlax or Snorlax on the team** (003 FR-009). Its only pre-Champion source
+  is wild Munchlax; the other is a post-game Victory Road item ball.
 - **Availability is an under-approximation**:
   - the availability ledger does not list bred species. Day Care breeding is added as a species
     source by the legality layer;
@@ -434,10 +470,12 @@ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7" 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-10-09 (feature 002, T033): `uv run pytest -q -m
-  "not browser"` gave **381 passed, 2 deselected in 8,872 s (2 h 28 min), exit 0**, then `uv run
-  pytest -q -m browser tests/browser/` gave 2 passed. Later 002 changes were checked with the web
-  and browser subsets (21 and 4 passed); see `specs/002-webui-redesign/validation-log.md`.
+- **Full pytest:** the last full run was on 2026-10-11 (feature 003, T059): `uv run pytest -q -m
+  "not browser"` gave 448 passed, 1 failed, 4 xfailed in 8,541 s (2 h 22 min). The failure was an
+  outdated assertion in `test_evaluate.py::test_determinism_fast`: the report now records five
+  rule options, not two. After fixing it, that test passed on its own (`1 passed in 189.82s`). The
+  4 xfails are strict, documented story-rank controls. `uv run pytest -q -m browser tests/browser/`
+  gave 4 passed. See `specs/003-webui-refinements/validation-log.md`.
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
 - **Node suite:** on current code it gave **314 pass, 0 fail, exit 0 in 285 s**.

@@ -6,42 +6,57 @@
   <meta name="color-scheme" content="light dark">
   <title>Platinum Team Optimizer</title>
   <link rel="stylesheet" href="/static/style.css">
+  <script>
+    // Apply a stored theme choice before the first paint (003 FR-023). Storage can be unavailable.
+    try { const t = localStorage.getItem("platsim-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
 </head>
 <body>
   <header class="site">
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
     <h1>Platinum Team Optimizer</h1>
-    <p class="lede">Pick six species obtainable before the Champion. The optimizer finds the lowest-level
-      legal build that clears the Elite Four and Cynthia at your minimum clear rate.</p>
+    <p class="lede">Pick six Pokémon for the Elite 4 and Champion fight. The optimizer finds the lowest-level
+      legal build that clears the Elite Four and the Champion at your minimum clear rate.</p>
   </header>
 
   <main class="layout">
-    <!-- Left: everything needed to start a run (FR-001). -->
+    <!-- Left: everything needed to start a run. -->
     <section id="setup" aria-label="Run setup">
       <section class="card" aria-labelledby="pick-h">
-        <h2 id="pick-h">1. Choose species</h2>
+        <h2 id="pick-h">1. Choose Pokémon</h2>
         <fieldset class="rules">
-          <legend>Optional rules (both off by default)</legend>
+          <legend>Optional rules (all off by default)</legend>
           <label class="check" for="allow-egg-moves">
             <input id="allow-egg-moves" type="checkbox">
             Allow egg moves (Day-Care breeding)
           </label>
-          <label class="check" for="allow-trade-evolutions">
-            <input id="allow-trade-evolutions" type="checkbox" aria-describedby="trade-help">
-            Allow trade evolutions
+          <span class="tip-wrap rule-tip">
+            <label class="check" for="allow-trade-evolutions">
+              <input id="allow-trade-evolutions" type="checkbox" aria-describedby="trade-help">
+              <span class="term">Allow trade evolutions</span>
+            </label>
+            <span id="trade-help" class="tip" role="tooltip">Trade evolutions need a second cartridge to trade with; an
+              item-trade evolution uses up its held item, which must be obtainable before the Champion.</span>
+          </span>
+          <label class="check" for="allow-post-game-pokemon">
+            <input id="allow-post-game-pokemon" type="checkbox">
+            Allow post-game exclusive Pokémon
           </label>
-          <p id="trade-help" class="muted small">Trade evolutions need a second cartridge to trade with; an
-            item-trade evolution uses up its held item, which must be obtainable before the Champion.</p>
+          <label class="check" for="allow-post-game-items">
+            <input id="allow-post-game-items" type="checkbox">
+            Allow post-game items and moves
+          </label>
+          <label class="check" for="allow-unobtainable-pokemon">
+            <input id="allow-unobtainable-pokemon" type="checkbox">
+            Allow Pokémon unobtainable in Platinum
+          </label>
         </fieldset>
-        <label class="field" for="search">Search species
+        <label class="field" for="search">Search Pokémon
           <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="e.g. gar"
                  aria-describedby="search-status" aria-controls="results">
         </label>
-        <label class="check" for="show-excluded">
-          <input id="show-excluded" type="checkbox">
-          Show excluded species (with the reason)
-        </label>
         <p id="search-status" class="muted" role="status" aria-live="polite"></p>
-        <!-- Hidden until the player types (FR-003). -->
+        <!-- Hidden until the player types; pokemon that can't be used are listed crossed out. -->
         <ul id="results" class="results" aria-label="Search results" hidden></ul>
       </section>
 
@@ -101,19 +116,20 @@
         <div id="run-message" class="error" role="alert" hidden></div>
         <div id="result" hidden>
           <div id="summary"></div>
+          <div id="team-cards" class="team-cards"></div>
           <figure id="chart" class="chart">
             <figcaption>Clear rate by trainer</figcaption>
             <div id="chart-body"></div>
             <div id="chart-tip" class="chart-tip" role="tooltip" hidden></div>
+            <div id="trainer-pop" class="trainer-pop" role="dialog" aria-modal="false" hidden></div>
           </figure>
-          <div id="team-cards" class="team-cards"></div>
           <p id="downloads" class="downloads"></p>
         </div>
       </section>
     </section>
   </main>
 
-  <footer class="muted small">Local only (127.0.0.1). Game data from the pokeplatinum decomp; battles in Pokemon Showdown.</footer>
+  <footer class="muted small">Local only (127.0.0.1). Game data from the pokeplatinum decomp; battles in Pokémon Showdown.</footer>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import json
 import re
+import dataclasses
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
@@ -107,6 +108,12 @@ ACQUIRE_KINDS = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
 ACQUIRE_LABELS = {"wild_slot": "Wild", "gift": "Gift", "egg": "Gift egg", "static": "Static encounter",
                   "roamer": "Roamer", "npc_trade": "NPC trade"}
 BREED = "breed"  # SourceOption.kind of Day-Care breeding
+# 003 (spec FR-011, research R4; constitution v1.2.0 Principle III): with allow_unobtainable_pokemon, a
+# base-form pokemon with no acquisition entry at all gets one synthetic source at level 1 (the Gen 4
+# hatch level). It is a project rule, not game data, and every report labels it as such.
+OUTSIDE = "outside_platinum"
+OUTSIDE_LEVEL = 1
+OUTSIDE_DETAIL = "Unavailable in Platinum (allowed by rule)"
 TRADE_METHODS = frozenset({"EVO_TRADE", "EVO_TRADE_WITH_HELD_ITEM"})
 # Methods whose int param is a level threshold ("param <= monLevel" in
 # Pokemon_GetEvolutionTargetSpecies, pokemon.c). Classified from the C below, see _level_methods().
@@ -269,6 +276,107 @@ def species_name(const: str) -> str:
 
 
 # ---------------------------------------------------------------------------------------------
+# "Obtained from" text (003 spec FR-014–FR-016, research R7): plain words, never an internal code.
+# Entry.detail keeps the ledger's machine-oriented text; only SourceOption.detail is reworded.
+
+_WILD_METHODS = {"grass": "grass", "surf": "surf", "old_rod": "Old Rod", "good_rod": "Good Rod",
+                 "super_rod": "Super Rod", "swarm": "swarm", "poke radar": "Poké Radar"}
+
+
+def _wild_method(detail: str) -> str:
+    if detail in _WILD_METHODS:
+        return _WILD_METHODS[detail]
+    if m := re.fullmatch(r"(day|night) \S+", detail):
+        return m.group(1)
+    if m := re.fullmatch(r"dual-slot (\w+)", detail):
+        return f"dual-slot {m.group(1).title().replace('red', 'Red').replace('green', 'Green')}"
+    if detail.startswith("trophy garden daily"):
+        return "Trophy Garden daily"
+    if m := re.match(r"great marsh daily, area (\d+)", detail):
+        return f"Great Marsh daily, area {m.group(1)}"
+    if m := re.fullmatch(r"feebas tile \((\w+)\)", detail):
+        return f"Feebas tiles, {_WILD_METHODS[m.group(1)]}"
+    if detail.startswith("honey tree"):
+        return "honey tree" + ("; rare: only some trees, depending on Trainer ID" if "(rare)" in detail else "")
+    return re.sub(r"[A-Z]{2,}_[A-Z_]+", "", detail).strip() or "wild"
+
+
+@cache
+def _npc_trade_name(trade_const: str) -> str:
+    from platsim.availability.sources import NPC_TRADES_DIR
+
+    path = NPC_TRADES_DIR / f"{trade_const.removeprefix('NPC_TRADE_').lower()}.json"
+    return json.loads(path.read_text())["name"] if path.exists() else "NPC"
+
+
+def acquire_text(e, species: str) -> str:
+    """The acquisition part of a source's text, from a ledger entry."""
+    name, where = species_name(species), human_map(e.map_header)
+    if e.kind == "wild_slot":
+        return f"Wild - {where} ({name}, {_wild_method(e.detail)})"
+    if e.kind == "static":
+        return f"Static encounter - {where}"
+    if e.kind == "roamer":
+        return f"Roamer - {name}"
+    if e.kind == "egg":
+        return f"Gift egg - {where} ({name})"
+    if e.kind == "npc_trade":
+        m = re.match(r"(NPC_TRADE_\w+)", e.detail)
+        req = (e.fixed_mon or {}).get("requested_species")
+        nick = _npc_trade_name(m.group(1)) if m else "NPC"
+        return f"NPC trade - {where} ({nick}, give {species_name(req)})" if req else f"NPC trade - {where} ({nick})"
+    if e.kind == "gift":
+        if e.exclusive_group == "starter":
+            return f"Gift - {where} ({name}, starter)"
+        if m := re.match(r"fossil revival of (ITEM_\w+)", e.detail):
+            return f"Fossil - {where} ({load_items()[m.group(1)].name})"
+        return f"Gift - {where} ({name})"
+    return f"{ACQUIRE_LABELS.get(e.kind, e.kind)} - {where} ({name})"
+
+
+_LEVEL_CONDITIONS = {
+    "EVO_LEVEL_ATK_GT_DEF": "Attack higher than Defense", "EVO_LEVEL_ATK_EQ_DEF": "Attack equal to Defense",
+    "EVO_LEVEL_ATK_LT_DEF": "Attack lower than Defense", "EVO_LEVEL_PID_LOW": "depends on personality value",
+    "EVO_LEVEL_PID_HIGH": "depends on personality value", "EVO_LEVEL_MALE": "male", "EVO_LEVEL_FEMALE": "female",
+    "EVO_LEVEL_SHEDINJA": "with a free party slot and a Poké Ball",
+}
+
+
+def evolution_text(species: str, ev) -> str:
+    """One evolution step, e.g. "Garchomp at level 48" or "Weavile by leveling up holding Razor Claw at
+    night". The level / item / move / species / place come from the decomp evolution data."""
+    from platsim.availability.ledger import _location_evolution_maps
+
+    name, m, p = species_name(species), ev.method, ev.param
+    item = load_items()[p].name if isinstance(p, str) and p.startswith("ITEM_") else None
+    if m in TRADE_METHODS:
+        held = f" holding {item}" if item else ""
+        return f"{name} (trade evolution{held}; needs a second cartridge for the trade)"
+    if m == "EVO_LEVEL" or m == "EVO_LEVEL_NINJASK":
+        return f"{name} at level {p}"
+    if m in _LEVEL_CONDITIONS:
+        return f"{name} at level {p} ({_LEVEL_CONDITIONS[m]})"
+    if m in ITEM_METHODS:
+        sex = {"EVO_USE_ITEM_MALE": " (male)", "EVO_USE_ITEM_FEMALE": " (female)"}.get(m, "")
+        return f"{name} with {item}{sex}"
+    if m in HELD_ITEM_METHODS:
+        return f"{name} by leveling up holding {item} {'during the day' if m.endswith('_DAY') else 'at night'}"
+    if m.startswith("EVO_LEVEL_HAPPINESS"):
+        when = {"EVO_LEVEL_HAPPINESS_DAY": " during the day", "EVO_LEVEL_HAPPINESS_NIGHT": " at night"}.get(m, "")
+        return f"{name} by leveling up with high friendship{when}"
+    if m == "EVO_LEVEL_BEAUTY":
+        return f"{name} by leveling up with high Beauty"
+    if m == "EVO_LEVEL_KNOW_MOVE":
+        return f"{name} by leveling up knowing {load_moves()[p].name}"
+    if m == "EVO_LEVEL_SPECIES_IN_PARTY":
+        return f"{name} by leveling up with {species_name(p)} in the party"
+    places = _location_evolution_maps().get(m)
+    if places:
+        return f"{name} by leveling up at {' or '.join(dict.fromkeys(human_map(h) for h in places))}"
+    return f"{name} by evolution"
+
+
+# ---------------------------------------------------------------------------------------------
 # Acquisition options
 
 
@@ -283,7 +391,7 @@ class Stage:
 @dataclass(frozen=True)
 class SourceOption:
     id: str
-    kind: str  # wild_slot | gift | egg | static | roamer | npc_trade | breed
+    kind: str  # wild_slot | gift | egg | static | roamer | npc_trade | breed | outside_platinum
     acquired: str  # SPECIES_* obtained (the first stage)
     map_header: str | None
     level_lo: int
@@ -296,6 +404,7 @@ class SourceOption:
     detail: str = ""
     src: tuple[str, ...] = ()
     mothers: tuple[str, ...] = ()  # breed: female-capable mothers of the line (Ditto excluded)
+    rate_percent: int | None = None  # wild: the entry's encounter rate on its map (003 research R8)
 
     @property
     def member(self) -> str:
@@ -362,7 +471,12 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
     def add(o: SourceOption) -> None:
         cur = out.get(o.id)
         if cur is None or o.min_level < cur.min_level:
+            # One option per (kind, species, map): it is 1%-only only if every method there is (003 R8).
+            if cur is not None and cur.rate_percent is not None and o.rate_percent is not None:
+                o = dataclasses.replace(o, rate_percent=max(o.rate_percent, cur.rate_percent))
             out[o.id] = o
+        elif cur.rate_percent is not None and o.rate_percent is not None and o.rate_percent > cur.rate_percent:
+            out[o.id] = dataclasses.replace(cur, rate_percent=o.rate_percent)
 
     for c in led.pre(subject=species):
         e = c.entry
@@ -379,12 +493,15 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
         else:
             continue  # level unknown: conservative, not an option
         oid = f"{e.kind}:{species}@{e.map_header}"
-        what = ", ".join(x for x in (species_name(species), e.detail) if x)
-        detail = f"{ACQUIRE_LABELS.get(e.kind, e.kind)} - {human_map(e.map_header)} ({what})"
         add(SourceOption(oid, e.kind, species, e.map_header, lo, hi, (Stage(species, lo),), e.fixed_mon,
-                         e.quantity, e.exclusive_group, (), detail, tuple(e.src)))
+                         e.quantity, e.exclusive_group, (), acquire_text(e, species), tuple(e.src),
+                         rate_percent=e.rate_percent))
     for o in _breed_options(species, led):
         add(o)
+    if options_of(led).allow_unobtainable_pokemon and not _preds().get(species) and not _has_entry(species, led):
+        add(SourceOption(f"{OUTSIDE}:{species}", OUTSIDE, species, None, OUTSIDE_LEVEL, 100,
+                         (Stage(species, OUTSIDE_LEVEL),), None, UNLIMITED, None, (), OUTSIDE_DETAIL,
+                         tuple(by_constant()[species].src[:1])))
     trade_ok = options_of(led).allow_trade_evolutions
     for pre, ev in _preds().get(species, []):
         if ev.method in TRADE_METHODS and not trade_ok:
@@ -420,18 +537,23 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
             for it in need:
                 if ev.method in ITEM_METHODS or ev.method in HELD_ITEM_METHODS or ev.method == "EVO_TRADE_WITH_HELD_ITEM":
                     consumes[it] = consumes.get(it, 0) + 1
-            if ev.method in TRADE_METHODS:
-                held = f" holding {load_items()[ev.param].name}" if need else ""
-                how = f"trade evolution{held}; needs a second cartridge for the trade"
-                esrc = tuple(refs()["evolution"]) + tuple(refs()["trade_evolution"])
-            else:
-                how, esrc = ev.method, tuple(refs()["evolution"])
+            esrc = tuple(refs()["evolution"]) + (tuple(refs()["trade_evolution"]) if ev.method in TRADE_METHODS else ())
             o = SourceOption(po.id, po.kind, po.acquired, po.map_header, po.level_lo, po.level_hi, stages,
                              po.fixed_mon, po.quantity, po.exclusive_group, tuple(sorted(consumes.items())),
-                             po.detail + f" -> {species_name(species)} ({how})",
-                             po.src + esrc + tuple(by_constant()[pre].src[6:7]), po.mothers)
+                             po.detail + " -> " + evolution_text(species, ev),
+                             po.src + esrc + tuple(by_constant()[pre].src[6:7]), po.mothers, po.rate_percent)
             add(o)
     return sorted(out.values(), key=lambda o: (o.min_level, o.id))
+
+
+def _has_entry(species: str, led) -> bool:
+    """Any acquisition entry for `species` in the ledger, in any phase (the synthetic source is only
+    for pokemon the game data has no way to obtain at all)."""
+    cache_ = led.derived.setdefault("legality_has_entry", None)
+    if cache_ is None:
+        cache_ = led.derived["legality_has_entry"] = frozenset(
+            c.entry.subject for c in led.entries if c.entry.kind in ACQUIRE_KINDS)
+    return species in cache_
 
 
 def _earliest_know(po: SourceOption, move: str, led) -> int | None:
@@ -471,7 +593,7 @@ def _egg_species_of_mother(mother: str, led) -> list[str]:
 
 def breed_mothers(led) -> dict[str, tuple[list[str], bool]]:
     """egg species -> (female-capable mothers obtainable pre-Champion, ditto_possible)."""
-    key = "legality_breed_mothers"
+    key = ("legality_breed_mothers", led.options)  # shared `derived`: key on the options view (003 R2)
     if key in led.derived:
         return led.derived[key]
     res: dict[str, tuple[list[str], bool]] = {}
@@ -530,7 +652,7 @@ def relearner_available(led) -> bool:
 
 def _where(led, item: str) -> tuple[str, list[str]]:
     labels = {"shop": "Shop", "game_corner": "Game Corner", "item_ball": "Item ball", "hidden_item": "Hidden item",
-              "npc_item_gift": "Gift", "underground": "Underground"}
+              "npc_item_gift": "Gift", "underground": "Underground", "frontier_exchange": "Battle Frontier exchange"}
     entries = [c for c in led.pre(subject=item) if c.entry.kind in labels]
     entries.sort(key=lambda c: (c.entry.quantity != UNLIMITED, c.entry.kind != "shop"))
     if not entries:
@@ -735,13 +857,14 @@ def explain(species: str, move: str, level: int, ledger, option: SourceOption | 
 # optimizer/candidates.Variant), and a caller that ranks trade and non-trade options together
 # (validator.from_showdown) gets non-trade first.
 #
-# Species source (`option_sort_key`), best first:
-#   0 the member species itself from a wild slot / gift / gift egg / static / roamer entry;
-#   1 such an entry for a pre-evolution, then evolve (fewer evolutions first);
-#   2 NPC trade (only reached when a caller mixes trade and non-trade options, see above);
-#   3 Day-Care egg: only when no other option makes the member legal (an egg move, or a
-#     breeding-only path). Callers can drop BREED options entirely (a future "no egg sources" flag).
-#   Ties: the cheaper move sources (`move_cost`), then fewer evolutions, the lowest minimum level, id.
+# Species source (`option_sort_key`), best first (003: the earliest location wins, user decision
+# 2026-10-11), among options already feasible at the member's level:
+#   the cheaper move sources (`move_cost`); a Day-Care egg only when no catch qualifies; a location
+#   where every method is a 1% encounter only when nothing else qualifies; the fewest badges needed
+#   to reach the map (story_rank.json, across evolution stages: Gible in Wayward Cave beats Gabite
+#   on Victory Road); then the member species itself < a pre-evolution then evolve < NPC trade
+#   (only when a caller mixes variants, see above) < the synthetic "unavailable" source; fewer
+#   evolutions; the lowest minimum level; fewer hops from the previous badge stage; map name; id.
 #
 # Move source (`move_source_key`), best first:
 #   sources consuming no limited copy before any source consuming one (team-wide copy limits,
@@ -750,20 +873,43 @@ def explain(species: str, move: str, level: int, ledger, option: SourceOption | 
 #   So the full order is: level-up < unlimited TM/HM < tutor < relearner < egg (no limited copy)
 #   < single-copy TM < other limited sources < egg whose father needs a limited copy.
 
-OPTION_RANK = {"own": 0, "pre_evolution": 1, "npc_trade": 2, BREED: 3}
+OPTION_RANK = {"own": 0, "pre_evolution": 1, "npc_trade": 2, BREED: 3, OUTSIDE: 4}
 MOVE_KIND_ORDER = {"level_up": 0, "pre_evo_level_up": 0, "tm": 1, "hm": 1, "tutor": 2, "relearner": 3, "egg": 4}
 
 
 def option_class(opt: SourceOption) -> str:
-    if opt.kind == BREED:
-        return BREED
+    if opt.kind in (BREED, OUTSIDE):
+        return opt.kind
     if opt.kind == "npc_trade":
         return "npc_trade"
     return "own" if len(opt.stages) == 1 else "pre_evolution"
 
 
+ONE_PERCENT = 1  # an encounter at or below this rate is a "1% encounter" (003 FR-017, research R8)
+_NO_RANK = 99
+
+
+def story_key(opt: SourceOption) -> tuple[int, int, str]:
+    """(badges needed, hops, map name) of the option's acquisition map (003 FR-017, research R9;
+    data/generated/story_rank.json). A source with no ranked map sorts after every ranked one."""
+    from platsim.availability.story_rank import rank
+
+    if opt.map_header is None:
+        return (_NO_RANK, _NO_RANK, "")
+    badges, hops = rank(opt.map_header)
+    return (_NO_RANK if badges is None else badges, _NO_RANK if hops is None else hops, human_map(opt.map_header))
+
+
 def option_sort_key(opt: SourceOption, move_cost: int = 0) -> tuple:
-    return (OPTION_RANK[option_class(opt)], move_cost, len(opt.stages), opt.min_level, opt.id)
+    """Which legal source is named (003 data-model "Selection order", user decision 2026-10-11: the
+    earliest location wins across evolution stages). Feasibility (level, copies, exclusive groups)
+    is decided by the caller first; this only orders feasible options:
+    move cost; Day Care egg last; 1%-only encounters after others; badges needed; own < pre-evolution
+    < NPC trade < synthetic; fewer evolutions; lower minimum level; fewer hops; map name; id."""
+    badges, hops, where = story_key(opt)
+    one_pct = opt.rate_percent is not None and opt.rate_percent <= ONE_PERCENT
+    return (move_cost, option_class(opt) == BREED, one_pct, badges, OPTION_RANK[option_class(opt)], len(opt.stages),
+            opt.min_level, hops, where, opt.id)
 
 
 def resource_copies(res: str, led) -> int | str:
@@ -795,7 +941,8 @@ class NoNamedSource(ValueError):
 
 ITEM_SOURCE_LABELS = {"shop": "Shop", "game_corner": "Game Corner", "berry_tree": "Berry patch",
                       "npc_item_gift": "Gift", "item_ball": "Item ball", "hidden_item": "Hidden item",
-                      "underground": "Underground mining", "wild_held_item": "Wild held item"}
+                      "underground": "Underground mining", "wild_held_item": "Wild held item",
+                      "frontier_exchange": "Battle Frontier exchange"}
 _ITEM_SOURCE_ORDER = tuple(ITEM_SOURCE_LABELS)  # display preference among sources of equal quantity
 
 

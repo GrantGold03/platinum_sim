@@ -205,14 +205,15 @@ def test_poke_radar_national_dex_exclusion(capsys):
     assert "scripts_sandgem_town_pokemon_research_lab.s" in out
 
 
-def test_munchlax_excluded(capsys):
+def test_munchlax_allowed(capsys):
+    """003 FR-008 (supersedes 001 FR-006a): Munchlax is a pre-Champion honey-tree pokemon."""
     rc, out, err = run(capsys, "species:munchlax")
     assert rc == 0, err
-    assert "phase: unobtainable" in out
-    assert "excluded: Munchlax (spec FR-006a" in out
+    assert "phase: pre_champion" in out
+    assert "FR-006a" not in out
     d = run_json(capsys, "species:munchlax")
-    assert d["excluded_project_rule"] is True and d["species_sources"] == []
-    assert d["entries"] and all(e["phase"] == "unobtainable" for e in d["entries"])
+    assert d.get("excluded_project_rule") is not True and d["species_sources"]
+    assert any(e["phase"] == "pre_champion" for e in d["entries"])
 
 
 def test_move_learners(capsys, ledger):

@@ -344,6 +344,22 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
             out.append(Violation("ITEM_COPIES", f"{item} is needed {used} times ({', '.join(item_who[item])}) but only {have} "
                                  f"cop{'y is' if have == 1 else 'ies are'} obtainable before the Champion",
                                  _src()["item"] + [s for c in led.pre(subject=item) for s in c.entry.src[:1]]))
+    # 003 FR-009: Leftovers held by wild Munchlax / Snorlax count only with one of them on the team.
+    from platsim.availability.ledger import TEAM_GATED_ITEMS, item_holders, team_item_copies
+
+    team_consts = [c for c in (_resolve(_species_index(), b.species) for b in team.builds) if c]
+    for item in TEAM_GATED_ITEMS:
+        used = item_use.get(item, 0)
+        if not used:
+            continue
+        have = team_item_copies(led, item, team_consts)
+        if have != MS.UNLIMITED and used > have + item_bonus[item]:
+            holders = " or ".join(sorted(MS.species_name(s) for s in item_holders(item)))
+            extra = (f"; only {have} other cop{'y is' if have == 1 else 'ies are'} obtainable" if have else "")
+            out.append(Violation("LEFTOVERS_NEEDS_MUNCHLAX",
+                                 f"{load_items()[item].name} is held by {used} members ({', '.join(item_who[item])}): it comes "
+                                 f"from wild {holders}, so one of them must be on the team{extra}",
+                                 _src()["item"] + [s for c in led.pre(subject=item) for s in c.entry.src[:1]]))
     for oid, used in sorted(source_use.items()):
         q = opt_by_id[oid].quantity
         if opt_by_id[oid].exclusive_group:

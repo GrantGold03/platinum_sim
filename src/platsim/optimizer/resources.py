@@ -105,17 +105,28 @@ def _resource_kind(res: str) -> str:
 _COPIES: dict[tuple[int, str], int | str] = {}
 
 
-def copies(res: str, led) -> int | str:
-    """Pre-Champion copies (ledger.tm_copies / item_copies), memoised per ledger object."""
+def copies(res: str, led, team: tuple[str, ...] | None = None) -> int | str:
+    """Pre-Champion copies (ledger.tm_copies / item_copies), memoised per ledger object. With `team`
+    (the SPECIES_* of the whole team), a team-gated item (ledger.TEAM_GATED_ITEMS: Leftovers, 003
+    FR-009) counts its wild-holder copies only if a holder is on the team; without it (a single
+    member's level floor) it is not gated, and `realize` applies the gate for the real team."""
+    from platsim.availability.ledger import TEAM_GATED_ITEMS, item_holders, team_item_copies
+
+    item = res if res.startswith("ITEM_") else None
+    if team is not None and item in TEAM_GATED_ITEMS:
+        k = (id(led), res, bool(set(team) & item_holders(item)))
+        if k not in _COPIES:
+            _COPIES[k] = team_item_copies(led, item, team)
+        return _COPIES[k]
     k = (id(led), res)
     if k not in _COPIES:
         _COPIES[k] = led.tm_copies(res) if _resource_kind(res) == "tm" else led.item_copies(res)
     return _COPIES[k]
 
 
-def _affordable(uses: dict[str, int], used: Counter, led) -> bool:
+def _affordable(uses: dict[str, int], used: Counter, led, team: tuple[str, ...] | None = None) -> bool:
     for r, n in uses.items():
-        have = copies(r, led)
+        have = copies(r, led, team)
         if have == UNLIMITED:
             continue
         if used[r] + n > int(have):
@@ -154,7 +165,8 @@ def _sources(species: str, move: str, level: int, opt, led) -> list:
     return _SOURCES[k]
 
 
-def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list[MoveChoice], Counter, int] | None:
+def _member(spec: MemberSpec, level: int, opt, led, used: Counter,
+            team: tuple[str, ...] | None = None) -> tuple[list[MoveChoice], Counter, int] | None:
     """Move choices + limited copies this member consumes under `opt` + the picks' `movesources.move_cost`,
     or None."""
     local: Counter = Counter()
@@ -163,7 +175,7 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list
     mv = load_moves()
     for move in spec.moves:
         cs = _sources(spec.species, move, level, opt, led)
-        pick = next((c for c in cs if _affordable(MS.uses_of(c), used + local, led)), None)
+        pick = next((c for c in cs if _affordable(MS.uses_of(c), used + local, led, team)), None)
         if pick is None:
             return None
         for r, n in MS.uses_of(pick).items():
@@ -172,13 +184,13 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter) -> tuple[list
         choices.append(MoveChoice(mv[move].key, pick.source_kind, pick.detail, pick.availability_ref))
     for it, n in opt.consumes:
         local[it] += n
-    if not _affordable({k: v for k, v in local.items()}, used, led):
+    if not _affordable({k: v for k, v in local.items()}, used, led, team):
         return None
     if spec.item:
         item_const = f"ITEM_{spec.item.upper()}"
         own_copy = bool(opt.fixed_mon and opt.fixed_mon.get("held_item") == item_const)
         if not own_copy:
-            if copies(item_const, led) == 0 or not _affordable({item_const: 1}, used + local, led):
+            if copies(item_const, led, team) == 0 or not _affordable({item_const: 1}, used + local, led, team):
                 return None
             local[item_const] += 1
     return choices, local, MS.move_cost(picks, led)
@@ -191,6 +203,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
     groups: set[str] = set()
     builds: list[Build] = []
     options = []
+    team = tuple(s.species for s in specs)
     for slot, (spec, level) in enumerate(zip(specs, levels)):
         variant = variant_of(spec, led)
         best = None
@@ -201,10 +214,10 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
                 continue
             if opt.quantity != UNLIMITED and source_used[opt.id] >= int(opt.quantity):
                 continue
-            r = _member(spec, level, opt, led, used)
+            r = _member(spec, level, opt, led, used, team)
             if r is None:
                 continue
-            limited = sum(n for res, n in r[1].items() if copies(res, led) != UNLIMITED)
+            limited = sum(n for res, n in r[1].items() if copies(res, led, team) != UNLIMITED)
             key = (limited, *MS.option_sort_key(opt, r[2]))
             if best is None or key < best[0]:
                 best = (key, opt, r)
@@ -233,7 +246,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
                             moves=choices, ability=ability, ability_reason=reason, held_item=spec.item,
                             nature=nature, ivs=ivs, evs=default_evs()))
         options.append(opt)
-    limited = {r: n for r, n in used.items() if copies(r, led) != UNLIMITED}
+    limited = {r: n for r, n in used.items() if copies(r, led, team) != UNLIMITED}
     team = TeamCandidate(builds, resource_use=dict(sorted(limited.items())))
     return Realized(team, options, dict(sorted(limited.items())), {r: who[r] for r in sorted(limited)})
 
@@ -245,6 +258,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) ->
     item. Returns (specs, notes) or the Refusal when a member has no buildable alternative."""
     specs = list(specs)
     notes: list[str] = []
+    team = tuple(sp.species for sp in specs)
     for _ in range(len(specs) + 1):
         r = realize(tuple(specs), levels, led)
         if not isinstance(r, Refusal):
@@ -255,7 +269,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) ->
         fixed_levels = list(levels[:s + 1])
         replacement = None
         for moves in [cur.moves] + [m for m in ranked[s] if m != cur.moves]:
-            for item in dict.fromkeys([cur.item, *C.held_item_candidates(cur.species, moves, led), None]):
+            for item in dict.fromkeys([cur.item, *C.held_item_candidates(cur.species, moves, led, team), None]):
                 cand = MemberSpec(cur.species, cur.variant, moves, item, cur.ability, cur.ability_reason)
                 if not isinstance(realize(tuple(fixed + [cand]), fixed_levels, led), Refusal):
                     replacement = cand
@@ -310,9 +324,10 @@ def resource_lines(real: Realized, led) -> list:
 
     out = []
     names = [b.species for b in real.team.builds]
+    team = tuple(o.stages[-1].species for o in real.options)
     for res, n in real.uses.items():
         out.append(ResourceLine(resource=res, kind=_resource_kind(res), used_by=[f"{s + 1}: {names[s]}" for s in real.who[res]],
-                                copies_used=n, copies_available=copies(res, led)))
+                                copies_used=n, copies_available=copies(res, led, team)))
     return out
 
 

@@ -13,10 +13,12 @@
   no resume flag, so the web runner cannot ask the optimizer to continue from its checkpoint.
   Submit the job again (same species and seed give the same result, spec US1 scenario 4).
 - Result files (result.json / result.xlsx / result.csv / team.txt) return 409 until the job is done.
-- Legality options (legality/models.LegalityOptions): POST /api/jobs takes `allow_egg_moves` and
-  `allow_trade_evolutions` (JSON booleans, default false), stored in the job's `options` and passed
-  to the optimizer as OptimizeRequest.legality. GET /api/species takes `trade_evolutions=1` to
-  report availability with trade evolutions allowed (egg moves never change availability).
+- Legality options (legality/models.LegalityOptions): POST /api/jobs takes one JSON boolean per
+  option field (`allow_egg_moves`, `allow_trade_evolutions`, `allow_post_game_pokemon`,
+  `allow_post_game_items`, `allow_unobtainable_pokemon`; default false), stored in the job's
+  `options` and passed to the optimizer as OptimizeRequest.legality. GET /api/species takes
+  `trade_evolutions`, `post_game_pokemon`, `post_game_items` and `unobtainable_pokemon` (0/1) to
+  report availability under those rules (egg moves never change availability).
 - 002 redesign: with `isolate` (the default for the real optimizer), each job runs in a spawned child
   with its own process group (web/job_process.py), so POST /api/jobs/{id}/cancel stops it and its Node
   workers within seconds. Server shutdown (lifespan hook, atexit) stops the running job and records it
@@ -47,12 +49,13 @@ from fastapi.staticfiles import StaticFiles
 
 from platsim.budget import DEFAULT_PRESET, PRESETS
 from platsim.legality.models import LegalityOptions
+from platsim.web.display_text import clean
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest, OptimizeResult, Progress, run_optimization
 from platsim.pins import REPO_ROOT
 from platsim.web import job_process
 from platsim.web.eta import StageHistory, eta_seconds
 from platsim.web.result_view import build_result_view
-from platsim.web.sprites import sprite_png
+from platsim.web.sprites import league_trainers, sprite_png, trainer_sprite_png
 
 HOST = "127.0.0.1"  # contracts/http-api.md: local only
 DEFAULT_RUNS_DIR = REPO_ROOT / "runs"
@@ -196,7 +199,7 @@ class JobStore:
                 if job.get("status") == "running":
                     job.update(status="failed", finished=_now(),
                                error="interrupted by a server restart while running; the web runner does not resume "
-                                     "jobs (OptimizeRequest has no resume option). Submit it again: the same species "
+                                     "jobs (OptimizeRequest has no resume option). Submit it again: the same Pokémon "
                                      "and seed give the same result.")
                     self.jobs[job["id"]] = job
                     self.save(job)
@@ -302,8 +305,7 @@ class JobRunner:
             self.cancel_events[jid] = event
             self.current = jid
             opts = job["options"]
-            legality = LegalityOptions(allow_egg_moves=bool(opts.get("allow_egg_moves", False)),
-                                       allow_trade_evolutions=bool(opts.get("allow_trade_evolutions", False)))
+            legality = _legality(opts)
             req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]),
                                   seed=str(opts["seed"]), budget=str(opts["budget"]), out_dir=store.path(jid),
                                   legality=legality)
@@ -396,8 +398,8 @@ class CatalogHolder:
         if self.catalog is not None:
             return self.catalog
         if self.error:
-            raise HTTPException(500, detail=f"species data failed to load: {self.error}")
-        raise HTTPException(503, detail="species data is loading (first start takes about a minute); retry shortly")
+            raise HTTPException(500, detail=f"Pokémon data failed to load: {clean(self.error)}")
+        raise HTTPException(503, detail="Pokémon data is loading (first start takes about a minute); retry shortly")
 
 
 def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT_RUNS_DIR, catalog=None,
@@ -435,12 +437,15 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/api/species")
-    def species(q: str = "", excluded: int = 1, limit: int = 25, trade_evolutions: int = 0) -> list[dict]:
+    def species(q: str = "", excluded: int = 1, limit: int = 25, trade_evolutions: int = 0, post_game_pokemon: int = 0,
+                post_game_items: int = 0, unobtainable_pokemon: int = 0) -> list[dict]:
         cat = holder.require()
         limit = max(1, min(int(limit), 25))
-        trade = bool(trade_evolutions)
-        return [s.to_json(allow_trade_evolutions=trade)
-                for s in cat.search(q, include_excluded=bool(excluded), limit=limit, allow_trade_evolutions=trade)]
+        opts = LegalityOptions(allow_trade_evolutions=bool(trade_evolutions),
+                               allow_post_game_pokemon=bool(post_game_pokemon),
+                               allow_post_game_items=bool(post_game_items),
+                               allow_unobtainable_pokemon=bool(unobtainable_pokemon))
+        return [cat.to_json(s, opts) for s in cat.search(q, include_excluded=bool(excluded), limit=limit, options=opts)]
 
     @app.post("/api/jobs", status_code=201)
     def submit(payload: Any = Body(...)) -> JSONResponse:
@@ -449,9 +454,10 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
             return JSONResponse({"detail": "request body must be a JSON object", "reasons": {}}, status_code=422)
         try:
             options = _options(payload)
-            keys = cat.resolve_team(payload.get("species"), allow_trade_evolutions=options["allow_trade_evolutions"])
+            keys = cat.resolve_team(payload.get("species"), _legality(options))
         except InvalidRequest as e:
-            return JSONResponse({"detail": str(e), "reasons": e.reasons}, status_code=422)
+            return JSONResponse({"detail": clean(str(e)), "reasons": {k: clean(v) for k, v in e.reasons.items()}},
+                                status_code=422)
         job = store.create(keys, options)
         jobs.submit(job["id"])
         return JSONResponse({"id": job["id"]}, status_code=201)
@@ -480,6 +486,21 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
         data = sprite_png(species, kind)
         if data is None:
             raise HTTPException(404, detail=f"no {kind!r} sprite for {species!r}")
+        return Response(data, media_type="image/png", headers={"Cache-Control": "max-age=86400"})
+
+    @app.get("/api/league")
+    def league() -> JSONResponse:
+        """003 FR-020: the first-run Elite Four and Champion, in battle order, with party pokemon keys
+        only (no levels, moves or items)."""
+        body = [{"trainer": k, "name": name, "sprite": f"/api/trainer-sprites/{k}.png", "party": list(party)}
+                for k, (name, _cls, party) in league_trainers().items()]
+        return JSONResponse(body, headers={"Cache-Control": "max-age=86400"})
+
+    @app.get("/api/trainer-sprites/{trainer}.png")
+    def trainer_sprite(trainer: str) -> Response:
+        data = trainer_sprite_png(trainer)
+        if data is None:
+            raise HTTPException(404, detail=f"no trainer sprite for {trainer!r}")
         return Response(data, media_type="image/png", headers={"Cache-Control": "max-age=86400"})
 
     @app.get("/api/jobs/{job_id}/{name}")
@@ -514,7 +535,7 @@ def _options(payload: dict) -> dict:
     if budget not in PRESETS:
         raise InvalidRequest(f"unknown budget {budget!r} (known: {', '.join(PRESETS)})")
     flags = {}
-    for k in ("allow_egg_moves", "allow_trade_evolutions"):
+    for k in LegalityOptions().to_dict():
         v = payload.get(k, False)
         if v is None:
             v = False
@@ -522,6 +543,11 @@ def _options(payload: dict) -> dict:
             raise InvalidRequest(f"{k} must be true or false, got {v!r}")
         flags[k] = v
     return {"min_clear": min_clear, "seed": str(seed), "budget": budget, **flags}
+
+
+def _legality(options: dict) -> LegalityOptions:
+    """The legality rules of a job's stored options (its other keys are min_clear, seed and budget)."""
+    return LegalityOptions.from_dict({k: options[k] for k in LegalityOptions().to_dict() if k in options})
 
 
 def _job_or_404(store: JobStore, job_id: str) -> dict:
@@ -547,12 +573,18 @@ def _label(job: dict, holder: CatalogHolder | None) -> str:
         if what is None:  # older jobs: read once from result.json; unreadable -> "done" (P5-03)
             what = _verdict_of(Path((job.get("result_paths") or {}).get("json") or "")) or "done"
             _VERDICT_CACHE[job["id"]] = what
-    return f"{', '.join(names)} · {what.replace('_', ' ')}"
+    label = f"{', '.join(names)} · {what.replace('_', ' ')}"
+    # 003 T042a: a run re-rendered from an older one (new source text, same battles) says so.
+    return label + " (re-rendered)" if job.get("rerendered_from") else label
 
 
 def _view(store: JobStore, jobs: JobRunner, job_id: str, holder: CatalogHolder | None = None) -> dict:
     job = store.get(job_id)
     view = {k: v for k, v in job.items() if k != "traceback"}
+    # Recorded messages may come from the optimizer or validator: shown text only (003 FR-001, FR-002).
+    view["error"] = clean(view.get("error"))
+    if view.get("invalid_reasons"):
+        view["invalid_reasons"] = {k: clean(v) for k, v in view["invalid_reasons"].items()}
     view["label"] = _label(job, holder)
     view.setdefault("platsim_version", None)
     started, finished = _parse_time(job.get("started")), _parse_time(job.get("finished"))

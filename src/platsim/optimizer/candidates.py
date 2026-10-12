@@ -10,8 +10,8 @@ Species
 `resolve_species(names, ledger)` maps display names / keys / SPECIES_* to SPECIES_* constants and
 raises `InvalidRequest` (user-facing; CLI exit 2) for unknown names (with the closest matches),
 alternate forms, or species with no pre-Champion source, naming the reason: trade evolution (FR-005),
-the Munchlax project rule (FR-006a), post-game only (FR-003 / FR-003a, with the ledger's own phase
-reasons), or no source at all.
+post-game only (FR-003 / FR-003a, with the ledger's own phase reasons), or no source at all. (001's
+Munchlax project rule, FR-006a, was lifted by 003 FR-008.)
 
 Source variants (FR-008b)
 -------------------------
@@ -202,15 +202,13 @@ def display_name(const: str) -> str:
 
 def unavailable_reason(const: str, led) -> str | None:
     """None if `const` has a pre-Champion source option; otherwise a user-facing reason."""
-    from platsim.availability.ledger import EXCLUDED_SPECIES, NEVER, POST
+    from platsim.availability.ledger import NEVER, POST
 
     if const not in MS.by_constant():
         return "alternate forms are not modelled by the availability ledger (rejected conservatively)"
     if MS.source_options(const, led):
         return None
     name = display_name(const)
-    if const in EXCLUDED_SPECIES:
-        return f"{name} is excluded entirely by project rule (spec FR-006a, user decision 2026-10-07)"
     trade_ok = MS.options_of(led).allow_trade_evolutions
     trade = [(p, ev) for p, ev in MS._preds().get(const, []) if ev.method in MS.TRADE_METHODS]
     if trade:
@@ -223,7 +221,7 @@ def unavailable_reason(const: str, led) -> str | None:
                ([f"{ev.param} has no pre-Champion copy"] if held and led.item_copies(ev.param) == 0 else [])
         return f"{name} is only reachable by trade evolution from {display_name(p)} ({ev.method}{held}); trade " \
                f"evolutions are allowed, but {'; '.join(miss) or 'no pre-Champion path reaches it'}"
-    # walk the pre-evolution chain for post-game / excluded entries
+    # walk the pre-evolution chain for post-game / unobtainable entries
     chain, todo = [], [const]
     while todo:
         c = todo.pop()
@@ -238,8 +236,6 @@ def unavailable_reason(const: str, led) -> str | None:
                 post.append(f"{c.entry.kind} {c.entry.map_header}: {'; '.join(c.reasons[:2])}")
             elif c.phase == NEVER:
                 never.append(f"{c.entry.kind} {c.entry.map_header}: {'; '.join(c.reasons[:2])}")
-    if any(c in EXCLUDED_SPECIES for c in chain):
-        return f"{name} is only obtainable through an excluded species (project rule, spec FR-006a)"
     if post:
         return f"{name} is only obtainable post-game (FR-003/FR-003a): " + " | ".join(post[:3])
     if never:
@@ -418,7 +414,13 @@ def _item_copies(led, const: str) -> int | str:
     return _ITEM_COPIES[k]
 
 
-def held_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> list[str | None]:
+def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
+                         team: tuple[str, ...] | None = None) -> list[str | None]:
+    """Held items worth trying: the best HP berry, a boost for the strongest attack, and (003 FR-009)
+    Leftovers when this team may hold it: a wild holder (Munchlax / Snorlax) is on the team, or a
+    non-holder copy exists (post-game items rule). `team` is the six SPECIES_* of the job."""
+    from platsim.availability.ledger import TEAM_GATED_ITEMS, team_item_copies
+
     items = load_items()
     out: list[str | None] = []
     berries = sorted((it for it in items.values() if it.hold_effect == HP_BERRY_EFFECT
@@ -435,10 +437,15 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> li
         boosts.sort(key=lambda it: (_item_copies(led, it.const) != MS.UNLIMITED, -it.effect_param, it.key))
         if boosts:
             out.append(boosts[0].key)
+    if team is not None:
+        for const in TEAM_GATED_ITEMS:
+            if team_item_copies(led, const, team) != 0:
+                out.append(items[const].key)
     return out or [None]
 
 
-def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS) -> MemberCandidates:
+def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS,
+                      team: tuple[str, ...] | None = None) -> MemberCandidates:
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
     legal = legal_moves(variant, level, led)
     attacks, dropped = prune(legal)
@@ -474,7 +481,7 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
-    items = {ms: held_item_candidates(const, ms, led) for ms in chosen + ([setup] if setup else [])}
+    items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen + ([setup] if setup else [])}
     return MemberCandidates(const, variant, level, chosen, setup, items, ranked, pool, dropped,
                             {m: scores[m] for m in pool})
 

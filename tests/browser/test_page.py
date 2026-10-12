@@ -38,6 +38,23 @@ REMOVED = ("cynthia win", "policies", "objective", "nature", "ivs", "evs", "abil
 HASH_RE = re.compile(r"\b(?=[0-9a-f]*[a-f])[0-9a-f]{7,}\b")
 
 
+# 003 FR-001, FR-002, SC-001: every text the page shows, including hidden tooltips and attributes.
+SHOWN_TEXT_JS = """() => {
+  const out = [document.body.innerText];
+  for (const n of document.querySelectorAll('.tip, [role=tooltip], option')) out.push(n.textContent);
+  for (const n of document.querySelectorAll('[title], [aria-label], [placeholder]'))
+    for (const a of ['title', 'aria-label', 'placeholder']) if (n.getAttribute(a)) out.push(n.getAttribute(a));
+  return out.join('\\n');
+}"""
+# The word is always written "Pokémon"; identifiers such as pokemon-showdown/ are not page text.
+WORDING_RE = re.compile(r"\b(?:FR|SC)-\d+|species|(?<![\w/-])pokemon(?![\w/-])", re.IGNORECASE)
+
+
+def _assert_wording(page, where: str) -> None:
+    hits = WORDING_RE.findall(page.evaluate(SHOWN_TEXT_JS))
+    assert not hits, (where, hits)
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -123,9 +140,14 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         assert not _visible(page, "#progress-card")  # FR-008: nothing running
         setup, results = page.locator("#setup").bounding_box(), page.locator("#results-col").bounding_box()
         assert setup["x"] + setup["width"] <= results["x"]  # FR-001
-        for sel in ("#optimize", "#summary", "#chart"):  # SC-001, SC-003: all on screen at 1080p
+        for sel in ("#optimize", "#summary", ".mon >> nth=0"):  # SC-003 + 003 FR-019: summary and first card row
             b = page.locator(sel).bounding_box()
             assert b["y"] >= 0 and b["y"] + b["height"] <= 1080, (sel, b)
+        # 003 FR-019: summary, then the roster, then the chart, then the downloads (DOM order and position).
+        order = page.eval_on_selector_all("#result > *", "els => els.map(e => e.id)")
+        assert order == ["summary", "team-cards", "chart", "downloads"], order
+        ys = [page.locator(f"#{i}").bounding_box()["y"] for i in order]
+        assert ys == sorted(ys), ys
 
         # Clear-rate tooltip: hidden, then shown on hover and on keyboard focus (FR-017).
         tip = page.locator("#summary .clear-rate + .tip")
@@ -152,7 +174,8 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         widths = page.eval_on_selector_all(".sprite-front img", "els => els.map(e => e.naturalWidth)")
         assert widths == [160] * 6, widths
 
-        # The "obtained from" text is shown in full, not cut off (FR-023, T039).
+        # The "obtained from" text is shown in full, not cut off (FR-023, T039). The fixture run keeps the
+        # text it was recorded with (003 FR-018: old runs are never rewritten), and it is long enough to wrap.
         team = page.request.get(base + f"/api/jobs/{FIXTURE_ID}").json()["team"]
         shown = page.eval_on_selector_all(".mon .obtained", "els => els.map(e => [e.textContent, e.scrollWidth <= e.clientWidth + 1, e.getBoundingClientRect().height])")
         assert [t for t, _, _ in shown] == [m["obtained_from"] for m in team]
@@ -166,6 +189,15 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         move.hover()
         assert move_tip.is_visible() and move_tip.inner_text().strip()  # FR-026
         page.mouse.move(5, 5)
+        # 003 FR-022: each move is coloured by its type, and the tooltip names the type first.
+        chips = page.eval_on_selector_all(".mon .move", """els => els.map(e => [e.dataset.type, getComputedStyle(e).color,
+            getComputedStyle(document.documentElement).getPropertyValue('--type-' + (e.dataset.type || '').toLowerCase()).trim(),
+            e.nextElementSibling.textContent])""")
+        assert len(chips) == 24 and all(t for t, _, _, _ in chips), chips[:3]
+        def _rgb(h):
+            return f"rgb({int(h[1:3], 16)}, {int(h[3:5], 16)}, {int(h[5:7], 16)})"
+        assert all(c == _rgb(v) for _, c, v, _ in chips), chips[:3]
+        assert all(tip.startswith(f"{t} · ") for t, _, _, tip in chips), chips[:3]
 
         assert page.locator("g.bar-group").count() == 5  # FR-027
         label = page.locator("g.bar-group").last.get_attribute("aria-label")
@@ -176,13 +208,44 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         assert _tab_until(page, "document.activeElement.classList.contains('clear-rate')")
         assert tip.is_visible()
         assert _tab_until(page, "document.activeElement.matches('g.bar-group')")
-        assert _visible(page, "#chart-tip") and "battles" in page.inner_text("#chart-tip")
+        assert _visible(page, "#trainer-pop") and "battles" in page.inner_text("#trainer-pop .pop-head")
+        page.keyboard.press("Escape")
+        assert not _visible(page, "#trainer-pop")
         assert _tab_until(page, "document.activeElement.classList.contains('move')")
         assert page.evaluate("getComputedStyle(document.activeElement.nextElementSibling).display") == "block"
+
+        # ---- 003 US4: trainer pop-up on hover, focus and tap (FR-020, SC-006) ----
+        league = page.request.get(base + "/api/league").json()
+        assert [t["trainer"] for t in league] == ["aaron", "bertha", "flint", "lucian", "cynthia"]
+        bars = page.locator("g.bar-group")
+        for i, t in enumerate(league):
+            page.mouse.move(5, 5)
+            bars.nth(i).hover()
+            pop = page.locator("#trainer-pop")
+            pop.wait_for(state="visible")
+            assert f"{t['name']}'s team" == pop.get_attribute("aria-label")
+            head = page.inner_text("#trainer-pop .pop-head")
+            assert t["name"] in head and "%" in head and "interval" in head and "battles" in head, head
+            # Only the pop-up: no second box from the chart tooltip, and no SVG <title> (the browser
+            # draws that as its own native tooltip, which screenshots don't capture).
+            assert not _visible(page, "#chart-tip")
+            assert page.locator("#chart-body svg title").count() == 0
+            page.wait_for_function("[...document.querySelectorAll('#trainer-pop img')].every(i => i.complete && i.naturalWidth > 0)")
+            assert page.locator("#trainer-pop img").count() == 1 + len(t["party"])
+            assert page.locator("#trainer-pop .pop-empty").count() == 6 - len(t["party"])
+            box = pop.bounding_box()
+            assert box["x"] >= 0 and box["y"] >= 0 and box["x"] + box["width"] <= 1920 and box["y"] + box["height"] <= 1080
+            if shots:
+                pop.screenshot(path=os.path.join(shots, f"pop-{t['trainer']}.png"))
+            page.keyboard.press("Escape")
+            assert not pop.is_visible()
+        page.mouse.move(5, 5)
 
         # Run picker option text (FR-015).
         opt = page.locator("#run-picker option").first.inner_text()
         assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2} · ", opt) and "Infernape" in opt and "qualified" in opt, opt
+
+        _assert_wording(page, "fixture result shown")
 
         # ---- US2: setup (FR-003 to FR-007) ----
         assert not _visible(page, "#results")
@@ -211,16 +274,53 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         assert page.locator("#results li button").count() and page.locator("#slots button").count()
         assert page.evaluate(UNNAMED_JS) == []
 
-        page.check("#show-excluded")
-        page.fill("#search", "munchlax")
+        # 003 US1: pokemon that can't be used are always listed, crossed out with the reason.
+        assert page.locator("#show-excluded").count() == 0
+        page.fill("#search", "golem")
         excl = page.locator("#results li.excluded")
         excl.first.wait_for()
-        assert excl.first.locator("button").is_disabled() and excl.first.locator(".reason").inner_text()
-        page.uncheck("#show-excluded")
+        assert excl.first.locator("button").is_disabled() and "Graveler" in excl.first.locator(".reason").inner_text()
+        assert "No Pokémon match" not in page.inner_text("#search-status")
+        page.fill("#search", "zzzz")
+        _wait_text(page, "#search-status", "No Pokémon match")
         page.fill("#search", "alakazam")
         with page.expect_request(lambda r: "trade_evolutions=1" in r.url):
             page.check("#allow-trade-evolutions")
         page.uncheck("#allow-trade-evolutions")
+
+        # The trade-evolution note is a tooltip: hidden, shown on hover and on keyboard focus (FR-007).
+        trade_tip = page.locator("#trade-help")
+        page.evaluate("document.activeElement.blur()")
+        page.mouse.move(5, 5)
+        assert not trade_tip.is_visible()
+        page.hover("label[for='allow-trade-evolutions']")
+        assert trade_tip.is_visible()
+        page.mouse.move(5, 5)
+        page.focus("#allow-trade-evolutions")
+        assert trade_tip.is_visible()
+        page.evaluate("document.activeElement.blur()")
+
+        # Wording scan (SC-001) over setup with every rule combination, with a positive control.
+        page.evaluate("document.body.append(Object.assign(document.createElement('p'), {id: 'planted', textContent: 'species FR-001'}))")
+        with pytest.raises(AssertionError):
+            _assert_wording(page, "positive control")
+        page.evaluate("document.getElementById('planted').textContent = 'Choose pokemon'")
+        with pytest.raises(AssertionError):
+            _assert_wording(page, "positive control: unaccented")
+        page.evaluate("document.getElementById('planted').remove()")
+        assert "Pokémon" in page.evaluate(SHOWN_TEXT_JS), "positive control: the accented word is read"
+        rules = page.eval_on_selector_all("#setup .rules input[type=checkbox]", "els => els.map(e => e.id)")
+        assert rules, "positive control: the rule checkboxes exist"
+        page.fill("#search", "a")
+        for mask in range(2 ** len(rules)):
+            for i, rid in enumerate(rules):
+                page.set_checked(f"#{rid}", bool(mask >> i & 1))
+            with page.expect_response(lambda r: "/api/species" in r.url):
+                page.fill("#search", "a ")
+                page.fill("#search", "a")
+            _assert_wording(page, f"search 'a', rules {mask:b}")
+        for rid in rules:
+            page.set_checked(f"#{rid}", False)
 
         seed_tip = page.locator("#seed-tip")
         assert not seed_tip.is_visible()
@@ -271,6 +371,21 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         _wait_text(page, "#run-status", "Run cancelled")
         assert _visible(page, "#run-status")  # outside #progress (P4-07)
 
+        _assert_wording(page, "after cancel")
+
+        # A server-side 422 (an unusable pokemon in the team) is shown without "species" or ids.
+        page.fill("#search", "alakazam")
+        page.check("#allow-trade-evolutions")
+        ala = page.locator("button[aria-label='Add Alakazam to the team']")
+        ala.wait_for()
+        page.locator("#slots button").first.click()  # free a slot (remove one Garchomp)
+        ala.click()
+        page.uncheck("#allow-trade-evolutions")
+        page.click("#optimize")
+        page.locator("#form-error").wait_for(state="visible")
+        assert "Alakazam" in page.inner_text("#form-error")
+        _assert_wording(page, "422 error")
+
         # ---- US4: picker shows failed/cancelled runs as a status (FR-016) ----
         page.wait_for_function("document.querySelectorAll('#run-picker option').length >= 3", timeout=15000)
         page.select_option("#run-picker", running["id"])
@@ -280,10 +395,36 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         _wait_text(page, "#summary", "58.23")
         assert page.locator(".mon").count() == 6
 
+        # 003 FR-023: the theme toggle, top right; the choice survives a reload; no choice = system setting.
+        btn = page.locator("#theme-toggle")
+        head, b = page.locator("header.site").bounding_box(), btn.bounding_box()
+        assert b["x"] > head["x"] + head["width"] / 2 and b["y"] < head["y"] + head["height"] / 2, (b, head)
+        page.emulate_media(color_scheme="light")
+        page.evaluate("localStorage.removeItem('platsim-theme')")
+        page.reload()
+        _wait_text(page, "#summary", "58.23")
+        assert page.evaluate("document.documentElement.dataset.theme || ''") == ""
+        assert btn.get_attribute("aria-pressed") == "false"
+        light_bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+        btn.click()
+        assert page.evaluate("document.documentElement.dataset.theme") == "dark" and btn.get_attribute("aria-pressed") == "true"
+        assert page.evaluate("getComputedStyle(document.body).backgroundColor") != light_bg
+        page.reload()
+        _wait_text(page, "#summary", "58.23")
+        assert page.evaluate("document.documentElement.dataset.theme") == "dark"  # remembered
+        page.evaluate("localStorage.removeItem('platsim-theme')")
+        page.emulate_media(color_scheme="dark")
+        page.reload()
+        _wait_text(page, "#summary", "58.23")
+        assert page.evaluate("document.documentElement.dataset.theme || ''") == ""
+        assert btn.get_attribute("aria-pressed") == "true" and btn.inner_text() == "Light mode"  # follows the system
+        page.emulate_media(color_scheme="light")
         if shots:
             for scheme in ("light", "dark"):
-                page.emulate_media(color_scheme=scheme)
+                if page.evaluate("document.documentElement.dataset.theme || 'light'") != scheme:
+                    btn.click()
                 page.screenshot(path=os.path.join(shots, f"browser-{scheme}.png"), full_page=True)
+        page.evaluate("localStorage.removeItem('platsim-theme'); delete document.documentElement.dataset.theme")
 
         # ---- narrow screen (FR-002) ----
         small = chrome.new_context(viewport={"width": 360, "height": 800})
@@ -293,6 +434,28 @@ def test_page_walkthrough(tmp_path, catalog, chrome):
         _wait_text(sp, "#summary", "58.23")
         assert sp.evaluate("document.scrollingElement.scrollWidth") <= 360
         assert sp.locator("#setup").bounding_box()["y"] < sp.locator("#results-col").bounding_box()["y"]
+        small.close()
+
+        # Tap opens the pop-up on a touch screen, and it stays inside a 360 px viewport (003 FR-020).
+        touch = chrome.new_context(viewport={"width": 360, "height": 800}, has_touch=True, is_mobile=True)
+        tp = touch.new_page()
+        tp.goto(base + "/")
+        _wait_text(tp, "#summary", "58.23")
+        tp.wait_for_function("document.querySelectorAll('g.bar-group').length === 5")
+        tp.wait_for_timeout(300)  # /api/league
+        tp.locator("g.bar-group").last.scroll_into_view_if_needed()
+        tp.locator("g.bar-group").last.tap()
+        tp.locator("#trainer-pop").wait_for(state="visible")
+        box = tp.locator("#trainer-pop").bounding_box()
+        assert box["x"] >= 0 and box["x"] + box["width"] <= 360, box
+        assert tp.locator("#trainer-pop img").count() == 7  # Cynthia + six
+        if shots:
+            tp.screenshot(path=os.path.join(shots, "browser-360-pop.png"))
+        touch.close()
+        small = chrome.new_context(viewport={"width": 360, "height": 800})
+        sp = small.new_page()
+        sp.goto(base + "/")
+        _wait_text(sp, "#summary", "58.23")
         if shots:
             sp.screenshot(path=os.path.join(shots, "browser-360.png"), full_page=True)
         small.close()

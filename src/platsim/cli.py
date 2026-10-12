@@ -10,20 +10,33 @@ from pathlib import Path
 from platsim.pins import PinError
 
 
+_LEGALITY_HELP = {
+    "allow_egg_moves": "allow egg moves (Day-Care breeding with a father that knows the move)",
+    "allow_trade_evolutions": "allow trade evolutions (need a second cartridge; an item-trade evolution's held item "
+                              "must be obtainable and is used up)",
+    "allow_post_game_pokemon": "allow pokemon obtainable only after the Champion (including National Dex encounters)",
+    "allow_post_game_items": "allow items, TMs and move tutors obtainable only after the Champion",
+    "allow_unobtainable_pokemon": "allow pokemon that cannot be obtained in Platinum (other cartridges, events, none)",
+}
+
+
 def _add_legality_flags(p: argparse.ArgumentParser) -> None:
-    """Optional legality rules (legality/models.LegalityOptions); both off by default."""
-    p.add_argument("--allow-egg-moves", action="store_true",
-                   help="allow egg moves (Day-Care breeding with a father that knows the move); default off")
-    p.add_argument("--allow-trade-evolutions", action="store_true",
-                   help="allow trade evolutions (need a second cartridge; an item-trade evolution's held item must be "
-                        "obtainable before the Champion and is used up); default off (FR-005)")
+    """Optional legality rules, one `--allow-...` flag per LegalityOptions field; all off by default."""
+    import dataclasses
+
+    from platsim.legality.models import LegalityOptions
+
+    for f in dataclasses.fields(LegalityOptions):
+        p.add_argument("--" + f.name.replace("_", "-"), action="store_true",
+                       help=_LEGALITY_HELP.get(f.name, f.name.replace("_", " ")) + "; default off")
 
 
 def _legality(args: argparse.Namespace):
+    import dataclasses
+
     from platsim.legality.models import LegalityOptions
 
-    return LegalityOptions(allow_egg_moves=bool(args.allow_egg_moves),
-                           allow_trade_evolutions=bool(args.allow_trade_evolutions))
+    return LegalityOptions(**{f.name: bool(getattr(args, f.name, False)) for f in dataclasses.fields(LegalityOptions)})
 
 
 def _add_extract(sub: argparse._SubParsersAction) -> None:

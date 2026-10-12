@@ -48,15 +48,23 @@ def _opt(real, slot=0):
 # --- species source ---------------------------------------------------------------------------
 
 
-def test_wild_catch_of_the_species_itself_beats_breeding(led):
+def _story(o) -> int:
+    return MS.story_key(o)[0]
+
+
+def test_earliest_catch_beats_breeding_across_stages(led):
+    """003 FR-017 (user decision 2026-10-11): the earliest location wins across evolution stages, and
+    a Day Care egg is named only when no catch qualifies."""
     opts = MS.source_options("SPECIES_STARAVIA", led)
     kinds = {MS.option_class(o) for o in opts}
-    assert {"own", MS.BREED} <= kinds, kinds  # positive control: both a wild Staravia and an egg are legal
+    assert {"own", "pre_evolution", MS.BREED} <= kinds, kinds  # positive control: all three are legal
     spec = R.MemberSpec("SPECIES_STARAVIA", "own", ("MOVE_WING_ATTACK", "MOVE_QUICK_ATTACK"))
     real = R.realize((spec,), [30], led)
     assert not isinstance(real, R.Refusal)
-    assert _opt(real).kind == "wild_slot" and MS.option_class(_opt(real)) == "own"
-    assert real.team.builds[0].source.startswith("wild_slot:SPECIES_STARAVIA@")
+    chosen = _opt(real)
+    assert chosen.kind == "wild_slot" and MS.option_class(chosen) != MS.BREED
+    catches = [o for o in opts if o.kind == "wild_slot" and o.min_level <= 30]
+    assert _story(chosen) == min(_story(o) for o in catches), (chosen.detail, [(o.detail, _story(o)) for o in catches])
 
 
 def test_pre_evolution_catch_beats_breeding_when_no_egg_move(led):
@@ -66,8 +74,54 @@ def test_pre_evolution_catch_beats_breeding_when_no_egg_move(led):
     spec = R.MemberSpec("SPECIES_STARAPTOR", "own", ("MOVE_BRAVE_BIRD", "MOVE_CLOSE_COMBAT"))
     real = R.realize((spec,), [54], led)
     assert MS.option_class(_opt(real)) == "pre_evolution"
-    # among pre-evolution catches, fewer evolutions first (Staravia, not Starly)
-    assert _opt(real).acquired == "SPECIES_STARAVIA"
+    pre = [o for o in MS.source_options("SPECIES_STARAPTOR", led) if MS.option_class(o) == "pre_evolution"]
+    assert _story(_opt(real)) == min(_story(o) for o in pre)
+
+
+def test_garchomp_is_named_from_gible_in_wayward_cave(led):
+    """The quickstart V5 case: Gible (Wayward Cave B1F) beats Gabite (Victory Road 1F)."""
+    spec = R.MemberSpec("SPECIES_GARCHOMP", "own", ("MOVE_EARTHQUAKE",))
+    real = R.realize((spec,), [48], led)
+    assert not isinstance(real, R.Refusal), real
+    o = _opt(real)
+    assert o.acquired == "SPECIES_GIBLE" and o.map_header == "MAP_HEADER_WAYWARD_CAVE_B1F", o.detail
+    assert o.detail.startswith("Wild - Wayward Cave B1F (Gible, grass) -> Gabite at level"), o.detail
+    gabite = [x for x in MS.source_options("SPECIES_GARCHOMP", led) if x.acquired == "SPECIES_GABITE" and x.kind == "wild_slot"]
+    assert gabite and all(_story(x) > _story(o) for x in gabite)  # positive control: the later option exists
+
+
+def test_one_percent_only_location_is_skipped_unless_it_is_the_only_one(led):
+    one = [o for c in ("SPECIES_GABITE", "SPECIES_MUNCHLAX") for o in MS.source_options(c, led)
+           if o.kind == "wild_slot" and o.rate_percent is not None]
+    assert any(o.rate_percent <= MS.ONE_PERCENT for o in one), "positive control: a 1% option exists (Munchlax)"
+    k1 = MS.option_sort_key(next(o for o in one if o.rate_percent <= MS.ONE_PERCENT))
+    k2 = MS.option_sort_key(next(o for o in one if o.rate_percent > MS.ONE_PERCENT))
+    assert k1[2] is True and k2[2] is False
+    mun = R.realize((R.MemberSpec("SPECIES_MUNCHLAX", "own", ("MOVE_TACKLE",)),), [15], led)
+    assert not isinstance(mun, R.Refusal) and "honey tree" in _opt(mun).detail  # the only catch: still named
+
+
+def test_min_level_is_only_a_feasibility_filter(led):
+    spec = R.MemberSpec("SPECIES_GABITE", "own", ("MOVE_DRAGON_RAGE",))
+    real = R.realize((spec,), [24], led)
+    assert not isinstance(real, R.Refusal) and _opt(real).min_level <= 24
+
+
+def test_floors_unchanged_for_the_reference_species(led):
+    """003 T001 baseline: the optimizer's level floors do not depend on which source is named."""
+    base = json.loads((REPO_ROOT / "specs/003-webui-refinements/baseline/t001-baseline.json").read_text())
+    res = json.loads((REPO_ROOT / "tests/fixtures/web_final_defaults/result.json").read_text())
+    for b in res["team"]["builds"]:
+        spec = R.MemberSpec("SPECIES_" + b["species"].upper(), "own",
+                            tuple("MOVE_" + m["move"].upper() for m in b["moves"]), b.get("held_item"), b.get("ability"))
+        assert R.member_floor(spec, led) == base["floors_final_defaults_specs"][b["species"]], b["species"]
+
+
+def test_combee_is_named_from_the_honey_tree(led):
+    """Analysis H3: Combee was only a level-1 Day Care egg; with honey-tree levels it is caught."""
+    real = R.realize((R.MemberSpec("SPECIES_COMBEE", "own", ("MOVE_GUST",)),), [15], led)
+    assert not isinstance(real, R.Refusal) and "honey tree" in _opt(real).detail, _opt(real).detail
+    assert R.member_floor(R.MemberSpec("SPECIES_COMBEE", "own", ("MOVE_GUST",)), led) == 1  # breeding stays legal
 
 
 def test_luxray_with_egg_moves_is_bred_without_them_is_caught(led, egg_led):

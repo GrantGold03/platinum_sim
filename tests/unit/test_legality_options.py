@@ -31,6 +31,16 @@ FIX = REPO_ROOT / "tests" / "fixtures"
 V8_TEAM = FIX / "t076_v8_team.json"
 TRADE = LegalityOptions(allow_trade_evolutions=True)
 EGG = LegalityOptions(allow_egg_moves=True)
+POST_MON = LegalityOptions(allow_post_game_pokemon=True)
+POST_ITEMS = LegalityOptions(allow_post_game_items=True)
+OUTSIDE = LegalityOptions(allow_unobtainable_pokemon=True)
+NEW_RULES = ("allow_post_game_pokemon", "allow_post_game_items", "allow_unobtainable_pokemon")
+# 003 T001 baseline (specs/003-webui-refinements/baseline/t001-baseline.json): the default fingerprint
+# of the test_optimize_small.py request must not move when the new rules are added.
+T001_FINGERPRINT = {"species": ["SPECIES_INFERNAPE", "SPECIES_STARAPTOR", "SPECIES_LUXRAY", "SPECIES_GARCHOMP",
+                                "SPECIES_GYARADOS", "SPECIES_GARDEVOIR"], "min_clear": 0.75, "seed": "t058",
+                    "budget": "quick", "legality_options": {"allow_egg_moves": False, "allow_trade_evolutions": False},
+                    "state_version": 3}
 TRADE_TAIL = "(trade evolution; needs a second cartridge for the trade)"
 
 
@@ -60,7 +70,16 @@ def _legal() -> dict:
 
 def test_options_default_off_and_round_trip():
     o = LegalityOptions()
-    assert o.to_dict() == {"allow_egg_moves": False, "allow_trade_evolutions": False}
+    assert o.to_dict() == {"allow_egg_moves": False, "allow_trade_evolutions": False,
+                           "allow_post_game_pokemon": False, "allow_post_game_items": False,
+                           "allow_unobtainable_pokemon": False}
+    assert o.to_dict(compact=True) == {"allow_egg_moves": False, "allow_trade_evolutions": False}
+    assert POST_ITEMS.to_dict(compact=True) == {"allow_egg_moves": False, "allow_trade_evolutions": False,
+                                                "allow_post_game_items": True}
+    old = {"allow_egg_moves": True, "allow_trade_evolutions": False}  # a report written before 003
+    assert LegalityOptions.from_dict(old) == LegalityOptions(allow_egg_moves=True)
+    for o2 in (POST_MON, POST_ITEMS, OUTSIDE):
+        assert LegalityOptions.from_dict(o2.to_dict()) == o2
     assert LegalityOptions.from_dict(TRADE.to_dict()) == TRADE and LegalityOptions.from_dict(None) == o
     with pytest.raises(ValueError):
         LegalityOptions.from_dict({"allow_egg_moves": "yes"})
@@ -95,7 +114,7 @@ def test_cli_validate_egg_flag(capsys):
     assert "legal (no violations)" in capsys.readouterr().out
     assert cli.main(["validate", str(V8_TEAM), "--allow-egg-moves", "--json"]) == 0
     d = json.loads(capsys.readouterr().out)
-    assert d["legal"] and d["legality_options"] == {"allow_egg_moves": True, "allow_trade_evolutions": False}
+    assert d["legal"] and d["legality_options"] == LegalityOptions(allow_egg_moves=True).to_dict()  # all five rules
 
 
 # --- trade evolutions --------------------------------------------------------------------------
@@ -218,8 +237,11 @@ def test_cli_flags_on_evaluate_and_optimize():
     for argv in (["evaluate", "t.json"], ["optimize", *["garchomp"] * 6], ["validate", "t.json"]):
         a = p.parse_args(argv)
         assert (a.allow_egg_moves, a.allow_trade_evolutions) == (False, False)
+        assert cli._legality(a) == LegalityOptions()
         a = p.parse_args(argv + ["--allow-egg-moves", "--allow-trade-evolutions"])
         assert cli._legality(a) == LegalityOptions(True, True)
+        a = p.parse_args(argv + ["--allow-post-game-pokemon", "--allow-post-game-items", "--allow-unobtainable-pokemon"])
+        assert cli._legality(a) == LegalityOptions(**{k: True for k in NEW_RULES})
 
 
 def test_optimizer_fingerprint_and_resolve_use_options(led):
@@ -235,7 +257,12 @@ def test_optimizer_fingerprint_and_resolve_use_options(led):
     assert consts[0] == "SPECIES_ALAKAZAM"
     a = job_fingerprint(consts, OptimizeRequest(tuple(names)))
     b = job_fingerprint(consts, OptimizeRequest(tuple(names), legality=TRADE))
-    assert a["legality_options"] == LegalityOptions().to_dict() and a != b
+    assert a["legality_options"] == LegalityOptions().to_dict(compact=True) and a != b
+    t058 = ["infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"]
+    req = OptimizeRequest(tuple(t058), budget="quick", seed="t058")
+    assert job_fingerprint([f"SPECIES_{s.upper()}" for s in t058], req) == T001_FINGERPRINT
+    for o in (POST_MON, POST_ITEMS, OUTSIDE):  # each new rule changes the fingerprint
+        assert job_fingerprint(consts, OptimizeRequest(tuple(names), legality=o)) != a
 
 
 def test_resume_with_other_options_is_refused(tmp_path):
@@ -248,6 +275,31 @@ def test_resume_with_other_options_is_refused(tmp_path):
     s.save()
     with pytest.raises(InvalidRequest, match="different optimize job"):
         _State(tmp_path / "state.json", job_fingerprint(consts, OptimizeRequest(("garchomp",) * 6, legality=EGG)), code)
+    with pytest.raises(InvalidRequest, match="different optimize job"):
+        _State(tmp_path / "state.json", job_fingerprint(consts, OptimizeRequest(("garchomp",) * 6, legality=POST_MON)), code)
+
+
+def test_option_dependent_caches_are_keyed_on_options(led):
+    """003 T015 (research R2): `species_sources` and `breed_mothers` must give each options view its
+    own answer. X is a pokemon whose only acquisition entries are post-game (read from the ledger)."""
+    from platsim.availability.ledger import POST, build_ledger
+
+    acq = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
+    phases: dict[str, set] = {}
+    for c in led.entries:
+        if c.entry.kind in acq:
+            phases.setdefault(c.entry.subject, set()).add(c.phase)
+    post_only = sorted(s for s, p in phases.items() if p == {POST})
+    assert post_only, "positive control: the ledger has post-game-only pokemon"
+    x = post_only[0]
+    fresh = build_ledger.__wrapped__() if hasattr(build_ledger, "__wrapped__") else led
+    post = fresh.with_options(POST_MON)
+    assert post.species_sources(x), f"{x} has post-game sources once they are allowed"
+    assert fresh.species_sources(x) == [], f"{x} has no pre-Champion source by default"
+    assert post.species_sources(x), "the default view must not overwrite the post-game view's answer"
+    assert MS.source_options(x, post) and not MS.source_options(x, fresh)
+    mothers_default, mothers_post = MS.breed_mothers(fresh), MS.breed_mothers(post)
+    assert mothers_default != mothers_post, "breed mothers differ once post-game pokemon count"
 
 
 # --- species catalogue -------------------------------------------------------------------------
@@ -259,22 +311,24 @@ def test_catalog_reflects_trade_option(led):
     cat = build_catalog(led)
     ala = cat.get("alakazam")
     assert not ala.available and ala.reason_code == "trade_evolution"
-    assert ala.available_trade and ala.trade_evolution
-    j = ala.to_json(allow_trade_evolutions=True)
+    st = cat.status(ala, TRADE)
+    assert st.available and st.note
+    j = cat.to_json(ala, TRADE)
     assert j["available"] and j["trade_evolution"] and "second cartridge" in j["note"]
-    assert not ala.to_json()["available"]
-    kd = cat.get("kingdra")
-    assert not kd.available_trade and kd.reason_code_trade == "trade_evolution" and "ITEM_DRAGON_SCALE" in kd.reason_trade
+    assert not cat.to_json(ala)["available"]
+    kd = cat.status(cat.get("kingdra"), TRADE)
+    assert not kd.available and kd.reason_code == "trade_evolution" and "Dragon Scale" in kd.reason
     garchomp = cat.get("garchomp")  # positive control: available either way, never marked
-    assert garchomp.available and garchomp.available_trade and not garchomp.trade_evolution
+    g = cat.status(garchomp, TRADE)
+    assert garchomp.available and g.available and not g.note
     assert [s.key for s in cat.search("alaka", include_excluded=False)] == []
-    assert [s.key for s in cat.search("alaka", include_excluded=False, allow_trade_evolutions=True)] == ["alakazam"]
+    assert [s.key for s in cat.search("alaka", include_excluded=False, options=TRADE)] == ["alakazam"]
     six = ["alakazam", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"]
     from platsim.optimizer.api import InvalidRequest
 
     with pytest.raises(InvalidRequest):
         cat.resolve_team(six)
-    assert cat.resolve_team(six, allow_trade_evolutions=True)[0] == "alakazam"
+    assert cat.resolve_team(six, TRADE)[0] == "alakazam"
 
 
 def test_validator_still_independent_of_optimizer():

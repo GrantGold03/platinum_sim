@@ -57,10 +57,18 @@ NEVER_KINDS = frozenset({G.KIND_EVENT_ONLY, "other_cartridge"})
 ITEM_ENTERED_MAPS = {"MAP_HEADER_UNDERGROUND": "ITEM_EXPLORER_KIT"}
 
 
-def _reached() -> frozenset[str]:
+def _reached() -> tuple[frozenset[str], frozenset[str]]:
+    """(maps reachable before the Champion, maps reachable with post-game edges too); both strict."""
     from platsim.availability.mapgraph import build_graph
 
-    return frozenset(build_graph().reachable(strict=True))
+    g = build_graph()
+    return frozenset(g.reachable(strict=True)), frozenset(g.reachable(strict=True, post_game=True))
+
+
+# 003 research R3: a map the decomp itself names UNUSED_ (generated/map_headers.txt) that the map graph
+# cannot reach even with post-game edges can never be entered. Real post-game areas the graph cannot
+# model (Turnback Cave's random warps, the Battle Tower rooms) are not UNUSED_ and stay plain POST.
+UNUSED_MAP_PREFIX = "MAP_HEADER_UNUSED_"
 
 
 @dataclass
@@ -70,6 +78,9 @@ class Classified:
     reasons: list[str] = field(default_factory=list)
     uncertain: bool = False
     needs_national_dex: bool = False
+    # 003 research R3: on a map that cannot be entered even after the Champion. Phase stays POST;
+    # no legality option ever admits such an entry.
+    unreachable: bool = False
 
     def to_json(self) -> dict[str, Any]:
         d = self.entry.to_json()
@@ -77,10 +88,11 @@ class Classified:
         d["phase_reasons"] = self.reasons
         d["uncertain"] = self.uncertain
         d["needs_national_dex"] = self.needs_national_dex
+        d["unreachable"] = self.unreachable
         return d
 
 
-def _base_phase(e: S.Entry, reached: frozenset[str]) -> Classified:
+def _base_phase(e: S.Entry, reached: frozenset[str], ever: frozenset[str] | None = None) -> Classified:
     reasons: list[str] = []
     kinds = {g["kind"] for g in e.gates}
     if kinds & NEVER_KINDS:
@@ -91,9 +103,14 @@ def _base_phase(e: S.Entry, reached: frozenset[str]) -> Classified:
     phase = PRE
     uncertain = False
     natdex = False
+    unreachable = False
     if e.map_header and e.map_header not in ITEM_ENTERED_MAPS and e.map_header not in reached:
         phase = POST
         reasons.append(f"region: {e.map_header} is not reachable before the Champion (mapgraph strict)")
+        if ever is not None and e.map_header.startswith(UNUSED_MAP_PREFIX) and e.map_header not in ever:
+            unreachable = True
+            reasons.append(f"unreachable: {e.map_header} is an unused map that cannot be entered even after the "
+                           "Champion (mapgraph strict, post-game edges)")
     for g in e.gates:
         if g["kind"] == G.KIND_UNCERTAIN:
             phase, uncertain = POST, True
@@ -103,7 +120,7 @@ def _base_phase(e: S.Entry, reached: frozenset[str]) -> Classified:
         elif g["post_game"]:
             phase = POST
             reasons.append(f"{g['kind']} @{g['ref']}: {g['detail']}")
-    return Classified(e, phase, reasons, uncertain, natdex)
+    return Classified(e, phase, reasons, uncertain, natdex, unreachable)
 
 
 @dataclass(eq=False)
@@ -112,8 +129,8 @@ class Ledger:
     national_dex: dict
     reached: frozenset[str]
     derived: dict = field(default_factory=dict)
-    # Legality options (legality/models.LegalityOptions) this view applies; the ledger's own facts
-    # (entries, phases, copies, species_sources) never depend on them.
+    # Legality options (legality/models.LegalityOptions) this view applies. The entries and phases
+    # never depend on them; what `pre()` admits does (003), so option-dependent caches key on them.
     options: LegalityOptions = field(default_factory=LegalityOptions)
 
     def with_options(self, options: LegalityOptions | None) -> Ledger:
@@ -131,19 +148,39 @@ class Ledger:
     # -- queries -------------------------------------------------------------------------
 
     def pre(self, subject: str | None = None, kind: str | None = None) -> list[Classified]:
+        """Entries usable under this view's options: pre-Champion entries, plus what the 003 rules
+        admit (`admits`). With default options this is exactly the pre-Champion entries."""
         return [
             c for c in self.entries
-            if c.phase == PRE and (subject is None or c.entry.subject == subject) and (kind is None or c.entry.kind == kind)
+            if (subject is None or c.entry.subject == subject) and (kind is None or c.entry.kind == kind) and self.admits(c)
         ]
+
+    def admits(self, c: Classified) -> bool:
+        """003 research R2: one phase filter for every reader.
+        - pokemon sources (ACQUIRE_KINDS): PRE; POST with allow_post_game_pokemon; other-cartridge
+          NEVER entries with allow_unobtainable_pokemon;
+        - everything else (items, TMs, tutors, wild held items): PRE; POST with allow_post_game_items;
+        - entries on maps that can never be entered (`unreachable`) are never admitted."""
+        if c.phase == PRE:
+            return True
+        if c.unreachable:
+            return False
+        o = self.options
+        if c.entry.kind in ACQUIRE_KINDS:
+            if c.phase == POST:
+                return o.allow_post_game_pokemon
+            return c.phase == NEVER and o.allow_unobtainable_pokemon and any(r.startswith("other_cartridge") for r in c.reasons)
+        return c.phase == POST and o.allow_post_game_items
 
     def species_sources(self, species: str) -> list[dict]:
         """Pre-Champion ways to own `species`: direct entries, then evolutions of an obtainable
         pre-evolution (EVO_TRADE / EVO_TRADE_WITH_HELD_ITEM excluded, FR-005). Breeding is not
         derived (an under-approximation)."""
         cache = self.derived.setdefault("species_sources", {})
-        if species not in cache:
-            cache[species] = list(_species_sources(self, species))
-        return cache[species]
+        key = (self.options, species)  # `derived` is shared by every options view (003 research R2)
+        if key not in cache:
+            cache[key] = list(_species_sources(self, species))
+        return cache[key]
 
     def tm_copies(self, tm: str) -> int | str:
         """'TM26' / 'ITEM_TM26' -> copies obtainable pre-Champion, or 'unlimited'. HMs are never
@@ -180,25 +217,25 @@ class Ledger:
 # Project rule (spec FR-003a, user decision 2026-10-07): sources that need the National Dex are excluded.
 ALLOW_NATIONAL_DEX = False
 
-# Project rule (spec FR-006a + Clarification, user decision 2026-10-07): Munchlax is excluded entirely
-# ("too costly to obtain"): its encounters are not species sources (so Snorlax only through another
-# source) and the items it holds in the wild (Leftovers, res/pokemon/munchlax/data.json held_items)
-# are not item sources. All other honey-tree encounters stay allowed.
-EXCLUDED_SPECIES = frozenset({"SPECIES_MUNCHLAX"})
-EXCLUDED_SPECIES_REASON = "project_rule: {sp} is excluded entirely (spec FR-006a, user decision 2026-10-07: too costly to obtain)"
+# Project rule slot for pokemon excluded entirely (their encounters and wild held items become
+# unobtainable). Empty since 003 (FR-008, user decision 2026-10-11): Munchlax, excluded by 001 FR-006a
+# on 2026-10-07, is allowed again, and its wild held Leftovers count (the validator then allows
+# Leftovers only on a team with Munchlax or Snorlax, 003 FR-009).
+EXCLUDED_SPECIES: frozenset[str] = frozenset()
+EXCLUDED_SPECIES_REASON = "project_rule: {sp} is excluded entirely"
 ACQUIRE_KINDS = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
 
 
 @cache
 def build_ledger() -> Ledger:
-    reached = _reached()
+    reached, ever = _reached()
     entries = _merge_wild(S.all_entries())
     entries += S.wild_held_item_entries(entries)  # spec FR-006a; phases follow the encounter's gates
     base = [_base_phase(e, reached) for e in entries]
     # Pass 1: without the National Dex (verdict inputs must not depend on it).
     _resolve_items(base, natdex_ok=False)
     verdict = national_dex_verdict(base, reached)
-    final = [_apply_project_rules(_base_phase(e, reached)) for e in entries]
+    final = [_apply_project_rules(_base_phase(e, reached, ever)) for e in entries]
     # User decision 2026-10-07 (spec FR-003a): National Dex sources are NOT allowed, even though the
     # decomp verdict says the National Dex is obtainable pre-Champion. The verdict is still recorded.
     _resolve_items(final, natdex_ok=verdict["pre_champion"] and ALLOW_NATIONAL_DEX)
@@ -230,13 +267,16 @@ def _merge_wild(entries: list[S.Entry]) -> list[S.Entry]:
         key = (e.map_header, e.subject, typ, json.dumps(e.gates, sort_keys=True), tuple(e.requires_items), tuple(e.requires_any))
         cur = index.get(key)
         if cur is None:
-            ne = S.Entry(e.kind, e.subject, e.map_header, e.quantity, list(e.gates), list(e.src), e.level, None, list(e.requires_items), list(e.requires_any), e.exclusive_group, typ)
+            ne = S.Entry(e.kind, e.subject, e.map_header, e.quantity, list(e.gates), list(e.src), e.level, None, list(e.requires_items), list(e.requires_any), e.exclusive_group, typ,
+                         rate_percent=e.rate_percent)
             index[key] = ne
             out.append(ne)
         else:
             lo = min(cur.level[0], e.level[0]) if cur.level and e.level else None
             hi = max(cur.level[1], e.level[1]) if cur.level and e.level else None
             cur.level = (lo, hi) if lo is not None else cur.level
+            if cur.rate_percent is not None and e.rate_percent is not None:  # 003 R8: slots of one method add up
+                cur.rate_percent += e.rate_percent
             for s in e.src:
                 if s not in cur.src:
                     cur.src.append(s)
@@ -420,7 +460,35 @@ def once_flag_groups(led: Ledger, item: str) -> dict[str, list[Classified]]:
     return out
 
 
-def _item_copies(led: Ledger, item: str) -> int | str:
+# 003 FR-009 (user decision 2026-10-11): Leftovers comes from wild Munchlax / Snorlax (they hold it in
+# both held-item slots), and a team may use those copies only if one of them is on the team. Other
+# sources (the post-game Victory Road item ball) count for any team.
+TEAM_GATED_ITEMS = ("ITEM_LEFTOVERS",)
+
+
+@cache
+def item_holders(item: str) -> frozenset[str]:
+    """Species whose wild data (res/pokemon/*/data.json held_items) holds `item` in either slot."""
+    from platsim.decomp.species import by_constant
+
+    out = set()
+    for const, sp in by_constant().items():
+        raw = json.loads((PP / "res" / "pokemon" / sp.key / "data.json").read_text()) if sp.form is None else {}
+        if item in (raw.get("held_items") or {}).values():
+            out.add(const)
+    return frozenset(out)
+
+
+def team_item_copies(led: Ledger, item: str, team_species) -> int | str:
+    """Copies of `item` this team may use. For a TEAM_GATED_ITEMS item, the copies held by wild
+    `item_holders(item)` count only when one of those species is on the team."""
+    if item not in TEAM_GATED_ITEMS or set(team_species) & item_holders(item):
+        return led.item_copies(item)
+    holders = item_holders(item)
+    return _item_copies(led, item, skip=lambda c: c.entry.kind == "wild_held_item" and c.entry.via_species in holders)
+
+
+def _item_copies(led: Ledger, item: str, skip=None) -> int | str:
     """Sum of pre-Champion quantities, except that entries sharing a one-time flag (Entry.once_flag:
     an item ball shown in two map headers, a hidden item on a map seam, one NPC gift reachable from
     two rooms or two branches) are one acquisition: a flag group adds the max quantity of one
@@ -428,7 +496,7 @@ def _item_copies(led: Ledger, item: str) -> int | str:
     total = 0
     groups: dict[str, int] = {}
     for c in led.pre(subject=item):
-        if c.entry.kind in ("trainer_seen", "dex_seen"):
+        if c.entry.kind in ("trainer_seen", "dex_seen") or (skip is not None and skip(c)):
             continue
         if c.entry.quantity == UNLIMITED:
             return UNLIMITED

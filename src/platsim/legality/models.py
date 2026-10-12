@@ -26,6 +26,7 @@ writes team.txt for users (T066) should pass the generated-data display names.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -56,7 +57,7 @@ NameFn = Callable[[str, str], str]
 @dataclass(frozen=True)
 class LegalityOptions:
     """Optional legality rules (user decisions 2026-10-08; Constitution III: explicit inputs, never
-    silent assumptions). Both default OFF.
+    silent assumptions). All default OFF.
 
     - `allow_egg_moves`: egg moves (Day-Care breeding with a father that knows the move,
       movesources "Egg move") are legal sources. Off: no member may use an egg move (validator
@@ -72,14 +73,31 @@ class LegalityOptions:
 
     allow_egg_moves: bool = False
     allow_trade_evolutions: bool = False
+    # 003 (spec FR-010, FR-010a, FR-011; constitution v1.2.0 Principle III: explicit, off by default,
+    # enforced by the validator, recorded in every report):
+    # - post-game acquisition entries (including National Dex ones) are pokemon sources;
+    allow_post_game_pokemon: bool = False
+    # - post-game item, TM and tutor entries are item and move sources;
+    allow_post_game_items: bool = False
+    # - other-cartridge acquisition entries count, and a pokemon with no source at all gets a synthetic
+    #   level-1 `outside_platinum` source ("Unavailable in Platinum (allowed by rule)").
+    # Entries on maps that can never be entered (ledger `unreachable`) never count under any rule.
+    allow_unobtainable_pokemon: bool = False
 
-    def to_dict(self) -> dict[str, bool]:
-        return {"allow_egg_moves": self.allow_egg_moves, "allow_trade_evolutions": self.allow_trade_evolutions}
+    # Options added after 001 are left out of the compact form while off, so the fingerprint (and the
+    # default output directory) of a job that does not use them is unchanged (003 research R1).
+    _COMPACT_OPTIONAL = ("allow_post_game_pokemon", "allow_post_game_items", "allow_unobtainable_pokemon")
+
+    def to_dict(self, compact: bool = False) -> dict[str, bool]:
+        d = {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
+        if compact:
+            d = {k: v for k, v in d.items() if v or k not in self._COMPACT_OPTIONAL}
+        return d
 
     @classmethod
     def from_dict(cls, d: dict[str, Any] | None) -> LegalityOptions:
         d = d or {}
-        unknown = set(d) - {"allow_egg_moves", "allow_trade_evolutions"}
+        unknown = set(d) - {f.name for f in dataclasses.fields(cls)}
         if unknown:
             raise ValueError(f"unknown legality option(s): {sorted(unknown)}")
         for k, v in d.items():

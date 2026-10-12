@@ -134,3 +134,62 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - `/proc/<pid>/task/<pid>/children` doesn't exist on this kernel; use `pgrep -P` to find child processes.
 - The id `results` is already used by the species list (`index.html`), so the new right column
   is `#results-col`.
+
+# 003 Web UI refinements (started 2026-10-11)
+- Source: `webui_changes.md` (the user's notes from testing 002). Spec: `specs/003-webui-refinements/spec.md`,
+  with both clarifications answered. `.specify/feature.json` now points at 003.
+- No branch has been made yet. The work sits on `002-webui-redesign`, and 002 is still not merged. The user's
+  intent is to make these changes before merging.
+- It reverses 001's Munchlax exclusion (`ledger.EXCLUDED_SPECIES`). Leftovers is allowed only when Munchlax or
+  Snorlax is on the team.
+- 2026-10-11: spec clarified (post-game pokemon and post-game items are separate rules; reports carry the new
+  source text; one post-game Leftovers counts with post-game items on; earliest location = badge gates).
+- 2026-10-11: plan written: plan.md, research.md R1–R14, data-model, contracts, quickstart. It stays on branch
+  002 (the user's choice).
+- 2026-10-11: tasks.md written (T001–T062).
+- 2026-10-11: /speckit-analyze found 1 critical, 3 high, 5 medium and 6 low issues. All 15 were fixed on the user's
+  go-ahead:
+  - constitution amended to v1.2.0 (Principle III: explicit, off-by-default rules may widen the output);
+  - added T002a (constitution check) and T042a (re-render the stored web runs; originals untouched). As built,
+    the new runs use normal job ids, not `-r003` folders (see validation-log);
+  - FR-018 now guarantees unchanged sets and battle numbers, not "nothing else changes";
+  - honey-tree pokemon (Aipom, Burmy, Cherubi, Combee, Heracross) are available today only as a level-1
+    Day Care egg; checked live, research R5 corrected;
+  - story ranks go into `data/generated/story_rank.json`;
+  - the synthetic source kind is `outside_platinum`.
+- 2026-10-11: /speckit-implement started. Done so far:
+  - T001–T002a: baseline in `specs/003-webui-refinements/baseline/` and the validation log;
+  - Phase 2 (display_text, a catalogue per options value);
+  - US1 (wording, always-listed excluded pokemon, trade tooltip). Web 56 passed, browser 4 passed.
+  - A background agent is building story_rank (T033/T038/T039).
+- 2026-10-11: US2 done: rules, Munchlax/Leftovers, unreachable maps, Frontier exchange, data regenerated. Story rank
+  done by an agent (31 passed, 4 xfailed with decomp evidence).
+- 2026-10-11: US3, US4 and US5 done. T001–T057 and T061 are done.
+  - Three stored web runs were re-rendered: *-75665e, *-c86e64, *-0c1874.
+  - The version is 0.2.0.
+- 2026-10-11: T059 full suite: 448 passed, 1 failed, 4 xfailed (2 h 22 min). The failure was a stale assertion in
+  `test_evaluate.py::test_determinism_fast` (expected 2 legality keys, reports now carry 5). Fixed; rerun 1 passed.
+  Browser 4 passed. Coverage table in `specs/003-webui-refinements/validation-log.md`. T058, T059, T061 marked.
+- 2026-10-11: T060 passed. The web job `runs/job-20261011T222457Z-c4aa1b` and the CLI run (seed t058, quick)
+  give byte-identical result.json (`cmp` exit 0, sha256 b665cfa9…). It has five legality keys and platsim 0.2.0,
+  and every T001 baseline hash is OK. T001–T062 are all done.
+- Now: the user is testing on `uv run platsim serve` (port 8000).
+- 2026-10-11: user follow-up: "Pokémon" spelling in all page text, and the double box on trainer hover (SVG
+  <title> native tooltip) removed. Web 35 passed, browser 4 passed; server on :8000 restarted with the change.
+- Next: commit 003 on branch 002-webui-redesign when the user asks. Merge only on the user's go-ahead:
+  `git switch main && git merge --ff-only 002-webui-redesign`.
+- Nothing is committed yet for 003. Commit only when the user asks.
+- Open for the user: story rank is per map. Route 218 and Ravaged Path rank 0 by their early edge, though their
+  grass is later.
+- Traps found in research:
+  - Honey-tree entries had level=None, so movesources skipped them as wild sources and named a level-1 Day Care
+    egg instead (corrected R5, analysis H3). Fixed: levels 5–15 are parsed from the decomp.
+  - `Ledger.species_sources` and `breed_mothers` caches are not keyed on options (R2).
+  - POST also covers maps that are never reachable (UNUSED_*, condominium) (R3).
+  - Encounter rates are lost in `_merge_wild` (R8).
+  - The map graph treats sea water as land, so hop counts are useless (R9).
+  - The Battle Frontier BP exchange (`scrcmd.c` `ScrCmd_PokeMartFrontier`) is not extracted, so TM04, TM08, TM61
+    and TM73 look as if they have no source at all. They are post-game. Sweep for other unextracted post-game
+    shops (R3).
+  - Wild Gabite is only on Victory Road, but Gible is in Wayward Cave B1F (17–20, pre-Champion). The earliest
+    location wins across evolution stages (user, 2026-10-11), so Garchomp is named from Gible.

@@ -61,6 +61,9 @@ NPC_TRADES_DIR = PP / "res" / "npc_trades"
 MART_H = PP / "include" / "data" / "mart_items.h"
 SHOP_C = PP / "src" / "scrcmd_shop.c"
 GAME_CORNER_C = PP / "src" / "scrcmd_game_corner_prize.c"
+SCRCMD_C = PP / "src" / "scrcmd.c"
+SHOP_MENU_C = PP / "src" / "overlay007" / "shop_menu.c"
+MART_FRONTIER_IDS = PP / "generated" / "mart_frontier_id.txt"
 HIDDEN_H = PP / "include" / "data" / "field" / "hidden_items.h"
 SCRIPT_MANAGER_C = PP / "src" / "script_manager.c"
 MINING_C = PP / "src" / "underground" / "mining.c"
@@ -98,6 +101,9 @@ class Entry:
     # one acquisition in total (ledger._item_copies counts a flag group once).
     once_flag: str | None = None
     once_flag_src: list[str] = field(default_factory=list)
+    # 003 research R8: percent chance this species appears for this encounter method on this map
+    # (summed over its slots after ledger._merge_wild). None when no slot table applies.
+    rate_percent: int | None = None
 
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
@@ -331,10 +337,96 @@ def _species_ok(s: str) -> bool:
     return s.startswith("SPECIES_") and s != "SPECIES_NONE"
 
 
-def _add_slot(out, header, kind_detail, sp, lo, hi, src, gates=(), req=(), req_any=()):
+def _add_slot(out, header, kind_detail, sp, lo, hi, src, gates=(), req=(), req_any=(), rate=None):
     if not _species_ok(sp):
         return
-    out.append(Entry("wild_slot", sp, header, UNLIMITED, list(gates), list(src), (lo, hi), None, list(req), list(req_any), None, kind_detail))
+    out.append(Entry("wild_slot", sp, header, UNLIMITED, list(gates), list(src), (lo, hi), None, list(req), list(req_any), None,
+                     kind_detail, rate_percent=rate))
+
+
+# ---------------------------------------------------------------------------------------------
+# Encounter slot rates (003 research R8), parsed from the decomp's roll chains
+
+
+def _parse_roll_chain(body: str, kind: str) -> list[int]:
+    """Percent per slot of one `roll = LCRNG_RandMod(100)` if/else chain. Each branch's condition is
+    a conjunction of `roll <op> N`; its slot comes from `return K;`, `encSlot = K;` or `*slot = K;`.
+    The final unconditional slot gets the remaining rolls. Raises on anything else."""
+    branches = re.findall(r"if \(([^)]*roll[^)]*)\) \{\s*(?:return (\d+);|encSlot = (\d+);|\*slot = (\d+);)", body)
+    tail = re.findall(r"\}\s*(?:else \{\s*)?(?:return (\d+);|encSlot = (\d+);|\*slot = (\d+);)\s*\}?\s*(?:break;|$|\n)", body)
+    if not branches:
+        raise ValueError(f"no roll branches found ({kind})")
+    taken: set[int] = set()
+    rates: dict[int, int] = {}
+    for cond, *slot in branches:
+        rolls = set(range(100))
+        for op, n in re.findall(r"roll (<=|>=|<|>|==) (\d+)", cond):
+            n = int(n)
+            rolls &= {r for r in range(100) if {"<": r < n, "<=": r <= n, ">": r > n, ">=": r >= n, "==": r == n}[op]}
+        rolls -= taken
+        taken |= rolls
+        k = int(next(x for x in slot if x))
+        rates[k] = rates.get(k, 0) + len(rolls)
+    rest = 100 - len(taken)
+    if rest:
+        if not tail:
+            raise ValueError(f"no fallback slot for {rest} rolls ({kind})")
+        k = int(next(x for x in tail[-1] if x))
+        rates[k] = rates.get(k, 0) + rest
+    n = max(rates) + 1
+    out = [rates.get(i, 0) for i in range(n)]
+    if sum(out) != 100:
+        raise ValueError(f"slot rates do not sum to 100 ({kind}): {out}")
+    return out
+
+
+def _c_function(path: Path, signature: str) -> str:
+    text = path.read_text()
+    start = text.index(signature)
+    return text[start:text.index("\n}\n", start)]
+
+
+@cache
+def slot_rate_tables() -> dict[str, list[int]]:
+    """Encounter-method -> percent per slot (wild_encounters.c GetGroundEncounterSlot,
+    GetWaterEncounterSlot, GetRodEncounterSlot's three cases)."""
+    out = {"grass": _parse_roll_chain(_c_function(WILD_C, "static u8 GetGroundEncounterSlot(void)\n{"), "grass"),
+           "surf": _parse_roll_chain(_c_function(WILD_C, "static u8 GetWaterEncounterSlot(void)\n{"), "surf")}
+    rod = _c_function(WILD_C, "static u8 GetRodEncounterSlot(const int fishingRodType)\n{")
+    for case in ("OLD_ROD", "GOOD_ROD", "SUPER_ROD"):
+        body = rod[rod.index(f"case FISHING_TYPE_{case}:"):]
+        body = body[:body.index("break;") + len("break;")]
+        out[case.lower()] = _parse_roll_chain(body, case.lower())
+    return out
+
+
+@cache
+def honey_slot_rates() -> list[int]:
+    """Percent per slot within a honey-tree group (honey_tree.c GetTreeEncounterSlot)."""
+    return _parse_roll_chain(_c_function(HONEY_C, "static void GetTreeEncounterSlot(u8 *slot)\n{"), "honey slot")
+
+
+@cache
+def honey_group_rates() -> dict[str, int]:
+    """encounters_honey_tree.json group -> best percent over tree types (honey_tree.c
+    GetTreeEncounterGroup: a normal tree and a Munchlax tree roll differently). The json groups
+    common / uncommon / rare are TREE_GROUP_A / B / C (the NARC is read at group - 1)."""
+    body = _c_function(HONEY_C, "static void GetTreeEncounterGroup(const BOOL isMunchlaxTree, u8 *group)\n{")
+    best: dict[str, int] = {}
+    if "\n    if (isMunchlaxTree) {" not in body or body.count("\n    } else {\n") != 1:
+        raise ValueError(f"{rel(HONEY_C)}: GetTreeEncounterGroup layout changed")
+    for part in body.split("\n    } else {\n"):  # the Munchlax-tree chain, then the normal-tree chain
+        prev = 0
+        for n, grp in re.findall(r"roll < (\d+)\) \{\s*\*group = (TREE_GROUP_\w+);", part):
+            best[grp] = max(best.get(grp, 0), int(n) - prev)
+            prev = int(n)
+        last = re.findall(r"\} else \{\s*\*group = (TREE_GROUP_\w+);", part)
+        if last:
+            best[last[-1]] = max(best.get(last[-1], 0), 100 - prev)
+    names = {"TREE_GROUP_A": "common", "TREE_GROUP_B": "uncommon", "TREE_GROUP_C": "rare"}
+    if set(names) - set(best):
+        raise ValueError(f"{rel(HONEY_C)}: GetTreeEncounterGroup changed: {best}")
+    return {names[g]: best[g] for g in names}
 
 
 def _enc_line(path: Path, key: str) -> str:
@@ -345,6 +437,8 @@ def wild_entries() -> list[Entry]:
     out: list[Entry] = []
     swarm_gates = _enable_swarm_gates()
     marsh = great_marsh_headers()
+    rates = slot_rate_tables()
+    grass = rates["grass"]
     for h in map_header_names():
         mh = map_headers().get(h)
         if mh is None or mh.encounters == "ENCOUNTERS_NONE":
@@ -357,45 +451,55 @@ def wild_entries() -> list[Entry]:
             for i, s in enumerate(land):
                 if h in marsh and i in (6, 7):
                     continue  # always replaced while the Safari Game runs (wild_encounters.c:340)
-                _add_slot(out, h, f"grass slot {i}", s["species"], s["level"], s["level"], [_enc_line(path, "land_encounters"), header_ref])
+                _add_slot(out, h, f"grass slot {i}", s["species"], s["level"], s["level"], [_enc_line(path, "land_encounters"), header_ref],
+                          rate=grass[i])
             for key, slots, cond in (("day", (2, 3), "DAY/TWILIGHT"), ("night", (2, 3), "NIGHT/LATE_NIGHT")):
                 for sp, slot in zip(d.get(key, []), slots):
                     lv = land[slot]["level"]
-                    _add_slot(out, h, f"{key} {cond} (slot {slot})", sp, lv, lv, [_enc_line(path, key), _anchor(WILD_C, "int timeOfDay = GetTimeOfDay();")])
+                    _add_slot(out, h, f"{key} {cond} (slot {slot})", sp, lv, lv, [_enc_line(path, key), _anchor(WILD_C, "int timeOfDay = GetTimeOfDay();")],
+                              rate=grass[slot])
             for sp, slot in zip(d.get("swarms", []), (0, 1)):
                 lv = land[slot]["level"]
                 _add_slot(out, h, f"swarm (slot {slot})", sp, lv, lv, [_enc_line(path, "swarms")],
-                          [gate("slot_type", _anchor(WILD_C, "if (SpecialEncounter_IsSwarmEnabled(specialEncounter))"), "swarm slots need EnableSwarms", False)] + list(swarm_gates))
+                          [gate("slot_type", _anchor(WILD_C, "if (SpecialEncounter_IsSwarmEnabled(specialEncounter))"), "swarm slots need EnableSwarms", False)] + list(swarm_gates),
+                          rate=grass[slot])
             for sp, slot in zip(d.get("radar", []), (4, 5, 10, 11)):
                 lv = land[slot]["level"]
                 _add_slot(out, h, f"poke radar (slot {slot})", sp, lv, lv, [_enc_line(path, "radar"), _anchor(WILD_C, "if (radarData->shakeType == 1) {")],
-                          [gate("slot_type", _anchor(WILD_C, "if (radarData->shakeType == 1) {"), "Poke Radar patch encounter", False)], ["ITEM_POKE_RADAR"])
+                          [gate("slot_type", _anchor(WILD_C, "if (radarData->shakeType == 1) {"), "Poke Radar patch encounter", False)], ["ITEM_POKE_RADAR"],
+                          rate=grass[slot])
             for ver in ("ruby", "sapphire", "emerald", "firered", "leafgreen"):
                 for sp, slot in zip(d.get(ver, []), (8, 9)):
                     lv = land[slot]["level"]
                     _add_slot(out, h, f"dual-slot {ver} (slot {slot})", sp, lv, lv, [_enc_line(path, ver)],
-                              [gate("other_cartridge", _anchor(DUAL_SLOT_C, "if (!nationalDexObtained) {"), f"needs a GBA {ver} cartridge in slot 2 (FR-005) and the National Dex", False)])
+                              [gate("other_cartridge", _anchor(DUAL_SLOT_C, "if (!nationalDexObtained) {"), f"needs a GBA {ver} cartridge in slot 2 (FR-005) and the National Dex", False)],
+                              rate=grass[slot])
             if "daily_encounters" in d:  # Trophy Garden
                 for sp in d["daily_encounters"]:
                     lo, hi = land[6]["level"], land[7]["level"]
                     _add_slot(out, h, "trophy garden daily (slots 6/7)", sp, min(lo, hi), max(lo, hi), [_enc_line(path, "daily_encounters"), _anchor(WILD_C, "if (MapHeader_IsTrophyGarden(fieldSystem->location->mapHeaderID)) {")],
-                              [gate(G.KIND_NATIONAL_DEX, f"{rel(WILD_C)}:{line_of(WILD_C, 'if (nationalDexObtained) {', 209)}", "Trophy Garden slots are replaced only with the National Dex", True)] + list(_backlot_gates()))
+                              [gate(G.KIND_NATIONAL_DEX, f"{rel(WILD_C)}:{line_of(WILD_C, 'if (nationalDexObtained) {', 209)}", "Trophy Garden slots are replaced only with the National Dex", True)] + list(_backlot_gates()),
+                              rate=grass[6] + grass[7])
         if d.get("surf_rate", 0):
             for i, s in enumerate(d.get("surf_encounters", [])):
-                _add_slot(out, h, f"surf slot {i}", s["species"], s["level_min"], s["level_max"], [_enc_line(path, "surf_encounters"), header_ref], req=["ITEM_HM03"])
+                _add_slot(out, h, f"surf slot {i}", s["species"], s["level_min"], s["level_max"], [_enc_line(path, "surf_encounters"), header_ref], req=["ITEM_HM03"],
+                          rate=rates["surf"][i])
         for rod, item in (("old_rod", "ITEM_OLD_ROD"), ("good_rod", "ITEM_GOOD_ROD"), ("super_rod", "ITEM_SUPER_ROD")):
             if d.get(f"{rod}_rate", 0):
                 for i, s in enumerate(d.get(f"{rod}_encounters", [])):
-                    _add_slot(out, h, f"{rod} slot {i}", s["species"], s["level_min"], s["level_max"], [_enc_line(path, f"{rod}_encounters"), header_ref], req=[item])
+                    _add_slot(out, h, f"{rod} slot {i}", s["species"], s["level_min"], s["level_max"], [_enc_line(path, f"{rod}_encounters"), header_ref], req=[item],
+                              rate=rates[rod][i])
         if h in marsh:
             look = ENC_DIR / "encounters_great_marsh_lookout.json"
             ld = json.loads(look.read_text())
             lo, hi = sorted((land[6]["level"], land[7]["level"]))
             for sp in dict.fromkeys(ld["before_national_dex"]):
-                _add_slot(out, h, f"great marsh daily, area {marsh[h]} (before National Dex)", sp, lo, hi, [_enc_line(look, "before_national_dex"), _anchor(MARSH_C, "encDataGroup = 10;")])
+                _add_slot(out, h, f"great marsh daily, area {marsh[h]} (before National Dex)", sp, lo, hi, [_enc_line(look, "before_national_dex"), _anchor(MARSH_C, "encDataGroup = 10;")],
+                          rate=grass[6] + grass[7])
             for sp in dict.fromkeys(ld["after_national_dex"]):
                 _add_slot(out, h, f"great marsh daily, area {marsh[h]} (after National Dex)", sp, lo, hi, [_enc_line(look, "after_national_dex"), _anchor(MARSH_C, "encDataGroup = 9;")],
-                          [gate(G.KIND_NATIONAL_DEX, _anchor(MARSH_C, "if (nationalDexObtained) {"), "after_national_dex list needs the National Dex", True)])
+                          [gate(G.KIND_NATIONAL_DEX, _anchor(MARSH_C, "if (nationalDexObtained) {"), "after_national_dex list needs the National Dex", True)],
+                          rate=grass[6] + grass[7])
         if h in feebas_headers():
             for rod in ("old_rod", "good_rod", "super_rod"):
                 if d.get(f"{rod}_rate", 0):
@@ -407,16 +511,35 @@ def wild_entries() -> list[Entry]:
     return out
 
 
+@cache
+def honey_tree_levels() -> tuple[int, int]:
+    """(lowest, highest) honey-tree encounter level, parsed from CreateWildMon_HoneyTree:
+    `levelVariance = HI - LO + 1; level = LO + LCRNG_RandMod(levelVariance)` (003 research R5)."""
+    text = WILD_C.read_text()
+    body = text[text.index("void CreateWildMon_HoneyTree("):]
+    var = re.search(r"levelVariance = (\d+) - (\d+) \+ 1;", body)
+    lvl = re.search(r"level = (\d+) \+ LCRNG_RandMod\(levelVariance\);", body)
+    if not var or not lvl or var.group(2) != lvl.group(1):
+        raise ValueError(f"{rel(WILD_C)}: CreateWildMon_HoneyTree level formula changed; update honey_tree_levels()")
+    return int(lvl.group(1)), int(var.group(1))
+
+
 def _honey_entries() -> list[Entry]:
     path = ENC_DIR / "encounters_honey_tree.json"
     d = json.loads(path.read_text())
-    lv_ref = _anchor(WILD_C, "int species = HoneyTree_GetSpecies(fieldSystem);")
+    lv_ref = _anchor(WILD_C, "u8 level = 5 + LCRNG_RandMod(levelVariance);")
+    level = honey_tree_levels()
+    slot_rates, group_rates = honey_slot_rates(), honey_group_rates()
     out = []
     for header, href in honey_tree_headers():
         for group in ("common", "uncommon", "rare"):
             for sp in dict.fromkeys(d[group]):
-                det = f"honey tree ({group})" + ("; only on the Trainer-ID-dependent Munchlax trees (honey_tree.c IsMunchlaxTree)" if group == "rare" else "")
-                out.append(Entry("wild_slot", sp, header, UNLIMITED, [], [ref(path, f'"{group}"'), href, lv_ref], None, None, ["ITEM_HONEY"], [], None, det))
+                share = sum(r for r, s in zip(slot_rates, d[group]) if s == sp)
+                rate = max(1, round(group_rates[group] * share / 100)) if share else 0
+                # The rare group appears only on the four trees picked from the Trainer ID (honey_tree.c IsMunchlaxTree).
+                det = f"honey tree ({group})" + ("; only some trees, depending on Trainer ID" if group == "rare" else "")
+                out.append(Entry("wild_slot", sp, header, UNLIMITED, [], [ref(path, f'"{group}"'), href, lv_ref], level, None, ["ITEM_HONEY"], [], None, det,
+                                 rate_percent=rate))
     return out
 
 
@@ -1000,6 +1123,62 @@ def game_corner_entries() -> list[Entry]:
 
 
 @cache
+def frontier_exchange_lists() -> dict[str, list[tuple[str, str]]]:
+    """MART_FRONTIER_ID_* -> [(ITEM_*, file:line)] from ScrCmd_PokeMartFrontier (src/scrcmd.c): the
+    martID indexes BattleFrontierExchangeServiceCorners[], whose order follows generated/mart_frontier_id.txt
+    (003 research R3: the Battle Frontier BP exchange)."""
+    text = SCRCMD_C.read_text()
+    start = text.index("static BOOL ScrCmd_PokeMartFrontier(ScriptContext *ctx)\n{")  # the definition, not the prototype
+    end = text.index("\n}\n", start)
+    body = text[start:end]
+    base_line = text[:start].count("\n") + 1
+    arrays: dict[str, list[tuple[str, str]]] = {}
+    for m in re.finditer(r"static const u16 (\w+)\[\] = \{(.*?)\};", body, re.S):
+        items = []
+        for im in re.finditer(r"\bITEM_\w+", m.group(2)):  # \b: not the ITEM_END inside SHOP_ITEM_END
+            line = base_line + body[:m.start(2) + im.start()].count("\n")
+            items.append((im.group(0), f"{rel(SCRCMD_C)}:{line}"))
+        arrays[m.group(1)] = items
+    order = re.search(r"BattleFrontierExchangeServiceCorners\[\] = \{(.*?)\};", body, re.S)
+    names = re.findall(r"\w+", order.group(1)) if order else []
+    ids = [l.strip() for l in MART_FRONTIER_IDS.read_text().splitlines() if l.strip()]
+    if len(names) != len(ids) or not all(n in arrays for n in names):
+        raise ValueError(f"{rel(SCRCMD_C)}: ScrCmd_PokeMartFrontier layout changed; update frontier_exchange_lists()")
+    return {mid: arrays[n] for mid, n in zip(ids, names)}
+
+
+@cache
+def frontier_bp_prices() -> dict[str, int]:
+    """ITEM_* -> BP price (src/overlay007/shop_menu.c itemToBpPrice)."""
+    text = SHOP_MENU_C.read_text()
+    table = re.search(r"itemToBpPrice\[\]\[2\] = \{(.*?)\};", text, re.S)
+    if not table:
+        raise ValueError(f"{rel(SHOP_MENU_C)}: itemToBpPrice not found")
+    return {m.group(1): int(m.group(2)) for m in re.finditer(r"\{ (ITEM_\w+), (\d+) \}", table.group(1))}
+
+
+def frontier_exchange_entries() -> list[Entry]:
+    """Battle Frontier exchange counters: unlimited (BP can be earned again), phase from the site's
+    gates and map (post-game; the Battle Frontier is entered after the Champion)."""
+    lists = frontier_exchange_lists()
+    prices = frontier_bp_prices()
+    out = []
+    for stem, idx in _prim_sites("SCRCMD_POKEMARTFRONTIER"):
+        c = load_script_file(stem).commands[idx]
+        prim = next(p for p in c.prims if p.op == "SCRCMD_POKEMARTFRONTIER")
+        items = lists.get(prim.operands[0].text)
+        if items is None:
+            continue
+        for h in _owners(stem):
+            gs = site_gates(h, stem, idx)
+            for item, iref in items:
+                bp = prices.get(item)
+                out.append(Entry("frontier_exchange", item, h, UNLIMITED, list(gs), [str(c.ref), iref], None, None, [], [],
+                                 None, f"{bp} BP" if bp is not None else "BP"))
+    return out
+
+
+@cache
 def mining_item_map() -> dict[str, tuple[str, str]]:
     """MINING_TREASURE_* -> (ITEM_*, ref) via underground.c's treasure->item table (indexed from
     MINING_TREASURE_START) and the enum order in include/underground/mining.h."""
@@ -1155,6 +1334,7 @@ def all_entries() -> list[Entry]:
         + npc_gift_entries()
         + shop_entries()
         + game_corner_entries()
+        + frontier_exchange_entries()
         + underground_entries()
         + berry_tree_entries()
         + tutor_entries()

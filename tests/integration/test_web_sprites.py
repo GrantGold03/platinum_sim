@@ -51,3 +51,31 @@ def test_sprites(tmp_path, catalog):
         assert client.get(bad).status_code == 404, bad
 
     assert client.get("/api/sprites/infernape/front.png").content == r.content
+
+
+def test_trainer_sprites_and_league(tmp_path, catalog):
+    """003 US4 (FR-020, FR-021): the five first-run trainers, their sprites (res/trainers/classes/<class>/
+    front_scan.png, 160x80, tRNS added) and their parties (read from the decomp in the test)."""
+    from platsim.decomp.species import by_constant
+    from platsim.decomp.trainers import load_league
+
+    client = TestClient(make_app(tmp_path, catalog))
+    league = client.get("/api/league")
+    assert league.status_code == 200 and "max-age" in league.headers.get("cache-control", "")
+    data = league.json()
+    expected = [(t.name.lower(), t.name, [by_constant()[m.species].key for m in t.party]) for t in load_league()]
+    assert [(x["trainer"], x["name"], x["party"]) for x in data] == expected
+    assert [x["trainer"] for x in data] == ["aaron", "bertha", "flint", "lucian", "cynthia"]
+    cyn = data[-1]["party"]
+    assert len(cyn) == 6 and all(len(x["party"]) == 5 for x in data[:4])
+    assert cyn[0] == "spiritomb" and cyn[-1] == "garchomp"  # spec US4 scenario 1, checked against load_league above
+    for x in data:
+        r = client.get(x["sprite"])
+        assert r.status_code == 200 and r.headers["content-type"] == "image/png", x["trainer"]
+        ihdr = dict(_chunks(r.content))[b"IHDR"]
+        assert struct.unpack(">II", ihdr[:8]) == (160, 80), x["trainer"]
+        assert b"tRNS" in [t for t, _ in _chunks(r.content)]
+        for key in x["party"]:
+            assert client.get(f"/api/sprites/{key}/front.png").status_code == 200, key
+    for bad in ("/api/trainer-sprites/roark.png", "/api/trainer-sprites/..%2Fx.png", "/api/trainer-sprites/AARON.png"):
+        assert client.get(bad).status_code == 404, bad

@@ -10,6 +10,7 @@ Outputs (one file per table, plus manifest.json):
     constants.json {"decomp_commit", "gender_ratios", "natures", "abilities", "nature_affinities", "src"}
     availability.json {"decomp_commit", "national_dex", "pp_restore_between_battles", "counts", "entries"}  (platsim.availability.ledger)
     abilities_battle.json {"decomp_commit", "rule", "counts", "abilities": {ABILITY_*: {has_battle_effect, battle_refs, ...}}}  (platsim.optimizer.abilities, T060)
+    story_rank.json {"decomp_commit", "gym_order", "field_moves", "ranks": {MAP_HEADER_*: {badges_needed, hops}}, "rule"}  (platsim.availability.story_rank, 003 T038)
     manifest.json  {"decomp_commit", "showdown_commit", "files": {name: sha256}}
 
 Determinism: every file is `json.dumps(..., sort_keys=True, indent=1)` + "\n", lists keep the
@@ -120,6 +121,14 @@ def _abilities_battle() -> dict[str, Any]:
     return battle_effect_table()
 
 
+def _story_rank() -> dict[str, Any]:
+    """003 T038/T039 (research R9): gym badges needed to reach each map; read at runtime by
+    story_rank.rank(), which never rebuilds."""
+    from platsim.availability.story_rank import story_rank_json
+
+    return story_rank_json()
+
+
 OUTPUTS: dict[str, Builder] = {
     "abilities_battle": _abilities_battle,
     "availability": _availability,
@@ -130,6 +139,7 @@ OUTPUTS: dict[str, Builder] = {
     "tutors": _tutors,
     "trainers": _trainers,
     "exp": _exp,
+    "story_rank": _story_rank,
 }
 
 

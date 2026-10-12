@@ -150,3 +150,18 @@ def test_uncertain_maps_are_listed(graph):
     assert "MAP_HEADER_ROUTE_224" in unc  # terrain-only League adjacency
     for e in graph.uncertain_edges():
         assert e.gates and all(g.ref.path and g.ref.line > 0 for g in e.gates)
+
+
+def test_post_game_mode_finds_maps_that_can_never_be_entered(graph):
+    """003 research R3: with post-game and uncertain edges usable, every map the game can enter is
+    reachable; what is left can never be entered (unused map headers)."""
+    pre = graph.reachable(strict=True)
+    ever = graph.reachable(strict=True, post_game=True)
+    assert "MAP_HEADER_ROUTE_201" in pre and "MAP_HEADER_ROUTE_201" in ever  # positive control
+    assert set(pre) <= set(ever) and len(ever) > len(pre)
+    loose = graph.reachable(strict=False, post_game=True)
+    stark = [h for h in map_header_names() if h.startswith("MAP_HEADER_STARK_MOUNTAIN")]
+    assert stark and not set(stark) & set(pre) and set(stark) <= set(loose)  # post-game, but enterable
+    for h in ("MAP_HEADER_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F", "MAP_HEADER_UNUSED_JUBILIFE_CITY_CONDOMINIUMS_4F",
+              "MAP_HEADER_UNUSED_BATTLE_PARK", "MAP_HEADER_UNUSED_RESORT_AREA_MART"):
+        assert h not in ever, h

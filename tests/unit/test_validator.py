@@ -290,3 +290,93 @@ def test_cli_validate_exit_codes(name, led, capsys):
 def test_cli_validate_missing_file(capsys):
     assert cli.main(["validate", str(FIX / "does_not_exist.json")]) == 1
     assert "no such file" in capsys.readouterr().err
+
+
+# --- 003: new rules and the Leftovers team rule (spec FR-008–FR-011, SC-004; quickstart V4) -----
+
+POST_MON = LegalityOptions(allow_post_game_pokemon=True)
+POST_ITEMS = LegalityOptions(allow_post_game_items=True)
+OUTSIDE = LegalityOptions(allow_unobtainable_pokemon=True)
+
+
+def _build(species: str, level: int, view) -> dict:
+    """A legal Build made by the optimizer's realize, with one level-up move the species knows."""
+    from platsim.optimizer import resources as R
+
+    sp = MS.by_constant()[species]
+    move = next(mv for n, mv in sp.learnset_level if n <= 10)
+    real = R.realize((R.MemberSpec(species, "own", (move,)),), [level], view)
+    assert not isinstance(real, R.Refusal), real.reason
+    return real.team.builds[0].to_dict()
+
+
+def _with_leftovers(d: dict, slots) -> dict:
+    d = copy.deepcopy(d)
+    for i in slots:
+        d["builds"][i]["held_item"] = "leftovers"
+    return d
+
+
+def test_leftovers_needs_munchlax_or_snorlax(led):
+    base = _legal()
+    assert validate(base, led) == []  # positive control
+    one = _with_leftovers(base, [0])
+    assert _codes(one, led) == ["LEFTOVERS_NEEDS_MUNCHLAX"]
+    v = validate(one, led)[0]
+    assert "Munchlax" in v.message and "FR-" not in v.message
+    for mon in ("SPECIES_MUNCHLAX", "SPECIES_SNORLAX"):
+        d = copy.deepcopy(base)
+        d["builds"][4] = _build(mon, 57, led)  # replaces the NPC-trade Chatot
+        assert validate(d, led) == [], mon
+        assert validate(_with_leftovers(d, [0, 1, 2]), led) == [], mon  # any member, any number
+
+
+def test_leftovers_with_post_game_items_is_one_copy(led):
+    view = led.with_options(POST_ITEMS)
+    base = _legal()
+    assert validate(_with_leftovers(base, [0]), view) == []  # Victory Road item ball
+    assert "LEFTOVERS_NEEDS_MUNCHLAX" in _codes(_with_leftovers(base, [0, 1]), view)
+
+
+def _post_only(led) -> str:
+    from platsim.availability.ledger import POST
+
+    acq = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
+    phases: dict[str, set] = {}
+    for c in led.entries:
+        if c.entry.kind in acq:
+            phases.setdefault(c.entry.subject, set()).add(c.phase)
+    view = led.with_options(POST_MON)
+    return next(s for s, p in sorted(phases.items()) if p == {POST} and MS.source_options(s, view)
+                and not MS.source_options(s, led))
+
+
+def test_post_game_pokemon_rule(led):
+    x = _post_only(led)
+    view = led.with_options(POST_MON)
+    d = _legal()
+    d["builds"][4] = _build(x, 57, view)
+    assert "SPECIES_UNAVAILABLE" in _codes(d, led), x
+    assert validate(d, view) == [], (x, [v.message for v in validate(d, view)])
+
+
+def test_unobtainable_pokemon_rule(led):
+    view = led.with_options(OUTSIDE)
+    opts = MS.source_options("SPECIES_BULBASAUR", view)
+    assert opts and opts[-1].kind == "outside_platinum" and opts[-1].min_level == 1
+    assert "Unavailable in Platinum" in opts[-1].detail
+    assert not MS.source_options("SPECIES_BULBASAUR", led)
+    d = _legal()
+    d["builds"][4] = _build("SPECIES_BULBASAUR", 57, view)
+    assert "SPECIES_UNAVAILABLE" in _codes(d, led)
+    assert validate(d, view) == []
+    # A dual-slot pokemon (Caterpie: only other-cartridge entries) uses its real encounter levels.
+    cat = MS.source_options("SPECIES_CATERPIE", view)
+    assert any(o.kind == "wild_slot" and "dual-slot" in o.detail and o.min_level > 1 for o in cat)
+    assert not MS.source_options("SPECIES_CATERPIE", led)
+
+
+def test_postgame_tutor_is_legal_with_post_game_items(led):
+    path = str(FIX / "illegal_postgame_tutor.json")
+    assert _codes(path, led) == ["MOVE_NOT_LEARNABLE"]
+    assert validate(path, led.with_options(POST_ITEMS)) == []

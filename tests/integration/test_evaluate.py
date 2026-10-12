@@ -79,8 +79,13 @@ def test_determinism_fast(tmp_path):
     for k in ("decomp_commit", "showdown_commit", "divergence_ledger_version", "seeds"):
         assert r[k]
     assert r["provenance"]["worker"]["decomp_data_hash"].startswith("sha256:")
-    # Legality options the team was validated under (both off by default)
-    assert r["provenance"]["legality_options"] == {"allow_egg_moves": False, "allow_trade_evolutions": False}
+    # Legality options the team was validated under: every rule, all off by default (003 adds three)
+    from dataclasses import fields
+
+    from platsim.legality.models import LegalityOptions
+
+    assert r["provenance"]["legality_options"] == {f.name: False for f in fields(LegalityOptions)}
+    assert len(r["provenance"]["legality_options"]) == 5
     for f in ("result.json", "result.xlsx", "result.csv", "team.txt"):
         assert (tmp_path / "a" / f).is_file()
     # team.txt is a Showdown export that re-imports to a legal team

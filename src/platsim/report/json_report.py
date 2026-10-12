@@ -45,10 +45,11 @@ QUALIFYING_PRESETS = frozenset(n for n, p in _PRESETS.items() if p.qualifying)
 DIVERGENCE_AREAS = frozenset({"data", "mechanics", "ai", "exp"})
 DIVERGENCE_RESOLUTIONS = frozenset({"corrected", "accepted"})
 
+# Shown on the page as well as in the reports, so it names no internal document ids (003 FR-001).
 QUICK_WARNING = (
-    "QUICK BUDGET: this result used the 'quick' simulation preset (research.md R8). Its run counts "
-    "have no confidence-interval target, it does not meet SC-003, and it can never be 'qualified'. "
-    "For testing only."
+    "QUICK BUDGET: this result used the 'quick' simulation preset. Its run counts have no "
+    "confidence-interval target, it does not meet the confidence target for a qualifying result, "
+    "and it can never be 'qualified'. For testing only."
 )
 
 DEFAULT_OBJECTIVE = (

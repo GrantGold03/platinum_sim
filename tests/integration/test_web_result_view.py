@@ -77,3 +77,18 @@ def test_ability_tie_label(monkeypatch):
     assert result_view._ability(tie("missing"), "Keen Eye") == "Keen Eye (no significant difference)"
     better = {"ability_reason": "better", "ability": "ABILITY_KEEN_EYE", "species": "two"}
     assert result_view._ability(better, "Keen Eye") == "Keen Eye"
+
+
+def test_moves_carry_their_type(fixture_runs_dir, catalog):
+    """003 T049 (FR-022): each move has its display type, read from the decomp move data."""
+    import json
+
+    from platsim.decomp.moves import load_moves
+
+    client = TestClient(make_app(fixture_runs_dir, catalog))
+    team = client.get(f"/api/jobs/{FIXTURE_ID}").json()["team"]
+    builds = json.loads((FIXTURE_DIR / "result.json").read_text())["team"]["builds"]
+    for m, b in zip(team, builds):
+        want = [load_moves()["MOVE_" + mv["move"].upper()].type.removeprefix("TYPE_").capitalize() for mv in b["moves"]]
+        assert [mv["type"] for mv in m["moves"]] == want, (m["species"], want)
+    assert team[0]["moves"][0]["type"] == "Fire"  # positive control: Infernape's Fire Blast (fixture result.json)

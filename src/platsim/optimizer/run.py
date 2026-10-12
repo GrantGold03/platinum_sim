@@ -84,7 +84,7 @@ def _log(msg: str) -> None:
 
 def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
     return {"species": list(consts), "min_clear": req.min_clear, "seed": str(req.seed), "budget": req.budget,
-            "legality_options": req.legality.to_dict(), "state_version": STATE_VERSION}
+            "legality_options": req.legality.to_dict(compact=True), "state_version": STATE_VERSION}
 
 
 def default_out_dir(fp: dict) -> Path:
@@ -203,7 +203,7 @@ def _member_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
 def _build_cands(consts, led, ref_level: int) -> list[dict]:
     out = []
     for c in consts:
-        out.append({v.key: C.member_candidates(c, v, ref_level, led) for v in C.variants(c, led)})
+        out.append({v.key: C.member_candidates(c, v, ref_level, led, team=tuple(consts)) for v in C.variants(c, led)})
     return out
 
 
@@ -667,7 +667,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
         "final_team_labels": [m.label() for m in specs]})
     rep.provenance["validator"] = {"violations": 0, "final_levels_checked": finals}
     if comparison and comparison.get("verdict") == "indistinguishable":
-        rep.warnings.append("Winner and runner-up are statistically indistinguishable on paired runs (FR-019); "
+        rep.warnings.append("Winner and runner-up are statistically indistinguishable on paired runs; "
                             "the winner is the screening winner.")
     paths = write_all(rep, out, showdown_name)
     state.done("report", {"qualified": rep.qualified, "paths": {k: str(p.name) for k, p in paths.items()}})

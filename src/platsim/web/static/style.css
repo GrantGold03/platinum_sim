@@ -12,11 +12,32 @@
   --warn: #9a6700;
   --excluded: #8a929c;
   --hover: #eef1f6;
+  /* Move-type colours (003 FR-022): page styling, not game data; each reaches at least 4.5:1 against
+     --surface in its theme (tests/unit/test_type_colours.py). */
+  --type-normal: #77774d;
+  --type-fire: #bc560e;
+  --type-water: #356aeb;
+  --type-electric: #8a7005;
+  --type-grass: #458028;
+  --type-ice: #307e7e;
+  --type-fighting: #c03028;
+  --type-poison: #a040a0;
+  --type-ground: #8d6f1d;
+  --type-flying: #7e5ae9;
+  --type-psychic: #e50a4c;
+  --type-bug: #707b15;
+  --type-rock: #857429;
+  --type-ghost: #705898;
+  --type-dragon: #7038f8;
+  --type-dark: #705848;
+  --type-steel: #6e6e9f;
   color-scheme: light dark;
 }
 
+/* Theme (003 FR-023): the system setting decides unless the toggle stored a choice (data-theme on
+   <html>). The dark values are repeated for the system rule and for an explicit dark choice. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #101317;
     --surface: #181c22;
     --text: #e6e9ee;
@@ -30,8 +51,79 @@
     --warn: #e3b341;
     --excluded: #6b737d;
     --hover: #222832;
+    --type-normal: #a8a878;
+    --type-fire: #f08030;
+    --type-water: #6890f0;
+    --type-electric: #f8d030;
+    --type-grass: #78c850;
+    --type-ice: #98d8d8;
+    --type-fighting: #dc5f58;
+    --type-poison: #c062c0;
+    --type-ground: #e0c068;
+    --type-flying: #a890f0;
+    --type-psychic: #f85888;
+    --type-bug: #a8b820;
+    --type-rock: #b8a038;
+    --type-ghost: #907bb2;
+    --type-dragon: #976efa;
+    --type-dark: #9f7f6a;
+    --type-steel: #b8b8d0;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #101317;
+  --surface: #181c22;
+  --text: #e6e9ee;
+  --muted: #9aa3ae;
+  --border: #2f3640;
+  --accent: #7d97ff;
+  --accent-text: #0d1020;
+  --danger: #ff8a80;
+  --danger-bg: #3a1916;
+  --ok: #56d364;
+  --warn: #e3b341;
+  --excluded: #6b737d;
+  --hover: #222832;
+  --type-normal: #a8a878;
+  --type-fire: #f08030;
+  --type-water: #6890f0;
+  --type-electric: #f8d030;
+  --type-grass: #78c850;
+  --type-ice: #98d8d8;
+  --type-fighting: #dc5f58;
+  --type-poison: #c062c0;
+  --type-ground: #e0c068;
+  --type-flying: #a890f0;
+  --type-psychic: #f85888;
+  --type-bug: #a8b820;
+  --type-rock: #b8a038;
+  --type-ghost: #907bb2;
+  --type-dragon: #976efa;
+  --type-dark: #9f7f6a;
+  --type-steel: #b8b8d0;
+  color-scheme: dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Move names in their type's colour; the type is also named in the move's tooltip. */
+.move[data-type] { font-weight: 600; }
+.move[data-type="Normal"] { color: var(--type-normal); }
+.move[data-type="Fire"] { color: var(--type-fire); }
+.move[data-type="Water"] { color: var(--type-water); }
+.move[data-type="Electric"] { color: var(--type-electric); }
+.move[data-type="Grass"] { color: var(--type-grass); }
+.move[data-type="Ice"] { color: var(--type-ice); }
+.move[data-type="Fighting"] { color: var(--type-fighting); }
+.move[data-type="Poison"] { color: var(--type-poison); }
+.move[data-type="Ground"] { color: var(--type-ground); }
+.move[data-type="Flying"] { color: var(--type-flying); }
+.move[data-type="Psychic"] { color: var(--type-psychic); }
+.move[data-type="Bug"] { color: var(--type-bug); }
+.move[data-type="Rock"] { color: var(--type-rock); }
+.move[data-type="Ghost"] { color: var(--type-ghost); }
+.move[data-type="Dragon"] { color: var(--type-dragon); }
+.move[data-type="Dark"] { color: var(--type-dark); }
+.move[data-type="Steel"] { color: var(--type-steel); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -245,6 +337,23 @@ footer { margin-top: 8px; }
 .chart-tip { position: absolute; z-index: 20; padding: 6px 10px; font-size: 0.85rem; background: var(--surface);
   border: 1px solid var(--accent); border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); pointer-events: none; }
 
+/* ---- theme toggle (003 FR-023): top-right of the header ----------------------------------- */
+header.site { position: relative; }
+.theme-toggle { position: absolute; top: 12px; right: 16px; padding: 6px 12px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.85rem; cursor: pointer; }
+.theme-toggle:hover { background: var(--hover); }
+header.site h1 { padding-right: 120px; }
+
+/* ---- trainer pop-up (003 FR-020) -------------------------------------------------------- */
+.trainer-pop { position: absolute; z-index: 30; padding: 8px 10px; background: var(--surface); border: 1px solid var(--accent);
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); pointer-events: none; max-width: calc(100vw - 16px); }
+.trainer-pop .pop-head { margin: 0 0 6px; font-size: 0.85rem; }
+.trainer-pop .pop-body { display: flex; align-items: center; gap: 10px; }
+.trainer-pop .pop-grid { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px); gap: 2px; }
+.trainer-pop .pop-grid .sprite-front, .trainer-pop .pop-empty { width: 56px; height: 56px; }
+.trainer-pop .pop-grid .sprite-front img { width: 112px; height: 56px; object-fit: fill; }
+.trainer-pop .pop-empty { display: block; border: 1px dashed var(--border); border-radius: 6px; }
+
 /* ---- team cards (FR-023, SC-002) -------------------------------------------------------- */
 .team-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 @media (max-width: 1200px) { .team-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -287,7 +396,8 @@ header.site .lede { margin-bottom: 8px; }
 #setup .card { padding: 12px 14px; margin-bottom: 10px; }
 #setup h2 { margin-bottom: 8px; }
 #setup .rules { margin-bottom: 8px; padding-bottom: 2px; }
-#setup .rules p { margin: 2px 0 6px; }
+#setup .rules .rule-tip { display: block; }
+#setup .rules .rule-tip > .tip { max-width: min(340px, 80vw); pointer-events: none; }  /* never blocks the next rule */
 #setup .field { margin-bottom: 8px; }
 #setup .field input, #setup .field select { padding: 8px 10px; }
 #setup .slots li { min-height: 40px; padding: 3px 4px 3px 10px; }

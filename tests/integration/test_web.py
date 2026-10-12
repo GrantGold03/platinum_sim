@@ -14,7 +14,10 @@ validator's source rule (~35 s once per session). Game facts used here:
 
 from __future__ import annotations
 
+import dataclasses
 import json
+import pathlib
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,9 +31,10 @@ def test_page_is_served(tmp_path, catalog):
     client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
     r = client.get("/")
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/html")
-    for needle in ('id="search"', 'id="show-excluded"', 'id="slots"', 'id="min-clear"', 'value="75"', 'id="seed"',
+    for needle in ('id="search"', 'id="slots"', 'id="min-clear"', 'value="75"', 'id="seed"',
                    ">Optimize<", "/static/app.js", 'name="viewport"'):
         assert needle in r.text, needle
+    assert 'id="show-excluded"' not in r.text  # 003 FR-003: excluded pokemon are always listed
     assert client.get("/static/app.js").status_code == 200
     assert "prefers-color-scheme: dark" in client.get("/static/style.css").text
 
@@ -44,11 +48,12 @@ def test_species_search(tmp_path, catalog, ledger):
     assert set(gar) >= {"key", "name", "types", "available"}
     assert len(client.get("/api/species", params={"q": ""}).json()) == 25
 
-    # Munchlax: project rule (ledger.py:171), shown with its reason; hidden when excluded=0.
-    m = client.get("/api/species", params={"q": "munchlax"}).json()
-    assert m and m[0]["key"] == "munchlax" and m[0]["available"] is False
-    assert m[0]["reason_code"] == "excluded" and "FR-006a" in m[0]["reason"]
-    assert client.get("/api/species", params={"q": "munchlax", "excluded": 0}).json() == []
+    # 003 FR-008: Munchlax and Snorlax are usable (001's Munchlax exclusion is superseded).
+    for key in ("munchlax", "snorlax"):
+        m = client.get("/api/species", params={"q": key}).json()
+        assert m and m[0]["key"] == key and m[0]["available"] is True, m[:1]
+    # A crossed-out pokemon is hidden only when a caller asks for excluded=0.
+    assert client.get("/api/species", params={"q": "bulbasaur", "excluded": 0}).json() == []
 
     # Post-game-only species, derived from the ledger: every acquisition entry is post_game.
     from platsim.availability.ledger import POST
@@ -62,8 +67,68 @@ def test_species_search(tmp_path, catalog, ledger):
     assert post_only, "positive control: the ledger has post-game-only species"
     for s in post_only[:5]:
         hit = next(x for x in client.get("/api/species", params={"q": s.key}).json() if x["key"] == s.key)
-        assert hit["available"] is False and "post-game" in hit["reason"], hit
+        assert hit["available"] is False and "post-game" in hit["reason"].lower(), hit
     assert sum(1 for s in post_only if s.reason_code == "post_game") >= 1
+
+
+ID_RE = re.compile(r"\b(FR|SC)-\d+")
+
+
+def catalog_ledger_entries(catalog):
+    from platsim.availability.ledger import build_ledger
+
+    return build_ledger().entries
+
+
+def test_reasons_are_plain_and_excluded_pokemon_always_listed(tmp_path, catalog):
+    """003 US1 (FR-001–FR-006, SC-002): every match is listed, usable or crossed out, with a short
+    plain reason; no requirement id and never the word "species"."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    golem = client.get("/api/species", params={"q": "golem"}).json()[0]  # Graveler -> Golem is EVO_TRADE
+    assert golem["key"] == "golem" and golem["available"] is False
+    assert "Graveler" in golem["reason"] and "trade" in golem["reason"]
+    assert client.get("/api/species", params={"q": "golem", "trade_evolutions": 1}).json()[0]["available"] is True
+
+    # Caterpie: dual-slot entries only; Bulbasaur: no entry at all (research R4). Both are "Unavailable in Platinum".
+    for key in ("caterpie", "bulbasaur"):
+        hit = client.get("/api/species", params={"q": key}).json()[0]
+        assert hit["key"] == key and hit["available"] is False
+        assert hit["reason"] == "Unavailable in Platinum" and hit["reason_code"] == "unavailable", hit
+
+    assert ID_RE.search("needs a second cartridge, FR-005"), "positive control: the id pattern matches"
+    for trade in (False, True):
+        opts = LegalityOptions(allow_trade_evolutions=trade)
+        for s in catalog.species:
+            st = catalog.status(s, opts)
+            assert st.available or st.reason, s.key
+            for text in (st.reason or "", st.note or ""):
+                assert not ID_RE.search(text) and "species" not in text.lower(), (s.key, text)
+
+
+def test_full_name_search_returns_that_pokemon_first(catalog):
+    """003 SC-002: searching a pokemon's full name returns it first, usable or not, under every rule
+    combination the options allow (T020 extends the combinations)."""
+    import itertools
+
+    names = [f.name for f in dataclasses.fields(LegalityOptions) if f.name != "allow_egg_moves"]
+    for values in itertools.product((False, True), repeat=len(names)):
+        opts = LegalityOptions(**dict(zip(names, values)))
+        for s in catalog.species:
+            hits = catalog.search(s.name, options=opts)
+            assert hits and hits[0].key == s.key, (s.name, [h.key for h in hits[:3]], opts)
+
+
+def test_loading_and_error_texts_say_pokemon(tmp_path, catalog):
+    holder = webapp.CatalogHolder()
+    with pytest.raises(webapp.HTTPException) as e:
+        holder.require()
+    assert e.value.status_code == 503 and "Pokémon" in e.value.detail and "species" not in e.value.detail.lower()
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    team = _available_team(catalog)
+    for body in ({"species": team[:5]}, {"species": team[:5] + ["not_a_mon"]}, {"species": "x"}):
+        r = client.post("/api/jobs", json=body).json()
+        texts = [r["detail"], *r.get("reasons", {}).values()]
+        assert all("species" not in t.lower() and not ID_RE.search(t) for t in texts), texts
 
 
 def test_post_validation(tmp_path, catalog):
@@ -71,10 +136,10 @@ def test_post_validation(tmp_path, catalog):
     team = _available_team(catalog)
     r = client.post("/api/jobs", json={"species": team[:5]})
     assert r.status_code == 422 and "exactly 6" in r.json()["detail"]
-    r = client.post("/api/jobs", json={"species": team[:5] + ["munchlax"]})
-    assert r.status_code == 422 and "munchlax" in r.json()["reasons"]
+    r = client.post("/api/jobs", json={"species": team[:5] + ["golem"]})
+    assert r.status_code == 422 and "golem" in r.json()["reasons"]
     r = client.post("/api/jobs", json={"species": team[:5] + ["not_a_species"]})
-    assert r.status_code == 422 and r.json()["reasons"] == {"not_a_species": "unknown species"}
+    assert r.status_code == 422 and r.json()["reasons"] == {"not_a_species": "unknown Pokémon"}
     r = client.post("/api/jobs", json={"species": team, "min_clear": 1.5})
     assert r.status_code == 422
     r = client.post("/api/jobs", json={"species": team, "budget": "nope"})
@@ -100,7 +165,9 @@ def test_job_lifecycle_and_results(tmp_path, catalog):
     job = _wait(client, jid, {"done", "failed"})
     assert job["status"] == "done", job
     assert job["species"] == team and job["options"] == {"min_clear": 0.8, "seed": "fixed", "budget": "standard",
-                                                           "allow_egg_moves": False, "allow_trade_evolutions": False}
+                                                           "allow_egg_moves": False, "allow_trade_evolutions": False,
+                                                           "allow_post_game_pokemon": False, "allow_post_game_items": False,
+                                                           "allow_unobtainable_pokemon": False}
     req = stub.calls[0]
     assert req.species == tuple(team) and req.min_clear == 0.8 and req.seed == "fixed" and req.out_dir == tmp_path / jid
     assert req.legality == LegalityOptions()  # both optional rules off by default
@@ -182,11 +249,14 @@ def test_legality_options_page_search_and_jobs(tmp_path, catalog):
     stub = StubRunner()
     client = TestClient(webapp.create_app(runner=stub, runs_dir=tmp_path, catalog=catalog))
     page = client.get("/").text
-    for cid in ("allow-egg-moves", "allow-trade-evolutions"):
+    rule_ids = ("allow-egg-moves", "allow-trade-evolutions", "allow-post-game-pokemon", "allow-post-game-items",
+                "allow-unobtainable-pokemon")
+    assert page.count('type="checkbox"') == len(rule_ids)
+    for cid in rule_ids:
         tag = page[page.index(f'id="{cid}"') - 7:page.index(f'id="{cid}"') + 60]
         assert 'type="checkbox"' in tag and "checked" not in tag, tag
     js = client.get("/static/app.js").text
-    assert "allow_egg_moves" in js and "allow_trade_evolutions" in js and "trade_evolutions=" in js
+    assert "allow_egg_moves" in js and "allow_trade_evolutions" in js and "\"trade_evolutions\"" in js and "ruleQuery" in js
 
     off = client.get("/api/species", params={"q": "alakazam"}).json()
     assert off[0]["key"] == "alakazam" and off[0]["available"] is False and off[0]["reason_code"] == "trade_evolution"
@@ -208,6 +278,29 @@ def test_legality_options_page_search_and_jobs(tmp_path, catalog):
     assert job["status"] == "done", job
     assert job["options"]["allow_egg_moves"] is True and job["options"]["allow_trade_evolutions"] is True
     assert stub.calls[-1].legality == LegalityOptions(allow_egg_moves=True, allow_trade_evolutions=True)
+
+    # 003: the three new rules (FR-010, FR-010a, FR-011).
+    for k in ("allow_post_game_pokemon", "allow_post_game_items", "allow_unobtainable_pokemon"):
+        r = client.post("/api/jobs", json={"species": _available_team(catalog), k: 1})
+        assert r.status_code == 422 and k in r.json()["detail"], k
+    bulba = client.get("/api/species", params={"q": "bulbasaur"}).json()[0]
+    assert bulba["available"] is False
+    assert client.get("/api/species", params={"q": "bulbasaur", "unobtainable_pokemon": 1}).json()[0]["available"]
+    from platsim.availability.ledger import POST
+
+    acq = ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade")
+    phases: dict[str, set] = {}
+    for c in catalog_ledger_entries(catalog):
+        if c.entry.kind in acq:
+            phases.setdefault(c.entry.subject, set()).add(c.phase)
+    x = next(s for s in catalog.species if phases.get(s.const) == {POST} and not s.available
+             and catalog.status(s, LegalityOptions(allow_post_game_pokemon=True)).available)
+    assert client.get("/api/species", params={"q": x.key, "post_game_pokemon": 1}).json()[0]["available"], x.key
+    r = client.post("/api/jobs", json={"species": _available_team(catalog)[:5] + [x.key], "allow_post_game_pokemon": True})
+    assert r.status_code == 201, r.json()
+    job = _wait(client, r.json()["id"], {"done", "failed"})
+    assert job["options"]["allow_post_game_pokemon"] is True
+    assert stub.calls[-1].legality == LegalityOptions(allow_post_game_pokemon=True)
 
 
 def test_budget_and_species_icons(tmp_path, catalog):
@@ -308,3 +401,29 @@ def test_job_list_labels_and_cap(tmp_path, catalog):
     listed = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=big, catalog=catalog)).get("/api/jobs").json()
     assert len(listed) == 50 and listed[0]["id"] == "job-20261008T005000Z-000032"
     assert all(j["label"].endswith("· qualified") for j in listed)
+
+
+def test_rerendered_run_is_listed_and_labelled(tmp_path, catalog):
+    """003 T042a (SC-005): a re-rendered copy of an older run is listed, says "(re-rendered)", and its
+    "obtained from" text has no internal code. The original run is untouched."""
+    from _web_helpers import copy_fixture_run
+
+    from platsim.report.rerender import rerender
+
+    orig_id = copy_fixture_run(tmp_path)
+    orig = tmp_path / orig_id
+    before = {p.name: p.read_bytes() for p in orig.iterdir() if p.is_file()}
+    new_id = orig_id[:-6] + "abc003"
+    rerender(orig, tmp_path / new_id)
+    job = json.loads((orig / "job.json").read_text())
+    job.update(id=new_id, rerendered_from=orig_id,
+               result_paths={k: str(tmp_path / new_id / pathlib.Path(v).name) for k, v in job["result_paths"].items()})
+    (tmp_path / new_id / "job.json").write_text(json.dumps(job))
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    labels = {j["id"]: j["label"] for j in client.get("/api/jobs").json()}
+    assert labels[new_id].endswith("(re-rendered)") and not labels[orig_id].endswith("(re-rendered)")
+    team = client.get(f"/api/jobs/{new_id}").json()["team"]
+    assert team and not any(re.search(r"EVO_|[A-Z]{2,}_[A-Z_]{2,}", m["obtained_from"]) for m in team), team
+    old_team = client.get(f"/api/jobs/{orig_id}").json()["team"]
+    assert any("EVO_" in m["obtained_from"] for m in old_team), "positive control: the original keeps its old text"
+    assert {p.name: p.read_bytes() for p in orig.iterdir() if p.is_file()} == before

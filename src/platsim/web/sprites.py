@@ -56,6 +56,32 @@ def with_transparent_index0(png: bytes) -> bytes:
     return bytes(out[:plte_end]) + _chunk(b"tRNS", b"\x00") + bytes(out[plte_end:])
 
 
+TRAINERS_DIR = DECOMP_ROOT / "res" / "trainers" / "classes"
+
+
+@functools.cache
+def league_trainers() -> dict[str, tuple[str, str, tuple[str, ...]]]:
+    """trainer key (e.g. "cynthia") -> (display name, class folder, party pokemon keys in order), for
+    the first-run Elite Four and Champion (decomp/trainers.load_league; 003 FR-020)."""
+    from platsim.decomp.species import by_constant
+    from platsim.decomp.trainers import load_league
+
+    sp = by_constant()
+    return {t.name.lower(): (t.name, t.trainer_class.removeprefix("TRAINER_CLASS_").lower(),
+                             tuple(sp[m.species].key for m in t.party)) for t in load_league()}
+
+
+@functools.cache
+def trainer_sprite_png(trainer: str) -> bytes | None:
+    """res/trainers/classes/<class>/front_scan.png: 160x80, two 80x80 frames side by side (the same
+    layout as a pokemon front sprite), with index 0 made transparent. Only the five league keys."""
+    t = league_trainers().get(trainer)
+    if t is None:
+        return None
+    f = TRAINERS_DIR / t[1] / "front_scan.png"
+    return with_transparent_index0(f.read_bytes()) if f.is_file() else None
+
+
 @functools.cache
 def sprite_png(species: str, kind: str) -> bytes | None:
     if kind not in KINDS or species not in allowed_species():

@@ -49,7 +49,7 @@ with the decomp"
   which includes losing to the League once). Are National Dex sources allowed? → A: No. Treat them as not allowed.
 - Q: Do items held by wild Pokemon count as a source? → A: Yes, every wild held item counts, except that Munchlax is
   excluded entirely (too costly to obtain): neither Munchlax itself nor items it holds (Leftovers) are allowed. All other
-  honey-tree encounters are allowed.
+  honey-tree encounters are allowed. *Superseded by 003 FR-008/FR-009 (2026-10-11): Munchlax and Snorlax are allowed; Leftovers only with them on the team.*
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -188,7 +188,7 @@ divergence ledger with its resolution.
   copies obtainable; single-copy items can be held by at most one member.
 - **FR-006a**: Items held by wild Pokemon obtainable pre-Champion MUST count as item sources (repeatable
   wild encounters give unlimited copies). Munchlax MUST be excluded entirely, both as a team member and
-  as a held-item source (user decision 2026-10-07).
+  as a held-item source (user decision 2026-10-07). *Superseded by 003 FR-008/FR-009 (2026-10-11): Munchlax and Snorlax are allowed; Leftovers only with them on the team.*
 - **FR-007**: Each member's moves, ability, and evolution stage MUST be valid for its species and
   for its level at the moment it is used (e.g., level-up moves at or below the current level, or
   learned by a pre-evolution and carried forward, or via move relearner if pre-Champion).

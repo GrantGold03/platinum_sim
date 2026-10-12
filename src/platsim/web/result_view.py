@@ -1,7 +1,7 @@
 """What the result panel shows for a finished job (002 data-model ResultView).
 
 Built from the job's own result.json and result.csv. The report files are only read, never
-changed (FR-030). Fields the page no longer shows (nature, IVs, EVs, ability choice code,
+changed (FR-030). Text shown on the page goes through `display_text.clean` (003 FR-001, FR-002). Fields the page no longer shows (nature, IVs, EVs, ability choice code,
 held-item source, Cynthia win rate, policies, objective, commit hashes) are not sent at all.
 """
 
@@ -11,6 +11,8 @@ import csv
 import functools
 import json
 from pathlib import Path
+
+from platsim.web.display_text import clean
 
 TRAINER_ORDER = ("aaron", "bertha", "flint", "lucian", "cynthia")
 TIE = "(no significant difference)"
@@ -39,6 +41,14 @@ def _ability(build: dict, csv_value: str) -> str:
     return f"{csv_value}/{_ability_name(others[0])} {TIE}"
 
 
+def _move_type(key: str | None) -> str | None:
+    """Display type of a result.json move key, e.g. "fire_blast" -> "Fire" (decomp move data; 003 FR-022)."""
+    from platsim.decomp.moves import load_moves
+
+    mv = load_moves().get("MOVE_" + (key or "").upper()) if key else None
+    return mv.type.removeprefix("TYPE_").capitalize() if mv else None
+
+
 def _verdict(d: dict) -> str:
     if d.get("qualified"):
         return "qualified"
@@ -65,7 +75,7 @@ def build_result_view(job: dict) -> dict | None:
         "threshold": d.get("threshold"),
         "budget": d.get("budget_preset"),
         "legality_options": (d.get("provenance") or {}).get("legality_options"),
-        "warnings": d.get("warnings") or [],
+        "warnings": [clean(w) for w in d.get("warnings") or []],
         "no_qualifying": d.get("no_qualifying"),
         "platsim_version": job.get("platsim_version"),
     }
@@ -87,10 +97,11 @@ def build_result_view(job: dict) -> dict | None:
             "sprite": f"/api/sprites/{key}/front.png",
             "start_level": row.get("Start level"),
             "final_level": row.get("Final level (expected)"),
-            "ability": _ability(b, row.get("Ability") or ""),
+            "ability": clean(_ability(b, row.get("Ability") or "")),
             "held_item": row.get("Held item"),
-            "obtained_from": row.get("Obtained from"),
-            "moves": [{"name": row.get(f"Move {n}") or "", "source": row.get(f"Move {n} source") or ""}
+            "obtained_from": clean(row.get("Obtained from")),
+            "moves": [{"name": row.get(f"Move {n}") or "", "source": clean(row.get(f"Move {n} source") or ""),
+                       "type": _move_type(((b.get("moves") or [])[n - 1:n] or [{}])[0].get("move"))}
                       for n in range(1, 5)],
         })
     return {"summary": summary, "per_trainer": per_trainer, "team": team}

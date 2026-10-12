@@ -9,13 +9,15 @@
 
   const $ = (id) => document.getElementById(id);
   const els = {
-    search: $("search"), showExcluded: $("show-excluded"), status: $("search-status"), results: $("results"),
+    search: $("search"), status: $("search-status"), results: $("results"),
     slots: $("slots"), count: $("team-count"), form: $("opt-form"), minClear: $("min-clear"), seed: $("seed"),
     budget: $("budget"), optimize: $("optimize"), formError: $("form-error"),
     allowEgg: $("allow-egg-moves"), allowTrade: $("allow-trade-evolutions"),
+    allowPostMon: $("allow-post-game-pokemon"), allowPostItems: $("allow-post-game-items"),
+    allowOutside: $("allow-unobtainable-pokemon"),
     runStatus: $("run-status"), progCard: $("progress-card"), progress: $("progress"), queue: $("queue"),
     picker: $("run-picker"), noRuns: $("no-runs"), runMessage: $("run-message"), result: $("result"),
-    summary: $("summary"), chartBody: $("chart-body"), chartTip: $("chart-tip"), cards: $("team-cards"),
+    summary: $("summary"), chartBody: $("chart-body"), chartTip: $("chart-tip"), pop: $("trainer-pop"), cards: $("team-cards"),
     downloads: $("downloads"),
   };
 
@@ -83,6 +85,19 @@
   }
   function announce(text) { els.runStatus.textContent = text; }
 
+  // Optional rules: [request key, checkbox, summary label, /api/species query name or null].
+  const RULES = [
+    ["allow_egg_moves", els.allowEgg, "egg moves", null],
+    ["allow_trade_evolutions", els.allowTrade, "trade evolutions", "trade_evolutions"],
+    ["allow_post_game_pokemon", els.allowPostMon, "post-game Pokémon", "post_game_pokemon"],
+    ["allow_post_game_items", els.allowPostItems, "post-game items and moves", "post_game_items"],
+    ["allow_unobtainable_pokemon", els.allowOutside, "Pokémon unobtainable in Platinum", "unobtainable_pokemon"],
+  ];
+  function ruleFlags() { return Object.fromEntries(RULES.map(([key, el]) => [key, el.checked])); }
+  function ruleQuery() {
+    return RULES.filter((r) => r[3]).map(([, el, , q]) => `${q}=${el.checked ? 1 : 0}`).join("&");
+  }
+
   // ---- search (FR-003: no list until the player types) -------------------------------------
   function scheduleSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS); }
 
@@ -95,18 +110,17 @@
       els.status.textContent = "";
       return;
     }
-    const excluded = els.showExcluded.checked ? 1 : 0;
-    const trade = els.allowTrade.checked ? 1 : 0;
     let res;
     try {
-      res = await fetch(`/api/species?q=${encodeURIComponent(q)}&excluded=${excluded}&trade_evolutions=${trade}`);
+      // Pokemon that can't be used are always listed, crossed out with the reason (003 FR-003).
+      res = await fetch(`/api/species?q=${encodeURIComponent(q)}&excluded=1&${ruleQuery()}`);
     } catch (e) {
       if (seq === searchSeq) els.status.textContent = "Cannot reach the server.";
       return;
     }
     if (seq !== searchSeq) return;
     if (res.status === 503) {
-      els.status.textContent = "Loading species data (first start takes about a minute)…";
+      els.status.textContent = "Loading Pokémon data (first start takes about a minute)…";
       clearTimeout(searchTimer);
       searchTimer = setTimeout(runSearch, POLL_MS);
       return;
@@ -122,14 +136,14 @@
     els.results.replaceChildren();
     els.results.hidden = false;
     if (!list.length) {
-      els.status.textContent = `No species match “${q}”.`;
+      els.status.textContent = `No Pokémon match “${q}”.`;
       return;
     }
     const nAvail = list.filter((s) => s.available).length;
-    els.status.textContent = `${list.length} shown` + (els.showExcluded.checked ? ` (${nAvail} available)` : "") +
+    els.status.textContent = `${list.length} shown (${nAvail} available)` +
       (list.length >= 25 ? " — type more to narrow" : "");
     for (const s of list) {
-      const label = s.available ? `Add ${s.name} to the team` : `${s.name}: excluded, ${s.reason}`;
+      const label = s.available ? `Add ${s.name} to the team` : `${s.name}: not available, ${s.reason}`;
       const btn = el("button", { type: "button", "aria-label": label, disabled: !s.available || team.length >= 6,
         onclick: () => addMember(s) },
         el("span", { class: "name", text: s.name }),
@@ -194,7 +208,7 @@
       return;
     }
     if (team.length !== 6) {
-      showError(els.formError, "Choose exactly six species.");
+      showError(els.formError, "Choose exactly six Pokémon.");
       return;
     }
     els.optimize.disabled = true;
@@ -204,7 +218,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ species: team.map((m) => m.key), min_clear: pct / 100,
           seed: els.seed.value.trim() || "default", budget: els.budget.value,
-          allow_egg_moves: els.allowEgg.checked, allow_trade_evolutions: els.allowTrade.checked }),
+          ...ruleFlags() }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.status !== 201) {
@@ -374,7 +388,7 @@
         ? `${s.avg_final_level.toFixed(2)} (level gap of ${typeof s.level_gap === "number" ? fmtGap(s.level_gap) : "?"})` : null],
       ["Threshold", typeof s.threshold === "number" ? fmtPct(s.threshold) : null],
       ["Budget", s.budget],
-      ["Legality options", lo ? `egg moves ${lo.allow_egg_moves ? "allowed" : "off"}, trade evolutions ${lo.allow_trade_evolutions ? "allowed" : "off"}` : null],
+      ["Legality options", lo ? RULES.map(([key, , label]) => `${label} ${lo[key] ? "allowed" : "off"}`).join(", ") : null],
       ["Version", s.platsim_version ? `platsim ${s.platsim_version}` : "platsim version not recorded"],
     ]);
     els.summary.replaceChildren(dl);
@@ -393,9 +407,47 @@
     }
   }
 
+  // ---- trainer pop-up (003 FR-020): sprite on the left, the team in a 3x2 grid ---------------
+  let league = null; // trainer key -> {name, sprite, party}; null until /api/league answers (or if it fails)
+  fetch("/api/league").then((r) => (r.ok ? r.json() : null)).then((d) => {
+    if (Array.isArray(d)) league = Object.fromEntries(d.map((t) => [t.trainer, t]));
+  }).catch(() => {});
+  let popOwner = null;
+
+  function openPop(g, key, text) {
+    const t = league && league[key];
+    if (!t) return false;
+    const grid = el("div", { class: "pop-grid" });
+    for (let i = 0; i < 6; i++) {
+      const k = t.party[i];
+      grid.append(k ? sprite(`/api/sprites/${k}/front.png`, "front") : el("span", { class: "pop-empty", "aria-hidden": "true" }));
+    }
+    els.pop.replaceChildren(
+      el("p", { class: "pop-head", text }),
+      el("div", { class: "pop-body" }, sprite(t.sprite, "front"), grid));
+    els.pop.setAttribute("aria-label", `${t.name}'s team`);
+    els.pop.hidden = false;
+    popOwner = g;
+    // Positioned inside the chart (it scrolls with the page), kept within the viewport: below the bar
+    // if it fits, else above; clamped left and right.
+    const f = els.pop.offsetParent.getBoundingClientRect(), b = g.getBoundingClientRect(), p = els.pop.getBoundingClientRect();
+    const left = Math.max(8, Math.min(b.left, window.innerWidth - p.width - 8));
+    const below = b.bottom + 6 + p.height <= window.innerHeight;
+    const top = below ? b.bottom + 6 : Math.max(8, b.top - p.height - 6);
+    els.pop.style.left = `${left - f.left}px`;
+    els.pop.style.top = `${top - f.top}px`;
+    return true;
+  }
+  function closePop() { els.pop.hidden = true; popOwner = null; }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closePop(); els.chartTip.hidden = true; } });
+  document.addEventListener("click", (e) => {
+    if (popOwner && !popOwner.contains(e.target) && !els.pop.contains(e.target)) closePop();
+  });
+
   function renderChart(rows, threshold) {
     els.chartBody.replaceChildren();
     els.chartTip.hidden = true;
+    closePop();
     if (!rows.length) {
       els.chartBody.append(el("p", { class: "muted", text: "Per-trainer data is not available for this run" }));
       return;
@@ -411,7 +463,6 @@
       const text = `${r.label} ${fmtPct(r.rate)}` + (ci ? `, 95% interval ${fmtPct(ci[0]).slice(0, -1)}–${fmtPct(ci[1])}` : "") +
         `, ${fmtCount(r.battles)} ${TRAINER_BATTLES}`;
       const g = svg("g", { class: "bar-group", tabindex: "0", role: "img", "aria-label": text },
-        svg("title", {}, text),
         svg("text", { x: 0, y: y + barH - 4 }, r.label),
         svg("rect", { class: "track", x: labelW, y, width: plotW, height: barH, rx: 3 }),
         svg("rect", { class: "bar", x: labelW, y, width: Math.max(0, x(r.rate || 0) - labelW), height: barH, rx: 3 }),
@@ -420,14 +471,16 @@
         ci ? svg("line", { class: "whisker", x1: x(ci[1]), x2: x(ci[1]), y1: y + 4, y2: y + barH - 4 }) : null,
         svg("text", { x: W - valueW + 6, y: y + barH - 4 }, fmtPct(r.rate)));
       const show = () => {
+        if (openPop(g, r.trainer, text)) return; // the pop-up carries the same rate text in its header
         els.chartTip.textContent = text;
         els.chartTip.hidden = false;
         els.chartTip.style.left = `${(labelW / W) * 100}%`;
         els.chartTip.style.top = `${((y + barH + 22) / H) * 100}%`;
       };
-      const hide = () => { els.chartTip.hidden = true; };
+      const hide = () => { els.chartTip.hidden = true; closePop(); };
       g.addEventListener("mouseenter", show);
       g.addEventListener("focus", show);
+      g.addEventListener("click", show); // tap on touch screens
       g.addEventListener("mouseleave", hide);
       g.addEventListener("blur", hide);
       root.append(g);
@@ -454,7 +507,12 @@
     els.cards.replaceChildren();
     for (const m of members) {
       const moves = el("div", { class: "field moves" });
-      for (const mv of m.moves || []) moves.append(withTip(mv.name, mv.source || "source unknown", "move"));
+      for (const mv of m.moves || []) {
+        // Coloured by type (003 FR-022); the tooltip names the type too, so colour is never the only cue.
+        const chip = withTip(mv.name, (mv.type ? `${mv.type} · ` : "") + (mv.source || "source unknown"), "move");
+        if (mv.type) chip.querySelector(".move").setAttribute("data-type", mv.type);
+        moves.append(chip);
+      }
       els.cards.append(el("article", { class: "mon", "aria-label": m.species },
         el("span", { class: "field slot", text: `Slot ${m.slot}` }),
         el("span", { class: "field sprite" }, sprite(m.sprite, "front")),
@@ -467,10 +525,31 @@
     }
   }
 
+  // ---- theme toggle (003 FR-023): system setting until the player picks; the pick is remembered ----
+  const themeBtn = $("theme-toggle");
+  const systemDark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function currentTheme() {
+    const t = document.documentElement.dataset.theme;
+    return t === "light" || t === "dark" ? t : (systemDark && systemDark.matches ? "dark" : "light");
+  }
+  function syncThemeButton() {
+    const dark = currentTheme() === "dark";
+    themeBtn.setAttribute("aria-pressed", String(dark));
+    themeBtn.textContent = dark ? "Light mode" : "Dark mode"; // names the theme it switches to
+  }
+  themeBtn.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("platsim-theme", next); } catch (e) { /* the choice lasts this page only */ }
+    syncThemeButton();
+  });
+  if (systemDark && systemDark.addEventListener) systemDark.addEventListener("change", syncThemeButton);
+  syncThemeButton();
+
   // ---- wire up -----------------------------------------------------------------------------
   els.search.addEventListener("input", scheduleSearch);
-  els.showExcluded.addEventListener("change", runSearch);
-  els.allowTrade.addEventListener("change", runSearch); // availability depends on it (egg moves never do)
+  // Availability depends on every rule except egg moves; re-run the search when one changes (003 FR-013).
+  for (const [key, el, , query] of RULES) if (query) el.addEventListener("change", runSearch);
   els.form.addEventListener("submit", submit);
   els.picker.addEventListener("change", () => showRun(els.picker.value));
   renderTeam();

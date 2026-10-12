@@ -354,10 +354,12 @@ def test_honey_tree_headers(led):
     honey = [c for c in led.entries if c.entry.detail.startswith("honey tree")]
     assert {c.entry.map_header for c in honey} == set(hs)
     assert any(c.phase == PRE for c in honey) and all("ITEM_HONEY" in c.entry.requires_items for c in honey)
-    # Munchlax (rare table, encounters_honey_tree.json) is extracted, but excluded by the project
-    # rule (spec FR-006a, user decision 2026-10-07); see test_munchlax_excluded_and_leftovers_not_from_munchlax.
+    # Munchlax (rare table, encounters_honey_tree.json) is a source since 003 (FR-008, which
+    # supersedes 001 FR-006a); see test_munchlax_and_snorlax_allowed_leftovers_from_munchlax.
     assert [c for c in honey if c.entry.subject == "SPECIES_MUNCHLAX"]
-    assert led.species_sources("SPECIES_MUNCHLAX") == []
+    assert led.species_sources("SPECIES_MUNCHLAX")
+    # Honey-tree level: 5 + rand(11), i.e. 5..15 (src/overlay006/wild_encounters.c HoneyTree_GetSpecies).
+    assert {c.entry.level for c in honey} == {(5, 15)}, {c.entry.level for c in honey}
 
 
 def test_victory_road_and_league_not_badge_gated(led):
@@ -421,20 +423,69 @@ def test_wild_held_item_rule_cited():
     assert S.held_item_odds("ITEM_NONE", "ITEM_NONE") == {}
 
 
-def test_munchlax_excluded_and_leftovers_not_from_munchlax(led):
+def test_munchlax_and_snorlax_allowed_leftovers_from_munchlax(led):
+    """003 FR-008 (supersedes 001 FR-006a): Munchlax and Snorlax are usable; Munchlax's wild held
+    Leftovers count. Research R5/H3: the honey-tree wild source needs its level."""
+    from platsim.legality import movesources as MS
+
     # res/pokemon/munchlax/data.json:21-23 holds Leftovers in both slots; honey tree "rare" group.
     _line("res/pokemon/munchlax/data.json", 22, '"common": "ITEM_LEFTOVERS"')
     _line("res/field/encounters/encounters_honey_tree.json", 18, '"rare"')
     raw = _entries(led, kind="wild_slot", subject="SPECIES_MUNCHLAX")
-    assert raw, "positive control: Munchlax honey-tree encounters are still extracted"
-    assert all(c.phase == NEVER and any("user decision 2026-10-07" in r for r in c.reasons) for c in raw)
-    assert led.species_sources("SPECIES_MUNCHLAX") == []
+    assert raw and any(c.phase == PRE for c in raw)
+    wild = [o for o in MS.source_options("SPECIES_MUNCHLAX", led) if o.kind == "wild_slot"]
+    assert wild and all("honey tree" in o.detail.lower() for o in wild)
+    assert {(o.level_lo, o.level_hi) for o in wild} == {(5, 15)}
     held = _entries(led, kind="wild_held_item", via_species="SPECIES_MUNCHLAX")
     assert held and {c.entry.subject for c in held} == {"ITEM_LEFTOVERS"}
-    assert all(c.phase == NEVER for c in held)
-    assert not [c for c in led.pre(subject="ITEM_LEFTOVERS") if c.entry.via_species == "SPECIES_MUNCHLAX"]
-    # Snorlax evolves from Munchlax and has no other pre-Champion source.
-    assert led.species_sources("SPECIES_SNORLAX") == []
+    assert [c for c in led.pre(subject="ITEM_LEFTOVERS") if c.entry.via_species == "SPECIES_MUNCHLAX"]
+    assert led.item_copies("ITEM_LEFTOVERS") == S.UNLIMITED
+    # Snorlax evolves from Munchlax by friendship (res/pokemon/munchlax/data.json evolutions).
+    snor = led.species_sources("SPECIES_SNORLAX")
+    assert snor and any(s.get("method") == "EVO_LEVEL_HAPPINESS" for s in snor)
+
+
+def test_post_game_items_and_unreachable_maps(led):
+    """003 research R3: with post-game items allowed, reachable post-game sources count; entries
+    on maps that can never be entered are `unreachable` and never count."""
+    from platsim.legality.models import LegalityOptions
+
+    pi = led.with_options(LegalityOptions(allow_post_game_items=True))
+    for tm in ("ITEM_TM50", "ITEM_TM37", "ITEM_TM42", "ITEM_TM53"):
+        assert led.item_copies(tm) == 0 and pi.item_copies(tm) != 0, tm
+    vr = [c for c in led.entries if c.entry.subject == "ITEM_LEFTOVERS" and c.entry.kind == "item_ball"]
+    assert vr and all(c.phase == POST and c.entry.map_header == "MAP_HEADER_VICTORY_ROAD_1F_ROOM_2" for c in vr)
+    assert [c for c in pi.pre(subject="ITEM_LEFTOVERS") if c.entry.kind == "item_ball"]
+    unreach = [c for c in led.entries if c.unreachable]
+    assert unreach and all(c.phase == POST for c in unreach)
+    assert any(c.entry.map_header == "MAP_HEADER_UNUSED_ETERNA_CITY_CONDOMINIUMS_4F" for c in unreach)
+    every = led.with_options(LegalityOptions(allow_post_game_items=True, allow_post_game_pokemon=True,
+                                             allow_unobtainable_pokemon=True))
+    assert not [c for c in every.pre() if c.unreachable]
+
+
+def test_frontier_exchange_items(led):
+    """003 R3: the Battle Frontier BP exchange (src/scrcmd.c ScrCmd_PokeMartFrontier) is a post-game,
+    unlimited item source."""
+    from platsim.legality.models import LegalityOptions
+
+    fx = [c for c in led.entries if c.entry.kind == "frontier_exchange"]
+    items = {c.entry.subject for c in fx}
+    assert {"ITEM_TM04", "ITEM_TM08", "ITEM_TM61", "ITEM_TM73", "ITEM_FOCUS_BAND"} <= items
+    assert all(c.phase == POST and c.entry.quantity == S.UNLIMITED and c.entry.detail.endswith(" BP") for c in fx)
+    assert led.item_copies("ITEM_TM04") == 0
+    assert led.with_options(LegalityOptions(allow_post_game_items=True)).item_copies("ITEM_TM04") == S.UNLIMITED
+
+
+def test_default_rules_usable_set_is_t001_plus_munchlax_and_snorlax(catalog):
+    """003 SC-003 / M2: with all rules off, the usable pokemon are the T001 snapshot plus Munchlax and
+    Snorlax, exactly."""
+    from platsim.pins import REPO_ROOT
+
+    base = json.loads((REPO_ROOT / "specs/003-webui-refinements/baseline/t001-baseline.json").read_text())
+    now = sorted(s.key for s in catalog.species if s.available)
+    assert set(now) - set(base["available_default"]) == {"munchlax", "snorlax"}
+    assert set(base["available_default"]) - set(now) == set()
 
 
 def test_other_honey_tree_species_still_pre_champion(led):
@@ -467,13 +518,14 @@ def test_wild_held_item_positive_control(led):
 def test_wild_held_item_counts(led):
     # Before wild held items (validation-log T023-T026): 42 unlimited, 46 finite, 70 unavailable.
     n = led.derived["counts"]
-    assert len(n["held_items_unlimited"]) == 65
+    # 003: Munchlax's wild held Leftovers count (FR-008): Leftovers moves from unavailable to unlimited.
+    assert len(n["held_items_unlimited"]) == 66
     # 2026-10-08: Focus Band's only finite source (unused Jubilife condominium 4F gift) is behind a
     # warp on a collision tile (mapgraph warp_on_collision): 38 -> 37 finite, 55 -> 56 unavailable.
     assert len(n["held_items_finite"]) == 37
-    assert n["held_items_unavailable_count"] == 56
+    assert n["held_items_unavailable_count"] == 55
     assert led.item_copies("ITEM_FOCUS_BAND") == 0
-    assert led.item_copies("ITEM_LEFTOVERS") == 0
+    assert led.item_copies("ITEM_LEFTOVERS") == S.UNLIMITED
     # no wild held item entry is pre-Champion unless its encounter is
     for c in led.pre(kind="wild_held_item"):
         enc = [x for x in led.pre(subject=c.entry.via_species) if x.entry.map_header == c.entry.map_header]
@@ -578,3 +630,38 @@ def test_shared_flag_counts_summary(led):
     assert len(n["tms_finite"]) == 56 and len(n["tms_unlimited"]) == 36 and len(n["tms_unavailable"]) == 8
     data = json.loads((DECOMP_ROOT.parent / "data/generated/availability.json").read_text())
     assert len(data["counts"]["shared_once_flag_groups"]) == 20
+
+
+# ---------------------------------------------------------------------------------------------
+# 003 research R8: encounter rates, parsed from the decomp slot functions
+
+
+def test_slot_rate_tables_parsed_from_decomp():
+    # src/overlay006/wild_encounters.c GetGroundEncounterSlot / GetWaterEncounterSlot / GetRodEncounterSlot
+    _line("src/overlay006/wild_encounters.c", 824, "if (roll < 20) {")
+    t = S.slot_rate_tables()
+    assert t["grass"] == [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1]
+    assert t["surf"] == [60, 30, 5, 4, 1]
+    assert t["old_rod"] == [60, 30, 5, 4, 1]
+    assert t["good_rod"] == t["super_rod"] == [40, 40, 15, 4, 1]
+    assert all(sum(v) == 100 for v in t.values())
+    # src/overlay005/honey_tree.c GetTreeEncounterSlot (40/20/20/10/5/5) and the group rates
+    assert S.honey_slot_rates() == [40, 20, 20, 10, 5, 5]
+    # GetTreeEncounterGroup: normal tree A 70 / B 20; Munchlax tree A 20 / B 70 / C 1 -> best per group.
+    assert S.honey_group_rates() == {"common": 70, "uncommon": 70, "rare": 1}
+
+
+def test_parse_slot_rates_fails_loudly_on_a_broken_input():
+    with pytest.raises(ValueError):
+        S._parse_roll_chain("static u8 F(void) { u8 roll = LCRNG_RandMod(100); return 0; }", "return")
+
+
+def test_every_wild_entry_has_a_rate(led):
+    wild = [c for c in led.entries if c.entry.kind == "wild_slot"]
+    no_rate = [c.entry.detail for c in wild if c.entry.rate_percent is None]
+    assert set(no_rate) <= {"feebas tile (old_rod)", "feebas tile (good_rod)", "feebas tile (super_rod)"}, sorted(set(no_rate))[:5]
+    gab = [c for c in wild if c.entry.subject == "SPECIES_GABITE" and c.entry.map_header == "MAP_HEADER_VICTORY_ROAD_1F"
+           and c.entry.detail == "grass"]
+    assert gab and gab[0].entry.rate_percent == 5  # slots 9 + 11 (4% + 1%)
+    mun = [c for c in wild if c.entry.subject == "SPECIES_MUNCHLAX"]
+    assert mun and {c.entry.rate_percent for c in mun} == {1}

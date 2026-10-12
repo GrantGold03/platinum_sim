@@ -195,11 +195,6 @@ def _exclusion_notes(c, led) -> list[str]:
             f"excluded: National Dex (spec FR-003a; project rule ALLOW_NATIONAL_DEX={Lg.ALLOW_NATIONAL_DEX}; "
             f"decomp verdict national_dex.pre_champion={v['pre_champion']}, grant {v['grant']['ref']})",
             _project_ref("ALLOW_NATIONAL_DEX = "), v["grant"]["ref"], *v["condition"]["src"]))
-    if any(r.startswith("project_rule:") for r in c.reasons):
-        e = c.entry
-        sp = e.subject if e.kind in ACQUIRE_KINDS else e.via_species
-        out.append(_line(f"excluded: {_species_title(sp)} (spec FR-006a; project rule EXCLUDED_SPECIES)",
-                         _project_ref("EXCLUDED_SPECIES = ")))
     return out
 
 
@@ -365,7 +360,7 @@ def _explain_item(const: str, subject: str, kind: str, led) -> Explanation:
                                f"(max quantity {max(int(c.entry.quantity) for c in grp)}, not the sum "
                                f"{sum(int(c.entry.quantity) for c in grp)})",
                                *sorted({r for c in grp for r in c.entry.once_flag_src})))
-    purch = [c for c in cs if c.phase == "pre_champion" and c.entry.kind in ("shop", "game_corner")]
+    purch = [c for c in cs if c.phase == "pre_champion" and c.entry.kind in ("shop", "game_corner", "frontier_exchange")]
     lines.append(_line(f"  purchasable pre-Champion: {'yes' if purch else 'no'}"
                        + (" (" + ", ".join(sorted({c.entry.kind for c in purch})) + ")" if purch else ""),
                        *([c.entry.src[0] for c in purch[:4]] or all_refs)))
@@ -388,16 +383,10 @@ def _explain_species(const: str, subject: str, led) -> Explanation:
     evo_sources = [x for x in sources if x["kind"] == "evolution"]
     lines = _header(f"{s.name.title()} ({const})", *s.src[:2])
     lines.append(_line(f"  types {'/'.join(s.types)}; abilities {', '.join(a for a in s.abilities if a)}", *s.src[1:3]))
-    excluded = const in Lg.EXCLUDED_SPECIES
     phase = Lg.PRE if sources else _phase_summary(cs)
-    if excluded:
-        phase = Lg.NEVER if not sources else phase
     lines.append(_line(f"  phase: {phase} ({len(sources)} pre-Champion way(s) to own it)",
                        *([x["src"][0] for x in sources if x.get("src")][:3] or [c.entry.src[0] for c in cs][:3] or s.src[:2])))
-    if excluded:
-        lines.append(_line(f"  excluded: {s.name.title()} (spec FR-006a; project rule EXCLUDED_SPECIES): "
-                           + Lg.EXCLUDED_SPECIES_REASON.format(sp=const), _project_ref("EXCLUDED_SPECIES = ")))
-    elif phase != Lg.PRE:
+    if phase != Lg.PRE:
         lines += _summary_exclusions(cs, led)
     # evolutions into this species (incl. trade ones, FR-005)
     for pre_key, pre in spd.items():
@@ -417,7 +406,7 @@ def _explain_species(const: str, subject: str, led) -> Explanation:
         lines.append(_line(f"  evolves into {ev.target} by {ev.method} (param {ev.param}){tag}", *s.src[:2]))
     lines.append(_line(f"  acquisition entries ({len(cs)}):"))
     lines += _entries_block(cs, led)
-    data = {"species": const, "name": s.name, "phase": phase, "excluded_project_rule": excluded,
+    data = {"species": const, "name": s.name, "phase": phase,
             "src": s.src, "species_sources": sources, "entries": [c.to_json() for c in cs]}
     return Explanation(subject, "species", data, lines)
 
