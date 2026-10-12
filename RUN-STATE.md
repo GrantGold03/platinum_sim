@@ -176,9 +176,8 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - Now: the user is testing on `uv run platsim serve` (port 8000).
 - 2026-10-11: user follow-up: "Pokémon" spelling in all page text, and the double box on trainer hover (SVG
   <title> native tooltip) removed. Web 35 passed, browser 4 passed; server on :8000 restarted with the change.
-- Next: commit 003 on branch 002-webui-redesign when the user asks. Merge only on the user's go-ahead:
-  `git switch main && git merge --ff-only 002-webui-redesign`.
-- Nothing is committed yet for 003. Commit only when the user asks.
+- 2026-10-11: committed as 24df0df on 002-webui-redesign; main fast-forwarded to it on the user's go-ahead
+  (f55e5d8..24df0df, includes the 002 commits). Not pushed.
 - Open for the user: story rank is per map. Route 218 and Ravaged Path rank 0 by their early edge, though their
   grass is later.
 - Traps found in research:
