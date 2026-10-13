@@ -101,3 +101,36 @@ def test_wild_methods_are_plain(led):
     assert fl and not any("NIGHT" in d or "DAY" in d for d in fl), fl
     gy = _details("SPECIES_GYARADOS", led)
     assert any("Old Rod" in d for d in gy), gy
+
+
+# --- 004: breed and fossil text names the parent's source ----------------------------------------
+
+def _breed_detail(species: str, view) -> str:
+    return next(o.detail for o in MS.source_options(species, view) if o.kind == MS.BREED)
+
+
+def test_breed_text_names_the_parent(led):
+    assert _breed_detail("SPECIES_INFERNAPE", led).startswith("Day Care egg from your starter Chimchar")
+    assert _breed_detail("SPECIES_RAMPARDOS", led).startswith("Day Care egg from a revived Skull Fossil (odd Trainer ID)")
+    assert "Gift egg - Iron Island" in _breed_detail("SPECIES_LUCARIO", led)
+    assert "Hearthome City" in _breed_detail("SPECIES_VAPOREON", led)
+    garchomp = _breed_detail("SPECIES_GARCHOMP", led)
+    assert garchomp.startswith("Day Care egg (mother: ") and "Ditto" not in garchomp
+    rev = next(o.detail for o in MS.source_options("SPECIES_RAMPARDOS", led) if o.kind == "gift")
+    assert rev.startswith("Fossil - Mining Museum (Skull Fossil, odd Trainer ID)")
+
+
+def test_every_breed_source_names_a_parent(led):
+    """SC-005: every breed option names its group's parent source or at least one mother."""
+    bm = MS.breed_mothers(led)
+    names = {MS.species_name(c) for mothers, _ in bm.values() for c in mothers}
+    seen = 0
+    for egg in bm:
+        for o in MS.source_options(egg, led):
+            if o.kind != MS.BREED or o.acquired != egg:  # count each egg once, not via a pre-evolution's egg
+                continue
+            seen += 1
+            assert o.detail.startswith("Day Care egg"), o.detail
+            assert ("starter" in o.detail or "Fossil" in o.detail or "one-time parent" in o.detail
+                    or any(n in o.detail for n in names)), o.detail
+    assert seen == len(bm) == 86

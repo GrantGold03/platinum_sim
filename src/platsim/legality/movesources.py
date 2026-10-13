@@ -329,7 +329,8 @@ def acquire_text(e, species: str) -> str:
         if e.exclusive_group == "starter":
             return f"Gift - {where} ({name}, starter)"
         if m := re.match(r"fossil revival of (ITEM_\w+)", e.detail):
-            return f"Fossil - {where} ({load_items()[m.group(1)].name})"
+            parity = f", {e.group_choice} Trainer ID" if e.group_choice else ""  # 004 FR-011
+            return f"Fossil - {where} ({load_items()[m.group(1)].name}{parity})"
         return f"Gift - {where} ({name})"
     return f"{ACQUIRE_LABELS.get(e.kind, e.kind)} - {where} ({name})"
 
@@ -405,6 +406,9 @@ class SourceOption:
     src: tuple[str, ...] = ()
     mothers: tuple[str, ...] = ()  # breed: female-capable mothers of the line (Ditto excluded)
     rate_percent: int | None = None  # wild: the entry's encounter rate on its map (003 research R8)
+    # 004: the choice this option takes within `exclusive_group` (starter: the gift species; fossil
+    # revival: "odd"/"even" Trainer ID). Team rule: one choice per group (team_group_conflicts).
+    group_choice: str | None = None
 
     @property
     def member(self) -> str:
@@ -493,9 +497,12 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
         else:
             continue  # level unknown: conservative, not an option
         oid = f"{e.kind}:{species}@{e.map_header}"
+        # 004 FR-012: a fossil revival uses up its fossil (scripts_mining_museum.s RemoveItem).
+        fossil = re.match(r"fossil revival of (ITEM_\w+)", e.detail) if e.kind == "gift" else None
         add(SourceOption(oid, e.kind, species, e.map_header, lo, hi, (Stage(species, lo),), e.fixed_mon,
-                         e.quantity, e.exclusive_group, (), acquire_text(e, species), tuple(e.src),
-                         rate_percent=e.rate_percent))
+                         e.quantity, e.exclusive_group, ((fossil.group(1), 1),) if fossil else (),
+                         acquire_text(e, species), tuple(e.src),
+                         rate_percent=e.rate_percent, group_choice=e.group_choice))
     for o in _breed_options(species, led):
         add(o)
     if options_of(led).allow_unobtainable_pokemon and not _preds().get(species) and not _has_entry(species, led):
@@ -541,7 +548,8 @@ def _options(species: str, led, stack: frozenset[str]) -> list[SourceOption]:
             o = SourceOption(po.id, po.kind, po.acquired, po.map_header, po.level_lo, po.level_hi, stages,
                              po.fixed_mon, po.quantity, po.exclusive_group, tuple(sorted(consumes.items())),
                              po.detail + " -> " + evolution_text(species, ev),
-                             po.src + esrc + tuple(by_constant()[pre].src[6:7]), po.mothers, po.rate_percent)
+                             po.src + esrc + tuple(by_constant()[pre].src[6:7]), po.mothers, po.rate_percent,
+                             po.group_choice)
             add(o)
     return sorted(out.values(), key=lambda o: (o.min_level, o.id))
 
@@ -591,6 +599,46 @@ def _egg_species_of_mother(mother: str, led) -> list[str]:
     return out
 
 
+GENDER_RATIOS_TXT = PP / "generated" / "gender_ratios.txt"
+
+
+@cache
+def _gender_ratio_value(name: str) -> int:
+    """GENDER_RATIO_* -> its threshold (pokeplatinum generated/gender_ratios.txt)."""
+    for line in GENDER_RATIOS_TXT.read_text().splitlines():
+        if m := re.match(r"\s*(GENDER_RATIO_\w+)\s*=\s*(\d+)", line):
+            if m.group(1) == name:
+                return int(m.group(2))
+    raise KeyError(name)
+
+
+def _female_with(const: str, personality: int | None) -> bool:
+    """Can `const` be female with this personality (None = random)? pokemon.c SpeciesData_GetGenderOf:
+    male-only / female-only / genderless first, else female iff ratio > (personality & 0xFF)."""
+    if not _can_be_female(const):
+        return False
+    if personality is None or gender_ratio(const) == "GENDER_RATIO_FEMALE_ONLY":
+        return True
+    return _gender_ratio_value(gender_ratio(const)) > (int(personality) & 0xFF)
+
+
+def female_possible(const: str, srcs) -> bool:
+    """004 rule B3 (FR-006): one of `const`'s ledger sources (Ledger.species_sources dicts) can give a
+    female. Gifts, gift eggs, static, roamer and wild encounters roll a random personality
+    (Pokemon_InitWith with useMonPersonalityParam FALSE; research R3); an NPC trade fixes it
+    (fixed_mon.personality). An evolution keeps the pre-evolution's personality; its gender is
+    recomputed for the evolved species."""
+    for s in srcs:
+        if s.get("kind") == "evolution":
+            via = s.get("via") or []
+            if any(_female_with(const, (v.get("fixed_mon") or {}).get("personality")) if v.get("kind") != "evolution"
+                   else female_possible(const, [v]) for v in via):
+                return True
+        elif _female_with(const, (s.get("fixed_mon") or {}).get("personality")):
+            return True
+    return False
+
+
 def breed_mothers(led) -> dict[str, tuple[list[str], bool]]:
     """egg species -> (female-capable mothers obtainable pre-Champion, ditto_possible)."""
     key = ("legality_breed_mothers", led.options)  # shared `derived`: key on the options view (003 R2)
@@ -603,16 +651,59 @@ def breed_mothers(led) -> dict[str, tuple[list[str], bool]]:
             groups = egg_groups(const)
             if "EGG_GROUP_UNDISCOVERED" in groups or "EGG_GROUP_DITTO" in groups:
                 continue
-            if not led.species_sources(const):
+            srcs = list(led.species_sources(const))
+            if not srcs:
                 continue
             for egg in _egg_species_of_mother(const, led):
                 mothers, d = res.setdefault(egg, ([], False))
-                if _can_be_female(const) and const not in mothers:
+                if female_possible(const, srcs) and const not in mothers:
                     mothers.append(const)
                 res[egg] = (mothers, d or ditto)
-        res = {k: v for k, v in res.items() if v[0] or v[1]}
+        # 004 FR-005: an egg needs a mother and a partner - a compatible male, or Ditto.
+        res = {k: v for k, v in res.items() if (v[0] and compatible_father(v[0], led)) or v[1]}
     led.derived[key] = res
     return res
+
+
+def _line_entries(mothers: list[str], led) -> list:
+    """Pre-Champion acquisition entries of the mothers and their pre-evolutions (ledger only)."""
+    line, todo = set(), list(mothers)
+    while todo:
+        c = todo.pop()
+        if c not in line:
+            line.add(c)
+            todo += [p for p, _ in _preds().get(c, [])]
+    return [c.entry for sp in sorted(line) for c in led.pre(subject=sp) if c.entry.kind in ACQUIRE_KINDS]
+
+
+def _line_group(mothers: list[str], led) -> tuple[str | None, str | None]:
+    """004 rule B1: (exclusive_group, group_choice) that eggs of these mothers inherit. A mother
+    exists only through her own acquisition entries or a pre-evolution's (read straight from the
+    ledger, so breeding never recurses into source_options). If every such entry is in one group
+    with one choice (starter gift, fossil revival), the eggs need that choice too; one entry outside
+    a group (e.g. a post-game wild slot under allow_post_game_pokemon) frees them."""
+    keys = {(e.exclusive_group, e.group_choice) for e in _line_entries(mothers, led)}
+    if len(keys) == 1:
+        g, ch = next(iter(keys))
+        if g is not None:
+            return g, ch
+    return None, None
+
+
+def _breed_text(mothers: list[str], ditto: bool, group: str | None, choice: str | None, led) -> str:
+    """004 FR-007: name where the parent comes from (contracts/team-rules.md)."""
+    if group == STARTER_GROUP:
+        return f"Day Care egg from your starter {species_name(choice)}"
+    if group == TID_GROUP:
+        fossils = sorted({m.group(1) for e in _line_entries(mothers, led)
+                          if (m := re.match(r"fossil revival of (ITEM_\w+)", e.detail))})
+        name = load_items()[fossils[0]].name if fossils else "fossil"
+        return f"Day Care egg from a revived {name} ({choice} Trainer ID)"
+    entries = _line_entries(mothers, led)
+    if len(entries) == 1 and entries[0].quantity != UNLIMITED:  # one-time parent (gift, egg, static)
+        return f"Day Care egg from a one-time parent: {acquire_text(entries[0], entries[0].subject)}"
+    via = ", ".join(species_name(m) for m in mothers[:3]) + (" or Ditto" if ditto else "")
+    return f"Day Care egg (mother: {via})"
 
 
 def _breed_options(species: str, led) -> list[SourceOption]:
@@ -620,12 +711,13 @@ def _breed_options(species: str, led) -> list[SourceOption]:
     if not bm:
         return []
     mothers, ditto = bm
-    via = ", ".join(species_name(m) for m in mothers[:3]) + ("" if mothers else "") + (" or Ditto" if ditto else "")
+    group, choice = _line_group(mothers, led)
+    detail = _breed_text(mothers, ditto, group, choice, led)
     lvl = int(re.search(r"#define EGG_POKEMON_LEVEL\s+(\d+)", POKEMON_H.read_text()).group(1))
     return [SourceOption(f"breed:{species}@{map_header_for_script('scripts_pokemon_day_care')[0]}", BREED, species,
                          map_header_for_script("scripts_pokemon_day_care")[0], lvl, lvl, (Stage(species, lvl),),
-                         None, UNLIMITED, None, (), f"Day Care egg (mother: {via})", tuple(refs()["breed"]),
-                         tuple(mothers))]
+                         None, UNLIMITED, group, (), detail, tuple(refs()["breed"]),
+                         tuple(mothers), group_choice=choice)]
 
 
 # ---------------------------------------------------------------------------------------------
@@ -797,6 +889,31 @@ def _choices(opt: SourceOption, move: str, level: int, led, allow_egg: bool = Tr
     return res
 
 
+@cache
+def _father_species(mothers: tuple[str, ...]) -> tuple[str, ...]:
+    """Species that can sire an egg with one of `mothers` (daycare.c
+    BoxMon_GetPairDaycareCompatibilityScore: not Undiscovered, opposite genders so the father must
+    be able to be male, and a shared egg group via Egg_AreEggGroupsCompatible). Ditto is handled
+    separately (it pairs with any non-Undiscovered parent). Sorted by constant."""
+    mgroups = {g for m in mothers for g in egg_groups(m)}
+    out = []
+    for const in sorted(by_constant()):
+        if const == "SPECIES_DITTO" or not _can_be_male(const):
+            continue
+        groups = set(egg_groups(const))
+        if "EGG_GROUP_UNDISCOVERED" in groups or not (groups & mgroups):
+            continue
+        out.append(const)
+    return tuple(out)
+
+
+def compatible_father(mothers, led) -> str | None:
+    """004 FR-005: a pre-Champion species that can father an egg with one of `mothers`, or None.
+    Availability is read from the ledger (`species_sources`, as breed_mothers does for mothers), so
+    this never recurses into breeding."""
+    return next((c for c in _father_species(tuple(mothers)) if led.species_sources(c)), None)
+
+
 def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
     """A pre-Champion father for `move` (see module doc). The father's own source follows the move
     preference order (`move_source_key`: no limited copy first, then level-up < TM/HM < tutor <
@@ -805,14 +922,8 @@ def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
     key = ("legality_father", egg_species, move, options_of(led))
     if key in led.derived:
         return led.derived[key]
-    mgroups = {g for m in mothers for g in egg_groups(m)}
     best = None
-    for const in sorted(by_constant()):
-        if const == "SPECIES_DITTO" or not _can_be_male(const):
-            continue
-        groups = set(egg_groups(const))
-        if "EGG_GROUP_UNDISCOVERED" in groups or not (groups & mgroups):
-            continue
+    for const in _father_species(tuple(mothers)):
         for o in source_options(const, led):
             for c in _choices(o, move, 100, led, allow_egg=False):
                 score = (*move_source_key(c, led)[:2], OPTION_RANK[option_class(o)], const)
@@ -821,6 +932,77 @@ def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
     res = None if best is None else (best[1], best[2])
     led.derived[key] = res
     return res
+
+
+# --- choose-one groups (004) ------------------------------------------------------------------
+
+STARTER_GROUP = "starter"
+TID_GROUP = "trainer_id_parity"
+
+
+def choice_label(group: str, choice: str | None) -> str:
+    """Display text of one choice of a group: the starter species name, or the Trainer ID parity."""
+    if choice is None:
+        return "?"
+    return species_name(choice) if choice.startswith("SPECIES_") else choice
+
+
+def group_conflict_text(group: str, members: list[tuple[str, str | None]]) -> str:
+    """The message for members (display name, choice) of `group` that need more than one choice
+    (004 contracts/team-rules.md)."""
+    listed = ", ".join(f"{name} ({choice_label(group, ch)})" for name, ch in members)
+    if group == STARTER_GROUP:
+        n = len({ch for _, ch in members})
+        return f"only one starter can be chosen, but the team uses {n} lines: {listed}"
+    if group == TID_GROUP:
+        return ("Skull and Armor Fossils need different Trainer IDs (odd vs even), so the team cannot use both: "
+                + listed)
+    return f"only one choice of group '{group}' can be taken: {listed}"
+
+
+def team_group_conflicts(consts: list[str], led) -> dict[str, str]:
+    """004 spec FR-002/FR-004/FR-011: can the team's species take one choice per choose-one group?
+
+    Each member may use any of its source options; an option outside every group frees the member.
+    Members whose every option is grouped must agree on one choice per group, found by backtracking.
+    Returns {SPECIES_*: message} for the members that cannot agree, or {} when the team is fine.
+    Per-option quantities and item copies stay with resources.realize / the validator."""
+    bound: list[tuple[str, list[tuple[str, str | None]]]] = []
+    for c in consts:
+        opts = source_options(c, led)
+        if not opts or any(not o.exclusive_group for o in opts):
+            continue
+        bound.append((c, sorted({(o.exclusive_group, o.group_choice) for o in opts}, key=str)))
+
+    def ok(i: int, held: dict[str, str | None]) -> bool:
+        if i == len(bound):
+            return True
+        for g, ch in bound[i][1]:
+            if g in held and held[g] != ch:
+                continue
+            fresh = g not in held
+            held[g] = ch
+            if ok(i + 1, held):
+                return True
+            if fresh:
+                del held[g]
+        return False
+
+    if ok(0, {}):
+        return {}
+    out: dict[str, str] = {}
+    for g in sorted({g for _, pairs in bound for g, _ in pairs}):
+        members = [(c, {ch for gg, ch in pairs if gg == g}) for c, pairs in bound if any(gg == g for gg, _ in pairs)]
+        if len(members) < 2 or set.intersection(*(chs for _, chs in members)):
+            continue
+        listed = [(species_name(c), sorted(chs, key=str)[0]) for c, chs in members]
+        msg = group_conflict_text(g, listed)
+        for c, _ in members:
+            out[c] = msg
+    if not out:  # infeasible only across several groups at once: name every bound member
+        for c, pairs in bound:
+            out[c] = group_conflict_text(pairs[0][0], [(species_name(c), pairs[0][1])])
+    return out
 
 
 def sources(species: str, move: str, level: int, ledger, option: SourceOption | None = None) -> list[MoveChoice]:

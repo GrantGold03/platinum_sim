@@ -32,6 +32,17 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   - One cartridge only. No trades with another game, so trade evolutions are rejected by default.
     In-game NPC trades are allowed and get boosted exp.
   - **Egg moves are off by default.** A Day Care egg is still a legal species source.
+  - **One-of-a-kind choices hold for the whole team** (004). A team may use only one starter line.
+    Several members of that line are fine, because breeding the chosen starter gives more. A team
+    may also use only one fossil line. Before the National Dex, Skull Fossils (Cranidos) are dug
+    only with an odd Trainer ID and Armor Fossils (Shieldon) only with an even one
+    (`src/underground/mining.c`). Each revival uses up one fossil, and fossils can be dug again
+    and again.
+  - **A Day Care egg needs a real pair** (004). Ditto can't be caught before the Champion, so an
+    egg needs a mother that can be female and a male that shares an egg group with her.
+    One-time parents qualify, because breeding doesn't use them up: Riley's Riolu, the Hearthome
+    Eevee, the Togepi egg, Drifloon and Spiritomb. Each egg's "Obtained from" text names where
+    its parent comes from.
   - Five optional rules, all **off by default**, relax this. Each is a flag on `validate`,
     `evaluate` and `optimize` and a checkbox on the web page. All five are recorded in
     `provenance.legality_options`, and the validator enforces them (constitution 1.2.0, Principle III).

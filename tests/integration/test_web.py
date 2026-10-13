@@ -427,3 +427,18 @@ def test_rerendered_run_is_listed_and_labelled(tmp_path, catalog):
     old_team = client.get(f"/api/jobs/{orig_id}").json()["team"]
     assert any("EVO_" in m["obtained_from"] for m in old_team), "positive control: the original keeps its old text"
     assert {p.name: p.read_bytes() for p in orig.iterdir() if p.is_file()} == before
+
+
+def test_mixed_starters_refused_before_a_job(tmp_path, catalog):
+    """004 FR-004: two starter lines cannot both come from one game (starter choice + breeding)."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    others = ["garchomp", "gyarados", "lucario", "staraptor"]
+    r = client.post("/api/jobs", json={"species": ["torterra", "infernape", *others]})
+    assert r.status_code == 422, r.json()
+    body = r.json()
+    assert set(body["reasons"]) == {"torterra", "infernape"}
+    assert "only one starter" in body["detail"] and "species" not in body["detail"].lower()
+    assert not any(tmp_path.iterdir()), "an invalid request must not create a job"
+    # positive control: one starter line, several members
+    r = client.post("/api/jobs", json={"species": ["infernape", "monferno", *others]})
+    assert r.status_code == 201, r.json()

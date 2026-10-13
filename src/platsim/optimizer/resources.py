@@ -7,8 +7,9 @@ a copy limit is therefore never generated:
 
 - Members are processed in slot order. For each member every source option of its variant that exists
   at its level (`SourceOption.min_level`) is tried; a one-time source
-  (gift / static / starter choice, `quantity` / `exclusive_group`) already taken by an earlier member is
-  skipped (validator SOURCE_EXHAUSTED).
+  (gift / static / starter choice, `quantity`) already taken by an earlier member is skipped, and so is
+  an option of a choose-one group (`exclusive_group`) that an earlier member holds with a different
+  `group_choice` (004; validator SOURCE_EXHAUSTED).
 - For each move, the legal sources at that level (`movesources.sources`) are tried in the documented
   preference order `movesources.move_source_key` (no limited copy before a limited copy; then
   level-up / pre-evolution level-up < unlimited TM/HM < tutor < move relearner < egg move). A
@@ -200,7 +201,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
     used: Counter = Counter()
     who: dict[str, list[int]] = {}
     source_used: Counter = Counter()
-    groups: set[str] = set()
+    groups: dict[str, str | None] = {}  # 004: group -> the choice taken (same choice may repeat)
     builds: list[Build] = []
     options = []
     team = tuple(s.species for s in specs)
@@ -210,7 +211,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
         for opt in variant.options(led):
             if level < opt.min_level:
                 continue
-            if opt.exclusive_group and opt.exclusive_group in groups:
+            if opt.exclusive_group and groups.get(opt.exclusive_group, opt.group_choice) != opt.group_choice:
                 continue
             if opt.quantity != UNLIMITED and source_used[opt.id] >= int(opt.quantity):
                 continue
@@ -231,7 +232,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
             who.setdefault(res, []).append(slot)
         source_used[opt.id] += 1
         if opt.exclusive_group:
-            groups.add(opt.exclusive_group)
+            groups[opt.exclusive_group] = opt.group_choice
         ivs, nature = default_ivs(), "Hardy"
         if opt.fixed_mon:
             if opt.fixed_mon.get("ivs"):

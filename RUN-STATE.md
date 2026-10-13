@@ -190,3 +190,55 @@ decomp PNGs, with transparency added when they are served. The constitution was 
     and TM73 looked as if they had no source at all (R3). Fixed: `frontier_exchange_entries` (41 items, post-game).
   - Wild Gabite is only on Victory Road, but Gible is in Wayward Cave B1F (17–20, pre-Champion). The earliest
     location wins across evolution stages (user, 2026-10-11), so Garchomp is named from Gible.
+
+## 004 breeding and fossil choices (started 2026-10-13)
+- **Branch**: `004-breeding-source-limits`. Nothing is committed yet. The spec, plan, research,
+  data-model, contracts and quickstart are in `specs/004-breeding-source-limits/`.
+- **Status** (2026-10-13): all 36 tasks are done. The full suite gave `478 passed, 4 xfailed`
+  (2:27:46, exit 0). Committed on `004-breeding-source-limits`. **Not merged**: waiting for
+  the user's hands-on testing.
+- **How to test by hand**:
+  - Run `uv run platsim serve` on this branch. Restart any old server first, because it runs
+    the old code.
+  - Then try these teams:
+    - Torterra + Infernape + 4 others → refused ("only one starter").
+    - Infernape + Monferno → accepted.
+    - Rampardos + Bastiodon → refused (Trainer ID).
+  - "Obtained from" for a bred member names the parent's source.
+- **Not committed on purpose** (they predate 004 and are unrelated):
+  - the `.claude/scheduled_tasks.lock` deletion;
+  - `.claude/skills/speckit-assess-*`;
+  - `.specify/assessments/`, `.specify/extensions*`.
+- **Lost with the session scratchpad**: the probe scripts and the HM knockout scripts. The
+  method for the HM answer: patch `story_rank.move_stage`, then flood per badge stage seeded
+  at the Pokémon Centers already reached.
+- **Done**:
+  - (group, choice) on entries and options;
+  - starter lines limited to one per team (validator, optimizer, web 422);
+  - fossils grouped by Trainer ID parity, with revivals unlimited and each using up a fossil;
+  - breeding requires a compatible father (`compatible_father`) and a mother that can be female
+    (`female_possible`, the game's gender formula);
+  - breed text names the parent's source;
+  - the engine team count is 55,192,424,630 (a test);
+  - the 188 allowed species and 98 final forms are unchanged (a test);
+  - version 0.3.0, and the README is updated.
+- **Defect** (observed 2026-10-13): Day-Care breed options have no `exclusive_group`. As a
+  result, Torterra (gift) + Infernape (bred) is accepted, and so is any mix of starter lines.
+  Fossil revivals ignore the Trainer ID parity (`mining.c:647-648`) and are capped at one copy.
+- **Target**: species-only teams of six distinct species go from 56,574,476,596 to
+  55,192,424,630 (starter rule alone: 55,379,676,751). Two closed forms agree.
+- **Scratch scripts** (lost with the session scratchpad):
+  - the allowed-list generator, which produced `allowed_pokemon.md`;
+  - the team counter;
+  - the breed probes.
+
+  The method is written in research R9.
+- **Traps**:
+  - Breeding from one female is legal for one-time parents (Eevee, Riolu, Togepi, Drifloon,
+    Spiritomb). Do not remove those breed sources.
+  - Run probe scripts with `python -u`, or the output buffers and looks hung.
+  - `allowed_pokemon.md` at the repo root was generated on 2026-10-13 and is committed with 004.
+    It is the reference for `test_allowed_final_forms` and must not change under 004.
+  - Each story_rank stage floods from Twinleaf. To test whether an HM is still needed late, seed
+    at the Pokémon Centers already reached, not at every door of a town; every door also includes
+    doors behind obstacles.

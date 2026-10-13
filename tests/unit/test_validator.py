@@ -380,3 +380,88 @@ def test_postgame_tutor_is_legal_with_post_game_items(led):
     path = str(FIX / "illegal_postgame_tutor.json")
     assert _codes(path, led) == ["MOVE_NOT_LEARNABLE"]
     assert validate(path, led.with_options(POST_ITEMS)) == []
+
+
+# --- 004: choose-one groups (starter choice, fossil Trainer ID) -------------------------------
+# Facts: the starter is one of three (src/choose_starter/choose_starter_app.c, scripts_route_201.s);
+# Skull Fossil is dug only with an odd Trainer ID and Armor Fossil only with an even one before the
+# National Dex (src/underground/mining.c sMiningObjects, Mining_GetWeightOfItem). Breeding does not
+# use up the parent, so the chosen line can be bred any number of times (daycare.c).
+
+STARTER_GIFT = "gift:SPECIES_{}@MAP_HEADER_ROUTE_201"
+DAY_CARE = "breed:SPECIES_{}@MAP_HEADER_POKEMON_DAY_CARE"
+REVIVAL = "gift:SPECIES_{}@MAP_HEADER_MINING_MUSEUM"
+
+
+def _member(const: str, source: str, led, level: int = 57) -> dict:
+    """A legal build dict for `const` from `source`: up to two level-up moves found by the engine
+    itself (MS.sources), the species' first ability, default IVs/EVs/nature."""
+    sp = MS.by_constant()[const]
+    opt = _opt(const, source, led)
+    moves = []
+    for n, mv in sp.learnset_level:
+        if n > level or any(m["move"] == mv for m in moves):
+            continue
+        ch = [c for c in MS.sources(const, mv, level, led, opt) if c.source_kind in ("level_up", "pre_evo_level_up")]
+        if ch:
+            moves.append({"move": ch[0].move, "source_kind": ch[0].source_kind, "detail": ch[0].detail})
+        if len(moves) == 2:
+            break
+    assert moves, f"no level-up move for {const} from {source}"
+    abil = [a for a in sp.abilities if a]
+    return {"species": sp.key, "source": source, "start_level": level, "moves": moves, "ability": abil[0],
+            "ability_reason": "single_ability" if len(set(abil)) == 1 else "tie_default", "held_item": None,
+            "nature": "Hardy", "ivs": {k: 15 for k in ("hp", "atk", "def", "spa", "spd", "spe")},
+            "evs": {k: 85 for k in ("hp", "atk", "def", "spa", "spd", "spe")}}
+
+
+def _with(led, *members) -> dict:
+    """legal_team.json with its last len(members) slots replaced (slot 0 is gift Chimchar -> Infernape)."""
+    d = _legal()
+    for i, m in enumerate(members):
+        d["builds"][5 - i] = m
+    return d
+
+
+def _group_violations(team, led) -> list:
+    return [v for v in validate(team, led) if v.code == "SOURCE_EXHAUSTED"]
+
+
+def test_member_helper_is_legal(led):
+    """Positive control for _member: a Staraptor built by the helper passes."""
+    d = _with(led, _member("SPECIES_STARAPTOR", "wild_slot:SPECIES_STARAVIA@MAP_HEADER_ROUTE_209", led))
+    assert _codes(d, led) == []
+
+
+def test_mixed_starters_rejected(led):
+    d = _with(led, _member("SPECIES_TORTERRA", DAY_CARE.format("TURTWIG"), led))
+    vs = _group_violations(d, led)
+    assert len(vs) == 1 and _codes(d, led) == ["SOURCE_EXHAUSTED"]
+    assert "only one starter" in vs[0].message and "Torterra" in vs[0].message and "Infernape" in vs[0].message
+    assert any("004-breeding-source-limits/spec.md" in s for s in vs[0].src)
+
+
+def test_same_starter_line_accepted(led):
+    assert _codes(_with(led, _member("SPECIES_MONFERNO", DAY_CARE.format("CHIMCHAR"), led)), led) == []
+    three = _with(led, _member("SPECIES_INFERNAPE", DAY_CARE.format("CHIMCHAR"), led),
+                  _member("SPECIES_INFERNAPE", DAY_CARE.format("CHIMCHAR"), led))
+    assert _codes(three, led) == []
+
+
+def test_bred_starters_still_one_line(led):
+    """Two bred Infernape plus a gift Torterra: breeding needs the chosen starter."""
+    d = _legal()
+    d["builds"][0] = _member("SPECIES_TORTERRA", STARTER_GIFT.format("TURTWIG"), led)
+    d["builds"][5] = _member("SPECIES_INFERNAPE", DAY_CARE.format("CHIMCHAR"), led)
+    d["builds"][4] = _member("SPECIES_INFERNAPE", DAY_CARE.format("CHIMCHAR"), led)
+    assert _codes(d, led) == ["SOURCE_EXHAUSTED"]
+
+
+def test_fossil_lines_need_one_trainer_id(led):
+    d = _with(led, _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led),
+              _member("SPECIES_BASTIODON", REVIVAL.format("SHIELDON"), led))
+    vs = _group_violations(d, led)
+    assert len(vs) == 1 and "Trainer ID" in vs[0].message, [v.message for v in vs]
+    two = _with(led, _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led),
+                _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led))
+    assert _codes(two, led) == []

@@ -70,6 +70,7 @@ from platsim.pins import DECOMP_ROOT, REPO_ROOT
 PP = DECOMP_ROOT
 SPEC = REPO_ROOT / "specs" / "001-champion-team-optimizer" / "spec.md"
 DATA_MODEL = REPO_ROOT / "specs" / "001-champion-team-optimizer" / "data-model.md"
+SPEC_004 = REPO_ROOT / "specs" / "004-breeding-source-limits" / "spec.md"
 TEAM_SIZE = 6
 MAX_LEVEL_GAP = 10
 
@@ -101,6 +102,8 @@ def _src() -> dict[str, list[str]]:
         "holdable": [ref(bag_c, "if (Item_Get(itemData, ITEM_PARAM_PREVENT_TOSS) == FALSE) {"), fr("FR-006")],
         "tm": [ref(PP / "src" / "applications" / "party_menu" / "callbacks.c", "Item_IsHMMove"), fr("FR-004")],
         "gap": [fr("FR-016"), _repo_ref(DATA_MODEL, "final level gap ≤ 10")],
+        # 004: one choice per choose-one group (starter choice FR-002, fossil Trainer ID FR-011)
+        "group": [_repo_ref(SPEC_004, "**FR-002**"), _repo_ref(SPEC_004, "**FR-011**")],
     }
 
 
@@ -309,7 +312,7 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
     item_who: dict[str, list[str]] = {}
     item_bonus: Counter[str] = Counter()
     source_use: Counter[str] = Counter()
-    groups: dict[str, list[tuple[str, str]]] = {}
+    groups: dict[str, list[tuple[str, str | None]]] = {}  # group -> [("member N Name", choice)]
     opt_by_id: dict[str, MS.SourceOption] = {}
     for slot, b in enumerate(team.builds, start=1):
         r = _validate_build(slot, b, led)
@@ -328,7 +331,7 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
             source_use[o.id] += 1
             opt_by_id[o.id] = o
             if o.exclusive_group:
-                groups.setdefault(o.exclusive_group, []).append((who, o.id))
+                groups.setdefault(o.exclusive_group, []).append((f"member {slot} {MS.species_name(o.member)}", o.group_choice))
     for tm, used in sorted(tm_use.items()):
         have = led.tm_copies(tm)
         if have != MS.UNLIMITED and used > have:
@@ -361,17 +364,16 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
                                  f"from wild {holders}, so one of them must be on the team{extra}",
                                  _src()["item"] + [s for c in led.pre(subject=item) for s in c.entry.src[:1]]))
     for oid, used in sorted(source_use.items()):
-        q = opt_by_id[oid].quantity
-        if opt_by_id[oid].exclusive_group:
-            continue  # reported once per group below
+        q = opt_by_id[oid].quantity  # 004: grouped options too (the starter gift is still one Pokemon)
         if q != MS.UNLIMITED and used > int(q):
             out.append(Violation("SOURCE_EXHAUSTED", f"source {oid} gives {q} Pokemon but {used} members use it",
                                  _src()["source"] + list(opt_by_id[oid].src[:2])))
+    # 004 FR-002/FR-011: members of one group (gift or bred from it) must share one choice.
     for g, members in groups.items():
-        if len(members) > 1:
-            out.append(Violation("SOURCE_EXHAUSTED", f"only one choice of group '{g}' can be taken, but {len(members)} members use it: "
-                                 + ", ".join(f"{w} via {i}" for w, i in members),
-                                 _src()["source"] + list(opt_by_id[members[0][1]].src[:2])))
+        if len({ch for _, ch in members}) > 1:
+            text = MS.group_conflict_text(g, members)
+            refs = [s for oid in source_use for s in opt_by_id[oid].src[:1] if opt_by_id[oid].exclusive_group == g]
+            out.append(Violation("SOURCE_EXHAUSTED", text, _src()["source"] + _src()["group"] + sorted(set(refs))))
     if final_levels:
         gap = max(final_levels) - min(final_levels)
         if gap > MAX_LEVEL_GAP:

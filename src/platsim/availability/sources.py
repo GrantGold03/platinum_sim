@@ -104,6 +104,9 @@ class Entry:
     # 003 research R8: percent chance this species appears for this encounter method on this map
     # (summed over its slots after ledger._merge_wild). None when no slot table applies.
     rate_percent: int | None = None
+    # 004: which choice of `exclusive_group` this entry is (starter: the species constant; fossil
+    # revival: "odd"/"even" Trainer ID). Members of one group are compatible iff they share a choice.
+    group_choice: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
@@ -615,6 +618,21 @@ def fossil_species() -> tuple[tuple[str, str, str], ...]:
 
 
 @cache
+def fossil_parity(item: str) -> tuple[str, str] | None:
+    """004 FR-011: ("odd"|"even", mining.c ref) when `item` is dug before the National Dex for only
+    one Trainer ID parity (Mining_GetWeightOfItem); None when both parities (or neither) can dig it."""
+    rows = [e for e in underground_entries() if e.subject == item and "National Dex" not in e.detail]
+    parities = {e.exclusive_group.removeprefix("tid_"): e.src[0] for e in rows}
+    return next(iter(parities.items())) if len(parities) == 1 else None
+
+
+@cache
+def _diggable(item: str) -> bool:
+    """Dug in the Underground before the National Dex (any parity): digging repeats, so unlimited."""
+    return any(e.subject == item and "National Dex" not in e.detail for e in underground_entries())
+
+
+@cache
 def _species_data():
     from platsim.decomp.species import by_constant
 
@@ -687,11 +705,18 @@ def mon_entries() -> list[Entry]:
                     elif o[0] == "VAR_0x8000" and _prev_cmd(sf, c.index, "GetPlayerStarterSpecies"):
                         lv = parse_int(o[1])
                         for sp, sref in starter_species():
-                            out.append(Entry("gift", sp, h, 1, gs, base_src + [sref], (lv, lv), None, [], [], "starter", "starter choice (one of three)"))
+                            out.append(Entry("gift", sp, h, 1, gs, base_src + [sref], (lv, lv), None, [], [], "starter", "starter choice (one of three)",
+                                             group_choice=sp))
                     elif _prev_cmd(sf, c.index, "GetSpeciesFromFossil", window=40):
                         lv = parse_int(o[1])
                         for item, sp, fref in fossil_species():
-                            out.append(Entry("gift", sp, h, 1, gs, base_src + [fref], (lv, lv), None, [item], [], None, f"fossil revival of {item}"))
+                            # 004 FR-011/FR-012: one revival per fossil (the script removes it), and
+                            # fossils dug before the National Dex come for one Trainer ID parity only.
+                            par = fossil_parity(item)
+                            out.append(Entry("gift", sp, h, UNLIMITED if _diggable(item) else 1, gs,
+                                             base_src + [fref] + ([par[1]] if par else []), (lv, lv), None, [item], [],
+                                             "trainer_id_parity" if par else None, f"fossil revival of {item}",
+                                             group_choice=par[0] if par else None))
                     else:
                         out.append(Entry(kind, o[0], h, 1, gs + [gate(G.KIND_UNCERTAIN, c.ref, f"species operand {o[0]} not resolved", False)], base_src, None, None, [], [], None, c.name))
     return out

@@ -267,6 +267,11 @@ def resolve_species(names, led) -> list[str]:
     if reasons:
         msg = "; ".join(f"{k}: {v}" for k, v in reasons.items())
         raise InvalidRequest(f"invalid species: {msg}", reasons)
+    # 004 FR-004: one choice per choose-one group (one starter line, one fossil Trainer ID).
+    clash = MS.team_group_conflicts(out, led)
+    if clash:
+        reasons = {str(n): clash[c] for n, c in zip(names, out) if c in clash}
+        raise InvalidRequest(f"invalid species: {'; '.join(dict.fromkeys(reasons.values()))}", reasons)
     return out
 
 

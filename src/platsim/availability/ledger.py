@@ -421,7 +421,7 @@ def _species_sources(led: Ledger, species: str):
         if c.entry.kind in ("wild_slot", "gift", "egg", "static", "roamer", "npc_trade"):
             yield {"kind": c.entry.kind, "species": species, "map_header": c.entry.map_header, "detail": c.entry.detail,
                    "level": list(c.entry.level) if c.entry.level else None, "fixed_mon": c.entry.fixed_mon,
-                   "exclusive_group": c.entry.exclusive_group, "needs_national_dex": c.needs_national_dex, "src": c.entry.src}
+                   "exclusive_group": c.entry.exclusive_group, "group_choice": c.entry.group_choice, "needs_national_dex": c.needs_national_dex, "src": c.entry.src}
     # evolution from an obtainable pre-evolution
     for pre_key, pre_sp in sp.items():
         for ev in pre_sp.evolutions:

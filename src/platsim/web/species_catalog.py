@@ -99,6 +99,9 @@ class SpeciesInfo:
 
 
 TableFn = Callable[[LegalityOptions], dict[str, Status]]
+# 004: (SPECIES_* constants, options) -> {SPECIES_*: message} for members needing two choices of
+# one choose-one group (movesources.team_group_conflicts on the options' ledger view).
+ConflictFn = Callable[[tuple[str, ...], LegalityOptions], dict[str, str]]
 
 
 class SpeciesCatalog:
@@ -107,13 +110,14 @@ class SpeciesCatalog:
     `table(options)` is computed on first use and cached (LRU of 16 option values), because which
     species are usable depends on several options and most combinations are never asked for."""
 
-    def __init__(self, species: list[SpeciesInfo], table: TableFn | None = None):
+    def __init__(self, species: list[SpeciesInfo], table: TableFn | None = None, conflicts: ConflictFn | None = None):
         self.species = sorted(species, key=lambda s: s.dex)
         self._by_norm: dict[str, SpeciesInfo] = {}
         for s in self.species:
             self._by_norm[_norm(s.key)] = s
             self._by_norm.setdefault(_norm(s.name), s)
         self._table = functools.lru_cache(maxsize=16)(table) if table else None
+        self._conflicts = conflicts
 
     def get(self, key_or_name: str) -> SpeciesInfo | None:
         return self._by_norm.get(_norm(key_or_name or ""))
@@ -171,6 +175,13 @@ class SpeciesCatalog:
         if reasons:
             raise InvalidRequest("some Pokémon cannot be used: " + "; ".join(f"{k}: {v}" for k, v in reasons.items()),
                                  reasons)
+        if self._conflicts is not None:  # 004 FR-004: one starter line, one fossil Trainer ID
+            consts = tuple(self.get(x).const for x in species)
+            clash = self._conflicts(consts, options)
+            if clash:
+                reasons = {x: clash[c] for x, c in zip(species, consts) if c in clash}
+                raise InvalidRequest("some Pokémon cannot be used together: " + "; ".join(dict.fromkeys(reasons.values())),
+                                     reasons)
         return tuple(keys)
 
 
@@ -267,4 +278,7 @@ def build_catalog(ledger=None) -> SpeciesCatalog:
         out.append(SpeciesInfo(key=sp.key, const=const, name=MS.species_name(const),
                                types=tuple(_type_name(t) for t in dict.fromkeys(sp.types)), dex=sp.id,
                                available=st.available, reason=st.reason, reason_code=st.reason_code))
-    return SpeciesCatalog(out, cached)
+    def conflicts(consts: tuple[str, ...], options: LegalityOptions) -> dict[str, str]:
+        return MS.team_group_conflicts(list(consts), base.with_options(options))
+
+    return SpeciesCatalog(out, cached, conflicts)

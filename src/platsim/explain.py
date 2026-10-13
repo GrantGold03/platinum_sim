@@ -228,7 +228,12 @@ def _entry_lines(c, led, indent: str = "  ") -> list[str]:
     if e.requires_any:
         out.append(_line(f"{ind}requires any of: {', '.join(e.requires_any)}", *e.src))
     if e.exclusive_group:
-        out.append(_line(f"{ind}exclusive group: {e.exclusive_group} (only one of the group can be taken)", *e.src))
+        # 004: a team may use one choice per group (several members with the same choice are fine)
+        from platsim.legality.movesources import choice_label
+
+        ch = getattr(e, "group_choice", None)
+        shown = f", choice {choice_label(e.exclusive_group, ch)}" if ch else ""
+        out.append(_line(f"{ind}exclusive group: {e.exclusive_group}{shown} (a team uses one choice of the group)", *e.src))
     if getattr(e, "once_flag", None):
         out.append(_line(f"{ind}one-time flag: {e.once_flag} (entries sharing it are one acquisition)", *(e.once_flag_src or e.src)))
     for r in c.reasons:
