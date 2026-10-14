@@ -8,6 +8,7 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 
 - Default: `prefilter`, once it is accepted against the reference (FR-017). Until then the default is `reference`.
 - The value is recorded in `provenance.optimizer.candidate_mode` and in the job fingerprint, so a run in a different mode never resumes another mode's state.
+- Test-only request fields (not on the CLI or the web): `alternatives_round` (the reference's first-round size r) and `alternatives_members` (limit the stage to the first N members). Both are recorded in provenance when set.
 - `--player-policy` (evaluate) accepts `expectimax2-v3`. After acceptance (research R4.6), the default becomes `expectimax2-v3`. `expectimax2-v1` and `-v2` stay available.
 
 ## HTTP
@@ -44,7 +45,7 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 
 ## Warnings
 
-When the final team carries a move or item that the player version doesn't model, `warnings` gets:
+Unmodelled moves and items are not offered (spec FR-001, FR-009). The one remaining case is a **required HM** whose effect the player doesn't model (e.g. Defog), which is still carried (FR-014). Then `warnings` gets:
 
 `"<Species> carries <Move/Item>, which <policy> does not model; its in-battle effect is applied by the engine but the player does not plan around it."`
 

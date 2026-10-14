@@ -33,10 +33,10 @@ description: "Task list for 007 Status Moves and Held Items"
 ## Phase 1: Setup (baseline before any change)
 
 - [ ] T001 Create `specs/007-status-moves-items/validation-log.md` and record: `git rev-parse HEAD` (expect `e3273d5` or later, code equal to `f88cdd0`), `uv sync`, `uv run platsim extract`, `uv run platsim extract --check`, and `nproc`.
-- [ ] T002 Run the full Python suite `uv run pytest -q` (about 2.5 h, in the background) and `node --test sim/test`. Record the pass/fail counts in `validation-log.md` as the pre-change baseline.
+- [ ] T002 Run the full Python suite `uv run pytest -q` (about 2.5 h, in the background) and `node --test sim/test`. Record the pass/fail counts in `validation-log.md` as the pre-change baseline. Start the running total of one-time hours there (all suite runs together are budgeted at 8 h). Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
 - [ ] T003 Write the benchmark definitions B1–B5 (research R9) into `tests/fixtures/bench_007.json`: species lists, B3's `required_hms` (`surf`, `waterfall`), and seed `bench-007`. Check that each team resolves with `candidates.resolve_species` under `DEFAULT_LEGALITY` and record the output.
 - [ ] T004 Record the golden player hashes before any `sim/` edit. Run fixed-seed gauntlets (seeds `golden-007|0..19`) of `expectimax2-v1` and `expectimax2-v2` on `tests/fixtures/policy_benchmark_team.json` and on B1, and store each battle's `log_hash` in `sim/test/fixtures/golden_v1_v2.json`. Add `sim/test/golden_v1_v2.test.mjs`, which replays them and asserts equality. Positive control: changing one seed must make the test fail. Record the output.
-- [ ] T005 Baseline benchmark, about 8–11 h, in the background. Run `uv run platsim optimize --budget standard --seed bench-007 …` for B1–B5 on the current code (equal to `f88cdd0`), with `--out runs/bench-007-baseline/<B>`. Record each team's `state.json` timing per stage, total wall time, final levels, clear rate and CI in `validation-log.md` (table "Baseline"). No other heavy run (T036, T046, T063 onwards) may overlap it, because each uses all 16 workers.
+- [ ] T005 Baseline benchmark, about 8–11 h, in the background. Run `uv run platsim optimize --budget standard --seed bench-007 …` for B1–B5 on the current code (equal to `f88cdd0`), with `--out runs/bench-007-baseline/<B>`. Record each team's `state.json` timing per stage, total wall time, final levels, clear rate and CI in `validation-log.md` (table "Baseline"). No other heavy run (T036, T046, T063 onwards) may overlap it, because each uses all 16 workers. Budgeted at 11 h. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
 - [ ] T006 [P] Confirm battles already use friendship 255. Run a Node probe in the scratchpad that builds a B1 battle through `sim/team.mjs` and prints `pokemon.happiness` and Return's base power for p1. Record that both are 255 and 102 (positive control for R3).
 
 ---
@@ -114,7 +114,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - setting weather, Leech Seed, a substitute, Taunt, Spikes and Safeguard on a `leagueBattle` fixture through Showdown APIs (`field.setWeather`, `addVolatile`, `addSideCondition`) round-trips into the v3 state and the shadow;
   - the shadow AI's choice equals the live AI's choice in a weather position (positive control: a position where weather changes the AI's choice).
   - If the Showdown setters don't work on fixtures, record it and build the positions by playing moves instead.
-- [ ] T020 Checkpoint: `node --test sim/test` (golden v1/v2 unchanged) and `uv run pytest -q tests/unit`. Record the output, commit and push.
+- [ ] T020 Checkpoint: `node --test sim/test` (golden v1/v2 unchanged) and `uv run pytest -q tests/unit`. Record the output and its hours in the running total, then commit and push.
 
 **Checkpoint**: classification, item filter, adopted flag, v3 scaffold and state are ready. User stories can start.
 
@@ -148,6 +148,7 @@ description: "Task list for 007 Status Moves and Held Items"
 - [ ] T026 [US1] Hazards in `doSwitch`: Spikes (1/8, 1/6, 1/4, BS:5388-5450), Stealth Rock (scaled by Rock-type effectiveness, BS:8302-8335), Toxic Spikes (BS:7592-7650; absorbed by Poison types). The leaf hazard term per remaining foe switch-in is behind flag `leafHazards`.
 - [ ] T027 [US1] Baton Pass: detect the mid-turn switch request (find Showdown's field for it and record it), choose the target, and pass boosts, substitute and volatiles (BL:2055-2110 `SYSCTL_BATON_PASS`) without zeroing them in `doSwitch`.
 - [ ] T028 [US1] Residual-projection leaf behind flag `leafResidual`: per active, the per-turn HP drift from tox n/16, psn/brn 1/8, Leech Seed ±1/8, weather 1/16, Leftovers/Black Sludge, Aqua Ring/Ingrain and a pending Wish, projected over H turns (option `leafHorizon`). Also add state-dependent status penalties behind `leafStatusState`. Both are off in `V3_REF_OPTS` (the reference relies on search, not projection).
+- [ ] T028b [US1] Speed probe: 20 gauntlets each of `expectimax2-v3` (current `V3_OPTS`) and `expectimax2-v3-ref` on `tests/fixtures/policy_benchmark_team.json`. Record gauntlets/s and ms per decision against v2's measured 37-49 ms. T031 uses these numbers; T063 records the final ones and logs any change to the round sizes.
 - [ ] T029 [US1] SC-008 positions for status categories in `sim/test/expectimax2_v3_positions.test.mjs`, built with `sim/test/ai_fixtures.mjs` `leagueBattle`. For each of weather, Leech Seed, Substitute, Toxic stall, a sleep move, Thunder Wave, Wish/Recover at low HP, Taunt, hazards and Baton Pass:
   - a position where `expectimax2-v3-ref` chooses the move and v2 doesn't;
   - a matching position where the move doesn't help and v3-ref doesn't choose it.
@@ -168,12 +169,12 @@ description: "Task list for 007 Status Moves and Held Items"
     - **structured** 3-4-status sets (spec FR-005, research R5.1): for every choice of 3 or 4 categories the member can fill (inflict-status, protection, recovery, Leech Seed, self-boost, screen), each category's best move under the deterministic per-category order, plus the best attack in the 4th slot of a 3-status set.
 
     Items are added in T040 (US2).
-  - Record the measured N (alternatives per member and per team) for B1-B5 in `validation-log.md`, before any reference run. With the measured v3 throughput (T063), compute each team's round size r from research R5. If r = 25 doesn't fit a team's 14 h share, stop and ask the user.
+  - Record the measured N (alternatives per member and per team) for B1-B5 in `validation-log.md`, before any reference run. With the v3 throughput from T028b, compute the round size r for the reference teams B4, B5 and B3 from research R5. If r = 25 doesn't fit a team's 10 h share, stop and ask the user.
   - Every alternative is made buildable with `resources.repair` (copies), never skipped silently. An unbuildable one is recorded with the refusal reason.
   - The moves under test go into `adopted` for the duration of the test (research R6).
 - [ ] T032 [US1] In `src/platsim/optimizer/alternatives.py`, `run_stage(...)`:
   - levels are the current team's first failing neighbour from the bisection (`fail_u` from `LevelSearch`), or the bisection levels when there is none; record which;
-  - per member in slot order, **successive halving** over all of that member's alternatives with the expectimax2-v3 player: rounds r/2r/4r/8r paired runs, with r from the request (`alternatives_round` option, chosen per research R5; record it) (seeds `derive_seed(f"{seed}|alternatives", i, 0)`, the same seeds for every alternative), keeping the top third each round. Reuse `optimizer/screen.py` `successive_halving` if it fits; otherwise write it in `alternatives.py` and record why. Record each alternative's `round_reached` and counts;
+  - per member in slot order, **successive halving** over all of that member's alternatives with the expectimax2-v3 player: rounds r/2r/4r/8r paired runs, with r from the request (`alternatives_round` option, chosen per research R5; record it), recording every seed's outcome for every alternative so prefilters can be compared offline (seeds `derive_seed(f"{seed}|alternatives", i, 0)`, the same seeds for every alternative), keeping the top third each round. Reuse `optimizer/screen.py` `successive_halving` if it fits; otherwise write it in `alternatives.py` and record why. Record each alternative's `round_reached` and counts;
   - the finalists (the last round's top 3) are each played against the current team for `preset.ability_screen` paired runs, compared with McNemar exact (`stats.mcnemar_exact`) and Holm-corrected within the member;
   - the best significant winner is confirmed on a fresh block (`f"{seed}|alternatives-confirm"`) and adopted if it is confirmed;
   - `adopted` is set on the spec;
@@ -194,7 +195,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - a member that learns Toxic, Protect, Recover and Leech Seed (B4 Roserade or Milotic) gets at least one `structured` alternative;
   - a legal unmodelled move (e.g. Trick or Haze on a member that learns it) is not offered and appears in `excluded` as "not offered: not modelled";
   - a moved-under-test status move survives `place_required_hms` on B3.
-- [ ] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`, marked slow like `test_policy_strength`: a `--budget quick` B4 run with `--candidates reference` (record its time). `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
+- [ ] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`, marked slow like `test_policy_strength`: a **smoke test, not a reference**. It is a `--budget quick` B4 run with `--candidates reference`, the test-only options `alternatives_round=5` and `alternatives_members=2` (two members only; added to `OptimizeRequest` and recorded in provenance), and its time recorded. It is outside the 100 h budget. `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
 
 **Checkpoint**: US1 works end to end with the reference player settings (production v3 settings come in Phase 8).
 
@@ -219,7 +220,7 @@ description: "Task list for 007 Status Moves and Held Items"
 
   Export `items_for(member, moveset, team, led) -> list[item key]`.
 - [ ] T038 [US2] Type-boost tie rule (FR-011) in `src/platsim/optimizer/item_classes.py`: more copies, then higher effect_param, then classic `STRENGTHEN_*` before `ARCEUS_*`, then item key. Export it as the constant `ITEM_TIE_RULE` (the text in contracts/candidate-report.md).
-- [ ] T039 [US2] Replace `held_item_candidates` in `src/platsim/optimizer/candidates.py` with `item_classes.items_for`, keeping the old function name as a thin wrapper for callers (`resources.repair`). Record the new per-moveset item count for B1 in `validation-log.md`.
+- [ ] T039 [US2] Filter `item_classes.items_for` through `move_classes.modelled(policy)` (T017): an item whose hold effect isn't modelled is not offered and goes in `excluded` as "not offered: not modelled by <policy>" (spec FR-009). Then replace `held_item_candidates` in `src/platsim/optimizer/candidates.py` with `item_classes.items_for`, keeping the old function name as a thin wrapper for callers (`resources.repair`). Record the new per-moveset item count for B1 in `validation-log.md`.
 - [ ] T040 [US2] Extend `alternatives.generate` (`src/platsim/optimizer/alternatives.py`) with `status+item` (each status alternative × its paired items) and `item` (item-only swaps on the current set, from `items_for`). Team-wide copies go through `resources.repair`.
 - [ ] T041 [US2] Player item mechanics in `sim/policy/expectimax2.mjs` (v3 flags), each with a decomp-cited test in `sim/test/expectimax2_v3_mechanics.test.mjs`:
   - Light Clay at 8 turns (BS:4229, 4272), replacing the hard 5 at ~:778-779;
@@ -234,7 +235,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - Big Root, Power Herb.
 
   Add positive-control tests for the items already modelled through the damage port: Wise Glasses, Expert Belt, Scope Lens/Razor Claw, Wide Lens.
-- [ ] T042 [US2] Update `MODELLED` in `sim/policy/expectimax2.mjs` for v3/v3-ref with every effect and item added in T021–T028 and T041. Add a test that every offered item's `HOLD_EFFECT` either is in v3's `MODELLED` or appears in the recorded "not modelled" list in `validation-log.md` with its reason.
+- [ ] T042 [US2] Update `MODELLED` in `sim/policy/expectimax2.mjs` for v3/v3-ref with every effect and item added in T021–T028 and T041. Add a test that every **offered** item's `HOLD_EFFECT` is in the policy's `MODELLED` (true by construction after T039), and that every obtainable item not offered for that reason is listed in `excluded`. Record the list of skipped items in `validation-log.md`.
 - [ ] T043 [US2] SC-008 positions for items in `sim/test/expectimax2_v3_positions.test.mjs`: Light Clay with screens, a rock with weather, Chesto + Rest, a resist berry, the Choice Specs lock and Quick Claw. Each has a helps/doesn't-help pair, as in T029.
 - [ ] T044 [US2] Mechanics-divergence pass (research R8). For each offered status effect and hold effect, compare decomp and Showdown gen4 behaviour (`pokemon-showdown/data/mods/gen4/*`), starting with Encore (decomp 3–7 turns, BS:4742, vs Showdown `random(4,9)`). Record each as `corrected` or `accepted` with its impact in `data/divergences.json` through the existing divergence tooling (`src/platsim/divergence/`). Extend the divergence test so every new entry is checked.
 - [ ] T045 [P] [US2] Write `tests/unit/test_item_pairings.py`:
@@ -245,7 +246,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - Choice Specs only with all-attack sets, and given to only one member team-wide (copy 1);
   - the tie rule picks Mystic Water over Splash Plate when both have equal copies (set up through `allow_post_game_items`) and picks the unlimited item otherwise;
   - no post-Champion or never item is offered under default options.
-- [ ] T046 [US2] Integration: a quick B1 run with `--candidates reference` has `item` and `status+item` alternatives in `candidate_tests`, and the validator passes. Commit and push.
+- [ ] T046 [US2] Integration smoke test (outside the budget): a quick B1 run with `--candidates reference`, `alternatives_round=5` and `alternatives_members=2` has `item` and `status+item` alternatives in `candidate_tests`, and the validator passes. Commit and push.
 
 **Checkpoint**: US1 and US2 both work.
 
@@ -323,33 +324,37 @@ description: "Task list for 007 Status Moves and Held Items"
 
 ## Phase 8: Reference, prefilter and acceptance (Principle VI; FR-017, FR-019; cross-cutting)
 
-- [ ] T063 Player reference vs cheap variants (T063 and T064 together get about 20 h of the 100 h budget; record their hours), on B1–B5 and `tests/fixtures/policy_benchmark_team.json`. Run paired gauntlets (McNemar, at least 400 per team, seeds `v3-accept|i`) of `expectimax2-v3-ref` (T015 `V3_REF_OPTS`: all mechanics, no roll-bucket compression, K_ROOT 32, K_PLY2 8, all switches, ply-2 switches) against each cheap candidate:
+- [ ] T063 Player reference vs cheap variants (T063 and T064 together get 15 h of the 100 h budget), on `tests/fixtures/policy_benchmark_team.json` and as many of B4, B5, B1 as fit the budget, in that order. Run paired gauntlets (McNemar, at least 400 per team, seeds `v3-accept|i`) of `expectimax2-v3-ref` (T015 `V3_REF_OPTS`: all mechanics, no roll-bucket compression, K_ROOT 32, K_PLY2 8, all switches, ply-2 switches) against each cheap candidate:
   - today's knobs + `leafResidual`;
   - plus `leafStatusState`;
   - plus `leafHazards`;
   - re-fitted leaf weights. Fit them by logistic regression on v3-ref-played games, as in the v2 header :20-26. Put the fitting script in `sim/policy/fit/` or the scratchpad, and record which.
 
-  Also try depth 3 or rollouts as a second reference if time allows, and record it. Record per-decision time and gauntlets/s for each. The production `V3_OPTS` = the cheapest candidate not significantly worse than the reference on any team. Record the table and the choice in `validation-log.md`.
-- [ ] T064 Acceptance of v3 against v2 and against greedy-v1 using the `tests/integration/test_policy_strength.py` pattern (add v3 to it). Run the SC-008 positions with the production v3. A position that passes with v3-ref but fails with v3 is a finding, recorded with its effect on the T063 choice.
+  Also try depth 3 or rollouts as a second reference if time allows, and record it. Record per-decision time and gauntlets/s for each. The production `V3_OPTS` = the cheapest candidate not significantly worse than the reference on any team. Record the table and the choice in `validation-log.md`. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
+- [ ] T064 Acceptance of v3 against v2 and against greedy-v1 using the `tests/integration/test_policy_strength.py` pattern (add v3 to it). Run the SC-008 positions with the production v3. A position that passes with v3-ref but fails with v3 is a finding, recorded with its effect on the T063 choice. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
 - [ ] T065 Switch the defaults to `expectimax2-v3`: `src/platsim/optimizer/run.py` `POLICY`, `src/platsim/optimizer/levels.py` `POLICY`, `src/platsim/evaluate.py` `DEFAULT_PLAYER_POLICY`, the `src/platsim/cli.py` default. The golden v1/v2 test still passes. Commit and push.
-- [ ] T066 Generation-rule reference (spec FR-005, Complexity Tracking; about 10 h of the 100 h budget). For B4 Milotic and B4 Roserade, run the alternatives stage again with **full 3-4-slot generation** (every 3- and 4-slot replacement by offered status moves) as well, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. Otherwise widen the rule through `/speckit-converge`. Record both, with run times.
-- [ ] T067 Reference benchmark: standard runs of B1–B5 with `--candidates reference`, seed `bench-007`, `--out runs/bench-007-reference/<B>`, in the background, one team at a time, starting with B4, with each team's round size from T031. Keep a running total of all one-time reference hours (T063, T064, T066, T067) in `validation-log.md`. Stop and ask the user before anything would take the total over 100 h.
+- [ ] T066 Generation-rule and item-relevance references (spec FR-005, FR-009, FR-019, Complexity Tracking; 8 h of the 100 h budget).
+  - **Generation rule:** for B4 Milotic and B4 Roserade, run the alternatives stage again with **full 3-4-slot generation** (every 3- and 4-slot replacement by offered status moves) as well, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. Otherwise widen the rule through `/speckit-converge`.
+  - **Item relevance:** for B4 Milotic and B1 Gardevoir, also generate alternatives offering **every** offered (modelled, obtainable) item with each status set, not only the paired items, through the same reference. The pairing rule is accepted if no unpaired item set wins significantly; otherwise widen it through `/speckit-converge`.
+  - Record both comparisons with their run times. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
+- [ ] T066b Screening check (Constitution VI; 3 h of the budget). For B4 Milotic, take a fixed sample of about 40 alternatives: every finalist the reference screen picked, plus others drawn with seed `sh-check`. Give each the full 200-run paired test against the current team. The screening is **verified** if no non-finalist beats the finalists significantly. Otherwise label it unverified in plan Complexity Tracking and `validation-log.md`, with the evidence. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
+- [ ] T067 Reference benchmark (31 h of the budget): standard runs of **B4, B5 and B3** with `--candidates reference`, seed `bench-007`, `--out runs/bench-007-reference/<B>`, in the background, one team at a time in that order, with each team's round size from T031. Every seed's outcome for every alternative is kept for offline prefilter comparison (T068). Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
   - Record per-stage timings, final levels, clear rate and CI, and adopted alternatives.
-  - **SC-002:** evaluate the baseline final team and the new final team with the same player version (production v3) and seeds (`platsim evaluate --runs <confirm_min> --seed sc002-<B>`) at their own reported start levels. Apply the SC-002 test: McNemar on clear rate, and expected average final level against the combined CI half-width.
+  - **SC-002** (for these three teams here; B1 and B2 in T069): evaluate the baseline final team and the new final team with the same player version (production v3) and seeds (`platsim evaluate --runs <confirm_min> --seed sc002-<B>`) at their own reported start levels. Apply the SC-002 test: McNemar on clear rate, and expected average final level against the combined CI half-width.
   - **SC-001:** a table of each in-scope category, with which benchmark team and member offered it and how far it got (round reached, tested, adopted).
   - **SC-004:** assert that the validator passes on every final team, including B3's required HMs.
 - [ ] T068 Implement `mode="prefilter"` in `src/platsim/optimizer/alternatives.py` with at least two variants:
   - (a) smaller successive-halving rounds than the reference (e.g. 25/50/100/200), then the same finalist test;
   - (b) a static pre-score (`move_value`/variable power for attacks plus category priors, computed from the reference results of T067 and recorded) keeping the top N per member, with N chosen from T067's adoption ranks.
 
-  Both are deterministic and seeded.
-- [ ] T069 Prefilter acceptance. Run B1–B5 in each prefilter variant on seed `bench-007` and compare with T067:
-  - adopted sets;
-  - final levels;
-  - clear rate (paired where possible);
-  - wall time against the T005 baseline.
-
-  Use the SC-002 test from T067 for "not worse". Accept the cheapest variant that is not worse than the reference on any team and takes **at most 2.0×** the baseline time on every team (SC-006). Make it the `--candidates` default in `src/platsim/optimizer/api.py` and `src/platsim/cli.py`. If none qualifies, keep `reference` as the default and record why. Record the table in `validation-log.md`. Commit and push.
+  Both are deterministic and seeded. Variant (a)'s seeds are a prefix of the reference's seeds, so it can be scored offline.
+  - **Offline comparison, no new battles:** for each variant, on B4, B5 and B3, replay its decisions from T067's recorded per-seed outcomes. Record whether it keeps the reference's adopted alternative for every member, and its estimated alternatives-stage time from the run counts and the T028b/T063 speed.
+- [ ] T069 Prefilter acceptance (22 h of the budget, plus 2 h of SC-002 evaluations).
+  - Pick the cheapest variant that keeps every reference-adopted alternative in T068's offline comparison and whose estimated time is at most 2.0× baseline.
+  - Run **only that variant** live on B1-B5 (seed `bench-007`).
+  - Compare with T067 (B4, B5, B3: adopted sets, final levels, clear rate) and with the T005 baseline on all five teams (wall time; SC-002 test from T067).
+  - Accept it if it is not worse than the reference on B4, B5 and B3, not worse than the baseline on any team, and takes **at most 2.0×** the baseline time on every team (SC-006).
+  - If it fails, record why and ask the user before a second live run (budget). Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h. Make it the `--candidates` default in `src/platsim/optimizer/api.py` and `src/platsim/cli.py`. If none qualifies, keep `reference` as the default and record why. Record the table in `validation-log.md`. Commit and push.
 
 ---
 
@@ -357,8 +362,8 @@ description: "Task list for 007 Status Moves and Held Items"
 
 - [ ] T070 [P] Update `README.md`: `--candidates`, `expectimax2-v3`, the status-move and item behaviour, the friendship assumption, the new ledger sources, and the Pickup ability as a known gap.
 - [ ] T071 [P] Update the docstrings in `src/platsim/optimizer/candidates.py` (module doc steps 2, 5 and 6), `src/platsim/optimizer/run.py` (stage list: alternatives replaces the setup check) and `src/platsim/optimizer/resources.py` (slot tiers).
-- [ ] T072 Full Python suite `uv run pytest -q` and `node --test sim/test`. Record the output against the T002 baseline, and explain every changed count.
-- [ ] T073 SC-005: re-run one benchmark request (B4, `--budget quick`, both modes) with the same seed and confirm `result.json` is byte-identical. Record it.
+- [ ] T072 Full Python suite `uv run pytest -q` and `node --test sim/test`. Record the output against the T002 baseline, and explain every changed count. Add its hours to the running total.
+- [ ] T073 SC-005: re-run one smoke request (B4, `--budget quick`, both modes, `alternatives_round=5`, `alternatives_members=2`) with the same seed and confirm `result.json` is byte-identical. Record it.
 - [ ] T074 Write the final summary in `validation-log.md` and `RUN-STATE.md`: SC-001 to SC-009 each with its evidence or "not met" and why; adopted status moves and items per benchmark team; what v3 still doesn't model. Then hand over for the user's hands-on testing (restart `uv run platsim serve` from this branch on request). Don't merge.
 
 ---
@@ -371,7 +376,7 @@ description: "Task list for 007 Status Moves and Held Items"
 - **US3 (Phase 5)** needs T032–T033. It can start once US1 is done, in parallel with US2.
 - **US5 (Phase 6)** is independent of US1–US4 and can run any time after Phase 1. It changes item counts, so finish it before T067.
 - **US4 (Phase 7)** needs T007 (classification). It is independent of the player work.
-- **Phase 8** needs US1, US2 and US4 complete. T063 → T064 → T065 → T066/T067 → T068 → T069.
+- **Phase 8** needs US1, US2 and US4 complete. T063 → T064 → T065 → T066/T067 → T066b → T068 → T069. T028b (Phase 3) must come before T031's round-size calculation.
 - **Phase 9** comes last.
 
 ## Parallel opportunities
