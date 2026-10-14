@@ -208,9 +208,9 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 4. **Checkpointing.** After each alternative, in `state.json` under `level_search.alternatives`.
 5. **Two modes, FR-017:**
    - **`reference`, two levels (analysis C1, user 2026-10-14):** every alternative of a member reaches the strong player.
-     - Successive halving with generous rounds (100/200/400/800 paired runs, keeping the top third each round) narrows them.
+     - Successive halving, keeping the top third each round, narrows them. Round sizes are set by the budget below (user revision, 2026-10-14).
      - The finalists, the last round's top 3, get the full paired test against the current team with Holm correction, plus the confirm block.
-     - No time limit.
+     - Budget: part of the 100 h one-time development budget (see the cost note).
      - Why two levels: a probe (2026-10-14, Lv 55, default options) counted 5,604 (B1), 8,540 (B4) and 9,554 (B5) 1-2-slot alternatives per team, before items. A flat 200-run test of each would take about 115-196 h per team.
    - **`prefilter`:** a cheaper path that must be validated against `reference` on the benchmark before it becomes the default. Shapes to try:
      - smaller successive-halving rounds (e.g. 25/50/100/200);
@@ -220,7 +220,18 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
    The mode is recorded in `job_fingerprint` and provenance. Users can choose `reference` (CLI flag `--candidates reference|prefilter`; the web keeps the default).
 6. **The structured 3-4-status rule is itself a cap** (Principle VI). It is validated against **full 3-4-slot generation on two members**, B4 Milotic and B4 Roserade, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. This is recorded in Complexity Tracking.
 - **Estimated cost (unverified; from recorded throughput of about 2.7 v2 gauntlets/s, v3 cost unknown).** Successive halving over N alternatives costs about N×100 + (N/3)×200 + (N/9)×400 + (N/27)×800 ≈ 196·N gauntlets. For N ≈ 8,000 per team that is about 1.6 M gauntlets, roughly 160 h at v2 speed. That is still too much, so the first round's size is the main cost driver.
-  - **Decision:** round 1 uses 100 runs as specified. If the measured cost of the first benchmark team exceeds 48 h, the overrun is recorded and the user is asked before the other teams run (Principle VI encourages local compute, but a multi-week run is a decision for the user).
+  - **The user's revision (2026-10-14):** that is not feasible.
+    - The finished tool MUST take at most 2.0× each team's baseline, which is about 8-11 h for all five teams.
+    - One-time reference runs MAY take up to 100 h **in total**.
+  - **Allocation of the 100 h** (a planning decision, adjusted only with a record in the validation log):
+    - about 20 h for the player reference comparisons (T063, T064);
+    - about 10 h for the generation-rule reference (T066);
+    - about 70 h for the candidate reference benchmark (T067), so about 14 h per team.
+  - **Round sizes.** With round sizes r, 2r, 4r, 8r and keeping a third each round, the cost is about 1.96·r·N gauntlets for N alternatives. For each team, r = the largest of {100, 50, 25} with 1.96·r·N plus the rest of the run within 14 h, at the v3 throughput measured in T063.
+  - **Example.** At v2 speed (2.7 gauntlets/s, so about 136k gauntlets in 14 h) and N ≈ 2,800, r = 25 just fits; at N ≈ 8,000 nothing fits.
+  - **If r = 25 doesn't fit a team,** stop and ask the user before running it.
+  - **What reduces N:** dropping unmodelled moves (U2) and counting only offered moves. The real N is measured first (task T031).
+  - **The production budget is the binding constraint.** At most 2× the baseline leaves about 1.5-2 h per team for alternatives, about 15-20k gauntlets. Production therefore can't screen thousands of alternatives. The prefilter has to pick a few dozen per member before the strong player sees them, which is why the reference matters.
   - Excluding unmodelled moves (U2) and counting only offered moves will reduce N. The real N per team is measured first (task T031) and recorded.
 
 **Alternatives rejected.**

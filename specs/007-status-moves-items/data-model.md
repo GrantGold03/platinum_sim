@@ -60,7 +60,7 @@ New fields:
 | `adopted` | bool | — |
 | `not_modelled` | list | moves or items in it that the player doesn't model |
 
-**State transitions:** offered → screened (successive halving, rounds 100/200/400/800 in reference mode) → (dropped in a round | finalist) → finalist tested in full → (adopted after confirm | rejected). In prefilter mode the prefilter may drop it first ("not tested: prefilter").
+**State transitions:** offered → screened (successive halving with rounds r/2r/4r/8r, r fitted to the 100 h reference budget) → (dropped in a round | finalist) → finalist tested in full → (adopted after confirm | rejected). In prefilter mode the prefilter may drop it first ("not tested: prefilter").
 
 ## MemberSpec (changed; `optimizer/resources.py`, research R6)
 

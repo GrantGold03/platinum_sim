@@ -2,7 +2,7 @@
 
 Run everything locally with `uv run`. The benchmark teams B1-B5 are defined in `research.md` R9.
 
-Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. The two-level reference is measured on the first team first (research R5); if that team needs more than 48 h, ask the user before the others run.
+Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. All one-time reference runs together may take at most 100 h (research R5 allocation); stop and ask before going over. The finished tool must take at most 2.0× each team's baseline.
 
 ## 0. Before any change
 
