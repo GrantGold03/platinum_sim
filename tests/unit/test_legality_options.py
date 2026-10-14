@@ -336,3 +336,12 @@ def test_validator_still_independent_of_optimizer():
              "print('platsim.optimizer' in sys.modules)")
     r = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=True)
     assert r.stdout.strip() == "False"
+
+
+def test_unobtainable_option_help_names_one_platinum_game(capsys):
+    """005 FR-005: the --allow-unobtainable-pokemon help on validate / evaluate / optimize."""
+    for cmd in ("validate", "evaluate", "optimize"):
+        with pytest.raises(SystemExit):
+            cli.main([cmd, "--help"])
+        out = " ".join(capsys.readouterr().out.split())  # argparse wraps lines
+        assert "unobtainable in one Platinum game" in out and "second starter" in out, cmd

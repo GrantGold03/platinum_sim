@@ -26,11 +26,14 @@ def build_option(build, led):
 
 def team_sources(team: TeamCandidate, led) -> tuple[list[str], list[str | None], list[list[str]]]:
     obtained, held, refs = [], [], []
-    for b in team.builds:
-        opt = build_option(b, led)
+    opts = [build_option(b, led) for b in team.builds]
+    # 005 FR-004 (constitution III): a member whose starter / fossil choice differs from an earlier
+    # member's needs a second Platinum game (allow_unobtainable_pokemon); its source says so.
+    second = set(MS.second_game_members(opts))
+    for i, (b, opt) in enumerate(zip(team.builds, opts)):
         if opt is None:
             raise MS.NoNamedSource(f"{b.species}: source {b.source!r} is not a pre-Champion source option")
-        obtained.append(opt.detail)
+        obtained.append(opt.detail + (MS.SECOND_GAME_NOTE if i in second else ""))
         if not b.held_item:
             held.append(None)
             refs.append([])

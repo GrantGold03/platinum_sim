@@ -465,3 +465,38 @@ def test_fossil_lines_need_one_trainer_id(led):
     two = _with(led, _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led),
                 _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led))
     assert _codes(two, led) == []
+
+
+# --- 005: "Pokémon unobtainable in one Platinum game" lifts the starter / fossil groups -----------
+
+SECOND_GAME = LegalityOptions(allow_unobtainable_pokemon=True)
+
+
+def _codes_with(team, led, options) -> list[str]:
+    return sorted(v.code for v in validate(team, led, options=options))
+
+
+def test_second_game_option_allows_mixed_starters(led):
+    d = _with(led, _member("SPECIES_TORTERRA", DAY_CARE.format("TURTWIG"), led))
+    assert _codes_with(d, led, SECOND_GAME) == []
+    assert _codes_with(d, led, LegalityOptions()) == ["SOURCE_EXHAUSTED"]  # option off: as in 004
+
+
+def test_second_game_option_allows_both_fossils(led):
+    d = _with(led, _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led),
+              _member("SPECIES_BASTIODON", REVIVAL.format("SHIELDON"), led))
+    assert _codes_with(d, led, SECOND_GAME) == []
+    assert _codes_with(d, led, LegalityOptions()) == ["SOURCE_EXHAUSTED"]
+
+
+def test_second_game_option_allows_all_three_starters(led):
+    d = _with(led, _member("SPECIES_TORTERRA", DAY_CARE.format("TURTWIG"), led),
+              _member("SPECIES_EMPOLEON", STARTER_GIFT.format("PIPLUP"), led))
+    assert _codes_with(d, led, SECOND_GAME) == []
+
+
+def test_second_game_option_keeps_one_copy_limits(led):
+    """FR-007 positive control: a second game does not give a second Giratina."""
+    static = next(o.id for o in MS.source_options("SPECIES_GIRATINA", led) if o.kind == "static")
+    d = _with(led, _member("SPECIES_GIRATINA", static, led), _member("SPECIES_GIRATINA", static, led))
+    assert "SOURCE_EXHAUSTED" in _codes_with(d, led, SECOND_GAME)

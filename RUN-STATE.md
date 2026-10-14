@@ -242,3 +242,25 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   - Each story_rank stage floods from Twinleaf. To test whether an HM is still needed late, seed
     at the Pokémon Centers already reached, not at every door of a town; every door also includes
     doors behind obstacles.
+
+## 005 second-game option (started 2026-10-13)
+- **Branch**: `005-second-game-option`, from `main` at `dccb3a4`. Nothing is committed yet. The
+  spec, plan, research, data-model, contract and quickstart are in `specs/005-second-game-option/`.
+- **Goal**: rename `allow_unobtainable_pokemon` to "Allow Pokémon unobtainable in one Platinum
+  game". With it on, lift the 004 starter and fossil one-choice rules, and label later members
+  "(from a second Platinum game, allowed by rule)".
+- **Status** (2026-10-14): all 19 tasks are done. The full suite gave `490 passed, 4 xfailed`
+  (2:27:23, exit 0). Committed on `005-second-game-option`. **Not merged**: waiting for the
+  user's hands-on testing.
+- **How to test by hand**: run `uv run platsim serve` on this branch. Then:
+  - check "Allow Pokémon unobtainable in one Platinum game" and run Torterra + Infernape;
+    expect it to be accepted, with the later member's "Obtained from" ending "(from a second
+    Platinum game, allowed by rule)";
+  - uncheck it; expect a 422 "only one starter".
+- **Not committed** (unrelated, as before): the `.claude/scheduled_tasks.lock` deletion,
+  `speckit-assess-*`, `.specify/extensions*` and `hm_requirements.md`. The last one goes with
+  006.
+- **Targets**: with the option on, 1,174,080,931,485 = C(310,6) teams (it was 1,163,212,171,902).
+  With it off, 55,192,424,630, unchanged.
+- **Trap**: a first attempt edited code directly without speckit. The user stopped it and every
+  edit was reverted (the 004 branch was reset to `efbb110`).

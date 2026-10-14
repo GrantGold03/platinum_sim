@@ -107,11 +107,12 @@ def test_options_and_groups(ledger):
     # fossils: the National Dex weights keep the parity split, so post-game changes nothing
     assert set(MS.team_group_conflicts(["SPECIES_RAMPARDOS", "SPECIES_BASTIODON"], post)) == {
         "SPECIES_RAMPARDOS", "SPECIES_BASTIODON"}
-    # allow_unobtainable_pokemon: starters have in-game entries, so no synthetic source frees them
+    # allow_unobtainable_pokemon: starters have in-game entries, so no synthetic source is added;
+    # since 005 the option lifts the groups instead (a second Platinum game; see
+    # test_second_game_option_lifts_groups), so the mixed team no longer conflicts.
     unob = ledger.with_options(LegalityOptions(allow_unobtainable_pokemon=True))
     assert not [o for o in MS.source_options("SPECIES_TORTERRA", unob) if o.kind == MS.OUTSIDE]
-    assert set(MS.team_group_conflicts(["SPECIES_TORTERRA", "SPECIES_INFERNAPE"], unob)) == {
-        "SPECIES_TORTERRA", "SPECIES_INFERNAPE"}
+    assert MS.team_group_conflicts(["SPECIES_TORTERRA", "SPECIES_INFERNAPE"], unob) == {}
 
 
 # --- US2: breeding partner ----------------------------------------------------------------------
@@ -189,11 +190,14 @@ def test_fixed_male_parent_cannot_breed(ledger, monkeypatch):
 
 # --- SC-002 / SC-003 ------------------------------------------------------------------------------
 
-def _count_teams(led, groups: bool = True) -> int:
+def _count_teams(led, groups: bool | None = None) -> int:
     """Species-only teams of six distinct species that some source assignment can build: per-option
     quantity, limited item copies (evolution items, fossils) and, if `groups`, one choice per
     choose-one group. Species with a free option (unlimited, ungrouped, no limited item) never bind,
-    so only subsets of the others are enumerated; the rest are counted with C(free, 6-k)."""
+    so only subsets of the others are enumerated; the rest are counted with C(free, 6-k).
+    `groups=None` asks the engine (MS.groups_enforced: lifted by allow_unobtainable_pokemon, 005)."""
+    if groups is None:
+        groups = MS.groups_enforced(led)
     from collections import Counter
     from math import comb
 
@@ -295,3 +299,48 @@ def test_allowed_final_forms(catalog):
     assert len(listed) == 98 and finals == listed, (finals ^ listed)
     # positive control: dropping Garchomp makes Gabite a final form
     assert "Gabite" in {catalog.get(k).name for k in _final_forms(allowed - {"garchomp"})}
+
+
+# --- 005: the second-game option lifts the groups -----------------------------------------------
+
+def _second_game(ledger):
+    from platsim.legality.models import LegalityOptions
+
+    return ledger.with_options(LegalityOptions(allow_unobtainable_pokemon=True))
+
+
+def test_second_game_option_lifts_groups(ledger):
+    on = _second_game(ledger)
+    assert MS.groups_enforced(ledger) is True and MS.groups_enforced(on) is False
+    assert MS.team_group_conflicts(["SPECIES_TORTERRA", "SPECIES_INFERNAPE"], on) == {}
+    assert MS.team_group_conflicts(["SPECIES_RAMPARDOS", "SPECIES_BASTIODON"], on) == {}
+    assert set(MS.team_group_conflicts(["SPECIES_TORTERRA", "SPECIES_INFERNAPE"], ledger)) == {
+        "SPECIES_TORTERRA", "SPECIES_INFERNAPE"}  # option off: as in 004
+    got = C.resolve_species(["torterra", "infernape", *OTHERS], on)
+    assert got[:2] == ["SPECIES_TORTERRA", "SPECIES_INFERNAPE"] and len(got) == 6
+
+
+def test_second_game_members_by_team_order():
+    from types import SimpleNamespace as O
+
+    t = O(exclusive_group=MS.STARTER_GROUP, group_choice="SPECIES_TURTWIG")
+    c = O(exclusive_group=MS.STARTER_GROUP, group_choice="SPECIES_CHIMCHAR")
+    f_odd = O(exclusive_group=MS.TID_GROUP, group_choice="odd")
+    f_even = O(exclusive_group=MS.TID_GROUP, group_choice="even")
+    free = O(exclusive_group=None, group_choice=None)
+    assert MS.second_game_members([t, c, free]) == [1]
+    assert MS.second_game_members([c, t, free]) == [1]
+    assert MS.second_game_members([c, c, free]) == []
+    assert MS.second_game_members([t, c, c, f_odd, f_even, None]) == [1, 2, 4]
+
+
+def test_species_team_count_second_game(ledger):
+    """005 SC-002: with "Pokémon unobtainable in one Platinum game" the engine builds every 6-subset of
+    its 310 species: C(310, 6). Positive control: the 004 groups forced on give 1,163,212,171,902,
+    so starter / fossil mixing adds 10,868,759,583 teams."""
+    from math import comb
+
+    on = _second_game(ledger)
+    assert sum(1 for c in MS.by_constant() if MS.source_options(c, on)) == 310
+    assert _count_teams(on) == comb(310, 6) == 1_174_080_931_485
+    assert _count_teams(on, groups=True) == 1_163_212_171_902

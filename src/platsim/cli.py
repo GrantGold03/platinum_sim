@@ -16,7 +16,8 @@ _LEGALITY_HELP = {
                               "must be obtainable and is used up)",
     "allow_post_game_pokemon": "allow pokemon obtainable only after the Champion (including National Dex encounters)",
     "allow_post_game_items": "allow items, TMs and move tutors obtainable only after the Champion",
-    "allow_unobtainable_pokemon": "allow pokemon that cannot be obtained in Platinum (other cartridges, events, none)",
+    "allow_unobtainable_pokemon": "allow Pokémon unobtainable in one Platinum game (other cartridges, events, none, "
+                                  "or a second starter / the other fossil)",
 }
 
 

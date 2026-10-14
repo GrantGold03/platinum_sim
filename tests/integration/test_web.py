@@ -442,3 +442,23 @@ def test_mixed_starters_refused_before_a_job(tmp_path, catalog):
     # positive control: one starter line, several members
     r = client.post("/api/jobs", json={"species": ["infernape", "monferno", *others]})
     assert r.status_code == 201, r.json()
+
+
+def test_mixed_starters_allowed_with_second_game_option(tmp_path, catalog):
+    """005 FR-003: with "Pokémon unobtainable in one Platinum game" on, a mixed team starts a job;
+    without it the 004 refusal stands (test_mixed_starters_refused_before_a_job)."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    team = ["torterra", "infernape", "rampardos", "bastiodon", "garchomp", "gyarados"]
+    r = client.post("/api/jobs", json={"species": team, "allow_unobtainable_pokemon": True})
+    assert r.status_code == 201, r.json()
+    r = client.post("/api/jobs", json={"species": team})
+    assert r.status_code == 422 and set(r.json()["reasons"]) == {"torterra", "infernape", "rampardos", "bastiodon"}
+
+
+def test_unobtainable_option_wording(tmp_path, catalog):
+    """005 FR-005: the checkbox and the results summary name "one Platinum game"; the old label is gone."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    page, js = client.get("/").text, client.get("/static/app.js").text
+    assert "Allow Pokémon unobtainable in one Platinum game" in " ".join(page.split())
+    assert '"Pokémon unobtainable in one Platinum game"' in js
+    assert "unobtainable in Platinum\n" not in page and '"Pokémon unobtainable in Platinum"' not in js

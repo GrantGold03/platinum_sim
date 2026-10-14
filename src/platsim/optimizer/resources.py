@@ -9,7 +9,8 @@ a copy limit is therefore never generated:
   at its level (`SourceOption.min_level`) is tried; a one-time source
   (gift / static / starter choice, `quantity`) already taken by an earlier member is skipped, and so is
   an option of a choose-one group (`exclusive_group`) that an earlier member holds with a different
-  `group_choice` (004; validator SOURCE_EXHAUSTED).
+  `group_choice` (004; validator SOURCE_EXHAUSTED) - unless allow_unobtainable_pokemon lifts the
+  groups (005, `movesources.groups_enforced`; the report then labels the later member).
 - For each move, the legal sources at that level (`movesources.sources`) are tried in the documented
   preference order `movesources.move_source_key` (no limited copy before a limited copy; then
   level-up / pre-evolution level-up < unlimited TM/HM < tutor < move relearner < egg move). A
@@ -211,7 +212,8 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
         for opt in variant.options(led):
             if level < opt.min_level:
                 continue
-            if opt.exclusive_group and groups.get(opt.exclusive_group, opt.group_choice) != opt.group_choice:
+            if (opt.exclusive_group and MS.groups_enforced(led)
+                    and groups.get(opt.exclusive_group, opt.group_choice) != opt.group_choice):
                 continue
             if opt.quantity != UNLIMITED and source_used[opt.id] >= int(opt.quantity):
                 continue
@@ -232,7 +234,7 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
             who.setdefault(res, []).append(slot)
         source_used[opt.id] += 1
         if opt.exclusive_group:
-            groups[opt.exclusive_group] = opt.group_choice
+            groups.setdefault(opt.exclusive_group, opt.group_choice)  # the first member's choice
         ivs, nature = default_ivs(), "Hardy"
         if opt.fixed_mon:
             if opt.fixed_mon.get("ivs"):
