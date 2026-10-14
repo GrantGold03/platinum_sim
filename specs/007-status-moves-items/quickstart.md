@@ -50,7 +50,7 @@ uv run pytest -q tests/integration/test_policy_strength.py
 ## 5. Optimizer, reference mode
 
 ```bash
-uv run platsim optimize --candidates reference --seed bench-007 <B4 team>
+uv run platsim optimize --candidates reference --seed bench-007 <B4 team>   # reference teams: B4, B5, B3
 ```
 
 Expected in `result.json`:
@@ -61,8 +61,8 @@ Expected in `result.json`:
 
 ## 6. Prefilter acceptance (FR-017, FR-019, SC-002, SC-006)
 
-- Run B1-B5 in `prefilter` mode on the same seeds.
-- For each team, compare with the reference and with the baseline, using spec SC-002's test (both final teams evaluated with the same player and seeds). Record the table and run times in `validation-log.md`.
+- Compare the prefilter versions offline against the reference's recorded per-seed outcomes on B4, B5 and B3 (T068).
+- Run only the chosen version live on B1-B5 on the same seeds. Compare it with the reference (B4, B5, B3) and with the baseline (all five), using spec SC-002's test. Record the table, run times and the running hour total in `validation-log.md`.
 - The prefilter becomes the default only if it is not worse than the reference on any team, and it takes at most 2.0× baseline time per team.
 
 ## 7. Reproducibility (SC-005)
