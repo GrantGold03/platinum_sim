@@ -1,23 +1,30 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (MINOR: materially expanded guidance in Principle III)
-- Modified principles:
-  - III. In-Game Legality of Every Output: the first bullet now admits explicit rules; a new bullet
-    sets the conditions under which an explicit, off-by-default rule may widen the output beyond
-    the pre-Champion single-cartridge game.
+- Version change: 1.2.0 → 1.3.0 (MINOR: materially expanded guidance in Development Workflow &
+  Quality Gates)
+- Modified principles: none
+- Modified sections:
+  - Development Workflow & Quality Gates. "Every feature follows Spec Kit" becomes "every change
+    that affects behaviour goes through Spec Kit":
+    - new work uses the full flow;
+    - changes to an existing or in-progress feature are recorded in that feature's spec and
+      contracts, then go through `/speckit-converge` and `/speckit-implement`;
+    - direct edits are reverted and redone;
+    - documentation and records that change no behaviour are exempt.
 - Added sections: none
 - Removed sections: none
-- Reason: feature 003-webui-refinements adds opt-in rules (post-game pokemon, post-game items and
-  moves, pokemon not obtainable in Platinum: spec FR-010, FR-010a, FR-011). The last one outputs
-  teams that the cartridge cannot produce. Raised as finding C1 by /speckit-analyze on 2026-10-11;
-  the user chose to amend rather than drop the rule. The existing trade-evolution option is also
-  covered by the new bullet.
+- Reason: user decision 2026-10-14. On 2026-10-13 a small change to 004 (the second-game option)
+  was started as direct code edits. The user stopped it and required Spec Kit "even though this
+  is a small change", which became feature 005. On 2026-10-14 the user asked for the rule to
+  apply to the project as a whole, not only one branch.
 - Templates reviewed:
   - .specify/templates/plan-template.md (Constitution Check gate) — compatible, no change
   - .specify/templates/spec-template.md — compatible, no change
   - .specify/templates/tasks-template.md — compatible, no change
-- Prior history: 1.1.0 (2026-10-09, Principle IV report files vs. views, feature 002);
-  1.0.0 initial ratification 2026-10-07.
+- Prior history:
+  - 1.2.0 (2026-10-11): Principle III, explicit off-by-default widening rules (feature 003).
+  - 1.1.0 (2026-10-09): Principle IV, report files vs. views (feature 002).
+  - 1.0.0: initial ratification 2026-10-07.
 - Deferred TODOs: none
 -->
 
@@ -138,9 +145,25 @@ controls are what distinguish them.
 
 ## Development Workflow & Quality Gates
 
-- Every feature follows Spec Kit: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` →
-  `/speckit-implement`. The plan's Constitution Check MUST pass, or violations MUST be justified
-  in Complexity Tracking.
+- Every change that affects behaviour MUST go through Spec Kit, whatever its size. This covers a
+  new feature, a bug fix, a small tweak and a change asked for after hands-on testing. Behaviour
+  means:
+  - source code (`src/`) and tests;
+  - static web files;
+  - `sim/`;
+  - extraction rules;
+  - anything else that changes outputs.
+- New work follows `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` →
+  `/speckit-implement`.
+- A change to an existing or in-progress feature first records the decision in that feature's
+  spec (Clarifications and the affected FRs) and contracts. Then `/speckit-converge` appends the
+  remaining work as tasks, and `/speckit-implement` completes them.
+- In both cases, the plan's Constitution Check MUST pass, or violations MUST be justified in
+  Complexity Tracking.
+- Direct edits outside this flow are not allowed. An edit started by mistake MUST be reverted and
+  redone through Spec Kit.
+- Exempt: documentation and records that change no behaviour, such as README prose,
+  `RUN-STATE.md`, validation logs, and analysis notes like `hm_requirements.md`.
 - Required test layers:
   - Extraction tests: known decomp values per data table (Principle I, V).
   - Legality tests: known-legal and known-illegal sets for the validator (Principle III).
@@ -162,4 +185,4 @@ controls are what distinguish them.
 - Compliance: every `/speckit-plan` Constitution Check and every code review MUST verify
   Principles I–V. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-11
+**Version**: 1.3.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-14
