@@ -297,3 +297,24 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   - A required HM must be in a final moveset, not merely learnable.
   - The web gets a new step 3 with eight toggles, all off by default.
   - A required HM that no team member can learn is refused before the run.
+
+## 007 status moves and held items (started 2026-10-14)
+
+- **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with a player that understands them (expectimax2-v3). Add the Route 221, Pastoria and Amity Square item sources to the ledger.
+- **Method.** Spec Kit. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
+- **Branch.** `007-status-moves-items`, worked in the main checkout. There is no worktree, and the web server is stopped (user, 2026-10-14).
+- **Done:**
+  - spec (`c1b6030`, `5a3d31a`);
+  - constitution v1.4.0 (`49534eb`);
+  - plan, research, data model, contracts and quickstart (2026-10-14).
+- **Next:**
+  1. `/speckit-tasks`.
+  2. Implement, starting with the groundwork: baseline standard runs of B1-B5 on `f88cdd0` (seed `bench-007`), golden v1/v2 log hashes, and the full suite recorded.
+- **Traps:**
+  - No standard run exists on `f88cdd0`; the baseline must be measured (research R9).
+  - Thunder Wave, Calm Mind, Sandstorm, Will-O-Wisp and Bulk Up TMs have 0 pre-Champion copies. Toxic, Rain Dance, Sunny Day, Hail, Roost and Rock Polish have 1.
+  - Magnitude's effect is named `BATTLE_EFFECT_PSYWAVE`.
+  - Name-only greps miss the resist berries, which battle code compares by number.
+  - `MemberSpec` is rebuilt positionally in 4 places, so a new field gets dropped silently there; use `dataclasses.replace`.
+  - Any `sim/*.mjs` edit changes the code hash, so old checkpoints won't resume.
+  - The Pickup ability (Leftovers, King's Rock) is a known unmodelled source, out of scope and proposed as a follow-up.

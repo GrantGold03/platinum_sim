@@ -238,6 +238,11 @@ Three in-game sources that the availability ledger doesn't model today are added
   - any other status move with an effect in a single trainer battle, except those excluded by FR-002 and FR-003.
 - **FR-002**: Moves whose only effect is to lower the foe's stats (including accuracy and evasion) MUST NOT be offered. The exclusion and its reason (Background: stages reset on faint or switch) MUST be recorded in the run's records.
 - **FR-003**: Fixed-damage moves (Seismic Toss, Night Shade, Sonic Boom, Dragon Rage, Super Fang, Endeavor, Psywave), moves with no effect in a single trainer battle, and the attacks already excluded today as conditional (one-hit KO, Explosion, Fake Out, and so on) MUST NOT be offered.
+  - Also excluded, each with its reason recorded (research R1, R3; plan 2026-10-14):
+    - moves where the user faints (Memento, Healing Wish, Lunar Dance);
+    - reactive or conditional moves (Counter, Mirror Coat, Metal Burst, Bide, Spit Up, Present);
+    - attacks whose power depends on a battle state the optimizer can't predict (Flail, Reversal, Trump Card);
+    - attacks that consume the held item (Natural Gift, Fling).
 - **FR-004**: Each offered move's category MUST be derived from the decomp's move data, by effect name. It MUST NOT come from a hand-typed list of move names (Constitution I).
 - **FR-005**: A moveset MAY contain more than one status move, up to all four moves.
 - **FR-006**: Moves and held items MUST be chosen together where an item depends on a move: Light Clay with screens, a weather rock with its weather move, Chesto or Lum Berry with Rest. A candidate pairs them as one choice.
