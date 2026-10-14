@@ -276,8 +276,10 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Status** (2026-10-14): all 28 tasks are done. The full suite gave 488 passed and 2 failed.
   One failure was a test fix (summary keys). The other was environmental (no `runs/` in the
   worktree); both pass on rerun, see `validation-log.md`. A quick end-to-end optimize with Surf and
-  Waterfall required passed, and its result validates. Committed on `006-required-hms`. **Not
-  merged.**
+  Waterfall required passed, and its result validates. After the user's testing (label and 4x2
+  layout fixes, T029-T031), `main` was merged in (`bf28dc4`; full suite 502 passed, plus the known
+  worktree-only ETA failure, which passes against the real runs). **Merged into `main`** by
+  fast-forward on 2026-10-14.
 - **How to test by hand**:
   - From the worktree, run `uv run platsim serve --port 8001`; the main checkout serves 005 on
     8000.

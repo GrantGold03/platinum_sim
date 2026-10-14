@@ -186,3 +186,20 @@ practice as the 003 T058 rerun).
   fold check.
 - **Screenshots**: desktop shows 4×2 (Cut, Fly, Surf, Strength / Defog, Rock Smash, Waterfall,
   Rock Climb). The phone shows 2×4 in even columns. No overlap.
+
+## Merge into main (2026-10-14)
+
+- `main` (005 + constitution v1.3.0) was merged into `006-required-hms` as `bf28dc4`. The only
+  conflicts were appended blocks in `tests/unit/test_validator.py`,
+  `tests/integration/test_web.py` and `RUN-STATE.md`; both sides were kept.
+- **Auto-merged code checked**: 005's `groups_enforced` and second-game label sit alongside 006's
+  `required_hms` placement, refusal and validator rule. The new option label is on the page, in
+  `app.js` and in the CLI. Undefined-name scan: clean.
+- **Full suite on the merged branch** (worktree, 13:06–15:35):
+  `1 failed, 502 passed, 1 skipped, 4 xfailed, 1 warning in 8906.90s (2:28:26)`.
+  The failure was `test_history_from_real_runs`, the known worktree-only gap: no past runs in its
+  `runs/`, which held only an empty folder the 006 server created.
+  - Rerun with the real runs linked (the empty folder set aside and restored):
+    `pytest -q tests/integration/test_web_eta.py` → `2 passed`.
+- `main` fast-forwarded to `bf28dc4` at the user's request. The untracked `hm_requirements.md` in
+  the main checkout was byte-identical to the committed copy and was replaced by it.
