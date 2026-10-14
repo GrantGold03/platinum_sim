@@ -1,27 +1,27 @@
 <!--
 Sync Impact Report
-- Version change: 1.2.0 → 1.3.0 (MINOR: materially expanded guidance in Development Workflow &
-  Quality Gates)
-- Modified principles: none
-- Modified sections:
-  - Development Workflow & Quality Gates. "Every feature follows Spec Kit" becomes "every change
-    that affects behaviour goes through Spec Kit":
-    - new work uses the full flow;
-    - changes to an existing or in-progress feature are recorded in that feature's spec and
-      contracts, then go through `/speckit-converge` and `/speckit-implement`;
-    - direct edits are reverted and redone;
-    - documentation and records that change no behaviour are exempt.
-- Added sections: none
+- Version change: 1.3.0 → 1.4.0 (MINOR: new principle added)
+- Modified principles:
+  - V. Verified Claims With Positive Controls: the "simplest design" bullet now names a
+    reference kept under Principle VI as justified complexity.
+- Added sections:
+  - Principle VI. Reference-First Speed: Spend Development Time to Save Run Time.
+- Modified sections: Governance (the compliance check covers Principles I–VI).
 - Removed sections: none
-- Reason: user decision 2026-10-14. On 2026-10-13 a small change to 004 (the second-game option)
-  was started as direct code edits. The user stopped it and required Spec Kit "even though this
-  is a small change", which became feature 005. On 2026-10-14 the user asked for the rule to
-  apply to the project as a whole, not only one branch.
+- Reason: user decision 2026-10-14, during feature 007 (status moves and held items). The user
+  answered the run-time question with "build C first, then build a pre-filter and test it against
+  C so the end result is closer to B". They then said: "spending more time in development
+  (building an expensive model and then testing the cheaper versions against it) to achieve
+  higher accuracy in shorter end product runtimes should be the goal and should be encouraged",
+  and asked to "add it to the constitution to prefer longer development times if it results in
+  shorter simulation runtimes".
 - Templates reviewed:
-  - .specify/templates/plan-template.md (Constitution Check gate) — compatible, no change
+  - .specify/templates/plan-template.md (Constitution Check gates come from this file) —
+    compatible, no change
   - .specify/templates/spec-template.md — compatible, no change
   - .specify/templates/tasks-template.md — compatible, no change
 - Prior history:
+  - 1.3.0 (2026-10-14): Spec Kit required for every behaviour change.
   - 1.2.0 (2026-10-11): Principle III, explicit off-by-default widening rules (feature 003).
   - 1.1.0 (2026-10-09): Principle IV, report files vs. views (feature 002).
   - 1.0.0: initial ratification 2026-10-07.
@@ -123,10 +123,35 @@ chases noise and its rankings cannot be trusted or reproduced.
 - "Done", "passing", and "matches the game" MUST NOT be claimed without running the check and
   showing its output. Unobserved behaviour is labelled unverified.
 - Prefer the simplest design that satisfies these principles; added complexity MUST be justified
-  in the plan's Complexity Tracking.
+  in the plan's Complexity Tracking. A reference version kept under Principle VI, next to the
+  cheaper version it validates, is justified complexity.
 
 Rationale: a silent extractor or simulator failure looks identical to a clean result. Positive
 controls are what distinguish them.
+
+### VI. Reference-First Speed: Spend Development Time to Save Run Time
+
+- Shorter simulation run times in the finished tool, at no loss of accuracy, are worth longer
+  development. When the two trade off, the project MUST prefer the longer development path.
+- Every approximation MUST be built reference-first. That covers a candidate pre-filter, a
+  shortcut in the battle player's model, a relevance filter, and a cap on candidates or runs.
+  1. First build an expensive, accurate reference version.
+  2. Then build cheaper versions. Compare each one with the reference on the same benchmark
+     requests and seeds (paired, Principle IV).
+  3. Adopt a cheaper version only if it is not worse than the reference by a statistically
+     supported margin.
+- The comparison and the run times of both versions MUST be recorded in the feature's
+  validation log.
+- The reference MUST stay available, so the cheaper version can be checked again after later
+  changes.
+- An approximation adopted without a reference comparison MUST be listed in the plan's
+  Complexity Tracking with the reason, and labelled unverified (Principle V).
+- Extra development time and local compute spent on building and running references are
+  expected and encouraged. Paid or cloud compute still needs the user's approval first.
+
+Rationale: users pay the run time of every optimization; development time is paid once. A
+cheap heuristic that has never been checked against an accurate version can silently cost
+accuracy. The reference is what shows it doesn't.
 
 ## Technical Constraints
 
@@ -183,6 +208,6 @@ controls are what distinguish them.
 - Versioning: MAJOR for removing or redefining a principle; MINOR for adding a principle or
   section or materially expanding guidance; PATCH for clarifications and wording.
 - Compliance: every `/speckit-plan` Constitution Check and every code review MUST verify
-  Principles I–V. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
+  Principles I–VI. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
 
-**Version**: 1.3.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-14
+**Version**: 1.4.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-14

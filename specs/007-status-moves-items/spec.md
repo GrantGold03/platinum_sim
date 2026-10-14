@@ -268,7 +268,7 @@ Three in-game sources that the availability ledger doesn't model today are added
   - Each source is placed before or after the Champion by the ledger's existing rules. A condition the ledger can't decide MUST be resolved the conservative way and recorded.
   - Each source needs a positive-control test that ties it to its decomp script.
   - The validator MUST accept the items these sources give exactly when the ledger does.
-- **FR-019**: Every approximation this feature introduces MUST be built reference-first (user, 2026-10-14):
+- **FR-019**: Every approximation this feature introduces MUST be built reference-first (user, 2026-10-14; Constitution VI):
   - first an expensive, accurate version as the reference;
   - then cheaper versions, each compared with the reference on the same benchmark requests and seeds.
 
