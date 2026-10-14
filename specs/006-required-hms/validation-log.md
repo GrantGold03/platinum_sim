@@ -141,3 +141,27 @@ FAILED tests/integration/test_web_result_view.py::test_result_view
 
 Only a test file changed after the full run, so the whole suite was not run again (the same
 practice as the 003 T058 rerun).
+
+## T029–T030 Convergence: step 3 labels (2026-10-14, after the user's hands-on test)
+
+- **User report**: "the HM names overlap the next one. Remove HM0X from the name and just use the
+  move name." Recorded in spec FR-006 and Clarifications, and in the contract.
+  `/speckit-converge` found 2 contradicts gaps (F1 labels, F2 overlap) and appended T029–T030.
+- **Cause of the overlap**: `.hm-list` used `repeat(4, minmax(0, 1fr))`, and `.check` used
+  `white-space: nowrap`, so text spilled past narrow columns.
+- **Tests first**:
+  - `test_required_hms_step` now expects the move names and no "HM0", plus a no-overlap check at
+    1920×1080.
+  - New `test_hm_labels_do_not_overlap_on_a_phone` (390 px), with a positive control that forces
+    the old layout.
+  - The first version of the overlap check measured `<label>` boxes, which hide spilled text, so
+    the control found nothing. It now measures each label's content range, and the control
+    detects the old overlap.
+  - Before the fix: `1 failed` (labels "HM01 Cut", …).
+- **Fix**: `app.js` labels use `h.name`. `style.css` grid is now
+  `repeat(auto-fill, minmax(7.5em, 1fr))`, with labels `min-width: max-content`; the phone
+  media rule was dropped.
+- `uv run pytest -q -m browser tests/browser/` → `6 passed in 63.16s`. That includes the 1080p
+  fold check (002 SC-003).
+- **Screenshots** (session scratchpad): desktop shows 3 columns × 3 rows; phone shows 2 columns ×
+  4 rows. No label touches another.

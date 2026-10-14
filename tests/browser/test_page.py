@@ -511,6 +511,38 @@ def test_no_runs_yet(tmp_path, catalog, chrome):
         page.close()
 
 
+HM_OVERLAP_JS = """() => {
+  // the rendered extent of each label's contents (checkbox + text), which may spill past the label box
+  const r = [...document.querySelectorAll('#hm-list label')].map(l => {
+    const rg = document.createRange(); rg.selectNodeContents(l); return rg.getBoundingClientRect(); });
+  const out = [];
+  for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++)
+    if (r[i].left < r[j].right - 0.5 && r[j].left < r[i].right - 0.5 && r[i].top < r[j].bottom - 0.5 && r[j].top < r[i].bottom - 0.5)
+      out.push([i, j]);
+  return out;
+}"""
+
+
+def _hm_labels_overlap(page) -> list:
+    """Pairs of step 3 labels whose boxes intersect (006 FR-006: labels never overlap)."""
+    return page.evaluate(HM_OVERLAP_JS)
+
+
+def test_hm_labels_do_not_overlap_on_a_phone(tmp_path, catalog, chrome):
+    """006 T030: at a 390 px phone width the step 3 grid wraps instead of overlapping labels.
+    Positive control: forcing the old layout (4 shrinking columns, no wrapping) makes them overlap."""
+    with served(tmp_path, catalog) as (base, _app):
+        ctx = chrome.new_context(viewport={"width": 390, "height": 844})
+        page = ctx.new_page()
+        page.goto(base + "/")
+        page.locator("#hm-list label").nth(7).wait_for(timeout=15000)
+        assert _hm_labels_overlap(page) == []
+        page.add_style_tag(content="#hm-step .hm-list { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }"
+                                   " #hm-step .check { white-space: nowrap !important; }")
+        assert _hm_labels_overlap(page) != [], "positive control: the old layout overlaps"
+        ctx.close()
+
+
 def test_required_hms_step(tmp_path, catalog, chrome):
     """006 US3: four steps in order; step 3 lists the eight HMs unchecked; a checked HM is sent with
     the run; the results summary has a "Required HMs" row ("none" for the frozen default run)."""
@@ -530,7 +562,10 @@ def test_required_hms_step(tmp_path, catalog, chrome):
             "require-hm-cut", "require-hm-fly", "require-hm-surf", "require-hm-strength", "require-hm-defog",
             "require-hm-rock_smash", "require-hm-waterfall", "require-hm-rock_climb"]
         assert not any(boxes.nth(i).is_checked() for i in range(8))
-        assert "HM03 Surf" in page.inner_text("#hm-step")
+        names = [t.strip() for t in page.locator("#hm-list label").all_inner_texts()]
+        assert names == ["Cut", "Fly", "Surf", "Strength", "Defog", "Rock Smash", "Waterfall", "Rock Climb"], names
+        assert "HM0" not in page.inner_text("#hm-step")  # move names only (2026-10-14)
+        assert _hm_labels_overlap(page) == [], "step 3 labels overlap at 1920x1080"
         _wait_text(page, "#summary", "Required HMs")
         assert "Required HMs" in page.inner_text("#summary") and "none" in page.inner_text("#summary")
         # a checked HM is sent: fill the team through the page's own search, then optimize

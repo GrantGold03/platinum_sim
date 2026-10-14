@@ -563,7 +563,7 @@
     } catch (e) { HMS = []; }
     els.hmList.replaceChildren(...HMS.map((h) => {
       const box = el("input", { id: `require-hm-${h.key}`, type: "checkbox", class: "hm" });
-      const label = el("label", { class: "check", for: `require-hm-${h.key}` }, box, ` ${h.item} ${h.name}`);
+      const label = el("label", { class: "check", for: `require-hm-${h.key}` }, box, ` ${h.name}`);  // move name only (006, 2026-10-14)
       return label;
     }));
     if (shownJob) showRun(shownJob); // re-render the summary with HM names

@@ -144,7 +144,9 @@ all off. Turn some on, start a run, and check that the job records them.
   MUST name each such HM. This applies to the web (refused before a job is created, as for the
   004 starter refusal) and to the command line (`optimize` and `evaluate` exit without battles).
 - **FR-006**: The web setup MUST show steps in the order 1. Choose Pokémon, 2. Team, 3. Required
-  HMs, 4. Optimize. Step 3 has one toggle per HM in HM-number order, all off by default.
+  HMs, 4. Optimize. Step 3 has one toggle per HM in HM-number order, all off by default. Each
+  toggle is labelled with the move name only (e.g. "Surf"), and labels never overlap (user
+  decision 2026-10-14).
 - **FR-007**: The command line MUST accept the same requirement on `optimize`, `evaluate` and
   `validate`, one value per HM. Its default is none.
 - **FR-008**: Each report file (JSON report and spreadsheet) and the web results summary MUST
@@ -183,6 +185,14 @@ all off. Turn some on, start a run, and check that the job records them.
 - **SC-004**: A user can set required HMs and start a run in one pass through the four steps, with
   no hidden settings: all eight toggles are visible in step 3.
 - **SC-005**: The full test suite passes.
+
+## Clarifications
+
+### Session 2026-10-14 (hands-on testing)
+
+- **Q**: How should the step 3 toggles be labelled?
+  **A**: By move name only. Drop the "HM0X" prefix. The previous labels also overlapped the next
+  column, which must not happen (FR-006).
 
 ## Assumptions
 

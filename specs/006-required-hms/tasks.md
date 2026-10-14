@@ -270,3 +270,20 @@ checks it independently.
 2. US3 adds the web step.
 3. Polish: README, the end-to-end check, the full suite, and a commit. Then the user tests it by
    hand before merging.
+
+---
+
+## Phase 7: Convergence
+
+- [X] T029 Label each step 3 toggle with the move name only (e.g. "Surf", no "HM03"): in
+  `src/platsim/web/static/app.js` `loadHms` use `h.name`. Update
+  `tests/browser/test_page.py::test_required_hms_step` to assert the eight move names, in HM order,
+  with no "HM0" text in `#hm-step`. Per FR-006 / US3/AC1 / Clarification 2026-10-14
+  (contradicts).
+- [X] T030 Stop step 3 labels overlapping. In `src/platsim/web/static/style.css`, size the
+  `#hm-step .hm-list` columns to fit their labels (e.g.
+  `repeat(auto-fill, minmax(max-content, …))`), and let the grid wrap to more rows instead of
+  shrinking columns below the label width. Steps 1–4 must still fit on a 1080p screen (002 SC-003,
+  checked by `test_page_walkthrough`). Add a browser assertion that no two `#hm-list label`
+  bounding boxes intersect, at 1920×1080 and at a 390 px phone width. Per FR-006 / contract
+  "labels never overlap" (contradicts).

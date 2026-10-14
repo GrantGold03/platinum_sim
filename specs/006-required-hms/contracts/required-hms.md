@@ -41,7 +41,11 @@ before.
 - **Step headings**: `1. Choose Pokémon`, `2. Team`, `3. Required HMs`, `4. Optimize`.
 - **Step 3**: eight checkboxes in HM-number order, labelled with move names (Cut, Fly, Surf,
   Strength, Defog, Rock Smash, Waterfall, Rock Climb). All are unchecked by default.
-  - Each label shows the HM number (e.g. "HM03 Surf").
+  - Each label is the move name only (e.g. "Surf"), with no HM number (user decision
+    2026-10-14, after hands-on testing).
+  - Labels never overlap: each column is at least as wide as its longest label, and the grid
+    wraps to more rows when the column is narrow. Steps 1–4 still fit a 1080p screen (002
+    SC-003).
   - ids are `require-hm-<key>`.
 - **Results summary**: a "Required HMs" row lists the move names, or "none".
 - **422 refusal**: shown in the same error area as the 004 starter refusal.
