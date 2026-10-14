@@ -442,3 +442,37 @@ def test_mixed_starters_refused_before_a_job(tmp_path, catalog):
     # positive control: one starter line, several members
     r = client.post("/api/jobs", json={"species": ["infernape", "monferno", *others]})
     assert r.status_code == 201, r.json()
+
+
+def test_required_hm_nobody_can_learn_is_refused(tmp_path, catalog):
+    """006 FR-005: refused before a job, naming the HM; bad values are 422 too."""
+    client = TestClient(webapp.create_app(runner=StubRunner(), runs_dir=tmp_path, catalog=catalog))
+    six = ["garchomp"] * 6
+    r = client.post("/api/jobs", json={"species": six, "required_hms": ["fly"]})
+    assert r.status_code == 422, r.json()
+    assert r.json()["reasons"] == {"fly": "No team member can learn Fly"}
+    for bad in (["dig"], "fly", [3]):
+        assert client.post("/api/jobs", json={"species": six, "required_hms": bad}).status_code == 422, bad
+    assert not any(tmp_path.iterdir()), "an invalid request must not create a job"
+    # positive control: Surf is learnable by Garchomp, so the job starts
+    assert client.post("/api/jobs", json={"species": six, "required_hms": ["surf"]}).status_code == 201
+
+
+def test_required_hms_web(tmp_path, catalog):
+    """006 US3: /api/hms lists the HMs from the decomp; step 3 is in the page; a job keeps them."""
+    stub = StubRunner()
+    client = TestClient(webapp.create_app(runner=stub, runs_dir=tmp_path, catalog=catalog))
+    hms = client.get("/api/hms").json()
+    assert [h["key"] for h in hms] == ["cut", "fly", "surf", "strength", "defog", "rock_smash", "waterfall", "rock_climb"]
+    assert hms[2] == {"key": "surf", "name": "Surf", "item": "HM03"}
+    page = client.get("/").text
+    i1, i2, i3, i4 = (page.index(t) for t in ("1. Choose Pokémon", "2. Team", "3. Required HMs", "4. Optimize"))
+    assert i1 < i2 < i3 < i4 and 'id="hm-step"' in page
+    six = ["garchomp"] * 5 + ["gyarados"]  # Gyarados learns Waterfall (Garchomp can't: refused otherwise)
+    r = client.post("/api/jobs", json={"species": six, "required_hms": ["Waterfall", "surf"]})
+    assert r.status_code == 201, r.json()
+    job = json.loads((tmp_path / r.json()["id"] / "job.json").read_text())
+    assert job["options"]["required_hms"] == ["surf", "waterfall"]
+    # no HMs: the stored options have no required_hms key at all (FR-009)
+    r = client.post("/api/jobs", json={"species": ["garchomp"] * 6})
+    assert "required_hms" not in json.loads((tmp_path / r.json()["id"] / "job.json").read_text())["options"]

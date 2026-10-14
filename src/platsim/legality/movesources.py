@@ -934,6 +934,62 @@ def find_father(egg_species: str, mothers: tuple[str, ...], move: str, led):
     return res
 
 
+# --- HMs (006) -----------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class HM:
+    item: str  # "HM01".."HM08"
+    move: str  # MOVE_*
+    key: str  # data/generated move key, e.g. "rock_smash" (as in Build.moves)
+    name: str  # display name, e.g. "Rock Smash"
+    src: tuple[str, ...]  # the HM item's decomp refs
+
+
+@cache
+def hm_moves() -> tuple[HM, ...]:
+    """The eight HMs in HM-number order, from the decomp item table (decomp.items.tm_moves: the
+    item's teachesMove) - never typed by hand (006 research R6)."""
+    items, moves = load_items(), load_moves()
+    out = []
+    for item, move in sorted((k, v) for k, v in tm_moves().items() if k.startswith("HM")):
+        mv = moves[move]
+        out.append(HM(item, move, mv.key, mv.name, tuple(items[f"ITEM_{item}"].src[:2])))
+    return tuple(out)
+
+
+def hm_key(name: str) -> str:
+    """An HM given as key ("rock_smash"), display name ("Rock Smash"), MOVE_* or HMnn -> its key."""
+    norm = re.sub(r"[^a-z0-9]", "", str(name).lower())
+    for h in hm_moves():
+        if norm in {re.sub(r"[^a-z0-9]", "", x.lower()) for x in (h.key, h.name, h.move, h.move.removeprefix("MOVE_"), h.item)}:
+            return h.key
+    raise KeyError(f"not an HM: {name!r} (one of {', '.join(h.name for h in hm_moves())})")
+
+
+def normalize_hms(names) -> tuple[str, ...]:
+    """Keys of the given HMs, deduplicated, in HM-number order (OptimizeRequest.required_hms)."""
+    want = {hm_key(n) for n in names}
+    return tuple(h.key for h in hm_moves() if h.key in want)
+
+
+def hm_by_key(key: str) -> HM:
+    return next(h for h in hm_moves() if h.key == key)
+
+
+def unlearnable_moves(consts, moves, led) -> list[str]:
+    """006 FR-005 (data-model H2): keys of the required HMs that no member species can learn by any
+    legal source under `led`'s options. Level 100 is the widest test (legality grows with level),
+    so a move refused here is refused at every level. HM order."""
+    want = set(normalize_hms(moves))
+    return [h.key for h in hm_moves()
+            if h.key in want and not any(sources(c, h.move, 100, led) for c in dict.fromkeys(consts))]
+
+
+def unlearnable_text(key: str) -> str:
+    return f"No team member can learn {hm_by_key(key).name}"
+
+
 # --- choose-one groups (004) ------------------------------------------------------------------
 
 STARTER_GROUP = "starter"

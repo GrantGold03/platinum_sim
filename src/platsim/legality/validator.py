@@ -37,6 +37,8 @@ Violation codes (each carries `src` refs: decomp lines behind the rule, plus the
   Heart Scales and tutor shards exceed the pre-Champion copies, FR-006).
 - TM_COPIES: members using one TM exceed its pre-Champion copies (FR-004; HMs unlimited).
 - LEVEL_GAP: final levels (when present) differ by more than 10 (FR-016 / data-model).
+- REQUIRED_HM_MISSING (006 FR-004): `required_hms` names an HM that no member's moves contain (one
+  violation per HM; the requirement is an explicit input, empty by default).
 """
 
 from __future__ import annotations
@@ -71,6 +73,7 @@ PP = DECOMP_ROOT
 SPEC = REPO_ROOT / "specs" / "001-champion-team-optimizer" / "spec.md"
 DATA_MODEL = REPO_ROOT / "specs" / "001-champion-team-optimizer" / "data-model.md"
 SPEC_004 = REPO_ROOT / "specs" / "004-breeding-source-limits" / "spec.md"
+SPEC_006 = REPO_ROOT / "specs" / "006-required-hms" / "spec.md"
 TEAM_SIZE = 6
 MAX_LEVEL_GAP = 10
 
@@ -290,7 +293,7 @@ def showdown_name(kind: str, key: str) -> str:
 
 
 def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[int] | None = None,
-             options: LegalityOptions | None = None) -> list[Violation]:
+             options: LegalityOptions | None = None, *, required_hms=()) -> list[Violation]:
     led = _ledger(ledger, options)
     out: list[Violation] = []
     if isinstance(team, str):
@@ -378,6 +381,13 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
         gap = max(final_levels) - min(final_levels)
         if gap > MAX_LEVEL_GAP:
             out.append(Violation("LEVEL_GAP", f"final levels {final_levels} differ by {gap} (> {MAX_LEVEL_GAP})", _src()["gap"]))
+    if required_hms:  # 006 FR-002/FR-004: each required HM is in some member's final moveset
+        carried = {_resolve(_move_index(), m.move) for b in team.builds for m in b.moves}
+        for key in MS.normalize_hms(required_hms):
+            h = MS.hm_by_key(key)
+            if h.move not in carried:
+                out.append(Violation("REQUIRED_HM_MISSING", f"required HM {h.name} is not in any member's moveset",
+                                     list(h.src) + [_repo_ref(SPEC_006, "**FR-002**")]))
     return out
 
 

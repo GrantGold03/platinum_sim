@@ -31,6 +31,22 @@ def _add_legality_flags(p: argparse.ArgumentParser) -> None:
                        help=_LEGALITY_HELP.get(f.name, f.name.replace("_", " ")) + "; default off")
 
 
+def _hm_arg(value: str) -> str:
+    from platsim.legality.movesources import hm_key
+
+    try:
+        return hm_key(value)
+    except KeyError as e:
+        raise argparse.ArgumentTypeError(str(e.args[0])) from None
+
+
+def _add_hm_flags(p: argparse.ArgumentParser) -> None:
+    """006: --require-hm NAME (repeatable): the HM must be in some member's final moveset."""
+    p.add_argument("--require-hm", dest="require_hm", action="append", type=_hm_arg, default=[], metavar="HM",
+                   help="require this HM in some member's final moveset (cut, fly, surf, strength, defog, rock_smash, "
+                        "waterfall, rock_climb; repeatable); default none")
+
+
 def _legality(args: argparse.Namespace):
     import dataclasses
 
@@ -79,6 +95,7 @@ def _add_validate(sub: argparse._SubParsersAction) -> None:
     p.add_argument("team", type=Path, help="team file: JSON (TeamCandidate / {'team': [...]}) or Showdown export text")
     p.add_argument("--json", action="store_true", help="print the violations as JSON")
     _add_legality_flags(p)
+    _add_hm_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         import json
@@ -89,7 +106,7 @@ def _add_validate(sub: argparse._SubParsersAction) -> None:
             print(f"platsim validate: no such file: {args.team}", file=sys.stderr)
             return 1
         try:
-            violations = validate(str(args.team), options=_legality(args))
+            violations = validate(str(args.team), options=_legality(args), required_hms=tuple(args.require_hm))
         except (ValueError, KeyError) as e:
             print(f"platsim validate: cannot read {args.team}: {e}", file=sys.stderr)
             return 1
@@ -126,6 +143,7 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--max-runs", type=int, default=20000, help="cap on full gauntlets when extending to the CI target")
     p.add_argument("--out", type=Path, default=None, help="output directory (default runs/evaluate-<time>-<hash>/)")
     _add_legality_flags(p)
+    _add_hm_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         from platsim.evaluate import InvalidTeamInput, UsageError, evaluate, summary_text
@@ -137,7 +155,8 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
         try:
             report, paths = evaluate(args.team, runs=args.runs, seed=args.seed, workers=args.workers,
                                      player_policy=args.player_policy, budget=args.budget, threshold=args.min_clear,
-                                     max_runs=args.max_runs, out_dir=args.out, legality=_legality(args))
+                                     max_runs=args.max_runs, out_dir=args.out, legality=_legality(args),
+                                     required_hms=tuple(args.require_hm))
         except InvalidTeamInput as e:
             if e.violations:
                 print(format_violations(e.violations), file=sys.stderr)
@@ -170,6 +189,7 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
                    help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
                         "checkpoint was made by different code or data, which is never resumed")
     _add_legality_flags(p)
+    _add_hm_flags(p)
 
     def run(args: argparse.Namespace) -> int:
         from platsim.optimizer.api import InvalidRequest, OptimizeRequest, run_optimization
@@ -179,7 +199,8 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
             return 2
         req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
                               budget=args.budget, workers=args.workers, out_dir=args.out,
-                              force_new=args.force_new, legality=_legality(args))
+                              force_new=args.force_new, legality=_legality(args),
+                              required_hms=tuple(args.require_hm))
         try:
             res = run_optimization(req)
         except InvalidRequest as e:

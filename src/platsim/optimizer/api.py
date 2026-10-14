@@ -26,6 +26,18 @@ class OptimizeRequest:
     # Optional legality rules (egg moves, trade evolutions; both off by default). Part of the job
     # fingerprint: a checkpoint made with other options is never resumed.
     legality: LegalityOptions = field(default_factory=LegalityOptions)
+    # 006: HMs that must be carried in some member's final moveset (move keys, HM-number order).
+    # Part of the fingerprint and reports only when non-empty, so default jobs are unchanged.
+    required_hms: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.required_hms:
+            from platsim.legality.movesources import normalize_hms
+
+            try:
+                object.__setattr__(self, "required_hms", normalize_hms(self.required_hms))
+            except KeyError as e:
+                raise InvalidRequest(str(e.args[0]), {"required_hms": str(e.args[0])}) from None
 
 
 @dataclass

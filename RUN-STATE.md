@@ -242,3 +242,33 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   - Each story_rank stage floods from Twinleaf. To test whether an HM is still needed late, seed
     at the Pokémon Centers already reached, not at every door of a town; every door also includes
     doors behind obstacles.
+
+## 006 required HMs (started 2026-10-13)
+- **Where**: git worktree `../platinum_sim-006`, branch `006-required-hms`, from `main` at
+  `dccb3a4`. `pokeplatinum` and `pokemon-showdown` are symlinks to the main checkout (excluded in
+  `.git/info/exclude`).
+  - `data/generated/` and `.venv` don't exist here yet. Run `uv sync` and `uv run platsim extract`
+    before any test.
+- **Why a worktree**: the 005 full suite was running in the main checkout.
+- **Status** (2026-10-14): all 28 tasks are done. The full suite gave 488 passed and 2 failed.
+  One failure was a test fix (summary keys). The other was environmental (no `runs/` in the
+  worktree); both pass on rerun, see `validation-log.md`. A quick end-to-end optimize with Surf and
+  Waterfall required passed, and its result validates. Committed on `006-required-hms`. **Not
+  merged.**
+- **How to test by hand**:
+  - From the worktree, run `uv run platsim serve --port 8001`; the main checkout serves 005 on
+    8000.
+  - Step 3 has 8 HM toggles. Check Fly with Garchomp ×6 → expect a 422 "No team member can learn
+    Fly".
+  - Check Surf with a team that can learn it → the result carries Surf, and the summary shows
+    "Required HMs: Surf".
+- **Merge note**: 005 (`d8f90e9`) and 006 both branch from `main` `dccb3a4`. Both touch
+  `index.html`, `app.js`, `cli.py`, `movesources.py`, `validator.py`, `resources.py`, `README.md`
+  and the test files; expect small conflicts. Merge 005 first, then rebase or merge 006 and rerun
+  the suite.
+- **Includes** `hm_requirements.md` (linked from the README).
+- **Design**: required HMs are placed inside `resources.realize`, replacing the cheapest attack slot; a filter is not enough, because Defog never enters the move pool and 4 rewrite paths can drop an HM.
+- **User decisions**:
+  - A required HM must be in a final moveset, not merely learnable.
+  - The web gets a new step 3 with eight toggles, all off by default.
+  - A required HM that no team member can learn is refused before the run.

@@ -92,7 +92,7 @@ def rerender(run_dir: Path, out_dir: Path | None = None) -> tuple[EvaluationRepo
     if [w["is_traded"] for w in worker_team(old, led)] != [w["is_traded"] for w in worker_team(new, led)]:
         raise RerenderError("NPC-trade status changed (exp boost, FR-008a): refusing")
     finals = [round(x) for x in rep.expected_final_levels] if rep.expected_final_levels else None
-    v = validate(new, led, finals)
+    v = validate(new, led, finals, required_hms=tuple(rep.provenance.get("required_hms") or ()))  # 006
     if v:
         raise RerenderError("re-selected team FAILED the independent legality validator:\n" + format_violations(v))
 

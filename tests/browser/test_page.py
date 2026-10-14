@@ -509,3 +509,36 @@ def test_no_runs_yet(tmp_path, catalog, chrome):
         assert not _visible(page, "#result") and page.locator(".mon").count() == 0
         assert page.request.get(base + "/api/jobs").json() == []
         page.close()
+
+
+def test_required_hms_step(tmp_path, catalog, chrome):
+    """006 US3: four steps in order; step 3 lists the eight HMs unchecked; a checked HM is sent with
+    the run; the results summary has a "Required HMs" row ("none" for the frozen default run)."""
+    copy_fixture_run(tmp_path)
+    with served(tmp_path, catalog) as (base, _app):
+        page = chrome.new_page()
+        posts: list[str] = []
+        page.on("request", lambda r: posts.append(r.post_data or "") if r.method == "POST" and r.url.endswith("/api/jobs") else None)
+        page.goto(base + "/")
+        heads = [h.strip() for h in page.locator("#setup h2").all_inner_texts()]
+        assert [h.split()[0] + " " + h.split()[1].split("(")[0] for h in heads][:4] == [
+            "1. Choose", "2. Team", "3. Required", "4. Optimize"], heads
+        page.locator("input.hm").first.wait_for(timeout=15000)
+        boxes = page.locator("input.hm")
+        assert boxes.count() == 8
+        assert [boxes.nth(i).get_attribute("id") for i in range(8)] == [
+            "require-hm-cut", "require-hm-fly", "require-hm-surf", "require-hm-strength", "require-hm-defog",
+            "require-hm-rock_smash", "require-hm-waterfall", "require-hm-rock_climb"]
+        assert not any(boxes.nth(i).is_checked() for i in range(8))
+        assert "HM03 Surf" in page.inner_text("#hm-step")
+        _wait_text(page, "#summary", "Required HMs")
+        assert "Required HMs" in page.inner_text("#summary") and "none" in page.inner_text("#summary")
+        # a checked HM is sent: fill the team through the page's own search, then optimize
+        page.check("#require-hm-surf")
+        for _ in range(6):
+            page.fill("#search", "garchomp")
+            page.locator("#results li button, #results li").first.click()
+        page.click("#optimize")
+        page.wait_for_timeout(1500)
+        assert any('"required_hms": ["surf"]' in p or '"required_hms":["surf"]' in p for p in posts), posts
+        page.close()

@@ -18,8 +18,9 @@
     runStatus: $("run-status"), progCard: $("progress-card"), progress: $("progress"), queue: $("queue"),
     picker: $("run-picker"), noRuns: $("no-runs"), runMessage: $("run-message"), result: $("result"),
     summary: $("summary"), chartBody: $("chart-body"), chartTip: $("chart-tip"), pop: $("trainer-pop"), cards: $("team-cards"),
-    downloads: $("downloads"),
+    downloads: $("downloads"), hmList: $("hm-list"),
   };
+  let HMS = []; // 006: [{key, name, item}] from /api/hms, HM-number order
 
   const team = []; // [{key, name, types, icon}]
   let searchSeq = 0;
@@ -218,7 +219,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ species: team.map((m) => m.key), min_clear: pct / 100,
           seed: els.seed.value.trim() || "default", budget: els.budget.value,
-          ...ruleFlags() }),
+          ...ruleFlags(), ...(requiredHms().length ? { required_hms: requiredHms() } : {}) }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.status !== 201) {
@@ -389,6 +390,7 @@
       ["Threshold", typeof s.threshold === "number" ? fmtPct(s.threshold) : null],
       ["Budget", s.budget],
       ["Legality options", lo ? RULES.map(([key, , label]) => `${label} ${lo[key] ? "allowed" : "off"}`).join(", ") : null],
+      ["Required HMs", hmNames(s.required_hms)],
       ["Version", s.platsim_version ? `platsim ${s.platsim_version}` : "platsim version not recorded"],
     ]);
     els.summary.replaceChildren(dl);
@@ -546,6 +548,27 @@
   if (systemDark && systemDark.addEventListener) systemDark.addEventListener("change", syncThemeButton);
   syncThemeButton();
 
+  // ---- 006: required HMs (step 3) -----------------------------------------------------------
+  function requiredHms() {
+    return HMS.filter((h) => { const b = $(`require-hm-${h.key}`); return b && b.checked; }).map((h) => h.key);
+  }
+  function hmNames(keys) {
+    if (!Array.isArray(keys) || !keys.length) return "none";
+    return keys.map((k) => (HMS.find((h) => h.key === k) || { name: k }).name).join(", ");
+  }
+  async function loadHms() {
+    try {
+      const res = await fetch("/api/hms");
+      HMS = res.ok ? await res.json() : [];
+    } catch (e) { HMS = []; }
+    els.hmList.replaceChildren(...HMS.map((h) => {
+      const box = el("input", { id: `require-hm-${h.key}`, type: "checkbox", class: "hm" });
+      const label = el("label", { class: "check", for: `require-hm-${h.key}` }, box, ` ${h.item} ${h.name}`);
+      return label;
+    }));
+    if (shownJob) showRun(shownJob); // re-render the summary with HM names
+  }
+
   // ---- wire up -----------------------------------------------------------------------------
   els.search.addEventListener("input", scheduleSearch);
   // Availability depends on every rule except egg moves; re-run the search when one changes (003 FR-013).
@@ -553,5 +576,6 @@
   els.form.addEventListener("submit", submit);
   els.picker.addEventListener("change", () => showRun(els.picker.value));
   renderTeam();
+  loadHms();
   refreshJobs();
 })();

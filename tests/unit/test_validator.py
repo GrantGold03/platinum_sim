@@ -465,3 +465,13 @@ def test_fossil_lines_need_one_trainer_id(led):
     two = _with(led, _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led),
                 _member("SPECIES_RAMPARDOS", REVIVAL.format("CRANIDOS"), led))
     assert _codes(two, led) == []
+
+
+# --- 006: required HMs (REQUIRED_HM_MISSING) -----------------------------------------------------
+
+def test_required_hm_missing(led):
+    vs = validate(_legal(), led, required_hms=("fly",))
+    assert [v.code for v in vs] == ["REQUIRED_HM_MISSING"] and "Fly" in vs[0].message and vs[0].src
+    # positive control: Gyarados (slot 2 of legal_team.json) carries Waterfall
+    assert validate(_legal(), led, required_hms=("waterfall",)) == []
+    assert validate(_legal(), led) == []  # default call unchanged

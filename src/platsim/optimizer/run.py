@@ -60,6 +60,7 @@ from pathlib import Path
 
 from platsim import pins, version
 from platsim.budget import get_preset
+from platsim.legality import movesources as MS
 from platsim.optimizer import candidates as C
 from platsim.optimizer import resources as R
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest, OptimizeResult, Progress, ProgressCallback
@@ -83,8 +84,11 @@ def _log(msg: str) -> None:
 
 
 def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
-    return {"species": list(consts), "min_clear": req.min_clear, "seed": str(req.seed), "budget": req.budget,
-            "legality_options": req.legality.to_dict(compact=True), "state_version": STATE_VERSION}
+    fp = {"species": list(consts), "min_clear": req.min_clear, "seed": str(req.seed), "budget": req.budget,
+          "legality_options": req.legality.to_dict(compact=True), "state_version": STATE_VERSION}
+    if req.required_hms:  # 006 FR-009: only when set, so default fingerprints (and resume) are unchanged
+        fp["required_hms"] = list(req.required_hms)
+    return fp
 
 
 def default_out_dir(fp: dict) -> Path:
@@ -267,6 +271,11 @@ def run_optimization(req: OptimizeRequest, progress: ProgressCallback | None = N
     # Every legality / candidate query below reads the options from this ledger view (Ledger.with_options).
     led = build_ledger().with_options(req.legality)
     consts = C.resolve_species(req.species, led)
+    if req.required_hms:  # 006 FR-005: refuse an impossible HM requirement before any battle
+        missing = MS.unlearnable_moves(consts, req.required_hms, led)
+        if missing:
+            reasons = {k: MS.unlearnable_text(k) for k in missing}
+            raise InvalidRequest("required HMs no team member can learn: " + "; ".join(reasons.values()), reasons)
     fp = job_fingerprint(consts, req)
     out = Path(req.out_dir) if req.out_dir else default_out_dir(fp)
     # The pool starts first: its hello (agreed by every worker) gives the sim code hash and data
@@ -299,7 +308,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             raise RuntimeError(f"worker does not offer {need!r} ({key}: {hello[key]})")
 
     def wteam(specs, levels):
-        r = R.realize(specs, levels, led)
+        r = R.realize(specs, levels, led, required_hms=req.required_hms)
         if isinstance(r, R.Refusal):
             return None
         return worker_team(r.team, led)
@@ -308,7 +317,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     t0 = time.perf_counter()
     prog("prune", detail="building candidates (pass A, move legality at Lv 100)")
     cands_a = _build_cands(consts, led, 100)
-    base_a = R.repair(_baseline(cands_a, consts), [100] * 6, led, _ranked(cands_a, _baseline(cands_a, consts)))
+    base_a = R.repair(_baseline(cands_a, consts), [100] * 6, led, _ranked(cands_a, _baseline(cands_a, consts)), required_hms=req.required_hms)
     if isinstance(base_a, R.Refusal):
         raise InvalidRequest(f"no legal team can be formed: {base_a.reason}")
     base_a = base_a[0]
@@ -344,7 +353,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     prog("prune", detail=f"building candidates (pass B, move legality at Lv {ref}; screening level {u_g})")
     cands = _build_cands(consts, led, ref)
     screen_levels = [max(u_g, max(mc.ref_level for mc in mcs.values())) for mcs in cands]
-    b = R.repair(_baseline(cands, consts), screen_levels, led, _ranked(cands, _baseline(cands, consts)))
+    b = R.repair(_baseline(cands, consts), screen_levels, led, _ranked(cands, _baseline(cands, consts)), required_hms=req.required_hms)
     if isinstance(b, R.Refusal):
         raise InvalidRequest(f"no legal team can be formed: {b.reason}")
     baseline, base_notes = b
@@ -360,7 +369,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     if abilities is None:
         t0 = time.perf_counter()
         abilities = {}
-        team = R.realize(baseline, screen_levels, led).team
+        team = R.realize(baseline, screen_levels, led, required_hms=req.required_hms).team
         for slot, s in enumerate(baseline):
             prog("ability_screen", runs_done=slot, runs_planned=6, detail=f"slot {slot + 1} {C.display_name(s.species)}")
             ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led)
@@ -400,7 +409,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             else:
                 specs = tuple(baseline[s] if j is None else R.MemberSpec(consts[s], *opts[s][j]) for s, j in enumerate(c))
             specs = _apply_abilities(specs, abilities)
-            rr = R.repair(specs, screen_levels, led, _ranked(cands, specs))
+            rr = R.repair(specs, screen_levels, led, _ranked(cands, specs), required_hms=req.required_hms)
             if isinstance(rr, R.Refusal):
                 dropped.append({"combo": list(c), "reason": rr.reason})
                 continue
@@ -408,15 +417,15 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             key = json.dumps(R.spec_to_json(specs))
             if key in seen:
                 continue
-            real = R.realize(specs, screen_levels, led)
-            v = validate(real.team, led)
+            real = R.realize(specs, screen_levels, led, required_hms=req.required_hms)
+            v = validate(real.team, led, required_hms=req.required_hms)
             if v:  # the optimizer is not trusted (Constitution III): never screened
                 dropped.append({"combo": list(c), "reason": "validator: " + "; ".join(x.message for x in v[:3])})
                 continue
             seen.add(key)
             teams_specs.append(specs)
         prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels}")
-        wteams = [worker_team(R.realize(s, screen_levels, led).team, led) for s in teams_specs]
+        wteams = [worker_team(R.realize(s, screen_levels, led, required_hms=req.required_hms).team, led) for s in teams_specs]
         res = successive_halving(pool, wteams, seed=seed, rounds=preset.screening_rounds,
                                  progress=lambda d, p, best, sc, r: prog(
                                      "screen", runs_done=d, runs_planned=p,
@@ -435,7 +444,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
         for slot, s in enumerate(specs):
             k = f"{slot}|{s.variant}"
             if k not in abilities:
-                team = R.realize(specs, screen_levels, led).team
+                team = R.realize(specs, screen_levels, led, required_hms=req.required_hms).team
                 ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led)
                 abilities[k] = {"ability": ch.ability, "reason": ch.reason, "stats": ch.stats,
                                 "tested_on": f"finalist {fi + 1} at the screening levels"}
@@ -551,7 +560,7 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
     rep = ev = real = None
     lv = list(levels)
     for bump in range(MAX_CONFIRM_BUMPS + 1):
-        real = R.realize(winner, lv, led)
+        real = R.realize(winner, lv, led, required_hms=req.required_hms)
         if isinstance(real, R.Refusal):
             raise RuntimeError(f"winner not buildable at {lv}: {real.reason}")
         prog("confirm", runs_planned=preset.confirm_min, detail=f"winner at levels {lv} ({POLICY}, >= {preset.confirm_min} runs)")
@@ -587,7 +596,7 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
     if len(finalists) > 1 and finalists[1] != finalists[0]:
         ru = finalists[1]
         ru_lv = [max(a, R.member_floor(s, led) or 100) for a, s in zip(lv, ru)]
-        ru_real = R.realize(ru, ru_lv, led)
+        ru_real = R.realize(ru, ru_lv, led, required_hms=req.required_hms)
         if isinstance(ru_real, R.Refusal):
             comparison = {"result": f"runner-up not buildable at {ru_lv}: {ru_real.reason}"}
         else:
@@ -627,7 +636,8 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
         "objective": "minimise expected average final level after Cynthia among teams with clear rate >= threshold "
                      "and final gap <= 10 (FR-016)",
         "request": {"species": state.data["fingerprint"]["species"], "min_clear": req.min_clear,
-                    "seed": str(req.seed), "budget": preset.name, "legality_options": req.legality.to_dict()},
+                    "seed": str(req.seed), "budget": preset.name, "legality_options": req.legality.to_dict(),
+                    **({"required_hms": list(req.required_hms)} if req.required_hms else {})},
         "budget_preset": {"name": preset.name, "screening_rounds": list(preset.screening_rounds),
                           "ability_screen": preset.ability_screen, "confirm_min": preset.confirm_min,
                           "ci_half_width": preset.ci_half_width, "qualifying": preset.qualifying},
@@ -654,7 +664,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
     from platsim.report import write_all
 
     finals = [round(x) for x in rep.expected_final_levels] if rep.expected_final_levels else None
-    v = validate(real.team, led, finals)
+    v = validate(real.team, led, finals, required_hms=req.required_hms)
     if v:
         raise RuntimeError("the optimized team FAILED the independent legality validator (Constitution III):\n"
                            + format_violations(v))
@@ -664,8 +674,11 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
     rep.resources = R.resource_lines(real, led)
     rep.provenance["optimizer"] = _optimizer_provenance(req, preset, state, {
         "final_levels_start": list(levels), "runner_up_comparison": comparison,
-        "final_team_labels": [m.label() for m in specs]})
+        "final_team_labels": [m.label() for m in (R.place_required_hms(specs, levels, led, req.required_hms)[0]
+                                                  if req.required_hms else specs)]})
     rep.provenance["validator"] = {"violations": 0, "final_levels_checked": finals}
+    if req.required_hms:  # 006 FR-008: the constraint the result was made under
+        rep.provenance["required_hms"] = list(req.required_hms)
     if comparison and comparison.get("verdict") == "indistinguishable":
         rep.warnings.append("Winner and runner-up are statistically indistinguishable on paired runs; "
                             "the winner is the screening winner.")
@@ -698,7 +711,7 @@ def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, spe
         warnings=[f"No qualifying team: {why}. Best clear rate {best.wins}/{best.n} at start levels {best.levels}."],
         provenance={"legality_options": req.legality.to_dict(), "optimizer": _optimizer_provenance(req, preset, state, {
             "best_team_labels": [m.label() for m in specs], "best_team": R.spec_to_json(specs),
-            "confirm_attempts": attempts})},
+            "confirm_attempts": attempts}), **({"required_hms": list(req.required_hms)} if req.required_hms else {})},
     )
     write_all(rep, out, showdown_name)
     state.done("report", {"qualified": False, "no_qualifying": True})

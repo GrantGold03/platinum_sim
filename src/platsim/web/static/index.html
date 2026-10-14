@@ -66,8 +66,16 @@
         <ol id="slots" class="slots" aria-label="Team slots"></ol>
       </section>
 
+      <section class="card" id="hm-step" aria-labelledby="hm-h">
+        <h2 id="hm-h">3. Required HMs</h2>
+        <fieldset class="hm-rules"><!-- not class "rules": those are the legality options (003 wording test) -->
+          <legend>Must be in a team member's final moveset (none by default)</legend>
+          <div id="hm-list" class="hm-list"><!-- filled from /api/hms by app.js --></div>
+        </fieldset>
+      </section>
+
       <section class="card" aria-labelledby="opt-h">
-        <h2 id="opt-h">3. Optimize</h2>
+        <h2 id="opt-h">4. Optimize</h2>
         <form id="opt-form" novalidate>
           <div class="row">
             <label class="field" for="min-clear">Minimum clear rate (%)

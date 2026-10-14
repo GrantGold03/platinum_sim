@@ -197,7 +197,62 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter,
     return choices, local, MS.move_cost(picks, led)
 
 
-def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
+def _slot_cost(species: str, move: str) -> tuple:
+    """How much a member loses when `move` gives way to a required HM: a modelled self-boost (a
+    setup moveset the optimizer kept on purpose) only as a last resort, then the move's League
+    coverage value (candidates.move_value; 0 for other status moves)."""
+    mv = load_moves()[move]
+    boost = 1 if C.boost_score(species, move) else 0
+    return (boost, sum(C.move_value(species, move)) if C.is_attack(mv) else 0.0)
+
+
+def place_required_hms(specs: TeamSpec, levels, led, required) -> tuple[TeamSpec | None, str | None]:
+    """006 data-model H3 / research R2: put each required HM that no member carries yet on the
+    member and slot that lose least (`_slot_cost`; a free slot first; ties: lower member index,
+    then lower slot). Only members that can legally learn the HM at their level (some option of
+    their variant) are carriers; slots already holding a required HM are never replaced.
+    Deterministic. Returns (specs, None), or (None, HM name) when an HM has no carrier."""
+    from dataclasses import replace
+
+    out = list(specs)
+    keys = MS.normalize_hms(required)
+    req_moves = {MS.hm_by_key(k).move for k in keys}
+    for key in keys:
+        h = MS.hm_by_key(key)
+        if any(h.move in s.moves for s in out):
+            continue
+        best = None
+        for i, (s, lv) in enumerate(zip(out, levels)):
+            if not any(MS.sources(s.species, h.move, int(lv), led, o) for o in variant_of(s, led).options(led)):
+                continue
+            if len(s.moves) < 4:
+                cand = ((-1, 0.0), i, len(s.moves))
+            else:
+                slots = [(j, m) for j, m in enumerate(s.moves) if m not in req_moves]
+                if not slots:
+                    continue
+                j, m = min(slots, key=lambda jm: (_slot_cost(s.species, jm[1]), jm[0]))
+                cand = (_slot_cost(s.species, m), i, j)
+            if best is None or cand < best:
+                best = cand
+        if best is None:
+            return None, h.name
+        _, i, j = best
+        moves = list(out[i].moves)
+        if j == len(moves):
+            moves.append(h.move)
+        else:
+            moves[j] = h.move
+        out[i] = replace(out[i], moves=tuple(moves))
+    return tuple(out), None
+
+
+def realize(specs: TeamSpec, levels, led, *, required_hms=()) -> Realized | Refusal:
+    if required_hms:  # 006: every path to battle and report passes here, so no path can lose an HM
+        placed, missing = place_required_hms(specs, levels, led, required_hms)
+        if placed is None:
+            return Refusal(0, f"no member can carry required HM {missing} at these levels")
+        specs = placed
     used: Counter = Counter()
     who: dict[str, list[int]] = {}
     source_used: Counter = Counter()
@@ -252,7 +307,8 @@ def realize(specs: TeamSpec, levels, led) -> Realized | Refusal:
     return Realized(team, options, dict(sorted(limited.items())), {r: who[r] for r in sorted(limited)})
 
 
-def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) -> tuple[TeamSpec, list[str]] | Refusal:
+def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]], *,
+           required_hms=()) -> tuple[TeamSpec, list[str]] | Refusal:
     """Make `specs` buildable at `levels` by replacing refused members, in slot order: a refused member
     gets the first of its `ranked` movesets (best first) that can be built after the earlier members,
     keeping its held item if possible, else its first item candidate that fits (Sitrus first), else no
@@ -261,7 +317,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) ->
     notes: list[str] = []
     team = tuple(sp.species for sp in specs)
     for _ in range(len(specs) + 1):
-        r = realize(tuple(specs), levels, led)
+        r = realize(tuple(specs), levels, led, required_hms=required_hms)
         if not isinstance(r, Refusal):
             return tuple(specs), notes
         s = r.slot
@@ -272,6 +328,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) ->
         for moves in [cur.moves] + [m for m in ranked[s] if m != cur.moves]:
             for item in dict.fromkeys([cur.item, *C.held_item_candidates(cur.species, moves, led, team), None]):
                 cand = MemberSpec(cur.species, cur.variant, moves, item, cur.ability, cur.ability_reason)
+                # partial team: copies only (006: required HMs are placed on whole teams)
                 if not isinstance(realize(tuple(fixed + [cand]), fixed_levels, led), Refusal):
                     replacement = cand
                     break
@@ -281,7 +338,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]]) ->
             return r
         notes.append(f"slot {s + 1}: {cur.label()} -> {replacement.label()} ({r.reason})")
         specs[s] = replacement
-    r = realize(tuple(specs), levels, led)
+    r = realize(tuple(specs), levels, led, required_hms=required_hms)
     return (tuple(specs), notes) if not isinstance(r, Refusal) else r
 
 

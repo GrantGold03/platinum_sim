@@ -82,6 +82,19 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   - Abilities: when there are two, both are tested and the better one is kept. A tie keeps the
     first. An ability the battle code never checks (Stench, Illuminate) is not tested.
 - A draw or a hit on the 1,000-turn limit counts as a loss.
+- **Required HMs** (006, none by default). Each required HM must be in some team member's
+  **final** four-move set, the one used against Cynthia.
+  - **Where to set it:** step 3 on the web page, or `--require-hm surf` (repeatable) on
+    `optimize`, `evaluate` and `validate`.
+  - **How the optimizer handles it:** it places each missing HM on the member that loses least,
+    by replacing that member's weakest attack. A boost move is replaced only as a last resort. The
+    battles are then run with that real moveset.
+  - **Refusals:** if none of the six can learn a required HM under the active rules, the run is
+    refused before any battle, naming the HM.
+  - **Checks and records:** the validator checks it on its own (`REQUIRED_HM_MISSING`). Reports
+    record `required_hms` when it is set.
+  - **Which HMs the story needs:** see `hm_requirements.md`. Surf and Waterfall are needed to
+    reach the League.
 
 ## Prerequisites and one-time setup
 

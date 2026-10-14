@@ -76,8 +76,15 @@ def _log(msg: str) -> None:
     print(f"platsim evaluate: {msg}", file=sys.stderr, flush=True)
 
 
-def load_and_validate(path: Path, legality=None):
-    """(TeamCandidate, ledger view with the legality options) or raise InvalidTeamInput."""
+def _normalize_hms(names):
+    from platsim.legality.movesources import normalize_hms
+
+    return normalize_hms(names)
+
+
+def load_and_validate(path: Path, legality=None, required_hms=()):
+    """(TeamCandidate, ledger view with the legality options) or raise InvalidTeamInput. 006:
+    `required_hms` must each be in some member's moveset (validator REQUIRED_HM_MISSING)."""
     from platsim.availability.ledger import build_ledger
     from platsim.legality.validator import load_team, validate
 
@@ -88,7 +95,7 @@ def load_and_validate(path: Path, legality=None):
         raise InvalidTeamInput(f"cannot read {path}: {e}") from e
     violations = list(read)
     if team is not None:
-        violations += validate(team, led, finals)
+        violations += validate(team, led, finals, required_hms=required_hms)
     if team is None or violations:
         raise InvalidTeamInput(f"{path}: ILLEGAL - {len(violations)} violation(s)", violations)
     return team, led
@@ -250,7 +257,7 @@ def default_out_dir(team_path: Path, master: str, runs: int, policy: str) -> Pat
 def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", workers: int | None = None,
              player_policy: str = DEFAULT_PLAYER_POLICY, budget: str = "standard", threshold: float = 0.75,
              max_runs: int = DEFAULT_MAX_RUNS, out_dir: Path | None = None, pool=None,
-             legality=None) -> tuple[EvaluationReport, dict]:
+             legality=None, required_hms=()) -> tuple[EvaluationReport, dict]:
     """Run the evaluation and write the reports. Returns (report, {kind: path}). `legality`
     (models.LegalityOptions, default both off) selects egg moves / trade evolutions."""
     from platsim.legality.validator import showdown_name
@@ -266,7 +273,7 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
     except ValueError as e:
         raise UsageError(str(e)) from e
     master = str(seed)
-    team, led = load_and_validate(team_path, legality)
+    team, led = load_and_validate(team_path, legality, required_hms)
     _log(f"{team_path}: legal; {runs} runs, seed {master!r}, player {player_policy}, opponent {OPPONENT_POLICY}, "
          f"budget {preset.name}")
 
@@ -280,6 +287,8 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
         if own_pool:
             pool.close()
     out = Path(out_dir) if out_dir else default_out_dir(team_path, master, runs, player_policy)
+    if required_hms:  # 006 FR-008: recorded only when set, so default reports are unchanged
+        report.provenance["required_hms"] = list(_normalize_hms(required_hms))
     paths = write_all(report, out, showdown_name)
     _log(f"wrote {out}")
     return report, paths

@@ -102,6 +102,8 @@ TableFn = Callable[[LegalityOptions], dict[str, Status]]
 # 004: (SPECIES_* constants, options) -> {SPECIES_*: message} for members needing two choices of
 # one choose-one group (movesources.team_group_conflicts on the options' ledger view).
 ConflictFn = Callable[[tuple[str, ...], LegalityOptions], dict[str, str]]
+# 006: (SPECIES_* constants, required HM keys, options) -> required HM keys no member can learn.
+HmCheckFn = Callable[[tuple[str, ...], tuple[str, ...], LegalityOptions], list[str]]
 
 
 class SpeciesCatalog:
@@ -110,7 +112,8 @@ class SpeciesCatalog:
     `table(options)` is computed on first use and cached (LRU of 16 option values), because which
     species are usable depends on several options and most combinations are never asked for."""
 
-    def __init__(self, species: list[SpeciesInfo], table: TableFn | None = None, conflicts: ConflictFn | None = None):
+    def __init__(self, species: list[SpeciesInfo], table: TableFn | None = None, conflicts: ConflictFn | None = None,
+                 hm_check: HmCheckFn | None = None):
         self.species = sorted(species, key=lambda s: s.dex)
         self._by_norm: dict[str, SpeciesInfo] = {}
         for s in self.species:
@@ -118,6 +121,7 @@ class SpeciesCatalog:
             self._by_norm.setdefault(_norm(s.name), s)
         self._table = functools.lru_cache(maxsize=16)(table) if table else None
         self._conflicts = conflicts
+        self._hm_check = hm_check
 
     def get(self, key_or_name: str) -> SpeciesInfo | None:
         return self._by_norm.get(_norm(key_or_name or ""))
@@ -153,7 +157,8 @@ class SpeciesCatalog:
         sub = [s for s in pool if s.key not in seen and (nq in _norm(s.name) or nq in _norm(s.key))]
         return (prefix + sub)[:limit]
 
-    def resolve_team(self, species: object, options: LegalityOptions = DEFAULT_LEGALITY) -> tuple[str, ...]:
+    def resolve_team(self, species: object, options: LegalityOptions = DEFAULT_LEGALITY,
+                     required_hms: tuple[str, ...] = ()) -> tuple[str, ...]:
         """Validate a submitted team; returns the six keys or raises InvalidRequest with
         per-species reasons (keyed by the submitted value)."""
         if not isinstance(species, list) or not all(isinstance(x, str) for x in species):
@@ -182,6 +187,13 @@ class SpeciesCatalog:
                 reasons = {x: clash[c] for x, c in zip(species, consts) if c in clash}
                 raise InvalidRequest("some Pokémon cannot be used together: " + "; ".join(dict.fromkeys(reasons.values())),
                                      reasons)
+        if required_hms and self._hm_check is not None:  # 006 FR-005: a required HM nobody can learn
+            from platsim.legality.movesources import unlearnable_text
+
+            missing = self._hm_check(tuple(self.get(x).const for x in species), tuple(required_hms), options)
+            if missing:
+                reasons = {k: unlearnable_text(k) for k in missing}
+                raise InvalidRequest("some Pokémon cannot be used: " + "; ".join(reasons.values()), reasons)
         return tuple(keys)
 
 
@@ -281,4 +293,7 @@ def build_catalog(ledger=None) -> SpeciesCatalog:
     def conflicts(consts: tuple[str, ...], options: LegalityOptions) -> dict[str, str]:
         return MS.team_group_conflicts(list(consts), base.with_options(options))
 
-    return SpeciesCatalog(out, cached, conflicts)
+    def hm_check(consts: tuple[str, ...], hms: tuple[str, ...], options: LegalityOptions) -> list[str]:
+        return MS.unlearnable_moves(list(consts), hms, base.with_options(options))
+
+    return SpeciesCatalog(out, cached, conflicts, hm_check)

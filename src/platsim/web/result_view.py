@@ -75,6 +75,7 @@ def build_result_view(job: dict) -> dict | None:
         "threshold": d.get("threshold"),
         "budget": d.get("budget_preset"),
         "legality_options": (d.get("provenance") or {}).get("legality_options"),
+        "required_hms": (d.get("provenance") or {}).get("required_hms"),  # 006; None for runs without it
         "warnings": [clean(w) for w in d.get("warnings") or []],
         "no_qualifying": d.get("no_qualifying"),
         "platsim_version": job.get("platsim_version"),

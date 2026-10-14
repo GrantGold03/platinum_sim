@@ -19,6 +19,10 @@
   `options` and passed to the optimizer as OptimizeRequest.legality. GET /api/species takes
   `trade_evolutions`, `post_game_pokemon`, `post_game_items` and `unobtainable_pokemon` (0/1) to
   report availability under those rules (egg moves never change availability).
+- 006 required HMs: POST /api/jobs takes an optional `required_hms` list of HM names (stored in the
+  job's `options` only when non-empty; passed as OptimizeRequest.required_hms). A required HM no team
+  member can learn is a 422 naming it. GET /api/hms lists the eight HMs (key, name, item) from the
+  decomp item table, in HM-number order, for the page's step 3.
 - 002 redesign: with `isolate` (the default for the real optimizer), each job runs in a spawned child
   with its own process group (web/job_process.py), so POST /api/jobs/{id}/cancel stops it and its Node
   workers within seconds. Server shutdown (lifespan hook, atexit) stops the running job and records it
@@ -308,7 +312,7 @@ class JobRunner:
             legality = _legality(opts)
             req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]),
                                   seed=str(opts["seed"]), budget=str(opts["budget"]), out_dir=store.path(jid),
-                                  legality=legality)
+                                  legality=legality, required_hms=tuple(opts.get("required_hms", ())))
             started = _now()
             # stage_started and seen_stages are web-side fields: a Progress update replaces the whole
             # progress dict, so they are carried forward here (002 T005, analysis P3-01 / P4-09).
@@ -436,6 +440,12 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+    @app.get("/api/hms")
+    def hms() -> list[dict]:
+        from platsim.legality.movesources import hm_moves
+
+        return [{"key": h.key, "name": h.name, "item": h.item} for h in hm_moves()]
+
     @app.get("/api/species")
     def species(q: str = "", excluded: int = 1, limit: int = 25, trade_evolutions: int = 0, post_game_pokemon: int = 0,
                 post_game_items: int = 0, unobtainable_pokemon: int = 0) -> list[dict]:
@@ -454,7 +464,7 @@ def create_app(runner: Runner = run_optimization, runs_dir: Path | str = DEFAULT
             return JSONResponse({"detail": "request body must be a JSON object", "reasons": {}}, status_code=422)
         try:
             options = _options(payload)
-            keys = cat.resolve_team(payload.get("species"), _legality(options))
+            keys = cat.resolve_team(payload.get("species"), _legality(options), tuple(options.get("required_hms", ())))
         except InvalidRequest as e:
             return JSONResponse({"detail": clean(str(e)), "reasons": {k: clean(v) for k, v in e.reasons.items()}},
                                 status_code=422)
@@ -542,7 +552,18 @@ def _options(payload: dict) -> dict:
         if not isinstance(v, bool):
             raise InvalidRequest(f"{k} must be true or false, got {v!r}")
         flags[k] = v
-    return {"min_clear": min_clear, "seed": str(seed), "budget": budget, **flags}
+    out = {"min_clear": min_clear, "seed": str(seed), "budget": budget, **flags}
+    hms = payload.get("required_hms") or []  # 006: optional; stored only when non-empty (FR-009)
+    if not isinstance(hms, list) or not all(isinstance(h, str) for h in hms):
+        raise InvalidRequest(f"required_hms must be a list of HM names, got {hms!r}")
+    if hms:
+        from platsim.legality.movesources import normalize_hms
+
+        try:
+            out["required_hms"] = list(normalize_hms(hms))
+        except KeyError as e:
+            raise InvalidRequest(str(e.args[0])) from None
+    return out
 
 
 def _legality(options: dict) -> LegalityOptions:
