@@ -31,8 +31,8 @@ The optimizer will offer status moves, variable-power attacks and every useful h
 **Project Type**: CLI plus local web app, with a Node battle worker
 
 **Performance Goals**:
-- reference mode has no time limit;
-- the accepted prefilter takes about 2× the measured `f88cdd0` baseline or less per standard run (FR-017, SC-006);
+- reference mode has no time limit, but if the first benchmark team takes more than 48 h the user is asked before the rest run;
+- the accepted prefilter takes at most 2.0× the measured `f88cdd0` baseline per standard run, per team (FR-017, SC-006);
 - the production v3 player decision time is recorded against v2's 37-49 ms.
 
 **Constraints**:
@@ -46,7 +46,7 @@ The optimizer will offer status moves, variable-power attacks and every useful h
 - 98 final forms;
 - 130 status-move effects and 147 hold effects classified;
 - about 87 items offered under default options;
-- about 60 alternatives per team in reference mode (unverified);
+- a probe counted 5,600-9,600 1-2-slot alternatives per team before items and before dropping unmodelled moves (analysis C1). Reference mode screens them by successive halving (100/200/400/800); the real N per team is measured first;
 - 5 benchmark teams.
 
 ## Constitution Check
@@ -56,7 +56,7 @@ The optimizer will offer status moves, variable-power attacks and every useful h
 | Principle | How the design complies | Status |
 |---|---|---|
 | I. Decomp is ground truth | Move categories are derived from `ES` scripts and subscript pointers. Item relevance comes from hold-effect references in battle code. Pairings come from effect scripts and battle code. Variable powers use decomp formulas, with weights extracted from `res/pokemon`. Ledger sources are extracted from scripts and C tables. The unavoidable rule table (about 20 entries) is keyed on decomp constants, never move names, and guarded by completeness tests. | PASS |
-| II. Showdown is the battle engine | Showdown isn't modified. The player is a decision policy, not the battle mechanics. A mechanics-divergence pass over every offered effect and item records each disagreement in `data/divergences.json` (Encore first). A test checks that every offered item maps to Showdown. Every result names the player version. | PASS |
+| II. Showdown is the battle engine | Showdown isn't modified. Every battle is still simulated by Showdown. The player's internal model is used only to choose our side's actions, which is not battle simulation, so extending it doesn't reimplement the engine. A mechanics-divergence pass over every offered effect and item records each disagreement in `data/divergences.json` (Encore first). A test checks that every offered item maps to Showdown. Every result names the player version. | PASS |
 | III. Legality | The validator logic is unchanged and still runs on every output. Copy limits come from `team_item_copies`. The new ledger sources follow the existing phase rules, and the validator accepts their items exactly when the ledger does. | PASS |
 | IV. Reproducible, honest evaluation | New seed namespace `|alternatives`. Paired McNemar with Holm correction and a fresh-seed confirm. A golden test pins v1/v2. `STATE_VERSION` 4. The mode and policy are in the fingerprint and provenance. The objective is unchanged and stated. | PASS |
 | V. Positive controls | Controls for every category (R1), item filter (R2), variable power (R3), player mechanic (SC-008), ledger source (R7) and exclusion (SC-007). Negative results such as "not adopted" come with test records. | PASS |
@@ -134,6 +134,7 @@ tests/unit, tests/integration  # classification, items, variable power, ledger c
 | Item | Why needed | Simpler alternative rejected because |
 |---|---|---|
 | Rule table of about 20 decomp constants in `move_classes.py` / `item_classes.py` | Some meanings can't be derived from scripts: sacrifice moves, Follow Me, the Curse split, no-outcome items | A fully derived rule misclassifies them. A move-name list violates Principle I. Guarded by completeness tests. |
-| Candidate generation limited to 1-2 status substitutions per moveset | All 4-move combinations are infeasible (about 4,845 for Roserade alone) | Principle VI: validated by a 3-slot reference on B4 Roserade and Milotic. If a deeper set wins significantly, the cap is widened. |
+| Candidate generation = 1-2-slot substitutions plus structured 3-4-status sets (one move per category) | Full 3-4-slot generation is infeasible (Blissey alone has about 15,000 3-slot sets) | Principle VI: validated against full 3-4-slot generation on B4 Milotic and Roserade. If a full-generation set wins significantly, the rule is widened (user, 2026-10-14, analysis I1). |
+| Reference mode screens by successive halving before the full test | A flat full test of every alternative is about 115-196 h per team (analysis C1) | User decision C1(a). Every offered alternative still reaches the strong player. |
 | Two player configurations (`-v3-ref` and `-v3`) and two optimizer modes kept long-term | Principle VI requires the reference to stay available for re-checking | Deleting the reference would leave the cheap version unverifiable after later changes |
 | The `alternatives` stage replaces the setup check | The setup check skips unbuildable sets, ignores paired items, has no multiplicity control and compares far above the threshold | Patching it in place would keep the fixed-level comparison that judges level-deficit strategies in the wrong regime |

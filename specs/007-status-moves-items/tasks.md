@@ -159,19 +159,26 @@ description: "Task list for 007 Status Moves and Held Items"
 - [ ] T030 [US1] In `src/platsim/optimizer/candidates.py` `member_candidates`:
   - record `excluded = {move: reason}` for every legal move whose `move_class` is not offered (FR-002/003);
   - record `legal_status`, the offered status moves sorted;
-  - remove `setup_moveset` and its uses (the alternatives stage replaces it);
+  - a status move is offered only if `move_classes.modelled(policy)` (T017) contains its effect. Otherwise it goes in `excluded` as `"not offered: not modelled by <policy>"` (spec FR-001, analysis U2);
+  - remove `setup_moveset` and its uses (the alternatives stage replaces it), and update the tests that reference it (`tests/unit/test_optimizer_candidates.py` and any others found by `grep -rn setup_moveset tests/`);
   - extend `summary()` with `excluded`, `legal_status` and the alternative count.
 - [ ] T031 [US1] Create `src/platsim/optimizer/alternatives.py`:
-  - `generate(member_spec, mc, led, team, required_hms)` yields `Alternative`s, deterministic and sorted: the current set with 1 or 2 slots replaced by offered status moves from `mc.legal_status`. Items are added in T040 (US2).
+  - `generate(member_spec, mc, led, team, required_hms)` yields `Alternative`s, deterministic and sorted:
+    - the current set with 1 or 2 slots replaced by offered status moves from `mc.legal_status`;
+    - **structured** 3-4-status sets (spec FR-005, research R5.1): for every choice of 3 or 4 categories the member can fill (inflict-status, protection, recovery, Leech Seed, self-boost, screen), each category's best move under the deterministic per-category order, plus the best attack in the 4th slot of a 3-status set.
+
+    Items are added in T040 (US2).
+  - Record the measured N (alternatives per member and per team) for B1-B5 in `validation-log.md`, before any reference run.
   - Every alternative is made buildable with `resources.repair` (copies), never skipped silently. An unbuildable one is recorded with the refusal reason.
   - The moves under test go into `adopted` for the duration of the test (research R6).
 - [ ] T032 [US1] In `src/platsim/optimizer/alternatives.py`, `run_stage(...)`:
   - levels are the current team's first failing neighbour from the bisection (`fail_u` from `LevelSearch`), or the bisection levels when there is none; record which;
-  - per member in slot order, each alternative is played against the current team for `preset.ability_screen` paired runs with seeds `derive_seed(f"{seed}|alternatives", i, 0)`, compared with McNemar exact (`stats.mcnemar_exact`) and Holm-corrected within the member;
+  - per member in slot order, **successive halving** over all of that member's alternatives with the expectimax2-v3 player: rounds 100/200/400/800 paired runs (seeds `derive_seed(f"{seed}|alternatives", i, 0)`, the same seeds for every alternative), keeping the top third each round. Reuse `optimizer/screen.py` `successive_halving` if it fits; otherwise write it in `alternatives.py` and record why. Record each alternative's `round_reached` and counts;
+  - the finalists (the last round's top 3) are each played against the current team for `preset.ability_screen` paired runs, compared with McNemar exact (`stats.mcnemar_exact`) and Holm-corrected within the member;
   - the best significant winner is confirmed on a fresh block (`f"{seed}|alternatives-confirm"`) and adopted if it is confirmed;
   - `adopted` is set on the spec;
   - state is checkpointed after every alternative under `state.data["stages"]["level_search"]["alternatives"]`;
-  - `mode="reference"` tests every alternative.
+  - `mode="reference"` puts every alternative through the successive halving (spec FR-017 step 1).
 - [ ] T033 [US1] Wire the stage into `src/platsim/optimizer/run.py` in place of the setup check (~:485-519):
   - add `candidates: str = "reference"` to `OptimizeRequest` in `src/platsim/optimizer/api.py`;
   - put the mode in `job_fingerprint`;
@@ -184,8 +191,10 @@ description: "Task list for 007 Status Moves and Held Items"
   - Screech and Seismic Toss never appear (SC-007; a member that learns both, e.g. found via `legal_moves`);
   - an alternative needing an exhausted 1-copy TM (Toxic TM06 taken by an earlier member) is repaired or recorded with its reason;
   - Holm correction is applied, with a hand-computed example;
+  - a member that learns Toxic, Protect, Recover and Leech Seed (B4 Roserade or Milotic) gets at least one `structured` alternative;
+  - a legal unmodelled move (e.g. Trick or Haze on a member that learns it) is not offered and appears in `excluded` as "not offered: not modelled";
   - a moved-under-test status move survives `place_required_hms` on B3.
-- [ ] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`: a `--budget quick` B4 run with `--candidates reference` (record its time). `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
+- [ ] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`, marked slow like `test_policy_strength`: a `--budget quick` B4 run with `--candidates reference` (record its time). `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
 
 **Checkpoint**: US1 works end to end with the reference player settings (production v3 settings come in Phase 8).
 
@@ -263,18 +272,18 @@ description: "Task list for 007 Status Moves and Held Items"
 
 **Goal**: the Route 221, Pastoria and Amity Square sources are in the ledger, extracted from the decomp.
 
-**Independent Test**: `uv run platsim explain item:focus_sash` shows the Route 221 house, daily, before the Champion. The counts are 77 unlimited and 44 unavailable.
+**Independent Test**: `uv run platsim explain item:focus_sash` shows the Route 221 house, 1 copy, before the Champion. The counts are 74 unlimited, 40 finite and 44 unavailable.
 
 - [ ] T052 [P] [US5] Write `tests/integration/test_availability_controls.py` additions first, in the existing `_line(path, line, text)` style:
-  - Route 221 `:39` gives Black Belt, Expert Belt and Focus Sash entries, UNLIMITED, with detail naming `FLAG_DAILY_RECEIVED_ROUTE_221_HOUSE_REWARD` and the daily random level;
+  - Route 221 `:39` gives Black Belt, Expert Belt and Focus Sash entries, **quantity 1 each** with their own `once_flag`, and detail naming `FLAG_DAILY_RECEIVED_ROUTE_221_HOUSE_REWARD` and the daily random level. `item_copies` is 1 for each (spec FR-018, user 2026-10-14). Negative control: the News Press daily Poké Ball (no level check) stays UNLIMITED;
   - Pastoria gives exactly the 17 item ids [id(Occa), id(Occa)+17), and **Liechi stays 0** (negative control);
   - the Amity pickup berry set equals the `sBerryAndAccessoryManOptions` `ITEM_*` set, with no `ACCESSORY_*`;
   - the Gift Man detail says 5 per gift;
   - a sentinel lists the give sites whose resolved items change: Route 221, Pastoria, Amity ×2, News Press, Flower Shop, Route 208, and no others;
-  - update `:522` (66 → 77) and `:526` (55 → 44).
+  - update `:522` (66 → 74), `:525` (37 → 40) and `:526` (55 → 44).
 
   Confirm these fail before T053.
-- [ ] T053 [US5] Make `_const_dataflow` in `src/platsim/availability/sources.py` (~:914-942) return-aware: `Return` carries the callee's state to the call's fall-through, using a call stack in the work item. Add the detail text for Route 221's level condition (refs :15-21, `system_vars.c:267-271`).
+- [ ] T053 [US5] Make `_const_dataflow` in `src/platsim/availability/sources.py` (~:914-942) return-aware: `Return` carries the callee's state to the call's fall-through, using a call stack in the work item. Add the detail text for Route 221's level condition (refs :15-21, `system_vars.c:267-271`). Add the rule: a daily gift whose guarded path contains `GetDailyRandomLevel` counts each possible item once (quantity 1, a per-item `once_flag`), instead of daily → UNLIMITED. Detect it from the script command, never the map name.
 - [ ] T054 [US5] Support the `GetRandom V, N` + `AddVar V, ITEM_X` idiom in `src/platsim/availability/sources.py`, giving the item range by id order of `pokeplatinum/generated/items.txt`.
 - [ ] T055 [US5] Resolve save vars whose every write is a literal `ITEM_*` (`VAR_FOLLOWER_MON_PICKUP_ITEM_ID`) in `src/platsim/availability/sources.py`. Add a "repeatable, no flag" rule giving UNLIMITED, with the detail citing the step counter (`field_control.c:763`). Put Amity's partner species in `requires_any`, parsed from `scripts_amity_square.s:726-748`.
 - [ ] T056 [US5] Parse `sBerryAndAccessoryManOptions` (`pokeplatinum/src/scrcmd_amity_square.c:148-165`, `ITEM_*` tokens only), following the `frontier_exchange_lists` C-array pattern, and bind it to the Gift Man's `AddItem` (`scripts_amity_square.s:940`) in `src/platsim/availability/sources.py`.
@@ -323,10 +332,14 @@ description: "Task list for 007 Status Moves and Held Items"
   Also try depth 3 or rollouts as a second reference if time allows, and record it. Record per-decision time and gauntlets/s for each. The production `V3_OPTS` = the cheapest candidate not significantly worse than the reference on any team. Record the table and the choice in `validation-log.md`.
 - [ ] T064 Acceptance of v3 against v2 and against greedy-v1 using the `tests/integration/test_policy_strength.py` pattern (add v3 to it). Run the SC-008 positions with the production v3. A position that passes with v3-ref but fails with v3 is a finding, recorded with its effect on the T063 choice.
 - [ ] T065 Switch the defaults to `expectimax2-v3`: `src/platsim/optimizer/run.py` `POLICY`, `src/platsim/optimizer/levels.py` `POLICY`, `src/platsim/evaluate.py` `DEFAULT_PLAYER_POLICY`, the `src/platsim/cli.py` default. The golden v1/v2 test still passes. Commit and push.
-- [ ] T066 Candidate-generation cap reference (Complexity Tracking). For B4 Roserade and B4 Milotic, run the alternatives stage with every 3-slot substitution as well, at the same levels and seeds. If no 3-slot set beats the best 1–2-slot set significantly, the cap is accepted; otherwise widen the generation rule through `/speckit-converge`. Record both.
-- [ ] T067 Reference benchmark: standard runs of B1–B5 with `--candidates reference`, seed `bench-007`, `--out runs/bench-007-reference/<B>`, in the background. Record per-stage timings, final levels, clear rate and CI, adopted alternatives, and SC-002 against the T005 baseline (paired where seeds allow; otherwise CIs, labelled as such).
+- [ ] T066 Generation-rule reference (spec FR-005, Complexity Tracking). For B4 Milotic and B4 Roserade, run the alternatives stage again with **full 3-4-slot generation** (every 3- and 4-slot replacement by offered status moves) as well, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. Otherwise widen the rule through `/speckit-converge`. Record both, with run times.
+- [ ] T067 Reference benchmark: standard runs of B1–B5 with `--candidates reference`, seed `bench-007`, `--out runs/bench-007-reference/<B>`, in the background, **one team at a time, starting with B4**. If B4 takes more than 48 h, stop and ask the user before the others run (research R5).
+  - Record per-stage timings, final levels, clear rate and CI, and adopted alternatives.
+  - **SC-002:** evaluate the baseline final team and the new final team with the same player version (production v3) and seeds (`platsim evaluate --runs <confirm_min> --seed sc002-<B>`) at their own reported start levels. Apply the SC-002 test: McNemar on clear rate, and expected average final level against the combined CI half-width.
+  - **SC-001:** a table of each in-scope category, with which benchmark team and member offered it and how far it got (round reached, tested, adopted).
+  - **SC-004:** assert that the validator passes on every final team, including B3's required HMs.
 - [ ] T068 Implement `mode="prefilter"` in `src/platsim/optimizer/alternatives.py` with at least two variants:
-  - (a) expectimax2-v3 successive halving over the alternatives (rounds 50/100/200, top third), then the full paired test for survivors;
+  - (a) smaller successive-halving rounds than the reference (e.g. 25/50/100/200), then the same finalist test;
   - (b) a static pre-score (`move_value`/variable power for attacks plus category priors, computed from the reference results of T067 and recorded) keeping the top N per member, with N chosen from T067's adoption ranks.
 
   Both are deterministic and seeded.
@@ -336,7 +349,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - clear rate (paired where possible);
   - wall time against the T005 baseline.
 
-  Accept the cheapest variant that is not worse than the reference on any team and runs in about 2× baseline or less (SC-006). Make it the `--candidates` default in `src/platsim/optimizer/api.py` and `src/platsim/cli.py`. If none qualifies, keep `reference` as the default and record why. Record the table in `validation-log.md`. Commit and push.
+  Use the SC-002 test from T067 for "not worse". Accept the cheapest variant that is not worse than the reference on any team and takes **at most 2.0×** the baseline time on every team (SC-006). Make it the `--candidates` default in `src/platsim/optimizer/api.py` and `src/platsim/cli.py`. If none qualifies, keep `reference` as the default and record why. Record the table in `validation-log.md`. Commit and push.
 
 ---
 

@@ -198,6 +198,8 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 **Decision: a new `alternatives` stage**, which replaces and generalises the setup check, in the same place: after bisection, before descent.
 1. **Candidates per member, deterministic and sorted:**
    - the member's current set with 1 or 2 slots replaced by offered status moves (R1 categories in scope);
+   - **structured 3-4-status sets** (spec FR-005, analysis I1): one move per category, from inflict-status, protection, recovery, Leech Seed, self-boost and screen. For each choice of 3 or 4 categories the member can fill, take each category's best move under a deterministic per-category order (decomp-derived values: boost stages, heal fraction, status accuracy). The member's best attack fills the 4th slot of a 3-status set.
+   - **Offered moves only.** A move is offered only if the player version in use models its effect (`MODELLED`, analysis U2). The rest are listed as "not offered: not modelled".
    - each with its paired items (R2);
    - item-only swaps on the current set;
    - all copy conflicts **repaired** (`resources.repair`), not skipped.
@@ -205,15 +207,21 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 3. **Statistics.** McNemar exact per alternative, with Holm correction within each member. The winner is confirmed on a fresh seed block before adoption, so it isn't greedy on noise. Adoption is slot by slot, as today.
 4. **Checkpointing.** After each alternative, in `state.json` under `level_search.alternatives`.
 5. **Two modes, FR-017:**
-   - **`reference`:** every alternative gets the full paired comparison (`preset.ability_screen` runs, 200 at standard). No limit.
+   - **`reference`, two levels (analysis C1, user 2026-10-14):** every alternative of a member reaches the strong player.
+     - Successive halving with generous rounds (100/200/400/800 paired runs, keeping the top third each round) narrows them.
+     - The finalists, the last round's top 3, get the full paired test against the current team with Holm correction, plus the confirm block.
+     - No time limit.
+     - Why two levels: a probe (2026-10-14, Lv 55, default options) counted 5,604 (B1), 8,540 (B4) and 9,554 (B5) 1-2-slot alternatives per team, before items. A flat 200-run test of each would take about 115-196 h per team.
    - **`prefilter`:** a cheaper path that must be validated against `reference` on the benchmark before it becomes the default. Shapes to try:
-     - an expectimax2-v3 successive halving over the alternatives (e.g. 50/100/200);
+     - smaller successive-halving rounds (e.g. 25/50/100/200);
      - a static pre-score (R3 values plus category priors) that keeps the top N per member;
      - a combination.
 
    The mode is recorded in `job_fingerprint` and provenance. Users can choose `reference` (CLI flag `--candidates reference|prefilter`; the web keeps the default).
-6. **The generation rule is itself a cap** (Principle VI). All 4-move combinations are infeasible: Roserade alone has about 4,845. The 1-2 slot substitution rule is validated by a **deeper reference on two members**: B4 Roserade and B4 Milotic, with every 3-slot substitution. The rule is accepted if no deeper set wins significantly. This is recorded in Complexity Tracking.
-- **Estimated cost (from recorded throughput, unverified):** about 74 s per 200-run alternative. About 60 alternatives per team gives about 75 min extra in reference mode, beyond today's 80-130 min standard run.
+6. **The structured 3-4-status rule is itself a cap** (Principle VI). It is validated against **full 3-4-slot generation on two members**, B4 Milotic and B4 Roserade, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. This is recorded in Complexity Tracking.
+- **Estimated cost (unverified; from recorded throughput of about 2.7 v2 gauntlets/s, v3 cost unknown).** Successive halving over N alternatives costs about N×100 + (N/3)×200 + (N/9)×400 + (N/27)×800 ≈ 196·N gauntlets. For N ≈ 8,000 per team that is about 1.6 M gauntlets, roughly 160 h at v2 speed. That is still too much, so the first round's size is the main cost driver.
+  - **Decision:** round 1 uses 100 runs as specified. If the measured cost of the first benchmark team exceeds 48 h, the overrun is recorded and the user is asked before the other teams run (Principle VI encourages local compute, but a multi-week run is a decision for the user).
+  - Excluding unmodelled moves (U2) and counting only offered moves will reduce N. The real N per team is measured first (task T031) and recorded.
 
 **Alternatives rejected.**
 - Status sets in the greedy screen: the screen scores them 0, which violates FR-007.
@@ -252,12 +260,15 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 4. Parse the C table `sBerryAndAccessoryManOptions`, keeping `ITEM_*` tokens only, and bind it to the Gift Man's `AddItem`.
 5. Put the party conditions in `detail`: the daily random level, and Amity's partner list via `requires_any` parsed from :726-748.
 
-**Copies.** UNLIMITED for all of them, following the daily precedent. Route 221's rotation is deterministic over 3 qualifying days. Under the replanting rule any berry with a copy is unlimited anyway. The reading and its reason are recorded in each entry's `detail`. An `uncertain` gate is **not** used, because it would force the entry to POST.
+**Copies.**
+- **Route 221: 1 copy of each item** (user, 2026-10-14, analysis I2: the conservative reading). The ledger recognises the case from the script's `GetDailyRandomLevel` party check, a rule over a decomp command and not a map name. Such a daily gift counts each possible item once, instead of the usual daily → UNLIMITED.
+- **The others: UNLIMITED,** following the daily precedent. Under the replanting rule any berry with a copy is unlimited anyway. The reading and its reason are recorded in each entry's `detail`. An `uncertain` gate is **not** used, because it would force the entry to POST.
 
 **Effect (simulated):**
-- `held_items_unlimited` 66 → 77;
+- `held_items_unlimited` 66 → 74 (8 new berries: Occa, Passho, Kebia, Coba, Payapa, Tanga, Charti, Chilan);
+- `held_items_finite` 37 → 40 (Black Belt, Expert Belt, Focus Sash at 1 each);
 - `held_items_unavailable_count` 55 → 44;
-- the new items are Black Belt, Expert Belt, Focus Sash, Occa, Passho, Kebia, Coba, Payapa, Tanga, Charti and Chilan;
+- the counts were simulated with all three items UNLIMITED (77/37/44) and re-derived by hand for the 1-copy reading, so they are unverified until T057;
 - the 9 Amity berries have `HOLD_EFFECT_NONE`;
 - TMs and species are unchanged.
 
@@ -269,7 +280,7 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 - The Amity C and script berry sets are equal, with accessories excluded.
 - A dataflow sentinel: only the expected give sites change.
 - The validator accepts Focus Sash; Choice Band stays 0.
-- Update `test_availability_controls.py:522,526` (66 → 77, 55 → 44) and regenerate `data/generated/` with `uv run platsim extract`.
+- Update `test_availability_controls.py:522,526` (66 → 74, 37 → 40, 55 → 44) and regenerate `data/generated/` with `uv run platsim extract`.
 
 **Recorded, not in scope.** Other unmodelled sources found:
 - **The Pickup ability.** Its rare table includes Leftovers and King's Rock (BS:7781-7822, `include/data/pickup.h`). It would bypass the 003 team-gated Leftovers rule.

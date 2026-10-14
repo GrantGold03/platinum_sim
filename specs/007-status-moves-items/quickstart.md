@@ -2,7 +2,7 @@
 
 Run everything locally with `uv run`. The benchmark teams B1-B5 are defined in `research.md` R9.
 
-Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. A reference run is about baseline plus 75 min per team.
+Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. The two-level reference is measured on the first team first (research R5); if that team needs more than 48 h, ask the user before the others run.
 
 ## 0. Before any change
 
@@ -27,7 +27,7 @@ uv run platsim extract && uv run platsim extract --check
 uv run platsim explain item:focus_sash     # expect: Route 221 house, daily, before the Champion
 ```
 
-The counts become 77 unlimited and 44 unavailable. Liechi Berry stays at 0 copies.
+The counts become 74 unlimited, 40 finite (Black Belt, Expert Belt and Focus Sash at 1 each) and 44 unavailable. Liechi Berry stays at 0 copies.
 
 ## 3. Variable-power attacks (US4)
 
@@ -54,16 +54,16 @@ uv run platsim optimize --candidates reference --seed bench-007 <B4 team>
 ```
 
 Expected in `result.json`:
-- `provenance.optimizer.candidate_tests` lists every offered alternative.
-- Excluded moves have reasons.
+- `provenance.optimizer.candidate_tests` lists every offered alternative, including the structured 3-4-status sets.
+- Excluded and not-offered (unmodelled) moves have reasons.
 - The validator passes.
 - For B3, Surf and Waterfall are still carried, and no adopted status move was displaced by an HM.
 
 ## 6. Prefilter acceptance (FR-017, FR-019, SC-002, SC-006)
 
 - Run B1-B5 in `prefilter` mode on the same seeds.
-- For each team, compare with the reference (paired) and with the baseline. Record the table and run times in `validation-log.md`.
-- The prefilter becomes the default only if it is not worse than the reference on any team, and its time is about 2× baseline or less.
+- For each team, compare with the reference and with the baseline, using spec SC-002's test (both final teams evaluated with the same player and seeds). Record the table and run times in `validation-log.md`.
+- The prefilter becomes the default only if it is not worse than the reference on any team, and it takes at most 2.0× baseline time per team.
 
 ## 7. Reproducibility (SC-005)
 

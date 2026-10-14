@@ -8,7 +8,7 @@ These are additions and changes to the existing entities. Unchanged entities (Bu
 |---|---|---|
 | `effect` | `BATTLE_EFFECT_*` | every effect in `load_moves()` has exactly one MoveClass; an unknown effect raises |
 | `category` | enum | in scope: `recovery`, `inflict_status`, `leech_seed`, `self_boost`, `protection`, `screen`, `weather`, `other`, `attack`, `variable_attack`; excluded: `foe_drop`, `fixed_damage`, `no_effect_singles`, `sacrifice`, `reactive`, `conditional_attack` |
-| `offered` | bool | true only for the in-scope categories |
+| `offered` | bool | true only for the in-scope categories **and** when the player version in use models the effect (spec FR-001); otherwise the reason is "not offered: not modelled" |
 | `reason` | str | for excluded categories: the reason recorded in the run (FR-002, FR-003) |
 | `derived_from` | str | an `ES NNNN` script path and line, or the rule-table key |
 
@@ -43,7 +43,7 @@ New fields:
 | `base_moves` | tuple | the member's current moveset when generated |
 | `moves` | tuple | with 1 or 2 slots replaced by offered status moves, or the same moves for an item-only swap |
 | `item` | item key or None | a paired item (FR-006) or an item swap |
-| `kind` | `status` / `status+item` / `item` | — |
+| `kind` | `status` / `status+item` / `structured` / `structured+item` / `item` | `structured` = a 3-4-status set built one move per category (spec FR-005) |
 | `modelled` | bool | every move and the item are in the player version's `MODELLED` table |
 
 ## CandidateTest (new; one per Alternative tested, research R5, R10)
@@ -54,12 +54,13 @@ New fields:
 | `levels` | the level vector compared at (the first failing neighbour, or the bisection levels) |
 | `mode` | `reference` / `prefilter` |
 | `n_paired`, `rate_alt`, `rate_current`, `alt_only`, `current_only`, `p_value`, `p_holm` | McNemar exact, Holm within the member |
-| `verdict` | `alternative better` / `current better` / `indistinguishable` / `not tested: <reason>` |
+| `round_reached`, `round_cleared`, `round_runs` | the successive-halving round where the alternative stopped, and its counts there |
+| `verdict` | `alternative better` / `current better` / `indistinguishable` / `dropped in screening` / `not tested: <reason>` |
 | `confirmed` | bool or None | result of the fresh-seed-block confirm, for the winner only |
 | `adopted` | bool | — |
 | `not_modelled` | list | moves or items in it that the player doesn't model |
 
-**State transitions:** offered → (filtered out by the prefilter: "not tested: prefilter") | tested → (adopted after confirm | rejected).
+**State transitions:** offered → screened (successive halving, rounds 100/200/400/800 in reference mode) → (dropped in a round | finalist) → finalist tested in full → (adopted after confirm | rejected). In prefilter mode the prefilter may drop it first ("not tested: prefilter").
 
 ## MemberSpec (changed; `optimizer/resources.py`, research R6)
 

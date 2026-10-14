@@ -22,9 +22,10 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
   "candidate_mode": "reference",
   "item_tie_rule": "more copies; higher effect_param; classic STRENGTHEN_* before ARCEUS_*; item key",
   "assumptions": {"friendship": 255, "ivs": 15, "hidden_power": "Dark 70"},
-  "excluded_moves": {"1": {"MOVE_SCREECH": "foe_drop: stages reset when the foe faints or switches (battle_lib.c:97-100, 2156-2162)"}},
+  "excluded_moves": {"1": {"MOVE_SCREECH": "foe_drop: stages reset when the foe faints or switches (battle_lib.c:97-100, 2156-2162)",
+                          "MOVE_TRICK": "not offered: not modelled by expectimax2-v3"}},
   "candidate_tests": [
-    {"slot": 4, "species": "SPECIES_MILOTIC", "kind": "status+item",
+    {"slot": 4, "species": "SPECIES_MILOTIC", "kind": "status+item", "round_reached": "final",
      "moves": ["MOVE_SURF", "MOVE_ICE_BEAM", "MOVE_RECOVER", "MOVE_TOXIC"], "item": "leftovers",
      "levels": [54, 54, 54, 54, 54, 54], "mode": "reference",
      "n_paired": 200, "rate_alt": 0.79, "rate_current": 0.71, "alt_only": 22, "current_only": 6,
@@ -36,7 +37,9 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 }}
 ```
 
-- Every offered alternative appears exactly once. One that wasn't tested has `verdict: "not tested: <reason>"` and null statistics (SC-003).
+- Every offered alternative appears exactly once. `kind` is one of `status`, `status+item`, `structured`, `structured+item` and `item`.
+- An alternative dropped in a successive-halving round has `round_reached` (e.g. `"round 2 of 4"`), its round's clear count and run count, and `verdict: "dropped in screening"`.
+- One that wasn't tested at all has `verdict: "not tested: <reason>"` and null statistics (SC-003).
 - The numbers are those of the recorded battles. `n_paired` equals the number of runs actually played.
 
 ## Warnings
