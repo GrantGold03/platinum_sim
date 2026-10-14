@@ -46,7 +46,7 @@ The optimizer will offer status moves, variable-power attacks and every useful h
 - 98 final forms;
 - 130 status-move effects and 147 hold effects classified;
 - about 87 items offered under default options;
-- a probe counted 5,600-9,600 1-2-slot alternatives per team before items and before dropping unmodelled moves (analysis C1). Reference mode screens them by successive halving (100/200/400/800); the real N per team is measured first;
+- a probe counted 5,600-9,600 1-2-slot alternatives per team before items and before dropping unmodelled moves (analysis C1). Reference mode screens them by successive halving, with round sizes fitted to the 100 h budget; the real N per team is measured first;
 - 5 benchmark teams.
 
 ## Constitution Check
