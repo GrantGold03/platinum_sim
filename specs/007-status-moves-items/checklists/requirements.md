@@ -32,4 +32,4 @@
 ## Notes
 
 - The Background cites decomp file lines and names the battle player (expectimax2) and `sim/policy/`. These are evidence and a user-stated scope decision (FR-016: the player is changed in this feature), not design choices, matching the style of specs 004-006.
-- FR-017 and FR-018 were resolved by the user on 2026-10-14 (Q1: reference with no limit, then a pre-filter checked against it, aiming at about 2×; Q2: the missing sources are in scope).
+- FR-017 and FR-018 were resolved by the user on 2026-10-14 (Q1: reference with no limit, then a prefilter checked against it, aiming at about 2×; Q2: the missing sources are in scope).

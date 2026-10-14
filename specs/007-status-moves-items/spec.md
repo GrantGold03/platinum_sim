@@ -104,8 +104,18 @@
 - Q: Are the three missing item sources in scope? → A: Yes (user). See FR-018 and US5.
 - Q: What friendship is assumed for Return? → A: Maximum friendship, 255 (user). By the decomp formula (`pokeplatinum/src/battle/trainer_ai/trainer_ai.c:3019-3024`), that gives Return power 255 × 10 / 25 = 102 and Frustration power 0, so Frustration is never offered. See FR-012.
 - Q: How should accuracy and run time be balanced in general? → A: Spend more development time to get higher accuracy and shorter run times in the finished tool (user). The pattern from Q1 is the goal and is encouraged everywhere: first build the expensive, accurate version as a reference, then build cheaper versions and test them against it. See FR-019.
-- Q (analysis C1): What shape should the reference take, given that the 1-2-slot rule alone yields 5,600-9,600 alternatives per team (about 115-196 h at a flat 200 paired runs each)? → A: A two-level reference (user). Every offered alternative still reaches the strong player, but through successive halving with generous rounds (100/200/400/800 runs). Only the finalists get the full paired test. Cheaper prefilters are validated against this. See FR-017.
-- Q (budget, revised by the user after the two-level estimate came to about 160 h per team): What run time is allowed? → A: The finished tool MUST take at most 2.0× the measured baseline (the baseline for the five benchmark teams is about 8-11 h in total, so about 2× each team's own baseline). One-time development runs that improve accuracy, such as the references, MAY take up to **100 h** (user, 2026-10-14). This is read as 100 h in total for all one-time reference runs of this feature: the player reference comparisons and the candidate reference benchmark together. The successive-halving round sizes in the reference are chosen to fit that budget. See FR-017 and FR-019.
+- Q (analysis C1): What shape should the reference take, given that the 1-2-slot rule alone yields 5,600-9,600 alternatives per team (about 115-196 h at a flat 200 paired runs each)? → A: A two-level reference (user). Every offered alternative still reaches the strong player, but through successive halving with generous rounds (100/200/400/800 runs). Only the finalists get the full paired test. Cheaper prefilters are validated against this. See FR-017. (Round sizes superseded by the budget answer below.)
+- Q (budget, revised by the user after the two-level estimate came to about 160 h per team): What run time is allowed? → A: The finished tool MUST take at most 2.0× the measured baseline (the baseline for the five benchmark teams is about 8-11 h in total, so about 2× each team's own baseline). One-time development runs that improve accuracy, such as the references, MAY take up to **100 h** (user, 2026-10-14). The 100 h covers **every** one-time run of this feature (user, 2026-10-14, second analysis):
+  - the test suites;
+  - the baseline;
+  - the player comparisons;
+  - the reference checks;
+  - the candidate reference benchmark;
+  - the final prefilter benchmark;
+  - the SC-002 evaluations.
+
+  The successive-halving round sizes in the reference are chosen to fit that budget. See FR-017 and FR-019.
+- Q (second analysis I1): Are held items the player doesn't model offered? → A: No (user). They are skipped like unmodelled moves and listed as "not offered: not modelled". See FR-009 and FR-016.
 - Q (analysis U2): Are "other" status moves that the player doesn't model offered? → A: No (user). They are skipped and listed in the result as "not offered: not modelled by <player>". This applies to any in-scope move whose effect the player version in use does not model. See FR-001 and FR-013.
 - Q (analysis I1): How are sets with 3-4 status moves generated? → A: Option (b) (user). Every 1-2-slot replacement, plus a structured set of 3-4-status sets built from one move per category (for example inflict-status + protection + recovery, + Leech Seed). The structured rule is a shortcut, so it is validated against full 3-4-slot generation on two members. See FR-005.
 - Q (analysis I2): How many copies does the Route 221 house give? → A: One of each, Black Belt, Expert Belt and Focus Sash (user). This is the conservative reading. The gift needs a party Pokémon at that day's random level, and the ledger's usual "daily gift = unlimited" rule is not applied to it. See FR-018.
@@ -245,7 +255,7 @@ Three in-game sources that the availability ledger doesn't model today are added
   - weather setting;
   - any other status move with an effect in a single trainer battle, except those excluded by FR-002 and FR-003.
 
-  A move in any of these categories is offered only if the player version in use models its effect. Other moves are not offered and are listed in the result as "not offered: not modelled" (user, 2026-10-14).
+  A move in any of these categories is offered only if the player version in use models its effect. Other moves are not offered and are listed in the result as "not offered: not modelled" (user, 2026-10-14). The same rule applies to held items (FR-009).
 - **FR-002**: Moves whose only effect is to lower the foe's stats (including accuracy and evasion) MUST NOT be offered. The exclusion and its reason (Background: stages reset on faint or switch) MUST be recorded in the run's records.
 - **FR-003**: Fixed-damage moves (Seismic Toss, Night Shade, Sonic Boom, Dragon Rage, Super Fang, Endeavor, Psywave), moves with no effect in a single trainer battle, and the attacks already excluded today as conditional (one-hit KO, Explosion, Fake Out, and so on) MUST NOT be offered.
   - Also excluded, each with its reason recorded (research R1, R3; plan 2026-10-14):
@@ -265,7 +275,8 @@ Three in-game sources that the availability ledger doesn't model today are added
 - **FR-009**: Held-item candidates MUST include every item that:
   - has an in-battle effect in a single trainer battle;
   - has at least one copy under the active legality options (including the team-gated rule);
-  - is not an experience or EV item.
+  - is not an experience or EV item;
+  - has a hold effect that the player version in use models. Other items are not offered, and are listed as "not offered: not modelled" (user, 2026-10-14).
 
   Items whose effect is irrelevant to a moveset (for example a weather rock without its weather move) MAY be left out for that moveset.
 - **FR-010**: Team-wide copy limits for items and TMs MUST be enforced as today. An optimizer output MUST still pass the independent validator (Constitution III).
@@ -274,19 +285,35 @@ Three in-game sources that the availability ledger doesn't model today are added
   - Every member is assumed to have maximum friendship, 255 (user, 2026-10-14). Return is therefore scored at power 102, and Frustration (power 0 at maximum friendship) is never offered.
   - Battles MUST use the same friendship as scoring, and the result MUST state the assumption.
   - Any other input that isn't known before battle MUST be stated as an assumption in the result.
-- **FR-013**: The result MUST list, per member: the offered status moves and items, which were tested, each test's paired outcome (runs, clear rates, p-value, verdict), and the final choice. Offered items that the battle player does not model MUST be flagged. Legal moves that weren't offered MUST be listed with their reason (FR-001 "not modelled", FR-002, FR-003).
+- **FR-013**: The result MUST list, per member: the offered status moves and items, which were tested, each test's paired outcome (runs, clear rates, p-value, verdict), and the final choice. Legal moves and obtainable items that weren't offered MUST be listed with their reason (FR-001 and FR-009 "not modelled", FR-002, FR-003). A required HM whose effect the player doesn't model is still carried (FR-014), and MUST be flagged.
 - **FR-014**: Required HMs (006) MUST still be carried. When a slot must give way, an adopted status move MUST be replaced only after every non-adopted move. The order MUST be documented.
 - **FR-015**: Results MUST stay reproducible: the same request, seed and pinned commits give the same result (Constitution IV).
-- **FR-016**: The strong battle player MUST model the in-battle effect of every offered status-move category and every offered held item, well enough to choose them when they help (user, 2026-10-14). This covers the categories it treats as having no effect today, such as weather, Leech Seed and Substitute. A changed player MUST be a new named version. The previous version MUST stay available so earlier results can be reproduced, and every result MUST name the version used (Constitution II, IV). An offered move or item that the player still does not model MUST be flagged (FR-013).
+- **FR-016**: The strong battle player MUST model the in-battle effect of every offered status-move category and every offered held item, well enough to choose them when they help (user, 2026-10-14). This covers the categories it treats as having no effect today, such as weather, Leech Seed and Substitute. A changed player MUST be a new named version. The previous version MUST stay available so earlier results can be reproduced, and every result MUST name the version used (Constitution II, IV). Moves and items the player doesn't model are not offered (FR-001, FR-009), so every offered move and item is modelled by construction. A required HM that isn't modelled is flagged (FR-013).
 - **FR-017**: The feature MUST be built in two steps (user, 2026-10-14).
   1. **Reference (one-time, within the 100 h development budget).** First, every offered candidate is judged by the strong player, with no prefilter.
      - Successive halving narrows the candidates. Its round sizes are the largest that fit the reference's share of the 100 h budget, given the measured number of alternatives, with a first round of at least 25 paired runs. If even 25 doesn't fit, the user is asked before the reference runs.
      - The finalists get the full paired test.
-     - Its results on the benchmark (SC-002) are recorded as the reference.
+     - It runs on three benchmark teams, B4, B5 and B3 (SC-002 itself still covers all five). Its results, including every seed's outcome for every alternative, are recorded as the reference.
+     - The screening inside the reference is itself a shortcut. It is checked once on one member against a full test of a sample of alternatives (FR-019).
   2. **Prefilter.** Then a prefilter is added that cuts which candidates reach the strong player. It is compared with the reference on the same benchmark requests and seeds.
+     - Where possible, versions are compared offline from the reference's recorded per-seed outcomes, and only the chosen one runs live on B1-B5.
      - It MUST NOT be worse by a statistically supported margin (as defined in SC-002).
      - It MUST take at most 2.0× the measured baseline time per standard run, for each benchmark team (user, 2026-10-14: a hard maximum).
   - The reference mode MUST remain available after the prefilter is added, so the prefilter can be re-checked against it.
+  - **Budget for the one-time runs (100 h in total):**
+
+    | One-time run | Task | Hours |
+    |---|---|---|
+    | Full test-suite runs (before, during, after) | T002, T020, T072 | 8 |
+    | Baseline B1–B5 on `f88cdd0` | T005 | 11 |
+    | Player: reference vs cheap settings, v3 vs v2 | T063, T064 | 15 |
+    | Generation-rule and item-relevance references | T066 | 8 |
+    | Check of the screening inside the reference | T066b | 3 |
+    | Candidate reference on B4, B5, B3 (about 10 h each) | T067 | 31 |
+    | Final prefilter benchmark B1–B5 | T069 | 22 |
+    | SC-002 evaluations | T067, T069 | 2 |
+    | **Total** | | **100** |
+
 - **FR-018**: The availability ledger MUST model the item sources found missing at three places (user, 2026-10-14): the Route 221 house (Black Belt, Expert Belt, Focus Sash), the Pastoria City berry house and Amity Square. Amity Square has two sources, the partner pickup and the Gift Man, so there are four sources in all.
   - The Route 221 house counts as **1 copy of each item**. Its gift needs a party Pokémon at the day's random level, so the general daily-gift rule (unlimited) is not applied (user, 2026-10-14). The ledger detects this from the script's daily-random-level check, not from the map name.
   - Each source's items, copies and conditions (story gates, once-per-day limits, a required partner Pokémon, randomness) MUST be extracted from the decomp (Constitution I).
@@ -315,7 +342,7 @@ Three in-game sources that the availability ledger doesn't model today are added
 - **SC-003**: 100% of offered status moves and items appear in the result with a tested or not-tested state, and with the not-modelled flag where it applies.
 - **SC-004**: 100% of optimizer outputs pass the independent validator, including required-HM checks, on the benchmark and in the existing test suite.
 - **SC-005**: Re-running any benchmark request with the same seed gives an identical result.
-- **SC-006**: The reference mode (FR-017 step 1) runs the benchmark to completion, and all of this feature's one-time reference runs together take at most 100 h. Their run times are recorded. With the prefilter, a standard-budget run takes at most 2.0× the measured baseline time, for each benchmark team. Its results are not worse than the reference by a statistically supported margin.
+- **SC-006**: The reference mode (FR-017 step 1) runs to completion on its three teams. All of this feature's one-time runs together (as listed in FR-017's budget) take at most 100 h. Their run times are recorded. With the prefilter, a standard-budget run takes at most 2.0× the measured baseline time, for each benchmark team. Its results are not worse than the reference by a statistically supported margin.
 - **SC-007**: No offered move falls under FR-002 or FR-003. Positive control: a member that legally learns Screech and Seismic Toss is offered neither.
 - **SC-008**: For each status-move category and held-item effect the player newly models, a positive-control battle position exists where the player chooses that move or benefits from that item. A matching position where it does not help shows the player does not choose it there.
 - **SC-009**: Under default options, each of the four added sources (FR-018) shows up in the item catalog with its decomp source. The before or after the Champion verdict is shown with its reason. A count check on the ledger changes only by the items those sources add.

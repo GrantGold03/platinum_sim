@@ -222,15 +222,28 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 - **Estimated cost (unverified; from recorded throughput of about 2.7 v2 gauntlets/s, v3 cost unknown).** Successive halving over N alternatives costs about N×100 + (N/3)×200 + (N/9)×400 + (N/27)×800 ≈ 196·N gauntlets. For N ≈ 8,000 per team that is about 1.6 M gauntlets, roughly 160 h at v2 speed. That is still too much, so the first round's size is the main cost driver.
   - **The user's revision (2026-10-14):** that is not feasible.
     - The finished tool MUST take at most 2.0× each team's baseline, which is about 8-11 h for all five teams.
-    - One-time reference runs MAY take up to 100 h **in total**.
+    - **Every** one-time run MAY take up to 100 h **in total** (user, second analysis).
   - **Allocation of the 100 h** (a planning decision, adjusted only with a record in the validation log):
-    - about 20 h for the player reference comparisons (T063, T064);
-    - about 10 h for the generation-rule reference (T066);
-    - about 70 h for the candidate reference benchmark (T067), so about 14 h per team.
-  - **Round sizes.** With round sizes r, 2r, 4r, 8r and keeping a third each round, the cost is about 1.96·r·N gauntlets for N alternatives. For each team, r = the largest of {100, 50, 25} with 1.96·r·N plus the rest of the run within 14 h, at the v3 throughput measured in T063.
-  - **Example.** At v2 speed (2.7 gauntlets/s, so about 136k gauntlets in 14 h) and N ≈ 2,800, r = 25 just fits; at N ≈ 8,000 nothing fits.
+
+    | One-time run | Task | Hours |
+    |---|---|---|
+    | Full test-suite runs (before, during, after) | T002, T020, T072 | 8 |
+    | Baseline B1–B5 on `f88cdd0` | T005 | 11 |
+    | Player: reference vs cheap settings, v3 vs v2 | T063, T064 | 15 |
+    | Generation-rule and item-relevance references | T066 | 8 |
+    | Check of the screening inside the reference | T066b | 3 |
+    | Candidate reference on B4, B5, B3 (about 10 h each) | T067 | 31 |
+    | Final prefilter benchmark B1–B5 | T069 | 22 |
+    | SC-002 evaluations | T067, T069 | 2 |
+    | **Total** | | **100** |
+
+  - **Why 3 teams for the reference:** SC-002 compares the final result with the baseline on all five teams. The reference only has to support checking the prefilter.
+  - **Offline comparison of prefilters:** the reference records every seed's outcome for every alternative. A static-score prefilter can then be scored with no battles. A smaller-round successive halving can be scored too, if its seeds are a prefix of the reference's seeds. Only the chosen prefilter runs live, on B1-B5 (the 22 h line).
+  - **Screening check (T066b):** for B4 Milotic, a fixed sample of about 40 alternatives (every finalist plus others chosen with seed `sh-check`) gets the full 200-run paired test. The screening is verified if no non-finalist beats the finalists significantly; otherwise it is labelled unverified, with the evidence.
+  - **Round sizes.** With round sizes r, 2r, 4r, 8r and keeping a third each round, the cost is about 1.96·r·N gauntlets for N alternatives. For each team, r = the largest of {100, 50, 25} with 1.96·r·N plus the rest of the run within 10 h, at the v3 throughput measured in T028b. "The rest of the run" is that team's T005 baseline time outside the alternatives stage, scaled by the v3/v2 speed ratio from T028b.
+  - **Example.** At v2 speed (2.7 gauntlets/s), about 7 h of screening in a 10 h team share is about 68k gauntlets, so r = 25 fits N ≈ 1,400. Above that, nothing fits.
   - **If r = 25 doesn't fit a team,** stop and ask the user before running it.
-  - **What reduces N:** dropping unmodelled moves (U2) and counting only offered moves. The real N is measured first (task T031).
+  - **What reduces N:** dropping unmodelled moves (U2) and unmodelled items (second analysis I1), and counting only offered ones. The real N is measured first (task T031).
   - **The production budget is the binding constraint.** At most 2× the baseline leaves about 1.5-2 h per team for alternatives, about 15-20k gauntlets. Production therefore can't screen thousands of alternatives. The prefilter has to pick a few dozen per member before the strong player sees them, which is why the reference matters.
   - Excluding unmodelled moves (U2) and counting only offered moves will reduce N. The real N per team is measured first (task T031) and recorded.
 

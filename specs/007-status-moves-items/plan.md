@@ -31,7 +31,7 @@ The optimizer will offer status moves, variable-power attacks and every useful h
 **Project Type**: CLI plus local web app, with a Node battle worker
 
 **Performance Goals**:
-- one-time reference runs: at most 100 h in total (about 20 h player comparisons, 10 h generation-rule check, 70 h candidate reference, so about 14 h per benchmark team). Round sizes are fitted to the measured number of alternatives (research R5);
+- **every** one-time run of this feature: at most 100 h in total (spec FR-017 table: suites 8, baseline 11, player 15, generation and item references 8, screening check 3, candidate reference on B4/B5/B3 31, final prefilter benchmark 22, SC-002 evaluations 2). Round sizes are fitted to the measured number of alternatives (research R5). A running total is kept in `validation-log.md`;
 - **hard maximum:** the accepted prefilter takes at most 2.0× the measured `f88cdd0` baseline per standard run, per team (FR-017, SC-006, user 2026-10-14);
 - the production v3 player decision time is recorded against v2's 37-49 ms.
 
@@ -135,6 +135,7 @@ tests/unit, tests/integration  # classification, items, variable power, ledger c
 |---|---|---|
 | Rule table of about 20 decomp constants in `move_classes.py` / `item_classes.py` | Some meanings can't be derived from scripts: sacrifice moves, Follow Me, the Curse split, no-outcome items | A fully derived rule misclassifies them. A move-name list violates Principle I. Guarded by completeness tests. |
 | Candidate generation = 1-2-slot substitutions plus structured 3-4-status sets (one move per category) | Full 3-4-slot generation is infeasible (Blissey alone has about 15,000 3-slot sets) | Principle VI: validated against full 3-4-slot generation on B4 Milotic and Roserade. If a full-generation set wins significantly, the rule is widened (user, 2026-10-14, analysis I1). |
-| Reference mode screens by successive halving before the full test, with round sizes fitted to a 100 h total budget | A flat full test is about 115-196 h per team, and generous rounds about 160 h per team (analysis C1) | User decisions C1(a) and the 100 h budget. Every offered alternative still reaches the strong player. |
+| Reference mode screens by successive halving before the full test, with round sizes fitted to a 100 h total budget | A flat full test is about 115-196 h per team, and generous rounds about 160 h per team (analysis C1) | User decisions C1(a) and the 100 h budget. Every offered alternative still reaches the strong player. **Unverified** until T066b checks it against a full test of a sample of alternatives on one member (Constitution VI). |
+| Items offered only with their paired moves (FR-009 relevance filter) | Offering every item with every moveset multiplies the alternatives | Checked in T066 against offering every allowed item on two members; unverified until then. |
 | Two player configurations (`-v3-ref` and `-v3`) and two optimizer modes kept long-term | Principle VI requires the reference to stay available for re-checking | Deleting the reference would leave the cheap version unverifiable after later changes |
 | The `alternatives` stage replaces the setup check | The setup check skips unbuildable sets, ignores paired items, has no multiplicity control and compares far above the threshold | Patching it in place would keep the fixed-level comparison that judges level-deficit strategies in the wrong regime |
