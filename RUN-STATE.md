@@ -250,8 +250,8 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   game". With it on, lift the 004 starter and fossil one-choice rules, and label later members
   "(from a second Platinum game, allowed by rule)".
 - **Status** (2026-10-14): all 19 tasks are done. The full suite gave `490 passed, 4 xfailed`
-  (2:27:23, exit 0). Committed on `005-second-game-option`. **Not merged**: waiting for the
-  user's hands-on testing.
+  (2:27:23, exit 0). Committed on `005-second-game-option` (`d8f90e9`). **Merged into `main`** by
+  fast-forward on 2026-10-14, at the user's request.
 - **How to test by hand**: run `uv run platsim serve` on this branch. Then:
   - check "Allow Pokémon unobtainable in one Platinum game" and run Torterra + Infernape;
     expect it to be accepted, with the later member's "Obtained from" ending "(from a second
