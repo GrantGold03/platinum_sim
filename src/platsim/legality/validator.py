@@ -372,8 +372,8 @@ def validate(team: TeamCandidate | dict | str, ledger=None, final_levels: list[i
             out.append(Violation("SOURCE_EXHAUSTED", f"source {oid} gives {q} Pokemon but {used} members use it",
                                  _src()["source"] + list(opt_by_id[oid].src[:2])))
     # 004 FR-002/FR-011: members of one group (gift or bred from it) must share one choice.
-    for g, members in groups.items():
-        if len({ch for _, ch in members}) > 1:
+    for g, members in groups.items():  # 005: lifted by allow_unobtainable_pokemon (MS.groups_enforced)
+        if MS.groups_enforced(led) and len({ch for _, ch in members}) > 1:
             text = MS.group_conflict_text(g, members)
             refs = [s for oid in source_use for s in opt_by_id[oid].src[:1] if opt_by_id[oid].exclusive_group == g]
             out.append(Violation("SOURCE_EXHAUSTED", text, _src()["source"] + _src()["group"] + sorted(set(refs))))

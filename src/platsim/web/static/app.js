@@ -92,7 +92,7 @@
     ["allow_trade_evolutions", els.allowTrade, "trade evolutions", "trade_evolutions"],
     ["allow_post_game_pokemon", els.allowPostMon, "post-game Pokémon", "post_game_pokemon"],
     ["allow_post_game_items", els.allowPostItems, "post-game items and moves", "post_game_items"],
-    ["allow_unobtainable_pokemon", els.allowOutside, "Pokémon unobtainable in Platinum", "unobtainable_pokemon"],
+    ["allow_unobtainable_pokemon", els.allowOutside, "Pokémon unobtainable in one Platinum game", "unobtainable_pokemon"],
   ];
   function ruleFlags() { return Object.fromEntries(RULES.map(([key, el]) => [key, el.checked])); }
   function ruleQuery() {

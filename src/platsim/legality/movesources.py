@@ -996,6 +996,30 @@ STARTER_GROUP = "starter"
 TID_GROUP = "trainer_id_parity"
 
 
+SECOND_GAME_NOTE = " (from a second Platinum game, allowed by rule)"
+
+
+def groups_enforced(led) -> bool:
+    """005 (spec FR-001..FR-003): one choice per choose-one group holds for one Platinum game.
+    allow_unobtainable_pokemon ("Pokémon unobtainable in one Platinum game") lifts it - a second
+    game supplies another starter or the other fossil (constitution III: off by default, enforced
+    per options view, labelled by SECOND_GAME_NOTE, recorded in legality_options)."""
+    return not options_of(led).allow_unobtainable_pokemon
+
+
+def second_game_members(opts) -> list[int]:
+    """005 data-model: indices (team order) of chosen options whose `group_choice` differs from the
+    first choice seen in their `exclusive_group` - members that need a second Platinum game."""
+    first: dict[str, str | None] = {}
+    out = []
+    for i, o in enumerate(opts):
+        if o is None or not o.exclusive_group:
+            continue
+        if first.setdefault(o.exclusive_group, o.group_choice) != o.group_choice:
+            out.append(i)
+    return out
+
+
 def choice_label(group: str, choice: str | None) -> str:
     """Display text of one choice of a group: the starter species name, or the Trainer ID parity."""
     if choice is None:
@@ -1022,7 +1046,10 @@ def team_group_conflicts(consts: list[str], led) -> dict[str, str]:
     Each member may use any of its source options; an option outside every group frees the member.
     Members whose every option is grouped must agree on one choice per group, found by backtracking.
     Returns {SPECIES_*: message} for the members that cannot agree, or {} when the team is fine.
-    Per-option quantities and item copies stay with resources.realize / the validator."""
+    Per-option quantities and item copies stay with resources.realize / the validator.
+    005: {} when the groups are lifted (groups_enforced, allow_unobtainable_pokemon)."""
+    if not groups_enforced(led):
+        return {}
     bound: list[tuple[str, list[tuple[str, str | None]]]] = []
     for c in consts:
         opts = source_options(c, led)

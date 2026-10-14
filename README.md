@@ -53,9 +53,12 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
       pokemon sources.
     - `--allow-post-game-items` (003): post-game items, TMs and move tutors count, including the
       Battle Frontier BP exchange (TM04, TM08, TM61, TM73, Focus Band and more).
-    - `--allow-unobtainable-pokemon` (003): other-cartridge (dual-slot) encounters count. A pokemon
-      with no source at all gets a made-up level-1 source, labelled "Unavailable in Platinum
-      (allowed by rule)" in every report.
+    - `--allow-unobtainable-pokemon`, "Pokémon unobtainable in one Platinum game" (003, widened in
+      005): other-cartridge (dual-slot) encounters count. A pokemon with no source at all gets a
+      made-up level-1 source, labelled "Unavailable in Platinum (allowed by rule)" in every report.
+      It also lifts the 004 one-starter-line and one-fossil-line rules, as if a second Platinum
+      game supplied the other choice. Each member that needs it is labelled "(from a second
+      Platinum game, allowed by rule)". One-copy limits (legendaries, gifts, items) still apply.
     - Entries on maps the decomp labels `UNUSED_*` that can't be reached even after the Champion
       never count under any rule.
   - **No National Dex sources**, so no Poké Radar (user decision). This matters because Platinum

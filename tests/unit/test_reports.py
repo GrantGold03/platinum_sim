@@ -304,3 +304,50 @@ def test_report_invariants():
         _report(budget_preset="fast")
     with pytest.raises(ValueError):
         _report(no_qualifying=_no_team_report().no_qualifying)  # both team and no_qualifying
+
+
+# --- 005: "Obtained from" labels members that need a second Platinum game -------------------------
+
+def _obtained(ledger, members, options):
+    """team_sources' "Obtained from" for legal_team.json with its last slots replaced."""
+    from test_validator import _with
+
+    from platsim.legality.validator import _team_from_dict
+    from platsim.report.sources import team_sources
+
+    team, _, read = _team_from_dict(_with(ledger, *members))
+    assert not read
+    return team_sources(team, ledger.with_options(options))[0]
+
+
+def test_second_game_member_is_labelled(ledger):
+    from test_validator import DAY_CARE, SECOND_GAME, _member
+
+    from platsim.legality import movesources as MS
+    from platsim.legality.models import LegalityOptions
+
+    torterra = _member("SPECIES_TORTERRA", DAY_CARE.format("TURTWIG"), ledger)
+    got = _obtained(ledger, [torterra], SECOND_GAME)  # slot 0 Infernape (gift), slot 5 Torterra
+    labelled = [i for i, t in enumerate(got) if t.endswith(MS.SECOND_GAME_NOTE)]
+    assert labelled == [5], got
+    # one starter line: nobody needs a second game
+    monferno = _member("SPECIES_MONFERNO", DAY_CARE.format("CHIMCHAR"), ledger)
+    assert not any(MS.SECOND_GAME_NOTE in t for t in _obtained(ledger, [monferno], SECOND_GAME))
+    assert not any(MS.SECOND_GAME_NOTE in t for t in _obtained(ledger, [monferno], LegalityOptions()))
+
+
+def test_second_game_label_follows_team_order(ledger):
+    """Swap the members: Torterra first, Infernape later - the label moves to Infernape."""
+    from test_validator import DAY_CARE, SECOND_GAME, _legal, _member
+
+    from platsim.legality import movesources as MS
+    from platsim.legality.validator import _team_from_dict
+    from platsim.report.sources import team_sources
+
+    d = _legal()
+    infernape = d["builds"][0]
+    d["builds"][0] = _member("SPECIES_TORTERRA", DAY_CARE.format("TURTWIG"), ledger)
+    d["builds"][5] = infernape
+    team, _, _ = _team_from_dict(d)
+    got = team_sources(team, ledger.with_options(SECOND_GAME))[0]
+    assert [i for i, t in enumerate(got) if t.endswith(MS.SECOND_GAME_NOTE)] == [5], got
