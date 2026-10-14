@@ -287,3 +287,16 @@ checks it independently.
   checked by `test_page_walkthrough`). Add a browser assertion that no two `#hm-list label`
   bounding boxes intersect, at 1920×1080 and at a 390 px phone width. Per FR-006 / contract
   "labels never overlap" (contradicts).
+
+---
+
+## Phase 8: Convergence
+
+- [X] T031 Lay the step 3 toggles out as 4×2 on desktop. In `src/platsim/web/static/style.css`,
+  use four columns at 1920×1080 (row 1: Cut, Fly, Surf, Strength; row 2: Defog, Rock Smash,
+  Waterfall, Rock Climb). Labels must not overlap, the walkthrough's 1080p fit must hold, and the
+  grid may wrap to more rows at 390 px. Extend the browser tests:
+  - at 1920×1080, the labels sit in exactly 2 rows of 4, in HM order;
+  - the existing no-overlap checks at 1920 and 390 still pass.
+
+  Per FR-006 / contract (4×2) / Clarification 2026-10-14 (contradicts).

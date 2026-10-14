@@ -46,6 +46,8 @@ before.
   - Labels never overlap: each column is at least as wide as its longest label, and the grid
     wraps to more rows when the column is narrow. Steps 1–4 still fit a 1080p screen (002
     SC-003).
+  - At 1920×1080 the toggles form a 4×2 grid: row 1 Cut, Fly, Surf, Strength; row 2 Defog,
+    Rock Smash, Waterfall, Rock Climb. At a 390 px phone width they may use more rows.
   - ids are `require-hm-<key>`.
 - **Results summary**: a "Required HMs" row lists the move names, or "none".
 - **422 refusal**: shown in the same error area as the 004 starter refusal.

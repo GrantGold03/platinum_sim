@@ -523,6 +523,22 @@ HM_OVERLAP_JS = """() => {
 }"""
 
 
+HM_ROWS_JS = """() => {
+  const rows = new Map();
+  for (const l of document.querySelectorAll('#hm-list label')) {
+    const top = Math.round(l.getBoundingClientRect().top);
+    if (!rows.has(top)) rows.set(top, []);
+    rows.get(top).push(l.textContent.trim());
+  }
+  return [...rows.entries()].sort((a, b) => a[0] - b[0]).map(e => e[1]);
+}"""
+
+
+def _hm_rows(page) -> list:
+    """Step 3 labels grouped by row (top edge), top to bottom."""
+    return page.evaluate(HM_ROWS_JS)
+
+
 def _hm_labels_overlap(page) -> list:
     """Pairs of step 3 labels whose boxes intersect (006 FR-006: labels never overlap)."""
     return page.evaluate(HM_OVERLAP_JS)
@@ -537,8 +553,9 @@ def test_hm_labels_do_not_overlap_on_a_phone(tmp_path, catalog, chrome):
         page.goto(base + "/")
         page.locator("#hm-list label").nth(7).wait_for(timeout=15000)
         assert _hm_labels_overlap(page) == []
-        page.add_style_tag(content="#hm-step .hm-list { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }"
-                                   " #hm-step .check { white-space: nowrap !important; }")
+        page.add_style_tag(content="#hm-step .hm-list { display: grid !important;"  # the pre-T030 layout
+                                   " grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }"
+                                   " #hm-step .check { white-space: nowrap !important; min-width: 0 !important; }")
         assert _hm_labels_overlap(page) != [], "positive control: the old layout overlaps"
         ctx.close()
 
@@ -548,7 +565,8 @@ def test_required_hms_step(tmp_path, catalog, chrome):
     the run; the results summary has a "Required HMs" row ("none" for the frozen default run)."""
     copy_fixture_run(tmp_path)
     with served(tmp_path, catalog) as (base, _app):
-        page = chrome.new_page()
+        ctx = chrome.new_context(viewport={"width": 1920, "height": 1080})  # desktop (FR-006: 4x2)
+        page = ctx.new_page()
         posts: list[str] = []
         page.on("request", lambda r: posts.append(r.post_data or "") if r.method == "POST" and r.url.endswith("/api/jobs") else None)
         page.goto(base + "/")
@@ -566,6 +584,8 @@ def test_required_hms_step(tmp_path, catalog, chrome):
         assert names == ["Cut", "Fly", "Surf", "Strength", "Defog", "Rock Smash", "Waterfall", "Rock Climb"], names
         assert "HM0" not in page.inner_text("#hm-step")  # move names only (2026-10-14)
         assert _hm_labels_overlap(page) == [], "step 3 labels overlap at 1920x1080"
+        assert _hm_rows(page) == [["Cut", "Fly", "Surf", "Strength"],
+                                  ["Defog", "Rock Smash", "Waterfall", "Rock Climb"]], "desktop layout is 4x2"
         _wait_text(page, "#summary", "Required HMs")
         assert "Required HMs" in page.inner_text("#summary") and "none" in page.inner_text("#summary")
         # a checked HM is sent: fill the team through the page's own search, then optimize
@@ -576,4 +596,4 @@ def test_required_hms_step(tmp_path, catalog, chrome):
         page.click("#optimize")
         page.wait_for_timeout(1500)
         assert any('"required_hms": ["surf"]' in p or '"required_hms":["surf"]' in p for p in posts), posts
-        page.close()
+        ctx.close()

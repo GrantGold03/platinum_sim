@@ -165,3 +165,24 @@ practice as the 003 T058 rerun).
   fold check (002 SC-003).
 - **Screenshots** (session scratchpad): desktop shows 3 columns × 3 rows; phone shows 2 columns ×
   4 rows. No label touches another.
+
+## T031 Convergence: 4×2 on desktop (2026-10-14, user request)
+
+- **User**: "change it back to a 4x2 layout on desktop". Recorded in spec FR-006 and
+  Clarifications, and in the contract. `/speckit-converge` found 1 contradicts gap and appended
+  T031. This is the first change under constitution v1.3.0.
+- **Test first**:
+  - `test_required_hms_step` now runs at an explicit 1920×1080 viewport. It had used Playwright's
+    default 1280×720, so the earlier "1920×1080" overlap check had really run at 1280×720.
+  - New `_hm_rows` check: the labels form exactly 2 rows of 4, in HM order. Before the fix it
+    failed with 3 + 3 + 2.
+- **Fix** (`style.css`): the `.hm-list` grid became a wrapping flex row. Each label is
+  `flex: 1 0 calc(25% - 9px)` with `min-width: max-content`, so it never shrinks below its text.
+  On phones (≤520 px) it uses `flex-basis: calc(50% - 6px)` for an even 2 columns.
+- **Positive control**: the phone test's control re-applied only `grid-template-columns`, which
+  has no effect on a flex list, so it stopped detecting the old overlap. It now forces the whole
+  pre-T030 layout (`display: grid`, 4 shrinking columns, `min-width: 0`) and detects it again.
+- `uv run pytest -q -m browser tests/browser/` → `6 passed in 64.16s`. That includes the 1080p
+  fold check.
+- **Screenshots**: desktop shows 4×2 (Cut, Fly, Surf, Strength / Defog, Rock Smash, Waterfall,
+  Rock Climb). The phone shows 2×4 in even columns. No overlap.

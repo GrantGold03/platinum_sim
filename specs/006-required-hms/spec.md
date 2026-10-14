@@ -146,7 +146,8 @@ all off. Turn some on, start a run, and check that the job records them.
 - **FR-006**: The web setup MUST show steps in the order 1. Choose Pokémon, 2. Team, 3. Required
   HMs, 4. Optimize. Step 3 has one toggle per HM in HM-number order, all off by default. Each
   toggle is labelled with the move name only (e.g. "Surf"), and labels never overlap (user
-  decision 2026-10-14).
+  decision 2026-10-14). On a desktop screen (1920×1080) the toggles form a 4×2 grid: two rows of
+  four, in HM order. Narrow screens may wrap to more rows (user decision 2026-10-14).
 - **FR-007**: The command line MUST accept the same requirement on `optimize`, `evaluate` and
   `validate`, one value per HM. Its default is none.
 - **FR-008**: Each report file (JSON report and spreadsheet) and the web results summary MUST
@@ -193,6 +194,9 @@ all off. Turn some on, start a run, and check that the job records them.
 - **Q**: How should the step 3 toggles be labelled?
   **A**: By move name only. Drop the "HM0X" prefix. The previous labels also overlapped the next
   column, which must not happen (FR-006).
+- **Q**: What layout on desktop?
+  **A**: 4×2, two rows of four, as before the label fix (which had made it 3 columns). There must
+  still be no overlap, and narrow screens may wrap.
 
 ## Assumptions
 

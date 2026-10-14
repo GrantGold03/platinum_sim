@@ -404,10 +404,12 @@ header.site .lede { margin-bottom: 8px; }
 #setup .check { margin-bottom: 4px; }
 #search-status:empty { display: none; }
 
-/* 006 step 3 (required HMs): compact rows that still fit steps 1-4 on a 1080p screen (002 SC-003).
-   Columns are at least as wide as the longest label and wrap to more rows when narrow, so labels
-   never overlap (FR-006, 2026-10-14). */
+/* 006 step 3 (required HMs): 4x2 on desktop, in HM order (FR-006, 2026-10-14), and compact enough
+   that steps 1-4 still fit a 1080p screen (002 SC-003). Each label aims for a quarter of the row but
+   never shrinks below its own width, so narrow screens wrap to more rows instead of overlapping. */
 #hm-step .hm-rules { border: 1px solid currentColor; border-radius: 8px; padding: 4px 10px 2px; margin: 0; opacity: 0.95; }
 #hm-step .hm-rules legend { padding: 0 4px; font-weight: 400; font-size: 0.9em; }
-#hm-step .hm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5em, 1fr)); gap: 0 12px; }
-#hm-step .check { margin: 0 0 2px; font-size: 0.9em; white-space: nowrap; min-width: max-content; }
+#hm-step .hm-list { display: flex; flex-wrap: wrap; gap: 0 12px; }
+#hm-step .check { flex: 1 0 calc(25% - 9px); min-width: max-content; margin: 0 0 2px; font-size: 0.9em;
+  white-space: nowrap; }
+@media (max-width: 520px) { #hm-step .check { flex-basis: calc(50% - 6px); } }  /* phones: even 2 columns */
