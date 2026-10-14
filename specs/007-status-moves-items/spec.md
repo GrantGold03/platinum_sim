@@ -102,6 +102,8 @@
 - Q: Are fixed-damage moves in scope? → A: No (user).
 - Q: How much longer may an optimization take? → A: First build a reference with no limit (option C). Then add a pre-filter and test it against that reference, so the final result is close to about 2× today (option B) (user). See FR-017.
 - Q: Are the three missing item sources in scope? → A: Yes (user). See FR-018 and US5.
+- Q: What friendship is assumed for Return? → A: Maximum friendship, 255 (user). By the decomp formula (`pokeplatinum/src/battle/trainer_ai/trainer_ai.c:3019-3024`), that gives Return power 255 × 10 / 25 = 102 and Frustration power 0, so Frustration is never offered. See FR-012.
+- Q: How should accuracy and run time be balanced in general? → A: Spend more development time to get higher accuracy and shorter run times in the finished tool (user). The pattern from Q1 is the goal and is encouraged everywhere: first build the expensive, accurate version as a reference, then build cheaper versions and test them against it. See FR-019.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -174,7 +176,7 @@ For each member, the result says which status moves and held items were offered 
 ### User Story 4 - Variable-power attacks are considered (Priority: P3)
 
 Attacks whose stored power is 1 because the game computes it during battle are scored by their actual power for the member and against each foe:
-- Return and Frustration (from friendship);
+- Return (from friendship; maximum friendship assumed, FR-012);
 - Hidden Power (from IVs);
 - Low Kick and Grass Knot (from the foe's weight);
 - Gyro Ball (from speed);
@@ -249,7 +251,10 @@ Three in-game sources that the availability ledger doesn't model today are added
   Items whose effect is irrelevant to a moveset (for example a weather rock without its weather move) MAY be left out for that moveset.
 - **FR-010**: Team-wide copy limits for items and TMs MUST be enforced as today. An optimizer output MUST still pass the independent validator (Constitution III).
 - **FR-011**: The choice between items with the same effect (an Arceus Plate and a classic type-boost item) MUST be deterministic. The rule MUST be stated in the result.
-- **FR-012**: Variable-power attacks (US4) MUST be scored by the power the game computes for that member and each foe. Any input that isn't known before battle (for example friendship for Return) MUST be stated as an assumption in the result.
+- **FR-012**: Variable-power attacks (US4) MUST be scored by the power the game computes for that member and each foe.
+  - Every member is assumed to have maximum friendship, 255 (user, 2026-10-14). Return is therefore scored at power 102, and Frustration (power 0 at maximum friendship) is never offered.
+  - Battles MUST use the same friendship as scoring, and the result MUST state the assumption.
+  - Any other input that isn't known before battle MUST be stated as an assumption in the result.
 - **FR-013**: The result MUST list, per member: the offered status moves and items, which were tested, each test's paired outcome (runs, clear rates, p-value, verdict), and the final choice. Offered moves and items that the battle player does not model MUST be flagged.
 - **FR-014**: Required HMs (006) MUST still be carried. When a slot must give way, an adopted status move MUST be replaced only after every non-adopted move. The order MUST be documented.
 - **FR-015**: Results MUST stay reproducible: the same request, seed and pinned commits give the same result (Constitution IV).
@@ -263,6 +268,11 @@ Three in-game sources that the availability ledger doesn't model today are added
   - Each source is placed before or after the Champion by the ledger's existing rules. A condition the ledger can't decide MUST be resolved the conservative way and recorded.
   - Each source needs a positive-control test that ties it to its decomp script.
   - The validator MUST accept the items these sources give exactly when the ledger does.
+- **FR-019**: Every approximation this feature introduces MUST be built reference-first (user, 2026-10-14):
+  - first an expensive, accurate version as the reference;
+  - then cheaper versions, each compared with the reference on the same benchmark requests and seeds.
+
+  This covers the candidate pre-filter (FR-017), any player-model shortcut (FR-016), item relevance filtering (FR-009) and any cap on candidates per member. A cheaper version is adopted only if it is not worse than the reference by a statistically supported margin. The comparison and its run times MUST be recorded. The aim is higher accuracy and shorter run times in the finished tool; extra development time and compute spent on references is expected and encouraged.
 
 ### Key Entities
 
@@ -291,7 +301,7 @@ Three in-game sources that the availability ledger doesn't model today are added
 - The strong player, expectimax2, is the player that judges status-move candidates (FR-007). It is extended in this feature (FR-016) as a new version, rather than replaced by a new player.
 - The screening player (greedy-v1) is not required to understand status moves. FR-007 keeps it from eliminating them instead.
 - The optimizer's objective is unchanged: meet the clear-rate threshold with the lowest expected average final level, and a final level gap of 10 or less.
-- Friendship and IVs are whatever the project's builds already use. Planning will state the values and their source.
+- IVs are whatever the project's builds already use; planning will state the values and their source. Friendship is the maximum, 255 (FR-012).
 - Weather planning stays per member plus its own moveset and item. Choosing teammates to suit the weather is left to the existing team-level screen and search.
 - Legality options, copy limits and the 004/005/006 rules are unchanged. The ledger gains the FR-018 sources only.
 - "Today's time" means a standard-budget run on `main` at `f88cdd0`, measured on this machine on the benchmark teams.
