@@ -195,8 +195,8 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Branch**: `004-breeding-source-limits`. Nothing is committed yet. The spec, plan, research,
   data-model, contracts and quickstart are in `specs/004-breeding-source-limits/`.
 - **Status** (2026-10-13): all 36 tasks are done. The full suite gave `478 passed, 4 xfailed`
-  (2:27:46, exit 0). Committed on `004-breeding-source-limits`. **Not merged**: waiting for
-  the user's hands-on testing.
+  (2:27:46, exit 0). Committed on `004-breeding-source-limits` (`efbb110`). **Merged into `main`**
+  by fast-forward on 2026-10-13, at the user's request.
 - **How to test by hand**:
   - Run `uv run platsim serve` on this branch. Restart any old server first, because it runs
     the old code.
