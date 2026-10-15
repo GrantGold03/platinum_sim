@@ -98,6 +98,28 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     record `required_hms` when it is set.
   - **Which HMs the story needs:** see `hm_requirements.md`. Surf and Waterfall are needed to
     reach the League.
+- **Status moves and held items** (007). Besides attacks, the optimizer now tries status moves and
+  every useful held item for each member, judged by a battle player that can use them.
+  - **What is offered:** status moves the player models (recovery, sleep / paralysis / poison /
+    burn, Leech Seed, self-boosts, Protect / Substitute / Endure, screens and Safeguard, weather,
+    Taunt / Encore / confusion / Attract, hazards, Baton Pass). They replace the member's weakest or
+    second-weakest attack, alone or together, plus structured 3-4-status sets (one move per
+    category). Held items with an in-battle effect, paired with the moves they need (Light Clay
+    with screens, a weather rock with its weather move, Chesto with Rest, ...).
+  - **Not offered (with the reason in the report):** moves that only lower the foe's stats (stages
+    reset when the foe faints or switches), fixed-damage moves (Seismic Toss, Night Shade, ...),
+    moves with no effect in a single battle, sacrifice and reactive moves, and moves or items the
+    player does not model.
+  - **Variable-power attacks** (Return, Hidden Power, Low Kick, Grass Knot, Gyro Ball, ...) are
+    scored by their decomp power. **Every member is assumed to have maximum friendship (255)**:
+    Return is power 102 and Frustration is never offered.
+  - **How they are judged:** the `alternatives` stage plays every alternative with
+    `expectimax2-v3` near the clear threshold (successive halving), compares the best three with
+    the current team on paired seeds (McNemar, Holm), confirms the winner on fresh seeds and adopts
+    it only if both are significant. `--candidates reference|prefilter` picks the expensive
+    reference or the cheaper prefilter accepted against it.
+  - **New item sources** in the ledger: the Route 221 house (Black Belt, Expert Belt, Focus Sash,
+    1 copy each), the Pastoria City berry house and Amity Square.
 
 ## Prerequisites and one-time setup
 
@@ -331,6 +353,7 @@ picker lists the web jobs the server knows about, up to 50. Command-line runs su
 | **Team** (also `result.csv`) | One row per member: Slot, Species, Obtained from, Start level, Final level (expected), Ability, Ability choice, Held item, Held item source, Nature, IVs, EVs, Move 1–4, Move 1–4 source |
 | **Evaluation** | Status, qualified/borderline, threshold, budget preset, runs, gauntlet clear rate with 95% CI, Champion win rate, expected final levels and gap, per-trainer clear rates, top loss causes |
 | **Resources** | For each single-copy TM and limited item: who uses it, copies used, copies available |
+| **Candidates** (007) | Every status-move / held-item alternative the optimizer offered: how far it got, its paired statistics and whether it was adopted |
 | **Provenance** | Decomp and Showdown commits, ledger version, code hashes, repo commit and dirty flag, Node and Python versions, player and opponent policy, master seed, budget preset, legality options |
 | **Divergences** | Every ledger entry that applies to this run, with its resolution and impact |
 
@@ -448,7 +471,14 @@ Measured run times:
   - 48 "uncertain" entries are treated as unavailable.
 - `expectimax2-v2` keeps v1's model gaps (listed in the header of `sim/policy/expectimax2.mjs`):
   unmodelled status/setup moves, weather that never expires, hazards, and multi-hit moves. Its leaf
-  weights were fitted on greedy-played games.
+  weights were fitted on greedy-played games. `expectimax2-v3` (007) models weather, Leech Seed,
+  Substitute, hazards, Taunt/Encore/confusion/Attract, Baton Pass and many items (its `MODELLED`
+  table); a 2-ply search still undervalues payoffs past its horizon (weather, Wish, Taunt), see
+  `specs/007-status-moves-items/validation-log.md`.
+- **greedy-v1 scores power-1 moves as 0**, so the greedy screen undervalues sets with Return or
+  Hidden Power; the expectimax2 stages value them correctly.
+- **The Pickup ability is not modelled as an item source** (it can yield Leftovers and King's Rock);
+  proposed as a follow-up to 007.
 - The after-battle items from Pickup and Honey Gather are not simulated (accepted divergence).
 - **Known gaps in the item/TM ledger**:
   - Some DP-leftover rooms (for example the old Hearthome gym leader room) are still reachable in

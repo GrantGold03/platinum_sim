@@ -27,10 +27,13 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
 1. Legal pool: every move any stage of any option of the variant could know (level-up, TM/HM, tutor,
    egg, Draco Meteor), kept only if `movesources.sources` gives a legal source at the reference level
    `ref_level` under some option of the variant.
-2. Damaging moves only enter the coverage search. Excluded as attacks (heuristic): power 0 (status) and
-   power 1 (variable power / fixed damage: the screening policy greedy-v1 scores them 0, greedy.mjs),
-   and conditional attacks listed in EXCLUDED_ATTACK_EFFECTS (one-hit KO, Explosion/Self-Destruct,
-   Future Sight, Fake Out, Snore, Dream Eater, Last Resort, Focus Punch, False Swipe, Struggle).
+2. Damaging moves only enter the coverage search (`is_attack`: move_classes category attack or
+   variable_attack, 007). Variable-power attacks (Return, Hidden Power, Low Kick, ...) are scored by
+   `variable_power` per League foe (007 US4). Excluded: status moves (they are offered to the
+   alternatives stage instead, `legal_status`), fixed damage, and conditional / reactive attacks
+   (move_classes; EXCLUDED_ATTACK_EFFECTS: one-hit KO, Explosion/Self-Destruct, Future Sight, Fake Out,
+   Snore, Dream Eater, Last Resort, Focus Punch, False Swipe, Struggle). Every legal move left out is in
+   `excluded` with its reason (spec FR-002, FR-003).
 3. R8 dominance pruning: move B is dropped when another legal move A has the same type, category,
    accuracy and priority, strictly higher power, B's effect is the plain BATTLE_EFFECT_HIT, and A's
    effect is plain HIT or a chance-based secondary effect (effect_chance > 0, i.e. no drawback).
@@ -45,13 +48,12 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
    pairwise in at least 2 moves become the member's moveset candidates. The best `RANKED` combos are
    kept in order: when a team cannot be built because an earlier member took the last copy of a TM or
    item, `resources.repair` falls back to that member's next-best combo that can be built.
-6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v2
-   player models (its SELF_BOOSTS table, parsed from sim/policy/expectimax2.mjs so the two cannot
-   drift), one extra moveset = the best 3-move coverage subset + the best such boost move (score:
-   stages of the member's better attacking stat x1, Speed x0.5, defenses x0.25). greedy-v1 never uses
-   status moves, so setup variants are NOT screened by greedy: they are tested with expectimax2-v2 in
-   the optimizer's setup check (run.py), and kept only if significantly better.
-   Fewer than 4 attacks available: the set is filled with the best boost move, then shortened.
+6. Status moves and held items (007): `legal_status` lists the offered status moves (the categories
+   move_classes keeps, and only those ALT_POLICY models); `excluded_items` lists obtainable items the
+   player does not model. The alternatives stage (optimizer/alternatives.py) builds and tests status
+   and item alternatives with expectimax2-v3; greedy-v1 never sees them (spec FR-007). (This replaces
+   the pre-007 single "setup variant".) Fewer than 4 attacks available: the set is filled with the best
+   boost move, then shortened.
 
 Held-item candidates (FR-006, FR-006a)
 --------------------------------------
