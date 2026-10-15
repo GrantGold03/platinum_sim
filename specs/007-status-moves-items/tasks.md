@@ -43,7 +43,7 @@ description: "Task list for 007 Status Moves and Held Items"
 
 ## Phase 2: Foundational (blocks every user story)
 
-- [ ] T007 Create `src/platsim/optimizer/move_classes.py` (research R1):
+- [X] T007 Create `src/platsim/optimizer/move_classes.py` (research R1):
   - `effect_script(effect)` maps an effect to `pokeplatinum/res/battle/scripts/effects/effect_script_NNNN.s` through the line index in `pokeplatinum/generated/move_battle_effects.txt`;
   - parse each script's `MOVE_SIDE_EFFECT_{TO_ATTACKER|TO_DEFENDER}|MOVE_SUBSCRIPT_PTR_*` flags, `CalcDamage` / `BTLVAR_DAMAGE` writes and commands (TryWish, Ingrain, Aqua Ring, FollowMe…);
   - apply the derived rules from the R1 table;
@@ -51,19 +51,19 @@ description: "Task list for 007 Status Moves and Held Items"
   - export `classify(effect) -> MoveClass` (data-model.md) and `move_class(move_const)`.
 
   An unknown effect raises `ValueError`.
-- [ ] T008 [P] Write `tests/unit/test_move_classes.py`:
+- [X] T008 [P] Write `tests/unit/test_move_classes.py`:
   - every effect of every move in `load_moves()` classifies without error;
   - every constant in `RULES` exists in the decomp's generated lists;
   - positive controls: Screech and Growl → foe_drop; Seismic Toss, Night Shade, Sonic Boom, Dragon Rage, Super Fang, Endeavor and Psywave → fixed_damage; **Magnitude → variable_attack** (effect named `BATTLE_EFFECT_PSYWAVE`); Swords Dance → self_boost; Thunder Wave → inflict_status; Toxic → inflict_status; Leech Seed → leech_seed; Recover and Rest → recovery; Protect and Substitute → protection; Reflect → screen; Rain Dance → weather; Helping Hand, Teleport and Splash → no_effect_singles; Defog → other; Memento → sacrifice; Counter → reactive; Return → variable_attack; Frustration → conditional_attack;
   - the derived foe_drop set equals `FOE_DROPS` parsed from `sim/policy/expectimax2.mjs` plus `SP_ATK_DOWN_2_OPPOSITE_GENDER`.
-- [ ] T009 Create `src/platsim/optimizer/item_classes.py` (research R2):
+- [X] T009 Create `src/platsim/optimizer/item_classes.py` (research R2):
   - `hold_effect_references()` greps `pokeplatinum/src/battle/*.c` and `pokeplatinum/res/battle/scripts/**` for each `HOLD_EFFECT_*` by name and by number (the line index in `generated/item_hold_effects.txt`, as the resist-berry subscript compares by literal);
   - the `NO_OUTCOME` rule table (MONEY_UP, FLEE, FRIENDSHIP_UP), each with the function it must be referenced from;
   - `EXP_EV` is derived from references inside `BtlCmd_CalcExpGain`, `BattleScript_GetExpTask` and `BattleScript_CalcEffortValues`;
   - species gates are parsed from `battle_lib.c` conditions of the form `heldItemEffect == HOLD_EFFECT_X … species == SPECIES_Y`;
   - `item_class(item_const) -> ItemClass`;
   - `offerable_items(member_species, team, led) -> list[item key]`, which uses `team_item_copies(led, const, team) != 0`.
-- [ ] T010 [P] Write `tests/unit/test_item_classes.py`:
+- [X] T010 [P] Write `tests/unit/test_item_classes.py`:
   - all 17 resist berries are `in_battle` (the numeric-reference positive control);
   - Everstone, Cleanse Tag and Mail are not in battle;
   - Amulet Coin, Smoke Ball and Soothe Bell are `no_outcome`, and each reference lies in its named function;
@@ -74,19 +74,19 @@ description: "Task list for 007 Status Moves and Held Items"
   - Choice Band is not offered (0 copies);
   - under default options, at least 87 items are offered to some member before species gates; record the count;
   - every offered item has a Showdown id (via the worker's `gd.sdItem` mapping, or the Python mirror used by `worker_team`).
-- [ ] T011 Remove the stale `EXP_HOLD_EFFECTS` from `src/platsim/optimizer/candidates.py` and use `item_classes` instead. `held_item_candidates` keeps its current output for now (US2 replaces it). Confirm with `uv run pytest -q tests/unit/test_optimizer_candidates.py`.
-- [ ] T012 Add `adopted: tuple[str, ...] = ()` to `MemberSpec` in `src/platsim/optimizer/resources.py`:
+- [X] T011 Remove the stale `EXP_HOLD_EFFECTS` from `src/platsim/optimizer/candidates.py` and use `item_classes` instead. `held_item_candidates` keeps its current output for now (US2 replaces it). Confirm with `uv run pytest -q tests/unit/test_optimizer_candidates.py`.
+- [X] T012 Add `adopted: tuple[str, ...] = ()` to `MemberSpec` in `src/platsim/optimizer/resources.py`:
   - `spec_to_json` writes it only when non-empty, and `spec_from_json` reads `d.get("adopted", ())`;
   - replace every positional `MemberSpec(...)` rebuild with `dataclasses.replace`: `run.py` `_apply_abilities` (~:185-194), the screen combos (~:410), the setup alternative (~:497) and `resources.repair` (~:332);
   - `grep -n "MemberSpec(" src/` must show only constructions of new members.
-- [ ] T013 Change `_slot_cost` in `src/platsim/optimizer/resources.py` to the tiers from data-model.md, lowest replaced first:
+- [X] T013 Change `_slot_cost` in `src/platsim/optimizer/resources.py` to the tiers from data-model.md, lowest replaced first:
   1. non-adopted status;
   2. attacks by League value;
   3. non-adopted modelled boost;
   4. adopted.
 
   `place_required_hms` reads `spec.adopted`. Update the docstring.
-- [ ] T014 [P] Write `tests/unit/test_required_hms_adopted.py`:
+- [X] T014 [P] Write `tests/unit/test_required_hms_adopted.py`:
   - with Surf required and the carrier's moveset `(attack, attack, Toxic, Recover)`, where Toxic is adopted, Surf replaces Recover;
   - with both adopted, it replaces the weakest attack;
   - with none adopted, it replaces a status move first;
