@@ -270,7 +270,12 @@ export const MODELLED = {
   },
   'expectimax2-v3': {
     extends: 'expectimax2-v2',
-    effects: [],
+    effects: [ // 007 T021-T027 (statusMoveV3, doSwitch / switchInV3, preMoveV3, endOfTurn)
+      'WEATHER_RAIN', 'WEATHER_SUN', 'WEATHER_SANDSTORM', 'WEATHER_HAIL', 'STATUS_LEECH_SEED', 'SET_SUBSTITUTE',
+      'HEAL_IN_3_TURNS', 'RESTORE_HP_EVERY_TURN', 'GROUND_TRAP_USER_CONTINUOUS_HEAL', 'PREVENT_STATUS',
+      'SURVIVE_WITH_1_HP', 'TAUNT', 'ENCORE', 'STATUS_CONFUSE', 'ATK_UP_2_STATUS_CONFUSION', 'SP_ATK_UP_CAUSE_CONFUSION',
+      'INFATUATE', 'SET_SPIKES', 'TOXIC_SPIKES', 'STEALTH_ROCK', 'PASS_STATS_AND_STATUS',
+    ],
     items: [],
   },
   'expectimax2-v3-ref': {

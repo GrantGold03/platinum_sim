@@ -36,6 +36,9 @@ EFFECTS_TXT = DECOMP_ROOT / "generated" / "move_battle_effects.txt"
 EFFECT_SCRIPTS = DECOMP_ROOT / "res" / "battle" / "scripts" / "effects"
 SUBSCRIPT_PTRS_H = DECOMP_ROOT / "include" / "data" / "move_side_effect_subscripts.h"
 EXPECTIMAX2 = REPO_ROOT / "sim" / "policy" / "expectimax2.mjs"
+# The player the alternatives stage plays (007 spec FR-007, FR-016); which moves and items are offered
+# depends on what it models (MODELLED).
+ALT_POLICY = "expectimax2-v3"
 
 # Categories (data-model.md MoveClass). In scope = offered when the player models the effect.
 RECOVERY, INFLICT_STATUS, LEECH_SEED, SELF_BOOST = "recovery", "inflict_status", "leech_seed", "self_boost"
@@ -224,6 +227,18 @@ def item_modelled(policy: str, hold_effect: str) -> bool:
     return hold_effect.removeprefix("HOLD_EFFECT_") in modelled(policy)[1]
 
 
+def not_modelled(policy: str, moves, item_key: str | None) -> list[str]:
+    """Moves (status categories) and the held item whose effect `policy` does not model (spec FR-013)."""
+    out = [m for m in moves if move_class(m).category in STATUS_CATEGORIES and not effect_modelled(policy, move_class(m).effect)]
+    if item_key:
+        from platsim.decomp.items import load_items
+
+        it = next((i for i in load_items().values() if i.key == item_key), None)
+        if it and it.hold_effect != "HOLD_EFFECT_NONE" and not item_modelled(policy, it.hold_effect):
+            out.append(f"ITEM_{item_key.upper()}")
+    return out
+
+
 def offered(move_const: str, policy: str) -> tuple[bool, str]:
     """Whether a legal move is offered as a candidate, and the reason if not (spec FR-001-FR-003)."""
     c = move_class(move_const)
@@ -236,4 +251,4 @@ def offered(move_const: str, policy: str) -> tuple[bool, str]:
 
 __all__ = ["ATTACK", "EXCLUDED_ATTACK_EFFECTS", "MoveClass", "OFFERED", "RULES", "STATUS_CATEGORIES",
            "VARIABLE_ATTACK", "classify", "effect_modelled", "effect_script", "item_modelled", "modelled",
-           "modelled_table", "move_class", "offered"]
+           "modelled_table", "move_class", "not_modelled", "offered"]

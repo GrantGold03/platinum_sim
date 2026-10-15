@@ -386,21 +386,24 @@ class MemberCandidates:
     variant: Variant
     ref_level: int
     movesets: list[tuple[str, ...]]  # attack movesets (screened by greedy), best first
-    setup_moveset: tuple[str, ...] | None  # tested by expectimax2 (run.py setup check)
     items: dict[tuple[str, ...], list[str | None]]  # moveset -> held-item candidates (item keys)
     ranked: list[tuple[str, ...]] = field(default_factory=list)  # all combos, best first (repair order)
     pool: list[str] = field(default_factory=list)
     pruned: dict[str, str] = field(default_factory=dict)
     scores: dict[str, float] = field(default_factory=dict)
+    # 007: offered status moves (sorted; spec FR-001) and every legal move left out, with its reason
+    # (spec FR-002, FR-003, "not offered: not modelled"). The alternatives stage builds on these.
+    legal_status: list[str] = field(default_factory=list)
+    excluded: dict[str, str] = field(default_factory=dict)
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
                 "movesets": [list(m) for m in self.movesets],
-                "setup_moveset": list(self.setup_moveset) if self.setup_moveset else None,
                 "items": {"|".join(k): v for k, v in self.items.items()},
                 "ranked_count": len(self.ranked),
                 "pool": self.pool, "pruned": self.pruned,
-                "scores": {k: round(v, 1) for k, v in self.scores.items()}}
+                "scores": {k: round(v, 1) for k, v in self.scores.items()},
+                "legal_status": self.legal_status, "excluded": self.excluded}
 
 
 _ITEM_COPIES: dict[tuple[int, str], int | str] = {}
@@ -444,9 +447,16 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
 
 
 def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS,
-                      team: tuple[str, ...] | None = None) -> MemberCandidates:
+                      team: tuple[str, ...] | None = None, policy: str = MC.ALT_POLICY) -> MemberCandidates:
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
     legal = legal_moves(variant, level, led)
+    excluded, legal_status = {}, []
+    for m in sorted(legal):
+        ok, why = MC.offered(m, policy)
+        if not ok:
+            excluded[m] = why
+        elif MC.move_class(m).category in MC.STATUS_CATEGORIES:
+            legal_status.append(m)
     attacks, dropped = prune(legal)
     scores = {m: sum(move_value(const, m)) for m in attacks}
     pool = sorted(attacks, key=lambda m: (-scores[m], m))[:POOL]
@@ -464,10 +474,6 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
         if len(chosen) >= k:
             break
     boosts = sorted(((boost_score(const, m), m) for m in legal if boost_score(const, m)), key=lambda x: (-x[0], x[1]))
-    setup = None
-    if boosts and pool:
-        best3 = min(((-coverage([vals[m] for m in c]), c) for c in itertools.combinations(sorted(pool), min(3, len(pool)))))[1]
-        setup = tuple(best3) + (boosts[0][1],)
     if not chosen:
         if boosts:
             chosen = [(boosts[0][1],)]
@@ -477,12 +483,10 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
         raise InvalidRequest(f"{display_name(const)}: no legal move at Lv {level}", {const: "no legal move"})
     # order each moveset by score (stable display; worker order does not matter for legality)
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
-    if setup:
-        setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
-    items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen + ([setup] if setup else [])}
-    return MemberCandidates(const, variant, level, chosen, setup, items, ranked, pool, dropped,
-                            {m: scores[m] for m in pool})
+    items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen}
+    return MemberCandidates(const, variant, level, chosen, items, ranked, pool, dropped,
+                            {m: scores[m] for m in pool}, legal_status, excluded)
 
 
 __all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "coverage", "display_name", "dominates",
