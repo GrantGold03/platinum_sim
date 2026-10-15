@@ -46,7 +46,7 @@ SACRIFICE, REACTIVE, CONDITIONAL_ATTACK = "sacrifice", "reactive", "conditional_
 STATUS_CATEGORIES = (RECOVERY, INFLICT_STATUS, LEECH_SEED, SELF_BOOST, PROTECTION, SCREEN, WEATHER, OTHER)
 OFFERED = frozenset(STATUS_CATEGORIES + (ATTACK, VARIABLE_ATTACK))
 
-STAGE_RESET = ("foe_drop: stat stages reset when the foe faints or switches out "
+STAGE_RESET = ("stat stages reset when the foe faints or switches out "
                "(battle_lib.c:97-100, BattleSystem_CleanupFaintedMon battle_lib.c:2156-2162), "
                "so a drop is lost with every League KO; spec FR-002")
 
@@ -198,12 +198,14 @@ def modelled_table() -> dict[str, tuple[frozenset[str], frozenset[str]]]:
         return {}
     body = text[text.index("export const MODELLED = {"):]
     body = body[:body.index("\n};")]
-    out = {}
+    out: dict[str, tuple[frozenset[str], frozenset[str]]] = {}
     for name, inner in re.findall(r"'([\w-]+)':\s*\{(.*?)\n  \}", body, re.S):
+        base = re.search(r"extends:\s*'([\w-]+)'", inner)
         effects = re.search(r"effects:\s*\[(.*?)\]", inner, re.S)
         items = re.search(r"items:\s*\[(.*?)\]", inner, re.S)
-        out[name] = (frozenset(re.findall(r"'(\w+)'", effects.group(1) if effects else "")),
-                     frozenset(re.findall(r"'(\w+)'", items.group(1) if items else "")))
+        be, bi = out[base.group(1)] if base else (frozenset(), frozenset())  # a version extends an earlier one
+        out[name] = (be | frozenset(re.findall(r"'(\w+)'", effects.group(1) if effects else "")),
+                     bi | frozenset(re.findall(r"'(\w+)'", items.group(1) if items else "")))
     return out
 
 

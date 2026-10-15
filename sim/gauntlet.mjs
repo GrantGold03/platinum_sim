@@ -28,7 +28,7 @@ import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
 import { greedy } from './policy/greedy.mjs';
-import { expectimax2, expectimax2v2 } from './policy/expectimax2.mjs';
+import { expectimax2, expectimax2v2, expectimax2v3, expectimax2v3ref } from './policy/expectimax2.mjs';
 import { decompAI } from './ai/opponent.mjs';
 
 export const PLACEHOLDER = 'placeholder-default';
@@ -40,6 +40,8 @@ export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
 registerPlayerPolicy(expectimax2); // `expectimax2-v1` (T050, sim/policy/expectimax2.mjs, research R7)
 registerPlayerPolicy(expectimax2v2); // `expectimax2-v2` (sim/policy/expectimax2.mjs VERSIONS / HORIZON)
+registerPlayerPolicy(expectimax2v3); // `expectimax2-v3` (007, spec FR-016)
+registerPlayerPolicy(expectimax2v3ref); // `expectimax2-v3-ref` (007 reference, development only)
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)

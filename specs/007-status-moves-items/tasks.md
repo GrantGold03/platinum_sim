@@ -92,25 +92,25 @@ description: "Task list for 007 Status Moves and Held Items"
   - with none adopted, it replaces a status move first;
   - positive control: an existing 006 test in `tests/unit/test_required_hms.py` (or its current name) still passes unchanged;
   - with no HM required and `adopted=()`, `spec_to_json` output is byte-identical to before.
-- [ ] T015 Add the v3 scaffold to `sim/policy/expectimax2.mjs` **with no behaviour change**:
+- [X] T015 Add the v3 scaffold to `sim/policy/expectimax2.mjs` **with no behaviour change**:
   - `EXPECTIMAX2_V3 = 'expectimax2-v3'` and `EXPECTIMAX2_V3_REF = 'expectimax2-v3-ref'`;
   - `V3_OPTS = {...V2_OPTS}` and `V3_REF_OPTS`, where every new flag defaults off;
   - export `expectimax2v3` and `expectimax2v3ref`;
   - `export const MODELLED = {...}`, a literal table of the modelled `BATTLE_EFFECT` names (without prefix) and `HOLD_EFFECT` names for v1, v2, v3 and v3-ref, filled from the current code paths (`statusMove`, `SELF_BOOSTS`, `FOE_DROPS`, `STATUS_OF`, `HEAL_HALF`, the variable-power list, and the items in the damage port: Sitrus, Leftovers, Focus Sash, Life Orb, Wise Glasses, Expert Belt, Razor Claw / Scope Lens, Wide Lens, the type boosts, Choice Specs damage).
   - Register both in `sim/gauntlet.mjs:31,41-42` and update the VERSIONS header comment.
   - `node --test sim/test` must still pass the golden test from T004.
-- [ ] T016 Set `happiness: 255` explicitly for player builds in `sim/team.mjs` `memberSet`. The golden test must still pass, since Showdown already defaults to 255; record it.
-- [ ] T017 Add a Python parser for `MODELLED` in `src/platsim/optimizer/move_classes.py`, mirroring `expectimax_self_boosts()`: `modelled(policy) -> (effects, items)` and `not_modelled(policy, moves, item) -> list`. Add `tests/unit/test_modelled_table.py`, which checks:
+- [X] T016 Set `happiness: 255` explicitly for player builds in `sim/team.mjs` `memberSet`. The golden test must still pass, since Showdown already defaults to 255; record it.
+- [X] T017 Add a Python parser for `MODELLED` in `src/platsim/optimizer/move_classes.py`, mirroring `expectimax_self_boosts()`: `modelled(policy) -> (effects, items)` and `not_modelled(policy, moves, item) -> list`. Add `tests/unit/test_modelled_table.py`, which checks:
   - the parse is non-empty for each version;
   - v2's effects include `ATK_UP_2` and `STATUS_BADLY_POISON`;
   - v2's effects exclude `WEATHER_RAIN`;
   - its policy names match `sim/gauntlet.mjs` registrations.
-- [ ] T018 Shadow and state plumbing in `sim/policy/expectimax2.mjs`, active only when `opts.v3State` is set:
+- [X] T018 Shadow and state plumbing in `sim/policy/expectimax2.mjs`, active only when `opts.v3State` is set:
   - `rootState` reads `battle.field.weather` and its duration, the volatiles (`leechseed`, `substitute.hp`, `taunt`, `encore`, `confusion`, `attract`, `aquaring`, `ingrain`, choice lock), and the side conditions (`spikes.layers`, `toxicspikes.layers`, `stealthrock`, `safeguard`, `wish`, reflect/lightscreen duration), following `sim/ai/adapter.mjs`;
   - `cloneState` / `cloneMon` copy them;
   - `shadowBattle` materialises them, including a new `field` shadow made with `Object.create(real.field)`;
   - `signature()` and the `damageTable` cache key include weather and every new field.
-- [ ] T019 [P] Write `sim/test/expectimax2_v3_state.test.mjs`:
+- [X] T019 [P] Write `sim/test/expectimax2_v3_state.test.mjs`:
   - setting weather, Leech Seed, a substitute, Taunt, Spikes and Safeguard on a `leagueBattle` fixture through Showdown APIs (`field.setWeather`, `addVolatile`, `addSideCondition`) round-trips into the v3 state and the shadow;
   - the shadow AI's choice equals the live AI's choice in a weather position (positive control: a position where weather changes the AI's choice).
   - If the Showdown setters don't work on fixtures, record it and build the positions by playing moves instead.

@@ -6,6 +6,10 @@
 // VERSIONS (V1_OPTS / V2_OPTS):
 //   expectimax2-v1  W_ALIVE 1.0, W_FR 0.45, no koStop. Kept registered, unchanged, so recorded
 //                   results (T056, the T058 / US1 optimizer runs) stay reproducible.
+//   expectimax2-v3  (007) v2 plus the status-move and held-item mechanics listed in MODELLED, each
+//                   behind a V3_OPTS flag; v1 and v2 are pinned by sim/test/golden_v1_v2.test.mjs.
+//   expectimax2-v3-ref  (007) v3 with every mechanic and expensive search settings: the reference the
+//                   production v3 settings are accepted against (Constitution VI). Development only.
 //   expectimax2-v2  koStop (see HORIZON), W_ALIVE 0.25, W_FR 0.10. Why: on a quick-run screening
 //                   finalist (L58 Infernape/Staraptor/Luxray/Garchomp/Gyarados/Gardevoir with plates
 //                   and Sitrus Berries) v1 cleared 109/400 vs greedy-v1 348/400 (McNemar p = 4e-60),
@@ -160,6 +164,8 @@ import { WEIGHT_TO_POWER, speciesWeightHg } from '../ai/calcdamage.mjs';
 
 export const EXPECTIMAX2 = 'expectimax2-v1';
 export const EXPECTIMAX2_V2 = 'expectimax2-v2';
+export const EXPECTIMAX2_V3 = 'expectimax2-v3';
+export const EXPECTIMAX2_V3_REF = 'expectimax2-v3-ref';
 
 // Per-version model options (see the header, VERSIONS). v1 = the recorded expectimax2-v1 behaviour.
 //   koStop  a ply-1 branch in which an active member fainted is valued by the leaf at once (HORIZON)
@@ -167,6 +173,11 @@ export const EXPECTIMAX2_V2 = 'expectimax2-v2';
 //   wFR     leaf value of one usable opponent Full Restore (PARAMS.W_FR when absent)
 export const V1_OPTS = Object.freeze({ koStop: false });
 export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
+// v3 (007, spec FR-016): v2 plus the 007 mechanics, each behind its own flag (none yet: the scaffold
+// behaves as v2, but draws its own AI sample streams because the name seeds them). v3-ref is the
+// expensive reference the production v3 settings are accepted against (Constitution VI).
+export const V3_OPTS = Object.freeze({ ...V2_OPTS, v3State: true });
+export const V3_REF_OPTS = Object.freeze({ ...V2_OPTS, v3State: true, ref: true });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0 };
@@ -219,6 +230,55 @@ const RECOIL = { RECOIL_HALF: 2, RECOIL_THIRD: 3, RECOIL_BURN_HIT: 3, RECOIL_PAR
 const CHARGE_EFFECTS = new Set(['SKIP_CHARGE_TURN_IN_SUN', 'FLY', 'DIG', 'DIVE', 'BOUNCE', 'SHADOW_FORCE',
   'CHARGE_TURN_DEF_UP', 'CHARGE_TURN_HIGH_CRIT', 'CHARGE_TURN_HIGH_CRIT_FLINCH']);
 const HEAL_HALF = new Set(['RESTORE_HALF_HP', 'HEAL_HALF_MORE_IN_SUN', 'HEAL_HALF_REMOVE_FLYING_TYPE']);
+
+// What each version models (007 FR-001, FR-009, FR-013): status-move effects (BATTLE_EFFECT_ names
+// without the prefix) that statusMove gives an effect, and hold effects (HOLD_EFFECT_ without the
+// prefix) that the search or the damage port applies. `extends` adds the named version's entries.
+// Plain literal data: Python parses it
+// (src/platsim/optimizer/move_classes.py modelled_table) to decide which moves and items are offered,
+// and sim/test/expectimax2_v3_state.test.mjs checks it against the tables above.
+// Choice items are NOT listed for v1/v2: the damage port applies the boost, but the lock is not modelled.
+export const MODELLED = {
+  'expectimax2-v1': {
+    effects: [
+      'PROTECT', 'ATK_DEF_UP', 'ATK_SPD_UP', 'ATK_UP', 'ATK_UP_2', 'DEF_SPD_UP', 'DEF_UP', 'DEF_UP_2',
+      'DEF_UP_DOUBLE_ROLLOUT_POWER', 'EVA_UP', 'EVA_UP_2_MINIMIZE', 'SPEED_UP_2', 'SP_ATK_SP_DEF_UP',
+      'SP_ATK_UP', 'SP_ATK_UP_2', 'SP_DEF_UP_2', 'SP_DEF_UP_DOUBLE_ELECTRIC_POWER',
+      'MAX_ATK_LOSE_HALF_MAX_HP', 'RESTORE_HALF_HP', 'HEAL_HALF_MORE_IN_SUN',
+      'HEAL_HALF_REMOVE_FLYING_TYPE', 'REST', 'SET_REFLECT', 'SET_LIGHT_SCREEN', 'ATK_DOWN', 'ATK_DOWN_2',
+      'DEF_DOWN', 'DEF_DOWN_2', 'SPEED_DOWN', 'SPEED_DOWN_2', 'SP_DEF_DOWN_2', 'ACC_DOWN', 'EVA_DOWN',
+      'ATK_DEF_DOWN', 'STATUS_SLEEP', 'STATUS_PARALYZE', 'STATUS_POISON', 'STATUS_BADLY_POISON',
+      'STATUS_BURN', 'STATUS_SLEEP_NEXT_TURN',
+    ],
+    items: [
+      'HP_PCT_RESTORE', 'HP_RESTORE_GRADUAL', 'ENDURE', 'HP_DRAIN_ON_ATK', 'POWER_UP_PHYS',
+      'POWER_UP_SPEC', 'POWER_UP_SE', 'CRITRATE_UP', 'ACCURACY_UP', 'ACC_REDUCE', 'BOOST_REPEATED',
+      'PIKA_SPATK_UP', 'CUBONE_ATK_UP', 'LATI_SPECIAL', 'CLAMPERL_SPATK', 'CLAMPERL_SPDEF', 'DITTO_DEF_UP',
+      'CHANSEY_CRITRATE_UP', 'FARFETCHD_CRITRATE_UP', 'ARCEUS_BUG', 'ARCEUS_DARK', 'ARCEUS_DRAGON',
+      'ARCEUS_ELECTRIC', 'ARCEUS_FIGHTING', 'ARCEUS_FIRE', 'ARCEUS_FLYING', 'ARCEUS_GHOST', 'ARCEUS_GRASS',
+      'ARCEUS_GROUND', 'ARCEUS_ICE', 'ARCEUS_POISON', 'ARCEUS_PSYCHIC', 'ARCEUS_ROCK', 'ARCEUS_STEEL',
+      'ARCEUS_WATER', 'STRENGTHEN_BUG', 'STRENGTHEN_DARK', 'STRENGTHEN_DRAGON', 'STRENGTHEN_ELECTRIC',
+      'STRENGTHEN_FIGHT', 'STRENGTHEN_FIRE', 'STRENGTHEN_FLYING', 'STRENGTHEN_GHOST', 'STRENGTHEN_GRASS',
+      'STRENGTHEN_GROUND', 'STRENGTHEN_ICE', 'STRENGTHEN_NORMAL', 'STRENGTHEN_POISON',
+      'STRENGTHEN_PSYCHIC', 'STRENGTHEN_ROCK', 'STRENGTHEN_STEEL', 'STRENGTHEN_WATER',
+    ],
+  },
+  'expectimax2-v2': {
+    extends: 'expectimax2-v1',
+    effects: [],
+    items: [],
+  },
+  'expectimax2-v3': {
+    extends: 'expectimax2-v2',
+    effects: [],
+    items: [],
+  },
+  'expectimax2-v3-ref': {
+    extends: 'expectimax2-v3',
+    effects: [],
+    items: [],
+  },
+};
 const eff = (rec) => rec.effect.replace(/^BATTLE_EFFECT_/, '');
 
 function moveInfo(gd, sdId) {
@@ -254,15 +314,35 @@ function monFromReal(p, side, idx) {
     lastMoveId: p.lastMove ? p.lastMove.id : null,
     lastMoveOk: p.moveLastTurnResult !== false,
     activeTurns: p.activeTurns,
+    // 007 v3 state (read only when S.v3; v1/v2 never look at these fields). Volatiles exist only
+    // on the active mon. Showdown shapes as read by sim/ai/adapter.mjs.
+    ...v3Volatiles(p.isActive ? v : {}),
   };
 }
+
+const V3_VOLATILES = ['leechseed', 'substitute', 'taunt', 'encore', 'confusion', 'attract', 'aquaring', 'ingrain', 'choicelock'];
+function v3Volatiles(v) {
+  return {
+    seeded: v.leechseed ? 1 : 0,
+    subHp: v.substitute ? (v.substitute.hp ?? 0) : 0,
+    taunt: v.taunt ? (v.taunt.duration ?? 1) : 0,
+    encoreMove: v.encore ? v.encore.move : null,
+    encoreTurns: v.encore ? (v.encore.duration ?? 1) : 0,
+    confusion: v.confusion ? (v.confusion.time ?? v.confusion.duration ?? 1) : 0,
+    attract: v.attract ? 1 : 0,
+    aquaRing: v.aquaring ? 1 : 0,
+    ingrain: v.ingrain ? 1 : 0,
+    choiceLock: v.choicelock ? v.choicelock.move : null,
+  };
+}
+const V3_CLEAR = v3Volatiles({});
 
 function cloneMon(m) {
   return { ...m, boosts: { ...m.boosts }, pp: m.pp.slice() };
 }
 function cloneState(S) {
   return {
-    turn: S.turn, weather: S.weather,
+    turn: S.turn, weather: S.weather, weatherTurns: S.weatherTurns, v3: S.v3,
     sides: S.sides.map((s) => ({ active: s.active, sc: { ...s.sc }, mons: s.mons.map(cloneMon) })),
     items: { ...S.items, trainerItems: S.items.trainerItems.slice() },
     moveHit: S.moveHit.slice(), moveHitBattler: S.moveHitBattler.slice(),
@@ -282,8 +362,19 @@ function signature(S) {
     }
   }
   s += `|${S.items.trainerItems.join('.')}|${S.moveHit.join('.')}`;
+  if (S.v3) { // 007: every v3 state field, so states that differ in them are never merged
+    s += `|w${S.weather},${S.weatherTurns}`;
+    for (const side of S.sides) {
+      const c = side.sc;
+      s += `|${c.spikes},${c.tspikes},${c.rocks},${c.safeguard},${c.wish},${c.wishHp}`;
+      const m = side.active >= 0 ? side.mons[side.active] : null;
+      if (m) s += `:${m.seeded},${m.subHp},${m.taunt},${m.encoreMove},${m.encoreTurns},${m.confusion},${m.attract},${m.aquaRing},${m.ingrain},${m.choiceLock}`;
+    }
+  }
   return s;
 }
+
+const SD_WEATHER = { sun: 'sunnyday', rain: 'raindance', sand: 'sandstorm', hail: 'hail' };
 
 const WEATHER = { sunnyday: 'sun', raindance: 'rain', sandstorm: 'sand', hail: 'hail' };
 
@@ -358,6 +449,20 @@ function shadowBattle(X, S) {
       p.boosts = active ? { ...m.boosts } : { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
       const vol = active && !m.fresh ? { ...m.ref.volatiles } : {};
       if (!m.recharge) delete vol.mustrecharge; else vol.mustrecharge = vol.mustrecharge ?? { id: 'mustrecharge' };
+      if (S.v3) { // 007: the v3-managed volatiles come from the model state, never from the live mon
+        for (const id of V3_VOLATILES) delete vol[id];
+        if (active) {
+          if (m.seeded) vol.leechseed = { id: 'leechseed' }; // source set below, once both sides exist
+          if (m.subHp) vol.substitute = { id: 'substitute', hp: m.subHp };
+          if (m.taunt) vol.taunt = { id: 'taunt', duration: m.taunt };
+          if (m.encoreTurns) vol.encore = { id: 'encore', move: m.encoreMove, duration: m.encoreTurns };
+          if (m.confusion) vol.confusion = { id: 'confusion', duration: m.confusion, time: m.confusion };
+          if (m.attract) vol.attract = { id: 'attract' };
+          if (m.aquaRing) vol.aquaring = { id: 'aquaring' };
+          if (m.ingrain) vol.ingrain = { id: 'ingrain' };
+          if (m.choiceLock) vol.choicelock = { id: 'choicelock', move: m.choiceLock };
+        }
+      }
       p.volatiles = vol;
       // Pokemon.getTypes() runs the 'Type' event; in gen 4 only Roost changes it (Showdown
       // data/mods/gen4 conditions). Without Roost the result is the stored types, so answer that
@@ -378,6 +483,17 @@ function shadowBattle(X, S) {
     delete sc.reflect; delete sc.lightscreen;
     if (ss.sc.reflect) sc.reflect = { id: 'reflect', duration: ss.sc.reflect };
     if (ss.sc.lightscreen) sc.lightscreen = { id: 'lightscreen', duration: ss.sc.lightscreen };
+    if (S.v3) {
+      delete sc.spikes; delete sc.toxicspikes; delete sc.stealthrock; delete sc.safeguard;
+      if (ss.sc.spikes) sc.spikes = { id: 'spikes', layers: ss.sc.spikes };
+      if (ss.sc.tspikes) sc.toxicspikes = { id: 'toxicspikes', layers: ss.sc.tspikes };
+      if (ss.sc.rocks) sc.stealthrock = { id: 'stealthrock' };
+      if (ss.sc.safeguard) sc.safeguard = { id: 'safeguard', duration: ss.sc.safeguard };
+      const slot0 = { ...(real.sides[i].slotConditions?.[0] ?? {}) };
+      delete slot0.wish;
+      if (ss.sc.wish) slot0.wish = { id: 'wish', duration: ss.sc.wish, hp: ss.sc.wishHp };
+      sh.slotConditions = [slot0, ...(real.sides[i].slotConditions?.slice(1) ?? [])];
+    }
     sh.sideConditions = sc;
     sh.pokemonLeft = mons.filter((x) => x.hp > 0).length;
   });
@@ -385,6 +501,18 @@ function shadowBattle(X, S) {
   sides[1].foe = sides[0];
   b.sides = sides; // Battle.p1 / p2 are getters over this.sides
   b.turn = S.turn;
+  if (S.v3) {
+    for (const sh of sides) { // Leech Seed / Attract sources: the foe's active mon
+      const a = sh.active[0];
+      if (!a) continue;
+      if (a.volatiles.leechseed) a.volatiles.leechseed.source = sh.foe.active[0];
+      if (a.volatiles.attract) a.volatiles.attract.source = sh.foe.active[0];
+    }
+    const f = Object.create(real.field);
+    f.weather = SD_WEATHER[S.weather] ?? '';
+    f.weatherState = { id: f.weather, duration: S.weatherTurns || undefined }; // no duration = ability weather
+    b.field = f;
+  }
   return b;
 }
 
@@ -473,7 +601,7 @@ function damageTable(X, S, u, t, rec) {
   const sInfo = staticInfo(X, u);
   const tInfo = staticInfo(X, t);
   const pinch = u.hp * 3 <= u.maxhp ? 1 : 0;
-  const key = `${u.side}${u.idx}>${t.side}${t.idx}:${rec.key}:${BOOST_KEYS.slice(0, 5).map((k) => u.boosts[k]).join('.')}/${BOOST_KEYS.slice(0, 5).map((k) => t.boosts[k]).join('.')}:${u.status}:${t.status}:${pinch}:${u.item}:${t.item}:${S.sides[t.side].sc.reflect ? 1 : 0}${S.sides[t.side].sc.lightscreen ? 1 : 0}:${u.fresh ? 1 : 0}${t.fresh ? 1 : 0}`;
+  const key = `${u.side}${u.idx}>${t.side}${t.idx}:${rec.key}:${BOOST_KEYS.slice(0, 5).map((k) => u.boosts[k]).join('.')}/${BOOST_KEYS.slice(0, 5).map((k) => t.boosts[k]).join('.')}:${u.status}:${t.status}:${pinch}:${u.item}:${t.item}:${S.sides[t.side].sc.reflect ? 1 : 0}${S.sides[t.side].sc.lightscreen ? 1 : 0}:${u.fresh ? 1 : 0}${t.fresh ? 1 : 0}${S.v3 ? `:${S.weather}` : ''}`;
   let d = X.dmg.get(key);
   if (d !== undefined) return d;
   d = null;
@@ -490,6 +618,7 @@ function damageTable(X, S, u, t, rec) {
     if (e === 'RANDOM_POWER_BASED_ON_IVS') type = hiddenPowerType(u.ref);
   }
   const base = fromShowdown(X.battle, u.ref, t.ref, num, { power, type, powerMul: 10 });
+  if (S.v3) base.field.weather = S.weather; // 007: the state's weather, not the live field's
   const fix = (bt, m, info) => {
     bt.stages = { atk: m.boosts.atk, def: m.boosts.def, spa: m.boosts.spa, spd: m.boosts.spd };
     bt.hp = m.hp;
@@ -1139,14 +1268,20 @@ function qValue(X, S, a, opp) {
 
 function rootState(X) {
   const { battle } = X;
-  const sides = battle.sides.map((side, si) => ({
-    active: side.active[0] ? side.pokemon.indexOf(side.active[0]) : -1,
-    sc: { reflect: side.sideConditions.reflect ? (side.sideConditions.reflect.duration ?? 5) : 0,
-      lightscreen: side.sideConditions.lightscreen ? (side.sideConditions.lightscreen.duration ?? 5) : 0 },
-    mons: side.pokemon.map((p, i) => monFromReal(p, si, i)),
-  }));
+  const v3 = !!X.opts.v3State;
+  const sides = battle.sides.map((side, si) => {
+    const c = side.sideConditions;
+    const sc = { reflect: c.reflect ? (c.reflect.duration ?? 5) : 0, lightscreen: c.lightscreen ? (c.lightscreen.duration ?? 5) : 0 };
+    if (v3) { // 007 side state (sim/ai/adapter.mjs reads the same Showdown fields)
+      const wish = side.slotConditions?.[0]?.wish;
+      Object.assign(sc, { spikes: c.spikes?.layers ?? 0, tspikes: c.toxicspikes?.layers ?? 0, rocks: c.stealthrock ? 1 : 0,
+        safeguard: c.safeguard ? (c.safeguard.duration ?? 5) : 0, wish: wish ? (wish.duration ?? 1) : 0, wishHp: wish ? (wish.hp ?? 0) : 0 });
+    }
+    return { active: side.active[0] ? side.pokemon.indexOf(side.active[0]) : -1, sc, mons: side.pokemon.map((p, i) => monFromReal(p, si, i)) };
+  });
   return {
     turn: battle.turn, weather: WEATHER[battle.field.weather] ?? '',
+    ...(v3 ? { v3: true, weatherTurns: battle.field.weather ? (battle.field.weatherState?.duration ?? 0) : 0 } : {}),
     sides,
     items: { ...X.items, trainerItems: X.items.trainerItems.slice() },
     moveHit: X.moveHit.slice(), moveHitBattler: X.moveHitBattler.slice(),
@@ -1219,7 +1354,7 @@ export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
 }
 
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, rootState, makeContext };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {
@@ -1243,3 +1378,5 @@ export function makeExpectimax2(name, opts) {
 
 export const expectimax2 = makeExpectimax2(EXPECTIMAX2, V1_OPTS); // kept for recorded results
 export const expectimax2v2 = makeExpectimax2(EXPECTIMAX2_V2, V2_OPTS); // the default strong player
+export const expectimax2v3 = makeExpectimax2(EXPECTIMAX2_V3, V3_OPTS); // 007 (spec FR-016)
+export const expectimax2v3ref = makeExpectimax2(EXPECTIMAX2_V3_REF, V3_REF_OPTS); // 007 reference (Constitution VI)

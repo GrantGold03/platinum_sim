@@ -114,6 +114,9 @@ export function playerMember(gd, build, slot, start = {}) {
     foreignLanguage: !!(build.foreign_language ?? origin.foreignLanguage),
     gender: build.gender ?? undefined,
     pp: start.pp ? [...start.pp] : moves.map((k) => gd.moves[k].pp),
+    // 007 FR-012: every player member is assumed to have maximum friendship (Return = 102,
+    // effect_script_0121.s; trainer_ai.c:3019). Showdown's default is also 255; this makes it explicit.
+    happiness: 255,
   };
 }
 
@@ -126,6 +129,7 @@ export function memberSet(gd, m) {
     // Showdown as no item; exp.mjs reads the decomp item from the member instead.
     item: m.itemRec ? gd.sdItem.get(m.itemRec.key) ?? '' : '',
     nature: sdNature(m.nature), ivs: m.ivs, evs: m.evs, gender: m.gender,
+    ...(m.happiness !== undefined ? { happiness: m.happiness } : {}),
   };
 }
 
