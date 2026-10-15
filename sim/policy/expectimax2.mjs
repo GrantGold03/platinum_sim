@@ -276,7 +276,15 @@ export const MODELLED = {
       'SURVIVE_WITH_1_HP', 'TAUNT', 'ENCORE', 'STATUS_CONFUSE', 'ATK_UP_2_STATUS_CONFUSION', 'SP_ATK_UP_CAUSE_CONFUSION',
       'INFATUATE', 'SET_SPIKES', 'TOXIC_SPIKES', 'STEALTH_ROCK', 'PASS_STATS_AND_STATUS',
     ],
-    items: [],
+    items: [ // 007 T041 (cureBerry, resistBerry, applyHit, endOfTurn, hitChance, resolveTurn, execMove, statusMove)
+      'EXTEND_SCREENS', 'EXTEND_RAIN', 'EXTEND_SUN', 'EXTEND_SANDSTORM', 'EXTEND_HAIL', 'SLP_RESTORE', 'PRZ_RESTORE',
+      'PSN_RESTORE', 'BRN_RESTORE', 'FRZ_RESTORE', 'STATUS_RESTORE', 'CONFUSE_RESTORE', 'WEAKEN_NORMAL', 'WEAKEN_SE_FIRE',
+      'WEAKEN_SE_WATER', 'WEAKEN_SE_ELECTRIC', 'WEAKEN_SE_GRASS', 'WEAKEN_SE_ICE', 'WEAKEN_SE_FIGHT', 'WEAKEN_SE_POISON',
+      'WEAKEN_SE_GROUND', 'WEAKEN_SE_FLYING', 'WEAKEN_SE_PSYCHIC', 'WEAKEN_SE_BUG', 'WEAKEN_SE_ROCK', 'WEAKEN_SE_GHOST',
+      'WEAKEN_SE_DRAGON', 'WEAKEN_SE_DARK', 'WEAKEN_SE_STEEL', 'HP_RESTORE_ON_DMG', 'HP_RESTORE_PSN_TYPE',
+      'ACCURACY_UP_SLOWER', 'SOMETIMES_PRIORITY', 'SOMETIMES_FLINCH', 'CHOICE_ATK', 'CHOICE_SPATK', 'CHOICE_SPEED',
+      'LEECH_BOOST', 'CHARGE_SKIP',
+    ],
   },
   'expectimax2-v3-ref': {
     extends: 'expectimax2-v3',
@@ -301,14 +309,42 @@ const V3_TARGETED = new Set(['STATUS_LEECH_SEED', 'TAUNT', 'ENCORE', 'INFATUATE'
 
 // Rock-type multiplier for Stealth Rock (battle_script.c:8313-8335: maxHP / 2,4,8,16,32 by the
 // TYPE_ROCK matchup), from the decomp type chart the damage port parses.
-function rockMultiplier(types) {
+function rockMultiplier(types) { return typeMultiplier('TYPE_ROCK', types); }
+function typeMultiplier(atkType, types) {
   let m = 1;
   for (const t of types) {
     const def = `TYPE_${t.toUpperCase()}`;
-    for (const e of TYPE_CHART.entries) if (e.atk === 'TYPE_ROCK' && e.def === def) m *= e.mul / 10;
+    for (const e of TYPE_CHART.entries) if (e.atk === atkType && e.def === def) m *= e.mul / 10;
   }
   return m;
 }
+
+// 007 v3 held items (T041). Status-curing berries (battle_lib.c:4608-4669, 4998-5052): which status
+// each cures. Lum (STATUS_RESTORE) cures any major status and confusion.
+const CURES = { HOLD_EFFECT_SLP_RESTORE: ['slp'], HOLD_EFFECT_PRZ_RESTORE: ['par'], HOLD_EFFECT_PSN_RESTORE: ['psn', 'tox'],
+  HOLD_EFFECT_BRN_RESTORE: ['brn'], HOLD_EFFECT_FRZ_RESTORE: ['frz'], HOLD_EFFECT_STATUS_RESTORE: ['slp', 'par', 'psn', 'tox', 'brn', 'frz', 'confusion'],
+  HOLD_EFFECT_CONFUSE_RESTORE: ['confusion'] };
+function cureBerry(X, m) {
+  if (!m || !m.item || m.hp <= 0) return;
+  const c = CURES[holdEffect(X, m.item)];
+  if (!c) return;
+  let used = false;
+  if (m.status && c.includes(m.status)) { m.status = ''; m.slp = 0; m.tox = 0; used = true; }
+  if (m.confusion && c.includes('confusion')) { m.confusion = 0; used = true; }
+  if (used) m.item = '';
+}
+// Type-resist berries (subscript_type_resist_berry.s): halve one super-effective hit of their type
+// (Chilan: any Normal hit), then are eaten.
+function resistBerry(X, t, rec) {
+  const he = holdEffect(X, t.item);
+  if (!he.startsWith('HOLD_EFFECT_WEAKEN_')) return 1;
+  const type = he === 'HOLD_EFFECT_WEAKEN_NORMAL' ? 'TYPE_NORMAL' : `TYPE_${he.slice('HOLD_EFFECT_WEAKEN_SE_'.length)}`.replace('TYPE_FIGHT', 'TYPE_FIGHTING');
+  if (rec.type !== type) return 1;
+  if (type !== 'TYPE_NORMAL' && typeMultiplier(rec.type, staticInfo(X, t).types) <= 1) return 1;
+  t.item = '';
+  return 0.5;
+}
+const bigRoot = (X, m, amt) => (holdEffect(X, m.item) === 'HOLD_EFFECT_LEECH_BOOST' ? Math.floor(amt * 130 / 100) : amt);
 
 function moveInfo(gd, sdId) {
   const key = gd.fromSdMove.get(sdId);
@@ -371,7 +407,7 @@ function cloneMon(m) {
 }
 function cloneState(S) {
   return {
-    turn: S.turn, weather: S.weather, weatherTurns: S.weatherTurns, v3: S.v3,
+    turn: S.turn, weather: S.weather, weatherTurns: S.weatherTurns, v3: S.v3, moved: S.moved ? S.moved.slice() : undefined,
     sides: S.sides.map((s) => ({ active: s.active, sc: { ...s.sc }, mons: s.mons.map(cloneMon) })),
     items: { ...S.items, trainerItems: S.items.trainerItems.slice() },
     moveHit: S.moveHit.slice(), moveHitBattler: S.moveHitBattler.slice(),
@@ -762,6 +798,8 @@ function hitChance(X, S, u, t, rec) {
   if (ua === 'ABILITY_HUSTLE' && rec.category === 'CLASS_PHYSICAL') hitRate = Math.floor(hitRate * 80 / 100);
   if (holdEffect(X, t.item) === 'HOLD_EFFECT_ACC_REDUCE') hitRate = Math.floor(hitRate * (100 - itemParam(X, t.item)) / 100);
   if (holdEffect(X, u.item) === 'HOLD_EFFECT_ACCURACY_UP') hitRate = Math.floor(hitRate * (100 + itemParam(X, u.item)) / 100);
+  // Zoom Lens: +effectParam% if the target already moved this turn (battle_controller_player.c:2963-2965)
+  if (S.v3 && S.moved?.[t.side] && holdEffect(X, u.item) === 'HOLD_EFFECT_ACCURACY_UP_SLOWER') hitRate = Math.floor(hitRate * (100 + itemParam(X, u.item)) / 100);
   return Math.min(100, hitRate) / 100; // miss iff (rand % 100) + 1 > hitRate (:2949)
 }
 
@@ -823,7 +861,7 @@ function switchInV3(X, S, side, m) {
   }
   if (sc.tspikes && grounded && m.hp > 0) {
     if (info.types.includes('Poison')) sc.tspikes = 0; // a grounded Poison type absorbs them
-    else if (!m.status && !sc.safeguard && !statusImmune(X, m, 'psn')) { m.status = sc.tspikes >= 2 ? 'tox' : 'psn'; m.tox = 0; }
+    else if (!m.status && !sc.safeguard && !statusImmune(X, m, 'psn')) { m.status = sc.tspikes >= 2 ? 'tox' : 'psn'; m.tox = 0; cureBerry(X, m); }
   }
   afterHpLoss(X, m);
   const w = WEATHER_ABILITY[info.ability];
@@ -849,6 +887,7 @@ function doMove(X, br, side, act, foeAct, foeMovesLater) {
   if (u.recharge) { u.recharge = false; return [br]; }
   const rec = act.rec;
   if (!rec) return [br];
+  if (S.v3 && u.flinch) { u.lastMoveOk = false; return [br]; } // King's Rock / Razor Fang flinch
   // pre-move status checks
   const pre = [];
   if (u.status === 'slp') {
@@ -926,12 +965,17 @@ function execMove(X, br, side, act, foeAct, foeMovesLater) {
   }
   u.lastMoveId = act.id;
   u.lastMoveOk = true;
+  if (S.v3 && !u.choiceLock && /^HOLD_EFFECT_CHOICE_/.test(holdEffect(X, u.item))) u.choiceLock = act.id; // battle_controller_player.c:3923
   const wasProtecting = u.protectOk;
   if (e !== 'PROTECT') u.protectOk = 1;
   // charge turn
   if (CHARGE_EFFECTS.has(e) && u.charging !== act.slot && !(e === 'SKIP_CHARGE_TURN_IN_SUN' && S.weather === 'sun')) {
-    u.charging = act.slot;
-    return [br];
+    if (S.v3 && holdEffect(X, u.item) === 'HOLD_EFFECT_CHARGE_SKIP') {
+      u.item = ''; // Power Herb: skips the charge turn once (the charge-move effect scripts)
+    } else {
+      u.charging = act.slot;
+      return [br];
+    }
   }
   u.charging = -1;
   if (rec.category === 'CLASS_STATUS') return statusMove(X, br, side, act, e, wasProtecting, foeMovesLater);
@@ -960,6 +1004,16 @@ function execMove(X, br, side, act, foeAct, foeMovesLater) {
     const last = i === outcomes.length - 1;
     const b = last ? { p: br.p * hc * o.p, S } : { p: br.p * hc * o.p, S: cloneState(S) };
     applyHit(X, b.S, side, rec, e, o.dmg);
+    // King's Rock / Razor Fang: effectParam% flinch on a flagged move that hits first (battle_controller_player.c:4630-4645)
+    const tt = activeOf(b.S, 1 - side);
+    if (b.S.v3 && foeMovesLater && tt && tt.hp > 0 && !tt.subHp && rec.flags.includes('MOVE_FLAG_TRIGGERS_KINGS_ROCK')
+      && holdEffect(X, activeOf(b.S, side).item) === 'HOLD_EFFECT_SOMETIMES_FLINCH') {
+      const q = itemParam(X, activeOf(b.S, side).item) / 100;
+      const f = { p: b.p * q, S: cloneState(b.S) };
+      activeOf(f.S, 1 - side).flinch = true;
+      b.p *= 1 - q;
+      out.push(...selfKO(X, f, side, e));
+    }
     out.push(...selfKO(X, b, side, e));
   });
   return out;
@@ -984,6 +1038,7 @@ function applyHit(X, S, side, rec, e, dmgIn) {
     afterHpLoss(X, u);
     return;
   }
+  if (S.v3 && t.item) dmgIn = Math.floor(dmgIn * resistBerry(X, t, rec));
   let dmg = Math.min(dmgIn, t.hp);
   if (dmg >= t.hp && t.hp === t.maxhp && t.item && itemConst(X, t.item) === 'ITEM_FOCUS_SASH') { dmg = t.hp - 1; t.item = ''; }
   if (S.v3 && t.enduring && dmg >= t.hp) dmg = t.hp - 1; // battle_controller_player.c:3387-3403
@@ -997,7 +1052,14 @@ function applyHit(X, S, side, rec, e, dmgIn) {
   if (RECOIL[e] && dmg > 0 && ua !== 'ABILITY_ROCK_HEAD' && ua !== 'ABILITY_MAGIC_GUARD') {
     u.hp = Math.max(0, u.hp - Math.max(1, Math.floor(dmg / RECOIL[e])));
   }
-  if (e === 'RECOVER_HALF_DAMAGE_DEALT' && dmg > 0) u.hp = Math.min(u.maxhp, u.hp + Math.max(1, Math.floor(dmg / 2)));
+  if (e === 'RECOVER_HALF_DAMAGE_DEALT' && dmg > 0) {
+    const heal = Math.max(1, Math.floor(dmg / 2));
+    u.hp = Math.min(u.maxhp, u.hp + (S.v3 ? bigRoot(X, u, heal) : heal));
+  }
+  // Shell Bell: damage dealt / effectParam (battle_controller_player.c:4734-4745)
+  if (S.v3 && dmg > 0 && u.hp > 0 && u.hp < u.maxhp && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_RESTORE_ON_DMG') {
+    u.hp = Math.min(u.maxhp, u.hp + Math.max(1, Math.floor(dmg / Math.max(1, itemParam(X, u.item)))));
+  }
   if (dmg > 0 && u.item && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_DRAIN_ON_ATK' && ua !== 'ABILITY_MAGIC_GUARD') {
     u.hp = Math.max(0, u.hp - Math.max(1, Math.floor(u.maxhp / 10)));
   }
@@ -1031,10 +1093,13 @@ function statusMove(X, br, side, act, e, protectOk, foeMovesLater) {
   if (HEAL_HALF.has(e)) { u.hp = Math.min(u.maxhp, u.hp + Math.floor(u.maxhp / 2)); return [br]; }
   if (e === 'REST') {
     if (u.hp < u.maxhp && staticInfo(X, u).ability !== 'ABILITY_INSOMNIA') { u.hp = u.maxhp; u.status = 'slp'; u.slp = 3; u.tox = 0; }
+    if (S.v3) cureBerry(X, u);
     return [br];
   }
-  if (e === 'SET_REFLECT') { if (!S.sides[side].sc.reflect) S.sides[side].sc.reflect = 5; return [br]; }
-  if (e === 'SET_LIGHT_SCREEN') { if (!S.sides[side].sc.lightscreen) S.sides[side].sc.lightscreen = 5; return [br]; }
+  // Light Clay (EXTEND_SCREENS, effectParam 3) adds turns (battle_script.c:4229, 4272); v3 only
+  const screenTurns = 5 + (S.v3 && holdEffect(X, u.item) === 'HOLD_EFFECT_EXTEND_SCREENS' ? itemParam(X, u.item) : 0);
+  if (e === 'SET_REFLECT') { if (!S.sides[side].sc.reflect) S.sides[side].sc.reflect = screenTurns; return [br]; }
+  if (e === 'SET_LIGHT_SCREEN') { if (!S.sides[side].sc.lightscreen) S.sides[side].sc.lightscreen = screenTurns; return [br]; }
   const targeted = FOE_DROPS[e] || STATUS_OF[e] || e === 'STATUS_SLEEP_NEXT_TURN';
   if (!targeted) return [br]; // unmodelled status move: no effect (conservative)
   if (!t || t.hp <= 0) { u.lastMoveOk = false; return [br]; }
@@ -1058,6 +1123,7 @@ function statusMove(X, br, side, act, e, protectOk, foeMovesLater) {
     tt.status = status;
     if (status === 'slp') tt.slp = 3;
     if (status === 'tox') tt.tox = 0;
+    if (S.v3) cureBerry(X, tt);
   }
   if (hc >= 1) return [hitBr];
   br.p *= 1 - hc;
@@ -1138,6 +1204,7 @@ function statusMoveV3(X, br, side, act, e, protectOk, foeMovesLater) {
   else {
     if (CONFUSE_EFFECTS[e]) addBoosts(tt, CONFUSE_EFFECTS[e]);
     if (!tt.confusion && ti.ability !== 'ABILITY_OWN_TEMPO' && !foeSc.safeguard) tt.confusion = CONFUSION_TURNS;
+    cureBerry(X, tt);
   }
   if (hc >= 1) return [hitBr];
   br.p *= 1 - hc;
@@ -1170,8 +1237,12 @@ function endOfTurn(X, S) {
       }
     }
     if (S.v3 && m.hp > 0) { // Ingrain, Aqua Ring: maxHP / 16 (battle_controller_player.c:1311-1345)
-      if (m.ingrain) m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
-      if (m.aquaRing) m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
+      if (m.ingrain) m.hp = Math.min(m.maxhp, m.hp + bigRoot(X, m, Math.max(1, Math.floor(m.maxhp / 16))));
+      if (m.aquaRing) m.hp = Math.min(m.maxhp, m.hp + bigRoot(X, m, Math.max(1, Math.floor(m.maxhp / 16))));
+    }
+    if (S.v3 && m.hp > 0 && holdEffect(X, m.item) === 'HOLD_EFFECT_HP_RESTORE_PSN_TYPE') { // Black Sludge (battle_lib.c:4939-4950)
+      if (info.types.includes('Poison')) m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
+      else if (!magicGuard) m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.maxhp / 8)));
     }
     if (m.hp > 0 && m.item && holdEffect(X, m.item) === 'HOLD_EFFECT_HP_RESTORE_GRADUAL') m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
     if (S.v3 && m.seeded && m.hp > 0 && !magicGuard) { // Leech Seed: maxHP / 8 to the seeder's side (:1378-1392)
@@ -1179,7 +1250,7 @@ function endOfTurn(X, S) {
       if (r && r.hp > 0) {
         const amt = Math.min(m.hp, Math.max(1, Math.floor(m.maxhp / 8)));
         m.hp -= amt;
-        r.hp = Math.min(r.maxhp, r.hp + amt);
+        r.hp = Math.min(r.maxhp, r.hp + bigRoot(X, r, amt));
       }
     }
     if (m.hp > 0 && !magicGuard) {
@@ -1206,6 +1277,7 @@ function endOfTurn(X, S) {
       const m = sd.active >= 0 ? sd.mons[sd.active] : null;
       if (m) {
         m.enduring = false;
+        m.flinch = false;
         if (m.taunt) m.taunt--; // battle_controller_player.c:1637
         if (m.encoreTurns && --m.encoreTurns === 0) m.encoreMove = null; // :1591-1616
       }
@@ -1238,8 +1310,17 @@ function resolveTurn(X, S, pa, oa) {
     else {
       const f = speedInfo(X, S).pFirst; // turn order is fixed at the start of the turn
       orders = f === 1 ? [[[0, 1], 1]] : f === 0 ? [[[1, 0], 1]] : [[[0, 1], 0.5], [[1, 0], 0.5]];
+      if (S.v3) { // Quick Claw: effectParam% to move first within the priority bracket (battle_lib.c:1278-1284, 1344)
+        const qc = (side) => { const m = activeOf(S, side); return m && holdEffect(X, m.item) === 'HOLD_EFFECT_SOMETIMES_PRIORITY' ? itemParam(X, m.item) / 100 : 0; };
+        const q0 = qc(0), q1 = qc(1);
+        if (q0 || q1) {
+          const p = q0 * (1 - q1) + (1 - q0) * (1 - q1) * f + q0 * q1 * f;
+          orders = [[[0, 1], p], [[1, 0], 1 - p]].filter(([, x]) => x > 0);
+        }
+      }
     }
   } else orders = [[movers, 1]];
+  if (S0.v3) S0.moved = [false, false];
   const out = [];
   orders.forEach(([ord, po], oi) => {
     let branches = [{ p: po, S: oi === orders.length - 1 ? S0 : cloneState(S0) }];
@@ -1248,6 +1329,7 @@ function resolveTurn(X, S, pa, oa) {
       const foeAct = side === 0 ? oa : pa;
       const foeMovesLater = k === 0 && ord.length === 2;
       branches = branches.flatMap((b) => doMove(X, b, side, act, foeAct, foeMovesLater));
+      if (S0.v3) for (const b of branches) b.S.moved[side] = true;
     });
     for (const b of branches) { endOfTurn(X, b.S); out.push(b); }
   });

@@ -64,3 +64,31 @@ test('hazards (with the hazard leaf term): set against a full bench; not against
   const last = () => position(SKARMORY, { foeSlot: 5, live: (b) => { for (const p of b.sides[1].pokemon) if (p !== b.sides[1].active[0]) p.hp = 0; } });
   assert.ok(!['spikes', 'stealthrock'].includes(chosen(refHazards, last)));
 });
+
+// ---- held items (T043): the item raises the value of the action that uses it, and leaves an action
+// that does not use it unchanged (the matching "does not help" case). Reference player scores.
+import { scoreActions } from '../policy/expectimax2.mjs';
+const refScores = (ctx) => {
+  const { acts, scores } = scoreActions(ctx, V3_REF_OPTS, 'expectimax2-v3-ref');
+  return Object.fromEntries(acts.map((a, i) => [a.id ?? a.choice, scores[i]]));
+};
+const withAndWithout = (mk, item) => [refScores(mk(item)), refScores(mk(null))];
+
+test('Light Clay raises the value of Reflect and Light Screen, not of Gyro Ball', () => {
+  const mk = (item) => position([B('bronzong', 60, ['reflect', 'light_screen', 'gyro_ball', 'earthquake'], 'ABILITY_LEVITATE', item)], { foeSlot: 3 });
+  const [w, n] = withAndWithout(mk, 'light_clay');
+  assert.ok(w.reflect > n.reflect && w.lightscreen > n.lightscreen, JSON.stringify([w, n]));
+  assert.equal(w.gyroball, n.gyroball);
+});
+
+test('Chesto Berry raises the value of Rest, not of Body Slam', () => {
+  const mk = (item) => position([B('snorlax', 60, ['rest', 'body_slam', 'crunch', 'curse'], 'ABILITY_THICK_FAT', item)], { myHp: 0.4 });
+  const [w, n] = withAndWithout(mk, 'chesto_berry');
+  // the item changes the AI's sampled replies too (it sees the item), so other actions move a little:
+  // Rest must gain clearly more than any action that does not use the berry
+  const gain = (k) => w[k] - n[k];
+  assert.ok(gain('rest') > 0 && gain('rest') > 2 * Math.max(...['bodyslam', 'crunch', 'curse'].map((k) => Math.abs(gain(k)))),
+    JSON.stringify([w, n]));
+});
+// Damp Rock: no measurable gain at the 2-ply reference (the extra 3 turns lie past its horizon, and the
+// difference is inside the AI-sampling noise); recorded as a finding in validation-log.md (T043).

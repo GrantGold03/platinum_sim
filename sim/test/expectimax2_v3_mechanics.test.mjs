@@ -140,3 +140,74 @@ test('v2 is unchanged by the v3 mechanics: Leech Seed has no effect in the v2 mo
   assert.equal(foe(T).hp, foe(S).hp);
   assert.equal(S.v3, undefined);
 });
+
+// ---- 007 T041: held items -------------------------------------------------------------------------
+
+test('Light Clay: Reflect / Light Screen last 8 turns instead of 5 (battle_script.c:4229, 4272)', () => {
+  const { X, S } = setup([B('bronzong', 60, ['reflect', 'light_screen', 'gyro_ball', 'hypnosis'], 'ABILITY_LEVITATE', 'light_clay')]);
+  assert.equal(play(X, S, 'reflect').sides[0].sc.reflect, 7); // 8, one end of turn passed
+  const N = setup([B('bronzong', 60, ['reflect', 'light_screen', 'gyro_ball', 'hypnosis'], 'ABILITY_LEVITATE')]);
+  assert.equal(play(N.X, N.S, 'reflect').sides[0].sc.reflect, 4);
+});
+
+test('Chesto Berry wakes the user right after Rest; Lum cures confusion (battle_lib.c:4608, 4662)', () => {
+  const { X, S } = setup([B('snorlax', 60, ['rest', 'body_slam', 'curse', 'crunch'], 'ABILITY_THICK_FAT', 'chesto_berry')]);
+  me(S).hp = 50;
+  const T = play(X, S, 'rest');
+  assert.equal(me(T).hp, me(T).maxhp);
+  assert.equal(me(T).status, '');
+  assert.equal(me(T).item, '');
+  const N = setup([B('snorlax', 60, ['rest', 'body_slam', 'curse', 'crunch'], 'ABILITY_THICK_FAT')]);
+  me(N.S).hp = 50;
+  assert.equal(me(play(N.X, N.S, 'rest')).status, 'slp');
+});
+
+test('type-resist berry halves one super-effective hit of its type, then is eaten (subscript_type_resist_berry.s)', () => {
+  // Our Gengar's Shadow Ball vs Cynthia's Spiritomb (Ghost/Dark): neutral -> Kasib does nothing;
+  // our Thunderbolt vs Milotic (Water): super effective -> Wacan halves it.
+  const live = (b) => { b.sides[1].active[0].item = 'wacanberry'; };
+  const W = setup([B('jolteon', 60, ['thunderbolt', 'shadow_ball', 'pin_missile', 'agility'], 'ABILITY_VOLT_ABSORB')], { foeSlot: 4, live });
+  const N = setup([B('jolteon', 60, ['thunderbolt', 'shadow_ball', 'pin_missile', 'agility'], 'ABILITY_VOLT_ABSORB')], { foeSlot: 4 });
+  const lost = (P) => { const T = play(P.X, P.S, 'thunderbolt'); return foe(P.S).hp - foe(T).hp; };
+  const lw = lost(W), ln = lost(N);
+  assert.ok(lw > 0 && ln > 0);
+  assert.ok(Math.abs(lw - Math.floor(ln / 2)) <= Math.max(2, ln * 0.06), `${lw} vs ${ln}`);
+  assert.equal(foe(play(W.X, W.S, 'thunderbolt')).item, '');
+});
+
+test('Shell Bell heals damage dealt / 8; Black Sludge heals Poison types 1/16 and hurts others 1/8', () => {
+  const { X, S } = setup([B('garchomp', 60, ['earthquake', 'dragon_claw', 'fire_fang', 'swords_dance'], 'ABILITY_SAND_VEIL', 'shell_bell')]);
+  me(S).hp = 50;
+  const T = play(X, S, 'dragonclaw');
+  const dealt = foe(S).hp - foe(T).hp;
+  assert.equal(me(T).hp, 50 + Math.max(1, Math.floor(dealt / 8)));
+  const P = setup([B('drapion', 60, ['crunch', 'poison_fang', 'swords_dance', 'earthquake'], 'ABILITY_BATTLE_ARMOR', 'black_sludge')]);
+  me(P.S).hp = 50;
+  assert.equal(me(play(P.X, P.S, 'swordsdance')).hp, 50 + Math.floor(me(P.S).maxhp / 16));
+  const O = setup([B('garchomp', 60, ['earthquake', 'dragon_claw', 'fire_fang', 'swords_dance'], 'ABILITY_SAND_VEIL', 'black_sludge')]);
+  assert.equal(me(play(O.X, O.S, 'swordsdance')).hp, me(O.S).maxhp - Math.floor(me(O.S).maxhp / 8));
+});
+
+test('Choice lock: after the first move only that move is offered at ply 2; Power Herb skips a charge turn once', () => {
+  const { X, S } = setup([B('gengar', 60, ['shadow_ball', 'thunderbolt', 'focus_blast', 'hypnosis'], 'ABILITY_LEVITATE', 'choice_specs')]);
+  const T = play(X, S, 'thunderbolt');
+  assert.equal(me(T).choiceLock, 'thunderbolt');
+  const H = setup([B('venusaur', 60, ['solar_beam', 'sleep_powder', 'synthesis', 'earthquake'], 'ABILITY_OVERGROW', 'power_herb')]);
+  const out = play(H.X, H.S, 'solarbeam');
+  assert.equal(me(out).charging, -1);
+  assert.ok(foe(out).hp < foe(H.S).hp);
+  assert.equal(me(out).item, '');
+});
+
+test('Big Root: Aqua Ring heals 1/16 x 1.3', () => {
+  const { X, S } = setup([B('vaporeon', 60, ['aqua_ring', 'surf', 'wish', 'protect'], 'ABILITY_WATER_ABSORB', 'big_root')]);
+  me(S).hp = 10;
+  assert.equal(me(play(X, S, 'aquaring')).hp, 10 + Math.floor(Math.max(1, Math.floor(me(S).maxhp / 16)) * 130 / 100));
+});
+
+test('damage-port items already modelled: Wide Lens raises accuracy (battle_controller_player.c:2955)', () => {
+  const W = setup([B('jolteon', 60, ['thunder', 'shadow_ball', 'pin_missile', 'agility'], 'ABILITY_VOLT_ABSORB', 'wide_lens')]);
+  const N = setup([B('jolteon', 60, ['thunder', 'shadow_ball', 'pin_missile', 'agility'], 'ABILITY_VOLT_ABSORB')]);
+  const rec = (P) => _internal.moveAct(P.X, me(P.S), slotOf(P.S, 'thunder')).rec;
+  assert.ok(_internal.hitChance(W.X, W.S, me(W.S), foe(W.S), rec(W)) > _internal.hitChance(N.X, N.S, me(N.S), foe(N.S), rec(N)));
+});

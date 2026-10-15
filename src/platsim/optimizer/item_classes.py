@@ -157,5 +157,134 @@ def offerable_items(member_species: str, team, led) -> list[str]:
     return out
 
 
+# ---------------------------------------------------------------------------------------------
+# Move-item pairing (007 T037; spec FR-006, FR-009 relevance, research R2.5)
+
+
+@cache
+def effect_script_items() -> dict[str, frozenset[str]]:
+    """BATTLE_EFFECT_* -> hold effects its own effect script checks (CheckItemHoldEffect): the weather
+    rocks (effect_script_0136/0137/0115/0164) and Power Herb (the charge-turn scripts). Judgment's
+    Plate check (effect_script_0268) is a type change, not a pairing, and is left out."""
+    from platsim.optimizer import move_classes as MC
+
+    out = {}
+    for effect in MC.effect_index():
+        text = MC.effect_script(effect).read_text()
+        hes = set(re.findall(r"\bHOLD_EFFECT_\w+", text))
+        hes = {h for h in hes if not h.startswith("HOLD_EFFECT_ARCEUS_")}
+        if hes:
+            out[effect] = frozenset(hes)
+    return out
+
+
+# Pairings the effect scripts can't show (rule table over decomp constants; research R2.5):
+#   EXTEND_SCREENS is read only in BtlCmd_TryReflect / BtlCmd_TryLightScreen (battle_script.c:4229, 4272);
+#   LEECH_BOOST in the Leech Seed, drain, Dream Eater, Ingrain and Aqua Ring heal subscripts;
+#   SLP_RESTORE / STATUS_RESTORE cure the sleep Rest puts on its user (subscript_rest.s:32; battle_lib.c:4608, 4662).
+PAIRED_EFFECTS = {
+    "HOLD_EFFECT_EXTEND_SCREENS": {"BATTLE_EFFECT_SET_REFLECT", "BATTLE_EFFECT_SET_LIGHT_SCREEN"},
+    "HOLD_EFFECT_LEECH_BOOST": {"BATTLE_EFFECT_STATUS_LEECH_SEED", "BATTLE_EFFECT_RECOVER_HALF_DAMAGE_DEALT",
+                                "BATTLE_EFFECT_GROUND_TRAP_USER_CONTINUOUS_HEAL", "BATTLE_EFFECT_RESTORE_HP_EVERY_TURN"},
+    "HOLD_EFFECT_SLP_RESTORE": {"BATTLE_EFFECT_REST"},
+}
+CHOICE = {"HOLD_EFFECT_CHOICE_ATK", "HOLD_EFFECT_CHOICE_SPATK", "HOLD_EFFECT_CHOICE_SPEED"}
+# Items that only hurt their holder; worth holding only to give away with Trick / Switcheroo.
+DRAWBACK = {"HOLD_EFFECT_SPEED_DOWN_GROUNDED", "HOLD_EFFECT_PRIORITY_DOWN", "HOLD_EFFECT_DMG_USER_CONTACT_XFR",
+            "HOLD_EFFECT_PSN_USER", "HOLD_EFFECT_BRN_USER"}
+TRICK = "BATTLE_EFFECT_SWITCH_HELD_ITEMS"
+ITEM_TIE_RULE = "more copies; higher effect_param; classic STRENGTHEN_* before ARCEUS_*; item key"  # FR-011
+
+
+@cache
+def league_move_types() -> frozenset[str]:
+    """Types of every move the League (Elite Four + Cynthia) parties carry (trainers.json)."""
+    import json
+
+    from platsim.decomp.moves import load_moves
+    from platsim.optimizer.candidates import GAUNTLET_KEYS, TRAINERS_JSON
+
+    mv = load_moves()
+    data = {t["key"]: t for t in json.loads(TRAINERS_JSON.read_text())["trainers"]}
+    return frozenset(mv[m].type for k in GAUNTLET_KEYS for mon in data[k]["party"] for m in (mon.get("moves") or [])
+                     if m in mv and mv[m].category != "CLASS_STATUS")
+
+
+def _resist_type(hold_effect: str) -> str | None:
+    if hold_effect == "HOLD_EFFECT_WEAKEN_NORMAL":
+        return "TYPE_NORMAL"
+    m = re.fullmatch(r"HOLD_EFFECT_WEAKEN_SE_(\w+)", hold_effect)
+    return f"TYPE_{m.group(1)}".replace("TYPE_FIGHT", "TYPE_FIGHTING") if m else None
+
+
+def relevant(item_key: str, member_species: str, moveset, ) -> bool:
+    """Is this item worth offering with this moveset (spec FR-006, FR-009)?"""
+    from platsim.decomp.moves import load_moves
+    from platsim.legality import movesources as MS
+    from platsim.optimizer import candidates as C
+
+    it = _by_key()[item_key]
+    he = it.hold_effect
+    mv = load_moves()
+    effects = {mv[m].effect for m in moveset}
+    types = MS.by_constant()[member_species].types
+    if he in DRAWBACK:
+        return TRICK in effects
+    if he in CHOICE:
+        return all(mv[m].category != "CLASS_STATUS" for m in moveset)
+    if he == "HOLD_EFFECT_HP_RESTORE_PSN_TYPE":
+        return "TYPE_POISON" in types
+    if he in PAIRED_EFFECTS:
+        return bool(effects & PAIRED_EFFECTS[he])
+    paired_by_script = {e for e, hs in effect_script_items().items() if he in hs}
+    if paired_by_script:
+        return bool(effects & paired_by_script)
+    rt = _resist_type(he)
+    if rt:
+        weak = rt == "TYPE_NORMAL" or C.type_mult(rt, types) > 1
+        return weak and rt in league_move_types()
+    tb = [t for t, hes in C.type_boost_items().items() if he in hes]
+    if tb:
+        return any(mv[m].type in tb and mv[m].category != "CLASS_STATUS" for m in moveset)
+    return True
+
+
+@cache
+def _by_key():
+    return {i.key: i for i in load_items().values()}
+
+
+def _tie_key(item_key: str, copies) -> tuple:
+    from platsim.legality import movesources as MS
+
+    it = _by_key()[item_key]
+    unlimited = copies == MS.UNLIMITED
+    return (not unlimited, -(0 if unlimited else int(copies)), -it.effect_param,
+            it.hold_effect.startswith("HOLD_EFFECT_ARCEUS_"), item_key)
+
+
+def items_for(member_species: str, moveset, team, led, policy: str | None = None) -> list[str]:
+    """Item keys offered with this moveset (spec FR-009): offerable, relevant, modelled by `policy`
+    (when given), and one item per hold-effect family by ITEM_TIE_RULE (FR-011: a Plate and a classic
+    type booster share a family: the boosted type)."""
+    from platsim.availability.ledger import team_item_copies
+    from platsim.optimizer import candidates as C
+    from platsim.optimizer import move_classes as MC
+
+    fam = {}
+    for key in offerable_items(member_species, team, led):
+        it = _by_key()[key]
+        if policy and not MC.item_modelled(policy, it.hold_effect):
+            continue
+        if not relevant(key, member_species, moveset):
+            continue
+        tb = [t for t, hes in C.type_boost_items().items() if it.hold_effect in hes]
+        family = ("type", tb[0]) if tb else ("effect", it.hold_effect)
+        copies = team_item_copies(led, it.const, tuple(team))
+        if family not in fam or _tie_key(key, copies) < fam[family][0]:
+            fam[family] = (_tie_key(key, copies), key)
+    return sorted(k for _, k in fam.values())
+
+
 __all__ = ["EXP_FUNCTIONS", "ItemClass", "NO_OUTCOME", "exp_ev_effects", "hold_effect_numbers",
-           "hold_effect_references", "item_class", "offerable_items", "species_gates"]
+           "hold_effect_references", "item_class", "items_for", "offerable_items", "relevant", "species_gates", "ITEM_TIE_RULE"]

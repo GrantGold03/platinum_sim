@@ -39,6 +39,7 @@ import math
 from dataclasses import dataclass, replace
 
 from platsim.optimizer import candidates as C
+from platsim.optimizer import item_classes as IC
 from platsim.optimizer import move_classes as MC
 from platsim.optimizer import resources as R
 from platsim.sim.seeds import derive_seed
@@ -95,14 +96,16 @@ def _category_order(const: str, moves: list[str]) -> list[str]:
 
 
 def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structured: bool = True,
-             all_slots: bool = False) -> list[Alternative]:
+             all_slots: bool = False, items=None) -> list[Alternative]:
+    """`items(moves) -> [item key]`: the items offered with a moveset (item_classes.items_for); None = no item
+    alternatives (US1 only)."""
     cur = tuple(spec.moves)
     status = [m for m in mc.legal_status if m not in cur]
     seen, out = set(), []
 
-    def add(kind, moves, added):
-        a = Alternative(slot, kind, tuple(moves), spec.item, tuple(sorted(added)))
-        if sorted(a.moves) == sorted(cur) or a.key() in seen:
+    def add(kind, moves, added, item=spec.item):
+        a = Alternative(slot, kind, tuple(moves), item, tuple(sorted(added)))
+        if (sorted(a.moves) == sorted(cur) and a.item == spec.item) or a.key() in seen:
             return
         seen.add(a.key())
         out.append(a)
@@ -130,6 +133,19 @@ def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structure
                 picks = [_category_order(spec.species, by_cat[c])[0] for c in combo]
                 mv = picks + ([best_attack] if size == 3 and best_attack and best_attack not in picks else [])
                 add("structured", mv[:4], picks)
+    if items is not None:
+        from platsim.optimizer import item_classes as IC
+
+        base_items = set(items(cur))
+        for key in sorted(base_items - {spec.item}):  # item-only swaps on the current set
+            add("item", cur, [], key)
+        for a in [x for x in out if x.kind in ("status", "structured")]:  # move-item pairs (FR-006)
+            for key in items(a.moves):
+                if key in base_items or key == spec.item:
+                    continue  # not made relevant by the added moves
+                he = IC._by_key()[key].hold_effect
+                if he in IC.PAIRED_EFFECTS or any(he in hs for hs in IC.effect_script_items().values()):
+                    add(f"{a.kind}+item", a.moves, a.added, key)
     return sorted(out, key=lambda a: a.key())
 
 
@@ -160,7 +176,7 @@ def holm(pvals: list[float]) -> list[float]:
 
 def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_size: int,
               wteam, policy: str = MC.ALT_POLICY, members: int | None = None, progress=None, save=None,
-              done: list | None = None) -> tuple[tuple, list[dict]]:
+              done: list | None = None, items: bool = True) -> tuple[tuple, list[dict]]:
     """Returns (specs after adoptions, records). `done`: records of members already finished (resume)."""
     records = list(done or [])
     specs = tuple(specs)
@@ -175,7 +191,9 @@ def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_
             continue
         spec = specs[slot]
         mc = cands[slot].get(spec.variant)
-        alts = generate(spec, mc, slot) if mc else []
+        team_species = tuple(s.species for s in specs)
+        item_fn = (lambda moves, sp=spec.species: IC.items_for(sp, moves, team_species, led, policy)) if items else None
+        alts = generate(spec, mc, slot, items=item_fn) if mc else []
         base = {"slot": slot + 1, "species": spec.species, "levels": list(levels), "mode": "reference"}
         teams, entries = [], []
         for a in alts:
@@ -183,7 +201,7 @@ def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_
             alt_specs = tuple(alt_spec if i == slot else s for i, s in enumerate(specs))
             team = wteam(alt_specs, levels)
             e = {**base, "kind": a.kind, "moves": list(a.moves), "item": a.item,
-                 "not_modelled": MC.not_modelled(policy, a.moves, None)}
+                 "not_modelled": MC.not_modelled(policy, a.moves, a.item)}
             if team is None:
                 e.update({"verdict": "not tested: not buildable at these levels with the copies left", "adopted": False})
                 entries.append(e)

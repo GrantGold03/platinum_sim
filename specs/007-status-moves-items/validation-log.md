@@ -130,3 +130,34 @@ These payoffs lie beyond 2 plies. A deeper reference (T063: depth 3 or rollouts)
 - **Per-category order for structured sets.** The first version broke ties alphabetically and chose Endure over Protect, Aqua Ring over Recover and Double Team as the boost. That is replaced by an explicit effect preference (`EFFECT_RANK`, a policy heuristic checked by T066). The test `test_structured_stall_set_for_milotic` caught it.
 - **`tests/unit/test_alternatives.py`: 7 passed** (generation sorted, unique and without excluded moves; the weakest-two-slots rule; a structured Toxic + Recover set; determinism across PYTHONHASHSEED; Holm; adopted moves survive Waterfall placement with a positive control; the stage records every alternative exactly once and adopts a clear winner (fake pool)).
 - **Fingerprints:** `STATE_VERSION` 4 and `candidates` were added, and the pinned fingerprints in `test_required_hms.py` and `test_legality_options.py` were updated to `"state_version": 4, "candidates": "reference"`.
+
+## T037-T045 Held items (2026-10-15)
+
+- **Pairings.** Derived from the effect scripts: the weather rocks ↔ their weather moves, and Power Herb ↔ the 9 charge effects (`effect_script_items()`). The rule table `PAIRED_EFFECTS` covers Light Clay ↔ screens, Big Root ↔ drain/seed/Ingrain/Aqua Ring, and Chesto ↔ Rest. Further rules:
+  - Choice items only with all-attack sets.
+  - Black Sludge only for Poison types.
+  - Resist berries only for members weak to a type some League move carries.
+  - Type boosts only with an attack of that type.
+  - Drawback items only with Trick.
+- **Tie rule (FR-011):** `ITEM_TIE_RULE` = more copies; higher effect_param; classic before ARCEUS_*; item key.
+- **Deviation from T039 as written.** The greedy screen keeps `held_item_candidates` (Sitrus, the type booster, Leftovers). Greedy can't value most items, and putting them into its 81-team random combinations would dilute the screen. The new items reach the strong player through the alternatives stage (`item`, `status+item`, `structured+item` kinds), as FR-007 asks.
+- **N with items** (v3 MODELLED items as of T041, Lv 55): B4 1,030 (46 item swaps), B5 1,085, B3 656, B1 712, B2 724. Move-item pairs appear only for items that v3 models.
+- **Player items (T041), all in `sim/test/expectimax2_v3_mechanics.test.mjs`: 17 passed in total.**
+  - Light Clay at 8 turns.
+  - Chesto after Rest, and Lum.
+  - Resist berries (halve once, then eaten).
+  - Shell Bell dealt/8.
+  - Black Sludge +1/16 or -1/8.
+  - Choice lock.
+  - Power Herb.
+  - Big Root ×1.3.
+  - Wide Lens (already in the damage port).
+  - Also implemented, without a dedicated test: Zoom Lens (+20% if the target moved), Quick Claw (20% order branch), King's Rock / Razor Fang (10% flinch branch).
+- **SC-008 for items (T043), `expectimax2_v3_positions.test.mjs`: 6 passed in total.**
+  - Light Clay raises Reflect and Light Screen (+0.03) and leaves Gyro Ball unchanged.
+  - Chesto: Rest gains 0.56; the other actions move at most 0.15, which is AI-sampling noise because the AI sees the item.
+  - **Finding:** Damp Rock shows no gain at the 2-ply reference (−54.2 vs −50.0 for Rain Dance, inside the noise). Its extra 3 turns lie past the horizon.
+- **`tests/unit/test_item_pairings.py`: 7 passed.**
+  - Clay, rock, Chesto, Sludge and Choice pairings; no post-Champion item.
+  - Tie rule: Splash Plate by copies; Mystic Water when both are unlimited (post-game items option).
+  - Offered items are modelled, and skipped ones are listed. Skipped for B4 Roserade: aguav, figy, iapapa, mago, wiki, oran, leppa berries; full incense, grip claw, iron ball, lagging tail, mental herb, shed shell, sticky barb — not modelled by v3.

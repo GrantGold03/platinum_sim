@@ -395,6 +395,7 @@ class MemberCandidates:
     # (spec FR-002, FR-003, "not offered: not modelled"). The alternatives stage builds on these.
     legal_status: list[str] = field(default_factory=list)
     excluded: dict[str, str] = field(default_factory=dict)
+    excluded_items: dict[str, str] = field(default_factory=dict)  # obtainable items not offered, with the reason
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
@@ -403,7 +404,7 @@ class MemberCandidates:
                 "ranked_count": len(self.ranked),
                 "pool": self.pool, "pruned": self.pruned,
                 "scores": {k: round(v, 1) for k, v in self.scores.items()},
-                "legal_status": self.legal_status, "excluded": self.excluded}
+                "legal_status": self.legal_status, "excluded": self.excluded, "excluded_items": self.excluded_items}
 
 
 _ITEM_COPIES: dict[tuple[int, str], int | str] = {}
@@ -485,8 +486,13 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
     items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen}
+    excluded_items = {}
+    for key in (IC.offerable_items(const, team, led) if team is not None else []):  # spec FR-009, FR-013
+        he = IC._by_key()[key].hold_effect
+        if not MC.item_modelled(policy, he):
+            excluded_items[key] = f"not offered: not modelled by {policy}"
     return MemberCandidates(const, variant, level, chosen, items, ranked, pool, dropped,
-                            {m: scores[m] for m in pool}, legal_status, excluded)
+                            {m: scores[m] for m in pool}, legal_status, excluded, excluded_items)
 
 
 __all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "coverage", "display_name", "dominates",

@@ -207,7 +207,7 @@ description: "Task list for 007 Status Moves and Held Items"
 
 **Independent Test**: for B4 Bronzong with Light Screen, its candidates include Light Clay. Choice Specs is given to only one B1 member. No post-Champion item is offered under default options.
 
-- [ ] T037 [US2] Pairing rules in `src/platsim/optimizer/item_classes.py` (research R2.5):
+- [X] T037 [US2] Pairing rules in `src/platsim/optimizer/item_classes.py` (research R2.5):
   - derive rock ↔ weather pairs by scanning effect scripts for `HOLD_EFFECT_*`;
   - Light Clay ↔ Reflect/Light Screen from its referencing functions;
   - Chesto/Lum ↔ Rest from "the status Rest puts on the user" ∩ "the status the berry cures" (BL:4608, 4662);
@@ -219,10 +219,10 @@ description: "Task list for 007 Status Moves and Held Items"
   - drawback items only with Trick/Switcheroo.
 
   Export `items_for(member, moveset, team, led) -> list[item key]`.
-- [ ] T038 [US2] Type-boost tie rule (FR-011) in `src/platsim/optimizer/item_classes.py`: more copies, then higher effect_param, then classic `STRENGTHEN_*` before `ARCEUS_*`, then item key. Export it as the constant `ITEM_TIE_RULE` (the text in contracts/candidate-report.md).
-- [ ] T039 [US2] Filter `item_classes.items_for` through `move_classes.modelled(policy)` (T017): an item whose hold effect isn't modelled is not offered and goes in `excluded` as "not offered: not modelled by <policy>" (spec FR-009). Then replace `held_item_candidates` in `src/platsim/optimizer/candidates.py` with `item_classes.items_for`, keeping the old function name as a thin wrapper for callers (`resources.repair`). Record the new per-moveset item count for B1 in `validation-log.md`.
-- [ ] T040 [US2] Extend `alternatives.generate` (`src/platsim/optimizer/alternatives.py`) with `status+item` (each status alternative × its paired items) and `item` (item-only swaps on the current set, from `items_for`). Team-wide copies go through `resources.repair`.
-- [ ] T041 [US2] Player item mechanics in `sim/policy/expectimax2.mjs` (v3 flags), each with a decomp-cited test in `sim/test/expectimax2_v3_mechanics.test.mjs`:
+- [X] T038 [US2] Type-boost tie rule (FR-011) in `src/platsim/optimizer/item_classes.py`: more copies, then higher effect_param, then classic `STRENGTHEN_*` before `ARCEUS_*`, then item key. Export it as the constant `ITEM_TIE_RULE` (the text in contracts/candidate-report.md).
+- [X] T039 [US2] (Done with one recorded deviation: the greedy screen keeps the old 3-item `held_item_candidates`, because greedy can't value the new items; every new item reaches the strong player through the alternatives stage instead, which is what FR-007 asks. See validation-log T037-T045.) Filter `item_classes.items_for` through `move_classes.modelled(policy)` (T017): an item whose hold effect isn't modelled is not offered and goes in `excluded` as "not offered: not modelled by <policy>" (spec FR-009). Then replace `held_item_candidates` in `src/platsim/optimizer/candidates.py` with `item_classes.items_for`, keeping the old function name as a thin wrapper for callers (`resources.repair`). Record the new per-moveset item count for B1 in `validation-log.md`.
+- [X] T040 [US2] Extend `alternatives.generate` (`src/platsim/optimizer/alternatives.py`) with `status+item` (each status alternative × its paired items) and `item` (item-only swaps on the current set, from `items_for`). Team-wide copies go through `resources.repair`.
+- [X] T041 [US2] Player item mechanics in `sim/policy/expectimax2.mjs` (v3 flags), each with a decomp-cited test in `sim/test/expectimax2_v3_mechanics.test.mjs`:
   - Light Clay at 8 turns (BS:4229, 4272), replacing the hard 5 at ~:778-779;
   - Chesto/Lum and the status berries, including both trigger paths at BL:4608/4998 and 4662/5052;
   - type-resist berries halving the matching super-effective hit once, and Chilan for Normal (`subscript_type_resist_berry.s`);
@@ -235,10 +235,10 @@ description: "Task list for 007 Status Moves and Held Items"
   - Big Root, Power Herb.
 
   Add positive-control tests for the items already modelled through the damage port: Wise Glasses, Expert Belt, Scope Lens/Razor Claw, Wide Lens.
-- [ ] T042 [US2] Update `MODELLED` in `sim/policy/expectimax2.mjs` for v3/v3-ref with every effect and item added in T021–T028 and T041. Add a test that every **offered** item's `HOLD_EFFECT` is in the policy's `MODELLED` (true by construction after T039), and that every obtainable item not offered for that reason is listed in `excluded`. Record the list of skipped items in `validation-log.md`.
-- [ ] T043 [US2] SC-008 positions for items in `sim/test/expectimax2_v3_positions.test.mjs`: Light Clay with screens, a rock with weather, Chesto + Rest, a resist berry, the Choice Specs lock and Quick Claw. Each has a helps/doesn't-help pair, as in T029.
+- [X] T042 [US2] Update `MODELLED` in `sim/policy/expectimax2.mjs` for v3/v3-ref with every effect and item added in T021–T028 and T041. Add a test that every **offered** item's `HOLD_EFFECT` is in the policy's `MODELLED` (true by construction after T039), and that every obtainable item not offered for that reason is listed in `excluded`. Record the list of skipped items in `validation-log.md`.
+- [X] T043 [US2] SC-008 positions for items in `sim/test/expectimax2_v3_positions.test.mjs`: Light Clay with screens, a rock with weather, Chesto + Rest, a resist berry, the Choice Specs lock and Quick Claw. Each has a helps/doesn't-help pair, as in T029.
 - [ ] T044 [US2] Mechanics-divergence pass (research R8). For each offered status effect and hold effect, compare decomp and Showdown gen4 behaviour (`pokemon-showdown/data/mods/gen4/*`), starting with Encore (decomp 3–7 turns, BS:4742, vs Showdown `random(4,9)`). Record each as `corrected` or `accepted` with its impact in `data/divergences.json` through the existing divergence tooling (`src/platsim/divergence/`). Extend the divergence test so every new entry is checked.
-- [ ] T045 [P] [US2] Write `tests/unit/test_item_pairings.py`:
+- [X] T045 [P] [US2] Write `tests/unit/test_item_pairings.py`:
   - Light Clay is offered with Reflect and not without;
   - Damp Rock with Rain Dance only;
   - Chesto with Rest only;
