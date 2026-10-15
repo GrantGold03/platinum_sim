@@ -1786,3 +1786,10 @@ export const expectimax2 = makeExpectimax2(EXPECTIMAX2, V1_OPTS); // kept for re
 export const expectimax2v2 = makeExpectimax2(EXPECTIMAX2_V2, V2_OPTS); // the default strong player
 export const expectimax2v3 = makeExpectimax2(EXPECTIMAX2_V3, V3_OPTS); // 007 (spec FR-016)
 export const expectimax2v3ref = makeExpectimax2(EXPECTIMAX2_V3_REF, V3_REF_OPTS); // 007 reference (Constitution VI)
+// 007 T063 cheap candidates, accepted or rejected against expectimax2-v3-ref (development only).
+export const V3_CANDIDATES = Object.freeze({
+  'expectimax2-v3-c1': { ...V3_OPTS, leafResidual: true },
+  'expectimax2-v3-c2': { ...V3_OPTS, leafResidual: true, leafStatusState: true },
+  'expectimax2-v3-c3': { ...V3_OPTS, leafResidual: true, leafStatusState: true, leafHazards: true },
+});
+export const expectimax2v3candidates = Object.entries(V3_CANDIDATES).map(([n, o]) => makeExpectimax2(n, o));
