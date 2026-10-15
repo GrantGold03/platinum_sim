@@ -1,5 +1,5 @@
 {
- "version": "sha256:8fc3728d461fba56",
+ "version": "sha256:da89b0e14e9826a9",
  "entries": [
   {
    "id": "data-move-assist-target",
@@ -774,6 +774,56 @@
    "resolution": "accepted",
    "impact": "None on the estimates: results are win-rate distributions over seeded runs (Constitution IV), reproducible from the project seed, not from the cartridge.",
    "test_id": "sim/test/seeds.test.mjs (seed derivation is deterministic)"
+  },
+  {
+   "id": "mech-baton-pass-taunt",
+   "area": "mechanics",
+   "description": "Baton Pass. Game: only stat stages and listed fields pass (substitute HP, Lock-On, Perish Song, Mean Look, Ingrain, Aqua Ring, Magnet Rise, Embargo, Heal Block, confusion, Focus Energy, Curse, Leech Seed); every other moveEffectsData field, tauntedTurns included, is zeroed. Showdown: copyVolatileFrom copies every volatile without noCopy, so Taunt (and Charge, the passer's partial trapping and the Protect stall counter) also pass.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:2071-2074,2096-2110; pokeplatinum/include/constants/battle/condition.h:72-76",
+   "showdown_ref": "pokemon-showdown/sim/pokemon.ts:1246-1268; pokemon-showdown/data/mods/gen4/moves.ts:1397-1425",
+   "resolution": "accepted",
+   "impact": "Only when a taunted mon Baton Passes: the recipient stays taunted for 1-4 turns in Showdown. No League mon uses Taunt (trainers.json), so the player's Baton Pass is unaffected in League battles. A JSON patch (Moves.taunt.condition.noCopy = true) could correct it; untested, so not applied.",
+   "test_id": "UNTESTED: no League mon uses Taunt"
+  },
+  {
+   "id": "mech-kings-rock-serene-grace",
+   "area": "mechanics",
+   "description": "King's Rock / Razor Fang. Game: a flat item-power chance (10%), no Serene Grace term. Showdown gen4: the item adds a 10% flinch secondary before Serene Grace doubles secondaries, giving 20%. The move lists agree (202 moves with MOVE_FLAG_TRIGGERS_KINGS_ROCK).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_controller_player.c:4630-4645",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/items.ts:204-218,400-414; pokemon-showdown/data/mods/gen4/abilities.ts:373-382",
+   "resolution": "accepted",
+   "impact": "Only a Serene Grace holder of King's Rock or Razor Fang flinches at twice the game rate (20% vs 10%).",
+   "test_id": "UNTESTED"
+  },
+  {
+   "id": "mech-shell-bell-substitute",
+   "area": "mechanics",
+   "description": "Shell Bell. Game: damage dealt to a Substitute counts toward shellBellDamageDealt, so the holder heals 1/8 of it. Showdown: a substitute hit adds 0 to totalDamage, so no heal.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_controller_player.c:3358-3366,4734-4745",
+   "showdown_ref": "pokemon-showdown/data/items.ts:5656-5660; pokemon-showdown/sim/battle-actions.ts:955-958",
+   "resolution": "accepted",
+   "impact": "A Shell Bell holder misses at most 1/8 of the damage it deals to a foe's substitute; no League mon uses Substitute.",
+   "test_id": "UNTESTED: no League mon uses Substitute"
+  },
+  {
+   "id": "mech-accuracy-stages-rounding",
+   "area": "mechanics",
+   "description": "Accuracy. Game: accuracy and evasion stages are summed to one net stage, one table fraction is applied, every later multiplier (Compound Eyes, BrightPowder, Wide Lens, Zoom Lens) is truncated to an integer, and the move hits if rand%100+1 <= hitRate. Showdown gen4: the two stages are applied separately as float ratios and item multipliers are floats (Wide Lens on 85: 93% in game, 94% in Showdown; -1 accuracy with +1 evasion: 60% vs 57%).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_controller_player.c:2872-2973; pokeplatinum/include/data/hit_rate_stages.h:4-18",
+   "showdown_ref": "pokemon-showdown/data/mods/gen4/scripts.ts:148-197; pokemon-showdown/data/mods/gen4/items.ts:24-31,465-486",
+   "resolution": "accepted",
+   "impact": "Hit chances differ by 1-2 points with Wide Lens, Zoom Lens or BrightPowder or one-sided extreme stages, and up to about 4 points when both accuracy and evasion stages are non-zero. A correction needs a code patch of gen4 hitStepAccuracy (not a JSON patch).",
+   "test_id": "UNTESTED"
+  },
+  {
+   "id": "mech-trainer-friendship",
+   "area": "mechanics",
+   "description": "Friendship. Game: trainer party mons start at their species' base friendship. Showdown: a set without happiness gets 255. The player side is set to 255 on purpose (007 FR-012).",
+   "decomp_ref": "pokeplatinum/src/trainer_data.c:216,241,271,297; pokeplatinum/src/pokemon.c:435-436",
+   "showdown_ref": "pokemon-showdown/sim/pokemon.ts:342; sim/team.mjs (opponent sets carry no happiness)",
+   "resolution": "accepted",
+   "impact": "None for League battles: friendship only sets Return/Frustration power and no League mon has either move.",
+   "test_id": "UNTESTED: no League mon knows Return/Frustration"
   }
  ]
 }

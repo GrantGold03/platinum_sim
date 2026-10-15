@@ -192,3 +192,34 @@ These payoffs lie beyond 2 plies. A deeper reference (T063: depth 3 or rollouts)
   - One fixture fix: Route 221 line 39 reads `Common_GiveItemQuantityNoLineFeed`, which is the macro the parser shows as CallCommonScript.
 - **`test_validator.py::test_route_221_focus_sash_accepted_once`:** one Focus Sash holder passes, two give ITEM_COPIES, and Choice Band gives ITEM_UNAVAILABLE.
 - **T058:** `held_items.md` (an untracked analysis note) is marked superseded in its header and was not regenerated.
+
+## T044 Mechanics divergence pass (2026-10-15)
+
+A read-only comparison of every offered status effect and held item, decomp vs Showdown gen4, with file:line evidence on both sides (agent report, summarised here).
+
+- **Agree:**
+  - Encore: both force 3-7 later turns; the "Encore 3-7 vs 4-8" candidate was a counting difference, not a divergence.
+  - Taunt 3-5; confusion 2-5 and 50%; sleep 2-5; the Toxic counter; Leech Seed 1/8; Ingrain and Aqua Ring 1/16; Wish; Safeguard 5.
+  - Substitute (cost and what it blocks for the offered moves); Endure; Spikes; Stealth Rock; Toxic Spikes.
+  - Weather 5 turns, rocks 8; end-of-turn order; Synthesis fractions; Thunder/Blizzard.
+  - Attract 50%; Swagger/Flatter; Light Clay 8; status berries; Black Sludge.
+  - Quick Claw 20%; the King's Rock move list (202 moves); Choice lock; Big Root ×1.3 (floor(x×1.3) = floor(x×130/100) for x = 1..5000); Power Herb.
+  - Resist berries are already covered by `mech-resist-berry-order`.
+- **Disagree.** Added to `src/platsim/divergence/mechanics.py` as **accepted**, with their impact, and required by `test_divergences.py`:
+  - `mech-baton-pass-taunt`
+  - `mech-kings-rock-serene-grace`
+  - `mech-shell-bell-substitute`
+  - `mech-accuracy-stages-rounding` (covers Wide Lens, Zoom Lens, BrightPowder and accuracy/evasion stage combining)
+  - `mech-trainer-friendship`
+
+  Possible corrections (JSON patch Moves.taunt.condition.noCopy; Items.kingsrock priority; code patches for Shell Bell and accuracy) are untested, so none is applied.
+- `uv run platsim divergences`: 78 entries (mechanics/accepted=15), 5 Dex patches (unchanged), version sha256:da89b0e14e9826a9. `--check` up to date. `tests/integration/test_divergences.py`: 5 passed.
+- **Not checked** (unverified):
+  - the confusion self-hit with items or burn;
+  - Endure vs Future Sight;
+  - the Quick Claw speedRand width;
+  - berry timing mid multi-hit;
+  - Rain Dish / Ice Body / Dry Skin order;
+  - choice-lock edge cases;
+  - the Encore failure list;
+  - Zoom Lens when the target switched in.
