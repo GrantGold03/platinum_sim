@@ -326,3 +326,4 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   - The golden v1/v2 test takes about 5 min.
   - The suite's one early `F` in the baseline log may be contention from concurrent runs (unverified); check it when the suite finishes.
   - The Pickup ability is a known unmodelled source, out of scope.
+  - Never wait on a run with `pgrep -f <name>` from a shell whose own command line contains `<name>`: it matches itself and waits forever. This lost 3 h on 2026-10-15 (the T063 B4/B5 queue). Wait on the PID instead.
