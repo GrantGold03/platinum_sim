@@ -161,3 +161,34 @@ These payoffs lie beyond 2 plies. A deeper reference (T063: depth 3 or rollouts)
   - Clay, rock, Chesto, Sludge and Choice pairings; no post-Champion item.
   - Tie rule: Splash Plate by copies; Mystic Water when both are unlimited (post-game items option).
   - Offered items are modelled, and skipped ones are listed. Skipped for B4 Roserade: aguav, figy, iapapa, mago, wiki, oran, leppa berries; full incense, grip claw, iron ball, lagging tail, mental herb, shed shell, sticky barb — not modelled by v3.
+
+## T052-T058 Item sources (2026-10-15)
+
+- **Tests first.** The 5 new and changed tests in `tests/integration/test_availability_controls.py` failed before the change: "5 failed, 55 deselected".
+- **`sources.py`:**
+  - a Return-aware dataflow with a call stack;
+  - `GetRandom V, N` + `AddVar V, ITEM_X` as an item-id range;
+  - save-var literals;
+  - the Amity C table;
+  - `AddItem VAR_0x8004, VAR_0x8005`;
+  - the daily-random-level rule (1 copy of each item, with a per-item once flag);
+  - "repeatable" for flagless new sites;
+  - the CheckPartyHasSpecies party condition put in `requires_any`.
+- **Give sites tagged by the new dataflow** (sentinel), exactly as expected:
+
+  | Site | Items | Copies |
+  |---|---|---|
+  | Route 221 house | 3 | 1 each |
+  | Pastoria SW house | 17 berries | unlimited |
+  | Amity Square | 9 berries (pickup + Gift Man) | unlimited, plus the partner condition |
+  | News Press | 12 balls | unlimited |
+  | Flower Shop | 5 | unlimited |
+  | Route 208 | 26 | unlimited |
+
+- `uv run platsim extract` and `--check`: "up to date (11 files)".
+- **`test_availability_controls.py` + `test_extract.py`: 63 passed.**
+  - Counts: held_items_unlimited 74, finite 40, unavailable 44.
+  - Focus Sash / Expert Belt / Black Belt = 1; Occa unlimited; Liechi 0 (negative control); Choice Band 0.
+  - One fixture fix: Route 221 line 39 reads `Common_GiveItemQuantityNoLineFeed`, which is the macro the parser shows as CallCommonScript.
+- **`test_validator.py::test_route_221_focus_sash_accepted_once`:** one Focus Sash holder passes, two give ITEM_COPIES, and Choice Band gives ITEM_UNAVAILABLE.
+- **T058:** `held_items.md` (an untracked analysis note) is marked superseded in its header and was not regenerated.

@@ -275,7 +275,7 @@ description: "Task list for 007 Status Moves and Held Items"
 
 **Independent Test**: `uv run platsim explain item:focus_sash` shows the Route 221 house, 1 copy, before the Champion. The counts are 74 unlimited, 40 finite and 44 unavailable.
 
-- [ ] T052 [P] [US5] Write `tests/integration/test_availability_controls.py` additions first, in the existing `_line(path, line, text)` style:
+- [X] T052 [P] [US5] Write `tests/integration/test_availability_controls.py` additions first, in the existing `_line(path, line, text)` style:
   - Route 221 `:39` gives Black Belt, Expert Belt and Focus Sash entries, **quantity 1 each** with their own `once_flag`, and detail naming `FLAG_DAILY_RECEIVED_ROUTE_221_HOUSE_REWARD` and the daily random level. `item_copies` is 1 for each (spec FR-018, user 2026-10-14). Negative control: the News Press daily Poké Ball (no level check) stays UNLIMITED;
   - Pastoria gives exactly the 17 item ids [id(Occa), id(Occa)+17), and **Liechi stays 0** (negative control);
   - the Amity pickup berry set equals the `sBerryAndAccessoryManOptions` `ITEM_*` set, with no `ACCESSORY_*`;
@@ -284,12 +284,12 @@ description: "Task list for 007 Status Moves and Held Items"
   - update `:522` (66 → 74), `:525` (37 → 40) and `:526` (55 → 44).
 
   Confirm these fail before T053.
-- [ ] T053 [US5] Make `_const_dataflow` in `src/platsim/availability/sources.py` (~:914-942) return-aware: `Return` carries the callee's state to the call's fall-through, using a call stack in the work item. Add the detail text for Route 221's level condition (refs :15-21, `system_vars.c:267-271`). Add the rule: a daily gift whose guarded path contains `GetDailyRandomLevel` counts each possible item once (quantity 1, a per-item `once_flag`), instead of daily → UNLIMITED. Detect it from the script command, never the map name.
-- [ ] T054 [US5] Support the `GetRandom V, N` + `AddVar V, ITEM_X` idiom in `src/platsim/availability/sources.py`, giving the item range by id order of `pokeplatinum/generated/items.txt`.
-- [ ] T055 [US5] Resolve save vars whose every write is a literal `ITEM_*` (`VAR_FOLLOWER_MON_PICKUP_ITEM_ID`) in `src/platsim/availability/sources.py`. Add a "repeatable, no flag" rule giving UNLIMITED, with the detail citing the step counter (`field_control.c:763`). Put Amity's partner species in `requires_any`, parsed from `scripts_amity_square.s:726-748`.
-- [ ] T056 [US5] Parse `sBerryAndAccessoryManOptions` (`pokeplatinum/src/scrcmd_amity_square.c:148-165`, `ITEM_*` tokens only), following the `frontier_exchange_lists` C-array pattern, and bind it to the Gift Man's `AddItem` (`scripts_amity_square.s:940`) in `src/platsim/availability/sources.py`.
-- [ ] T057 [US5] Regenerate with `uv run platsim extract`, then `uv run platsim extract --check`. Run `uv run pytest -q tests/integration/test_availability_controls.py tests/unit/test_validator.py tests/integration/test_extract.py`. Add a validator test in which a team holding Focus Sash has no `ITEM_UNAVAILABLE`, and Choice Band is still refused. Record the new counts. Commit and push.
-- [ ] T058 [P] [US5] Regenerate `held_items.md` (repo root, untracked analysis note) with the T009/T037 filter and the new sources, or mark it as superseded in its header. Record which was done.
+- [X] T053 [US5] Make `_const_dataflow` in `src/platsim/availability/sources.py` (~:914-942) return-aware: `Return` carries the callee's state to the call's fall-through, using a call stack in the work item. Add the detail text for Route 221's level condition (refs :15-21, `system_vars.c:267-271`). Add the rule: a daily gift whose guarded path contains `GetDailyRandomLevel` counts each possible item once (quantity 1, a per-item `once_flag`), instead of daily → UNLIMITED. Detect it from the script command, never the map name.
+- [X] T054 [US5] Support the `GetRandom V, N` + `AddVar V, ITEM_X` idiom in `src/platsim/availability/sources.py`, giving the item range by id order of `pokeplatinum/generated/items.txt`.
+- [X] T055 [US5] Resolve save vars whose every write is a literal `ITEM_*` (`VAR_FOLLOWER_MON_PICKUP_ITEM_ID`) in `src/platsim/availability/sources.py`. Add a "repeatable, no flag" rule giving UNLIMITED, with the detail citing the step counter (`field_control.c:763`). Put Amity's partner species in `requires_any`, parsed from `scripts_amity_square.s:726-748`.
+- [X] T056 [US5] Parse `sBerryAndAccessoryManOptions` (`pokeplatinum/src/scrcmd_amity_square.c:148-165`, `ITEM_*` tokens only), following the `frontier_exchange_lists` C-array pattern, and bind it to the Gift Man's `AddItem` (`scripts_amity_square.s:940`) in `src/platsim/availability/sources.py`.
+- [X] T057 [US5] Regenerate with `uv run platsim extract`, then `uv run platsim extract --check`. Run `uv run pytest -q tests/integration/test_availability_controls.py tests/unit/test_validator.py tests/integration/test_extract.py`. Add a validator test in which a team holding Focus Sash has no `ITEM_UNAVAILABLE`, and Choice Band is still refused. Record the new counts. Commit and push.
+- [X] T058 [P] [US5] Regenerate `held_items.md` (repo root, untracked analysis note) with the T009/T037 filter and the new sources, or mark it as superseded in its header. Record which was done.
 
 ---
 
