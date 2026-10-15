@@ -9,6 +9,8 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | Golden v1/v2 record + verify (9.4 min) and positive control (2 × 4.6 min) | T004 | (suites, 8) | 0.31 | 0.31 |
 | Suite baseline (pytest 2.49 h + node 0.07 h, rerun) | T002 | (suites, 8) | 2.56 | 2.87 |
 | Baseline B4, B5, B3, B1, B2 (standard) | T005 | 11 | 8.20 | 11.07 |
+| T020 node + unit checkpoint and fix rerun | T020 | (suites, 8) | 0.20 | 11.27 |
+| Speed probe | T028b | (player, 15) | 0.30 | 11.57 |
 
 ## T001 Setup (2026-10-14)
 
@@ -298,3 +300,31 @@ A read-only comparison of every offered status effect and held item, decomp vs S
 
 - `node --test sim/test/*.test.mjs`: `# tests 342 # pass 342 # fail 0` (396 s), golden v1/v2 included.
 - `uv run pytest -q tests/unit`: `1 failed, 487 passed, 4 xfailed` (224 s). The failure was in `test_alternatives.py::test_run_stage...`: the test generated alternatives without the US2 item swaps, while the stage now includes them (334 vs 204). Test fixed, then `1 passed`.
+
+
+## T028b Speed probe and T031 round sizes (2026-10-15)
+
+Worker pool, 16 workers, `tests/fixtures/policy_benchmark_team.json`, `stop_on_loss`:
+
+```
+expectimax2-v2 n 64 cleared 58 sec 31.5 gauntlets/s 2.034
+expectimax2-v3 n 64 cleared 58 sec 27.2 gauntlets/s 2.356
+expectimax2-v3-ref n 32 cleared 28 sec 1015.2 gauntlets/s 0.032
+```
+
+- **v3 is as fast as v2.** v3-ref is about 74× slower than v3: K_ROOT 32, K_PLY2 8, switch beam 6, ply-2 switches, full damage rolls.
+- **Consequence for T063.** About 400 v3-ref gauntlets per team is about 3.5 h. The 15 h player budget allows the policy benchmark team plus 2 teams (about 10.5 h of reference) plus the cheap candidates (about 3 min each per 400 at v3 speed).
+
+**Round sizes (research R5).**
+- Share per reference team: 10 h.
+- "The rest of the run" is that team's baseline wall time × (2.034 / 2.356).
+- Screening cost is 1.96·r·N gauntlets at v3's 2.356/s, with N measured with items (T040).
+
+| Team | N | Rest (h) | Cap (gauntlets) | r | Cost (gauntlets) | Estimated team hours |
+|---|---|---|---|---|---|---|
+| B4 | 1,030 | 1.68 | 70,561 | **25** | 50,470 | 7.63 |
+| B5 | 1,085 | 1.44 | 72,587 | **25** | 53,165 | 7.71 |
+| B3 | 656 | 1.37 | 73,197 | **50** | 64,288 | 8.95 |
+
+- The estimates total about 24.3 h against 31 h.
+- **Unverified:** stop_on_loss gauntlets near the threshold (U-1) end earlier, so real throughput should be at least the probe's. N was measured with each member's first moveset at Lv 55, while the run uses the winner's sets at the reference level.
