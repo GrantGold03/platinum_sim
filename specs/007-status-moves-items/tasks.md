@@ -114,7 +114,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - setting weather, Leech Seed, a substitute, Taunt, Spikes and Safeguard on a `leagueBattle` fixture through Showdown APIs (`field.setWeather`, `addVolatile`, `addSideCondition`) round-trips into the v3 state and the shadow;
   - the shadow AI's choice equals the live AI's choice in a weather position (positive control: a position where weather changes the AI's choice).
   - If the Showdown setters don't work on fixtures, record it and build the positions by playing moves instead.
-- [ ] T020 Checkpoint: `node --test sim/test` (golden v1/v2 unchanged) and `uv run pytest -q tests/unit`. Record the output and its hours in the running total, then commit and push.
+- [X] T020 Checkpoint: `node --test sim/test` (golden v1/v2 unchanged) and `uv run pytest -q tests/unit`. Record the output and its hours in the running total, then commit and push.
 
 **Checkpoint**: classification, item filter, adopted flag, v3 scaffold and state are ready. User stories can start.
 

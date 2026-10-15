@@ -293,3 +293,8 @@ A read-only comparison of every offered status effect and held item, decomp vs S
 
 - All five qualified. Total 8.20 h, against an 11 h budget.
 - **SC-006 limit (2.0× baseline per team):** B4 233.6 min, B5 200.4, B3 190.4, B1 171.2, B2 188.2.
+
+## T020 Checkpoint on the 007 code (2026-10-15, machine otherwise idle)
+
+- `node --test sim/test/*.test.mjs`: `# tests 342 # pass 342 # fail 0` (396 s), golden v1/v2 included.
+- `uv run pytest -q tests/unit`: `1 failed, 487 passed, 4 xfailed` (224 s). The failure was in `test_alternatives.py::test_run_stage...`: the test generated alternatives without the US2 item swaps, while the stage now includes them (334 vs 204). Test fixed, then `1 passed`.

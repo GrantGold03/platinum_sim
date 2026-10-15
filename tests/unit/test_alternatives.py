@@ -10,6 +10,8 @@ from dataclasses import replace
 import pytest
 
 from platsim.optimizer import alternatives as A
+from platsim.optimizer import item_classes as IC
+from platsim.optimizer import move_classes as MC
 from platsim.optimizer import candidates as C
 from platsim.optimizer import resources as R
 from platsim.pins import REPO_ROOT
@@ -130,9 +132,12 @@ def test_run_stage_records_every_alternative_and_adopts_a_clear_winner(ledger, b
     assert [m["slot"] for m in members] == [1, 2, 3, 4]
     for m in members:
         slot = m["slot"] - 1
-        alts = A.generate(specs[slot], cands[slot][specs[slot].variant], slot)
+        team = tuple(s.species for s in specs)
+        alts = A.generate(specs[slot], cands[slot][specs[slot].variant], slot,
+                          items=lambda mv, sp=specs[slot].species: IC.items_for(sp, mv, team, ledger, MC.ALT_POLICY))
         entries = [r for r in recs if not r.get("member_done") and r["slot"] == m["slot"]]
-        assert len(entries) == len(alts) == m["alternatives"]  # SC-003: each exactly once
+        assert len(entries) == len(alts) == m["alternatives"]  # SC-003: each exactly once (items included, US2)
+        assert any(e["kind"] == "item" for e in entries)
         assert all("verdict" in e for e in entries)
     # a team carrying Toxic clears 90% vs 50% in the fake pool: the first member that can add it adopts it
     # (after that every team carries Toxic, so no later member gains from it), and the move is marked adopted
