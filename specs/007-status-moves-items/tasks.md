@@ -195,7 +195,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - a member that learns Toxic, Protect, Recover and Leech Seed (B4 Roserade or Milotic) gets at least one `structured` alternative;
   - a legal unmodelled move (e.g. Trick or Haze on a member that learns it) is not offered and appears in `excluded` as "not offered: not modelled";
   - a moved-under-test status move survives `place_required_hms` on B3.
-- [ ] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`, marked slow like `test_policy_strength`: a **smoke test, not a reference**. It is a `--budget quick` B4 run with `--candidates reference`, the test-only options `alternatives_round=5` and `alternatives_members=2` (two members only; added to `OptimizeRequest` and recorded in provenance), and its time recorded. It is outside the 100 h budget. `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
+- [X] T036 [US1] Integration test `tests/integration/test_alternatives_quick.py`, marked slow like `test_policy_strength`: a **smoke test, not a reference**. It is a `--budget quick` B4 run with `--candidates reference`, the test-only options `alternatives_round=5` and `alternatives_members=2` (two members only; added to `OptimizeRequest` and recorded in provenance), and its time recorded. It is outside the 100 h budget. `candidate_tests` lists every generated alternative, `excluded_moves` has reasons, the validator passes, and the result is byte-identical on a second run with the same seed (SC-005). Commit and push.
 
 **Checkpoint**: US1 works end to end with the reference player settings (production v3 settings come in Phase 8).
 
@@ -246,7 +246,7 @@ description: "Task list for 007 Status Moves and Held Items"
   - Choice Specs only with all-attack sets, and given to only one member team-wide (copy 1);
   - the tie rule picks Mystic Water over Splash Plate when both have equal copies (set up through `allow_post_game_items`) and picks the unlimited item otherwise;
   - no post-Champion or never item is offered under default options.
-- [ ] T046 [US2] Integration smoke test (outside the budget): a quick B1 run with `--candidates reference`, `alternatives_round=5` and `alternatives_members=2` has `item` and `status+item` alternatives in `candidate_tests`, and the validator passes. Commit and push.
+- [X] T046 [US2] Integration smoke test (outside the budget): a quick B1 run with `--candidates reference`, `alternatives_round=5` and `alternatives_members=2` has `item` and `status+item` alternatives in `candidate_tests`, and the validator passes. Commit and push.
 
 **Checkpoint**: US1 and US2 both work.
 

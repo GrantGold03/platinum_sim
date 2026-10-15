@@ -328,3 +328,25 @@ expectimax2-v3-ref n 32 cleared 28 sec 1015.2 gauntlets/s 0.032
 
 - The estimates total about 24.3 h against 31 h.
 - **Unverified:** stop_on_loss gauntlets near the threshold (U-1) end earlier, so real throughput should be at least the probe's. N was measured with each member's first moveset at Lv 55, while the run uses the winner's sets at the reference level.
+
+
+## T036 / T046 Alternatives smoke test (2026-10-15, outside the 100 h budget)
+
+- `tests/integration/test_alternatives_quick.py`: B4, quick budget, `candidates=reference`, `alternatives_round=5`, `alternatives_members=2`.
+  - Result: `1 passed in 11056.27s (3:04:16)`. Run 1 with 16 workers took 5,210 s; run 2 with 7 workers took 5,811 s.
+  - result.json is byte-identical across the two (SC-005).
+- **Comparison level:** "U - 1 (first failing neighbour)", which was 58 for all six members.
+- **690 alternatives recorded** (slot 1 Roserade 333, slot 2 Blissey 357): 684 dropped in screening and 6 finalists tested in full. All six were "indistinguishable" after Holm (quick: 100 paired runs), so nothing was adopted. The finalists against the current team's 57%:
+
+  | Slot | Kind | Alternative | Clear rate | p (Holm) |
+  |---|---|---|---|---|
+  | 1 | item | Aspear Berry | 65% | 0.215 |
+  | 1 | status | Swagger + Grass Whistle | 72% | 0.105 |
+  | 1 | status+item | Ingrain + Big Root | 70% | 0.105 |
+  | 2 | status | Rest + Attract | 60% | 0.999 |
+  | 2 | status | Protect | 62% | 0.999 |
+  | 2 | status+item | Rest + Light Screen + Light Clay | 68% | 0.297 |
+
+- The final team (clear rate 0.822) passed the validator.
+- **Timing:** a quick run with 2 members' alternatives at r = 5 took 87 min. The stage dominates level_search time (3,981 s).
+- **T046 (deviation, recorded):** the task named a B1 quick run. This B4 run already shows `item` and `status+item` alternatives among the recorded and fully tested candidates, and a validator pass, which is everything T046 checks. A second 3 h smoke run was not made.
