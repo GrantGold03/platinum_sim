@@ -1,0 +1,11 @@
+{
+  "_comment": "007 benchmark teams (specs/007-status-moves-items/research.md R9). B4, B5 and B3 are the reference teams (spec FR-017). Every team resolves under DEFAULT_LEGALITY (checked in T003, validation-log.md).",
+  "seed": "bench-007",
+  "teams": {
+    "B1": {"species": ["Infernape", "Staraptor", "Luxray", "Garchomp", "Gyarados", "Gardevoir"], "required_hms": []},
+    "B2": {"species": ["Garchomp", "Infernape", "Staraptor", "Rotom", "Floatzel", "Weavile"], "required_hms": []},
+    "B3": {"species": ["Infernape", "Garchomp", "Gyarados", "Lucario", "Chatot", "Staraptor"], "required_hms": ["surf", "waterfall"]},
+    "B4": {"species": ["Roserade", "Blissey", "Gliscor", "Milotic", "Bronzong", "Lucario"], "required_hms": []},
+    "B5": {"species": ["Torterra", "Magnezone", "Clefable", "Lumineon", "Gallade", "Spiritomb"], "required_hms": []}
+  }
+}
