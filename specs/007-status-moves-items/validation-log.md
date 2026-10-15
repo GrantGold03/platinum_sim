@@ -11,6 +11,7 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | Baseline B4, B5, B3, B1, B2 (standard) | T005 | 11 | 8.20 | 11.07 |
 | T020 node + unit checkpoint and fix rerun | T020 | (suites, 8) | 0.20 | 11.27 |
 | Speed probe | T028b | (player, 15) | 0.30 | 11.57 |
+| Player comparison, policy benchmark team (400 paired x 7 policies) | T063/T064 | (player, 15) | 3.71 | 15.28 |
 
 ## T001 Setup (2026-10-14)
 
@@ -350,3 +351,31 @@ expectimax2-v3-ref n 32 cleared 28 sec 1015.2 gauntlets/s 0.032
 - The final team (clear rate 0.822) passed the validator.
 - **Timing:** a quick run with 2 members' alternatives at r = 5 took 87 min. The stage dominates level_search time (3,981 s).
 - **T046 (deviation, recorded):** the task named a B1 quick run. This B4 run already shows `item` and `status+item` alternatives among the recorded and fully tested candidates, and a validator pass, which is everything T046 checks. A second 3 h smoke run was not made.
+
+
+## T063 / T064 Player comparison: policy benchmark team (2026-10-15)
+
+400 paired gauntlets per policy (seeds `v3-accept|policy_benchmark|i`), `tests/fixtures/policy_benchmark_team.json`; script `scratchpad/t063.py`:
+
+```
+policy_benchmark expectimax2-v3-ref cleared 336/400 in 12914s
+policy_benchmark expectimax2-v3 cleared 342/400 in 186s
+policy_benchmark expectimax2-v3-c1 cleared 353/400 in 188s
+policy_benchmark expectimax2-v3-c2 cleared 336/400 in 188s
+policy_benchmark expectimax2-v3-c3 cleared 347/400 in 190s
+policy_benchmark expectimax2-v2 cleared 333/400 in 164s
+policy_benchmark greedy-v1 cleared 47/400 in 8s
+policy_benchmark expectimax2-v3 vs ref: rate 0.855 vs 0.840, only 49/43, p 0.6024, verdict indistinguishable
+policy_benchmark expectimax2-v3-c1 vs ref: rate 0.882 vs 0.840, only 53/36, p 0.0893, verdict indistinguishable
+policy_benchmark expectimax2-v3-c2 vs ref: rate 0.840 vs 0.840, only 48/48, p 1.0000, verdict indistinguishable
+policy_benchmark expectimax2-v3-c3 vs ref: rate 0.868 vs 0.840, only 48/37, p 0.2780, verdict indistinguishable
+policy_benchmark expectimax2-v2 vs ref: rate 0.833 vs 0.840, only 53/56, p 0.8482, verdict indistinguishable
+policy_benchmark greedy-v1 vs ref: rate 0.117 vs 0.840, only 4/293, p 0.0000, verdict B
+policy_benchmark v3 vs expectimax2-v2: 0.855 vs 0.833, only 53/44, p 0.4168, verdict indistinguishable
+policy_benchmark v3 vs greedy-v1: 0.855 vs 0.117, only 304/9, p 0.0000, verdict A
+```
+
+- **Every cheap v3 setting is not worse than the reference on this team.**
+- **The expensive reference is not measurably better than plain v3** (0.840 vs 0.855), at 70× the cost: 12,914 s against 186 s.
+- **Reading, unverified until B4 and B5:** on an all-attack team the extra search width buys nothing measurable, and the leaf terms don't hurt. c1 (residual leaf) has the highest point estimate but is not significant.
+- **v3 vs v2:** indistinguishable here. **v3 vs greedy-v1:** better (p ≈ 0).
