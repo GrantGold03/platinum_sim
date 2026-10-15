@@ -300,21 +300,29 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 ## 007 status moves and held items (started 2026-10-14)
 
-- **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with a player that understands them (expectimax2-v3). Add the Route 221, Pastoria and Amity Square item sources to the ledger.
-- **Method.** Spec Kit. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
-- **Branch.** `007-status-moves-items`, worked in the main checkout. There is no worktree, and the web server is stopped (user, 2026-10-14).
-- **Done:**
-  - spec (`c1b6030`, `5a3d31a`);
-  - constitution v1.4.0 (`49534eb`);
-  - plan, research, data model, contracts and quickstart (2026-10-14).
-- **Next:**
-  1. `/speckit-tasks`.
-  2. Implement, starting with the groundwork: baseline standard runs of B1-B5 on `f88cdd0` (seed `bench-007`), golden v1/v2 log hashes, and the full suite recorded.
+- **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with expectimax2-v3. Add the Route 221, Pastoria and Amity Square item sources. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
+- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed. The web server is stopped.
+- **Done (2026-10-15)**, see `specs/007-status-moves-items/validation-log.md`:
+  - T001, T003, T004, T006;
+  - T007-T019 and T021-T035;
+  - T037-T045 and T047-T062;
+  - T070, T071.
+- **Running.** Background task `b2dtnjbi2`, script `scratchpad/baseline_chain.sh`. It runs on an `f88cdd0` snapshot at `scratchpad/baseline-f88cdd0`:
+  1. `uv run pytest -q` (log `scratchpad/suite_baseline.txt`);
+  2. `node --test sim/test`;
+  3. standard optimizations of B4, B5, B3, B1 and B2, seed bench-007, writing to `runs/bench-007-baseline/<B>`.
+
+  The progress log is `scratchpad/baseline_chain.log`. Started 2026-10-15T00:04Z; expect about 11-13 h in total.
+- **Next, after the chain finishes.** No heavy run may overlap the baseline, because its wall time is the SC-006 yardstick.
+  1. Record T002 and T005 in the validation log, with their hours in the running total.
+  2. T020: node tests and unit tests.
+  3. T028b: v3 / v3-ref speed probe; then compute the round sizes (T031).
+  4. T036 and T046 smoke runs.
+  5. Phase 8: T063-T069, within the 100 h budget for all one-time runs, with the running total kept in the validation log.
+  6. T072-T074.
 - **Traps:**
-  - No standard run exists on `f88cdd0`; the baseline must be measured (research R9).
-  - Thunder Wave, Calm Mind, Sandstorm, Will-O-Wisp and Bulk Up TMs have 0 pre-Champion copies. Toxic, Rain Dance, Sunny Day, Hail, Roost and Rock Polish have 1.
-  - Magnitude's effect is named `BATTLE_EFFECT_PSYWAVE`.
-  - Name-only greps miss the resist berries, which battle code compares by number.
-  - `MemberSpec` is rebuilt positionally in 4 places, so a new field gets dropped silently there; use `dataclasses.replace`.
+  - Don't `git commit -a`: the user's uncommitted deletion of `.claude/scheduled_tasks.lock` must stay out of commits.
   - Any `sim/*.mjs` edit changes the code hash, so old checkpoints won't resume.
-  - The Pickup ability (Leftovers, King's Rock) is a known unmodelled source, out of scope and proposed as a follow-up.
+  - The golden v1/v2 test takes about 5 min.
+  - The suite's one early `F` in the baseline log may be contention from concurrent runs (unverified); check it when the suite finishes.
+  - The Pickup ability is a known unmodelled source, out of scope.
