@@ -7,7 +7,8 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | Run | Task | Budget h | Used h | Running total h |
 |---|---|---|---|---|
 | Golden v1/v2 record + verify (9.4 min) and positive control (2 × 4.6 min) | T004 | (suites, 8) | 0.31 | 0.31 |
-| Suite baseline + B1–B5 baseline | T002, T005 | 8 + 11 | running | |
+| Suite baseline (pytest 2.49 h + node 0.07 h, rerun) | T002 | (suites, 8) | 2.56 | 2.87 |
+| Baseline B4, B5, B3, B1, B2 (standard) | T005 | 11 | 8.20 | 11.07 |
 
 ## T001 Setup (2026-10-14)
 
@@ -271,3 +272,24 @@ A read-only comparison of every offered status effect and held item, decomp vs S
 - **xlsx:** the "Candidates" sheet comes after "Resources" (`SHEET_NAMES`, `CANDIDATE_HEADERS`, `candidate_rows`). The 001 spreadsheet contract is amended. `report --rerender` keeps provenance as is (`rerender.py:110`), so candidate_tests carry over.
 - **Web:** the summary gains "Status moves and items: offered N / tested M / adopted K (details: Candidates sheet in result.xlsx)". The row is absent for runs without the stage.
 - **Tests:** `test_reports.py` 14 passed (new sheet tuple; Candidates rows equal candidate_tests); browser 6 passed (the 1080p fit still holds); `test_web.py` 20 passed; `test_modelled_table.py` 5 passed.
+
+
+## T002 / T005 Baseline on `f88cdd0` (2026-10-15)
+
+**T002 suite** (snapshot, 00:04-02:33Z): `1 failed, 503 passed, 4 xfailed, 1 warning in 8965.26s (2:29:25)`.
+
+- The failure is `tests/integration/test_evaluate.py::test_determinism_fast`, at `assert r["repo_commit"] == version.repo_commit()`: both sides are None, because the snapshot is a `git archive` export with no `.git`. It is an environment artifact, not a code result. The early `F` in the progress line was this test, not contention.
+- **Node:** `node --test sim/test` exits at once on Node 22 (a directory argument isn't supported). Re-run as `node --test sim/test/*.test.mjs`: `# tests 314 # pass 314 # fail 0`, 260 s.
+
+**T005 baseline benchmark** (standard budget, seed bench-007, `runs/bench-007-baseline/<B>`; minutes per stage from state.json):
+
+| Team | Wall | screen | level_search | confirm | Clear rate (95% CI), n=2000 | Expected avg final level | Start levels |
+|---|---|---|---|---|---|---|---|
+| B4 | 116.8 min | 8.2 | 53.7 | 53.3 | 0.822 (0.805-0.838) | 59.41 | 58,59,57,60,59,60 |
+| B5 | 100.2 min | 4.5 | 48.1 | 46.3 | 0.849 (0.832-0.864) | 64.18 | 63,64,64,63,64,65 |
+| B3 | 95.2 min | 4.9 | 41.6 | 47.5 | 0.889 (0.874-0.902) | 59.09 | 58,58,59,59,59,59 |
+| B1 | 85.6 min | 6.3 | 51.7 | 26.3 | 0.787 (0.769-0.804) | 56.93 | 56,56,57,57,56,57 |
+| B2 | 94.1 min | 4.2 | 44.1 | 44.8 | 0.900 (0.886-0.912) | 53.88 | 53,53,54,54,52,54 |
+
+- All five qualified. Total 8.20 h, against an 11 h budget.
+- **SC-006 limit (2.0× baseline per team):** B4 233.6 min, B5 200.4, B3 190.4, B1 171.2, B2 188.2.
