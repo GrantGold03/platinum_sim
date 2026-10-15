@@ -140,6 +140,7 @@ def test_xlsx_sheets_and_team_headers(tmp_path):
         "Team",
         "Evaluation",
         "Resources",
+        "Candidates",  # 007 (contracts/candidate-report.md)
         "Provenance",
         "Divergences",
     )
@@ -351,3 +352,27 @@ def test_second_game_label_follows_team_order(ledger):
     team, _, _ = _team_from_dict(d)
     got = team_sources(team, ledger.with_options(SECOND_GAME))[0]
     assert [i for i, t in enumerate(got) if t.endswith(MS.SECOND_GAME_NOTE)] == [5], got
+
+
+
+def test_candidates_sheet_rows_equal_candidate_tests(tmp_path):
+    """007 T050: one Candidates row per provenance.optimizer.candidate_tests entry, in order."""
+    from platsim.report.xlsx import CANDIDATE_HEADERS, candidate_rows
+
+    r = _report()
+    tests = [{"slot": 4, "species": "SPECIES_MILOTIC", "kind": "status+item", "moves": ["MOVE_SURF", "MOVE_RECOVER"],
+              "item": "leftovers", "mode": "reference", "levels": [54] * 6, "round_reached": "final", "round_runs": 375,
+              "round_cleared": 300, "n_paired": 200, "rate_alt": 0.79, "rate_current": 0.71, "alt_only": 22,
+              "current_only": 6, "p_value": 0.003, "p_holm": 0.012, "verdict": "alternative better", "confirmed": True,
+              "adopted": True, "not_modelled": []},
+             {"slot": 4, "species": "SPECIES_MILOTIC", "kind": "status", "moves": ["MOVE_SURF", "MOVE_HAZE"], "item": None,
+              "mode": "reference", "levels": [54] * 6, "verdict": "dropped in screening", "adopted": False,
+              "not_modelled": ["MOVE_HAZE"]}]
+    r.provenance = {**(r.provenance or {}), "optimizer": {"candidate_tests": tests}}
+    paths = write_all(r, tmp_path)
+    wb = load_workbook(paths["xlsx"])
+    rows = _sheet_rows(wb["Candidates"])
+    assert tuple(rows[0]) == CANDIDATE_HEADERS
+    assert len(rows) == 1 + len(tests)
+    assert [list(x) for x in rows[1:]] == [[None if v == "" else v for v in row] for row in candidate_rows(r)]
+    assert rows[2][-1] == "MOVE_HAZE"

@@ -36,3 +36,9 @@ def test_offered_uses_the_table():
     assert not ok and why == "not offered: not modelled by expectimax2-v2"
     ok, why = MC.offered("MOVE_SCREECH", "expectimax2-v2")
     assert not ok and why.startswith("foe_drop: stat stages reset")
+
+
+def test_required_hm_defog_is_flagged_not_modelled():
+    """007 contract: the one move that can reach a final team unmodelled is a required HM (FR-014); Defog
+    ('other', not in v3's MODELLED) is flagged, so _report warns about it; Surf (an attack) is not."""
+    assert MC.not_modelled(MC.ALT_POLICY, ("MOVE_DEFOG", "MOVE_SURF"), None) == ["MOVE_DEFOG"]

@@ -258,14 +258,14 @@ description: "Task list for 007 Status Moves and Held Items"
 
 **Independent Test**: any quick run's `result.json` meets contracts/candidate-report.md, and the "Candidates" sheet matches it row for row.
 
-- [ ] T047 [US3] In `src/platsim/optimizer/run.py` `_report` / `_optimizer_provenance`, write into `provenance.optimizer`:
+- [X] T047 [US3] In `src/platsim/optimizer/run.py` `_report` / `_optimizer_provenance`, write into `provenance.optimizer`:
   - `candidate_mode`, `item_tie_rule`, `assumptions` (friendship 255, IVs 15, Hidden Power from `default_ivs`, computed and not typed in);
   - `excluded_moves`;
   - `candidate_tests`, with every offered alternative exactly once, untested ones as `"not tested: <reason>"`, and `not_modelled` from `move_classes.not_modelled(policy, …)`.
-- [ ] T048 [US3] Add the warning in `src/platsim/optimizer/run.py` (or wherever `rep.warnings` is filled for optimize) for final-team moves and items the policy doesn't model, using the contract wording.
-- [ ] T049 [US3] Add the "Candidates" sheet after "Resources" in `src/platsim/report/xlsx.py` (update `SHEET_NAMES`). Amend `specs/001-champion-team-optimizer/contracts/spreadsheet.md` and `cli.md`/`http-api.md` with a pointer to `specs/007-status-moves-items/contracts/candidate-report.md`.
-- [ ] T050 [P] [US3] Write `tests/unit/test_reports.py` additions: the sheet tuple includes "Candidates"; the rows equal `candidate_tests`; `report --rerender` carries `candidate_tests`; a result with an unmodelled move gets exactly one warning per member and move.
-- [ ] T051 [US3] Web: in `src/platsim/web/result_view.py`, add a per-member "offered N / tested M / adopted K" line linking to the report files, with warnings shown as today. Run `uv run pytest -q -m browser tests/browser/` (SC-003 of 002 still fits 1080p). Commit and push.
+- [X] T048 [US3] Add the warning in `src/platsim/optimizer/run.py` (or wherever `rep.warnings` is filled for optimize) for final-team moves and items the policy doesn't model, using the contract wording.
+- [X] T049 [US3] Add the "Candidates" sheet after "Resources" in `src/platsim/report/xlsx.py` (update `SHEET_NAMES`). Amend `specs/001-champion-team-optimizer/contracts/spreadsheet.md` and `cli.md`/`http-api.md` with a pointer to `specs/007-status-moves-items/contracts/candidate-report.md`.
+- [X] T050 [P] [US3] Write `tests/unit/test_reports.py` additions: the sheet tuple includes "Candidates"; the rows equal `candidate_tests`; `report --rerender` carries `candidate_tests`; a result with an unmodelled move gets exactly one warning per member and move.
+- [X] T051 [US3] Web: in `src/platsim/web/result_view.py`, add a per-member "offered N / tested M / adopted K" line linking to the report files, with warnings shown as today. Run `uv run pytest -q -m browser tests/browser/` (SC-003 of 002 still fits 1080p). Commit and push.
 
 ---
 

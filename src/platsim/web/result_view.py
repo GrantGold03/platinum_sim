@@ -25,6 +25,17 @@ def _species_abilities() -> dict[str, list[str]]:
     return {k: [a for a in s.abilities if a] for k, s in load_species().items()}
 
 
+def _alternatives_summary(d: dict) -> str | None:
+    """007 (contracts/candidate-report.md): "offered N / tested M / adopted K" over all members; the full
+    per-alternative table is the report files' Candidates sheet (Constitution IV: shorter view allowed)."""
+    tests = (((d.get("provenance") or {}).get("optimizer") or {}).get("candidate_tests"))
+    if tests is None:
+        return None
+    tested = sum(1 for t in tests if t.get("n_paired"))
+    adopted = sum(1 for t in tests if t.get("adopted"))
+    return f"offered {len(tests)} / tested {tested} / adopted {adopted} (details: Candidates sheet in result.xlsx)"
+
+
 def _ability_name(const: str) -> str:
     from platsim.legality.validator import showdown_name
 
@@ -77,6 +88,7 @@ def build_result_view(job: dict) -> dict | None:
         "legality_options": (d.get("provenance") or {}).get("legality_options"),
         "required_hms": (d.get("provenance") or {}).get("required_hms"),  # 006; None for runs without it
         "warnings": [clean(w) for w in d.get("warnings") or []],
+        "alternatives": _alternatives_summary(d),  # 007; None for runs without the stage
         "no_qualifying": d.get("no_qualifying"),
         "platsim_version": job.get("platsim_version"),
     }

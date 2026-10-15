@@ -391,6 +391,7 @@
       ["Budget", s.budget],
       ["Legality options", lo ? RULES.map(([key, , label]) => `${label} ${lo[key] ? "allowed" : "off"}`).join(", ") : null],
       ["Required HMs", hmNames(s.required_hms)],
+      ["Status moves and items", s.alternatives || null], // 007: offered / tested / adopted
       ["Version", s.platsim_version ? `platsim ${s.platsim_version}` : "platsim version not recorded"],
     ]);
     els.summary.replaceChildren(dl);

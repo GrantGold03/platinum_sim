@@ -42,3 +42,10 @@ For each single-copy TM and limited item: who uses it, copies used, and copies a
 
 ## Sheet "Divergences"
 Every ledger entry that applies to this run, with its resolution and impact.
+
+## Amendment (007, 2026-10-15)
+
+A sheet **"Candidates"** sits between "Resources" and "Provenance": one row per
+`provenance.optimizer.candidate_tests` entry (the status-move and held-item alternatives the optimizer
+offered, how far each got, its paired statistics and whether it was adopted). For `platsim evaluate`
+reports it has the header row only. Full definition: `specs/007-status-moves-items/contracts/candidate-report.md`.

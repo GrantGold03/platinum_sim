@@ -661,6 +661,36 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
     return d
 
 
+def load_move_name(const: str) -> str:
+    from platsim.decomp.moves import load_moves
+
+    return load_moves()[const].name
+
+
+def _candidate_provenance(state: _State, specs) -> dict:
+    """007 FR-013 / contracts/candidate-report.md: every offered alternative and its outcome, the moves and
+    items left out with their reasons, the item tie rule and the assumptions."""
+    from platsim.legality.models import default_ivs
+    from platsim.optimizer import item_classes as IC
+
+    st = state.data["stages"]
+    alt = (st.get("level_search") or {}).get("alternatives") or {}
+    tests = [r for r in alt.get("records") or [] if not r.get("member_done")]
+    members = (st.get("prune") or {}).get("members") or []
+    excluded_moves, excluded_items = {}, {}
+    for slot, s in enumerate(specs):
+        summ = members[slot].get(s.variant) if slot < len(members) else None
+        if summ:
+            excluded_moves[str(slot + 1)] = summ.get("excluded") or {}
+            excluded_items[str(slot + 1)] = summ.get("excluded_items") or {}
+    hp_type, hp_power = C.hidden_power(default_ivs())
+    return {"candidate_tests": tests, "excluded_moves": excluded_moves, "excluded_items": excluded_items,
+            "item_tie_rule": IC.ITEM_TIE_RULE, "alternatives_levels": alt.get("levels"),
+            "alternatives_level_rule": alt.get("level_rule"), "alternatives_round_size": alt.get("round_size"),
+            "assumptions": {"friendship": C.FRIENDSHIP, "ivs": default_ivs()["hp"],
+                            "hidden_power": f"{hp_type.removeprefix('TYPE_').title()} {hp_power}"}}
+
+
 def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, abilities) -> bool:
     from platsim.legality.validator import format_violations, showdown_name, validate
     from platsim.report import write_all
@@ -674,10 +704,14 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
 
     rep.obtained_from, rep.held_item_sources, rep.held_item_source_refs = team_sources(real.team, led)
     rep.resources = R.resource_lines(real, led)
+    final_specs = R.place_required_hms(specs, levels, led, req.required_hms)[0] if req.required_hms else specs
     rep.provenance["optimizer"] = _optimizer_provenance(req, preset, state, {
         "final_levels_start": list(levels), "runner_up_comparison": comparison,
-        "final_team_labels": [m.label() for m in (R.place_required_hms(specs, levels, led, req.required_hms)[0]
-                                                  if req.required_hms else specs)]})
+        "final_team_labels": [m.label() for m in final_specs], **_candidate_provenance(state, specs)})
+    for s in final_specs:  # 007 contract: a required HM the player does not model is carried anyway (FR-014)
+        for m in MC.not_modelled(MC.ALT_POLICY, s.moves, None):
+            rep.warnings.append(f"{C.display_name(s.species)} carries {load_move_name(m)}, which {MC.ALT_POLICY} does not model; "
+                                "its in-battle effect is applied by the engine but the player does not plan around it.")
     rep.provenance["validator"] = {"violations": 0, "final_levels_checked": finals}
     if req.required_hms:  # 006 FR-008: the constraint the result was made under
         rep.provenance["required_hms"] = list(req.required_hms)

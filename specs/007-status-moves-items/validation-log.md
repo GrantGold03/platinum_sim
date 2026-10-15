@@ -257,3 +257,17 @@ A read-only comparison of every offered status effect and held item, decomp vs S
   | Gardevoir | Grass Knot, Hidden Power | Ice Punch, Shock Wave | yes |
 
 - **Known limitation, recorded:** greedy-v1 scores power-1 moves as 0 (`sim/policy/greedy.mjs`), so the greedy screen undervalues sets that carry Return or Hidden Power. The level search, alternatives and confirm stages use expectimax2, which models these powers (`variablePower`). greedy-v1 is pinned by the golden test and is not changed here.
+
+## T047-T051 Report (2026-10-15)
+
+- **`provenance.optimizer` gains:**
+  - `candidate_tests` (every alternative record);
+  - `excluded_moves` and `excluded_items` per slot (from the prune-stage summaries);
+  - `item_tie_rule`;
+  - `alternatives_levels`, `_level_rule` and `_round_size`;
+  - `assumptions` (friendship 255, IVs 15, Hidden Power "Dark 70", computed, not typed);
+  - `candidate_mode`, and `alternatives` in policy_per_stage and seeds (T033).
+- **Warning:** a final member carrying a move the player doesn't model gets the contract's warning. Only a required HM can do that (Defog). Unit check: `not_modelled(v3, Defog, Surf) == [Defog]`.
+- **xlsx:** the "Candidates" sheet comes after "Resources" (`SHEET_NAMES`, `CANDIDATE_HEADERS`, `candidate_rows`). The 001 spreadsheet contract is amended. `report --rerender` keeps provenance as is (`rerender.py:110`), so candidate_tests carry over.
+- **Web:** the summary gains "Status moves and items: offered N / tested M / adopted K (details: Candidates sheet in result.xlsx)". The row is absent for runs without the stage.
+- **Tests:** `test_reports.py` 14 passed (new sheet tuple; Candidates rows equal candidate_tests); browser 6 passed (the 1080p fit still holds); `test_web.py` 20 passed; `test_modelled_table.py` 5 passed.
