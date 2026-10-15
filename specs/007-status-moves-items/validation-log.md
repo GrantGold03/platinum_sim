@@ -223,3 +223,37 @@ A read-only comparison of every offered status effect and held item, decomp vs S
   - choice-lock edge cases;
   - the Encore failure list;
   - Zoom Lens when the target switched in.
+
+## T059-T062 Variable-power attacks (2026-10-15)
+
+- **Where the code lives.** `weight_hg` (speciesproc.c conversion, with the rounding-override list parsed from `species_weight_rounding_override`) is in `optimizer/candidates.py` and reads `res/pokemon/<sp>/data.json`. The task named `decomp/species.py`; this way no generated-data change is needed. The JS port `sim/ai/calcdamage.mjs speciesWeightHg` uses the same rule.
+- **Formulas:**
+  - `hidden_power` from BtlCmd_CalcHiddenPowerParams;
+  - Low Kick / Grass Knot from `weight_to_power.h`;
+  - Gyro Ball min(150, 1+25·foeSpe/userSpe), with the member's stats at its reference level and the foe's from trainers.json (iv, level, nature);
+  - Wring Out 121;
+  - Magnitude expected 71.0, parsed from BtlCmd_CalcMagnitudePower;
+  - Punishment 60;
+  - Return 102.
+- `is_attack` now = move_classes category attack or variable_attack. For fixed-power moves this is the same set as before.
+- **Positive controls (`tests/unit/test_variable_power.py`, 11 passed; plus `test_optimizer_candidates.py` 5 passed):**
+  - Return 102;
+  - Hidden Power Dark 70 at IV 15 / 31, and Fighting 30 at IV 0;
+  - Low Kick 120 vs Hippowdon, 40 vs Roserade;
+  - Garchomp 950 hg;
+  - the Snowpoint NPC-trade Haunter's fixed IVs give its own Hidden Power;
+  - Frustration, Seismic Toss, Flail, Natural Gift and Fling are not in pools;
+  - Return enters Snorlax's pool.
+  - **Cross-check note:** Mr. Mime comes out at 544 hg from the decomp formula; Showdown says 54.5 kg. The decomp value is used, and the JS port agrees with it.
+- **B1 pools at Lv 55, compared with the `f88cdd0` snapshot.** Only variable-power attacks were added:
+
+  | Member | Added | Removed | Best set changed |
+  |---|---|---|---|
+  | Infernape | Grass Knot | Rock Slide | yes |
+  | Staraptor | Return | U-turn | yes |
+  | Luxray | Return | Bite | yes |
+  | Garchomp | Return | Fire Blast | no |
+  | Gyarados | Return | Strength | no |
+  | Gardevoir | Grass Knot, Hidden Power | Ice Punch, Shock Wave | yes |
+
+- **Known limitation, recorded:** greedy-v1 scores power-1 moves as 0 (`sim/policy/greedy.mjs`), so the greedy screen undervalues sets that carry Return or Hidden Power. The level search, alternatives and confirm stages use expectimax2, which models these powers (`variablePower`). greedy-v1 is pinned by the golden test and is not changed here.

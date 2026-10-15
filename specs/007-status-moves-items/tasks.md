@@ -299,8 +299,8 @@ description: "Task list for 007 Status Moves and Held Items"
 
 **Independent Test**: for a member that learns Return, the candidate pool scores Return at power 102. Low Kick's value against Hippowdon uses power 120.
 
-- [ ] T059 [P] [US4] Extract species weight in hectograms in `src/platsim/decomp/species.py` from `pokeplatinum/res/pokemon/<sp>/data.json` `pokedex_data.weight_pounds`, using the conversion in `pokeplatinum/tools/dataproc/src/speciesproc.c:696-751`. Positive controls: Garchomp = 950, Mr. Mime = 545 (cross-check only). Regenerate if this changes `data/generated/species.json`.
-- [ ] T060 [US4] Extend `league_opponents()` in `src/platsim/optimizer/candidates.py` with each foe's level and stats (from `trainers.json` and base stats with the trainer IVs/EVs the battle uses) and weight. Add `variable_power(member variant, move, foe)` implementing the R3 table, sharing formulas with `sim/policy/expectimax2.mjs` `variablePower`:
+- [X] T059 [P] [US4] Extract species weight in hectograms in `src/platsim/decomp/species.py` from `pokeplatinum/res/pokemon/<sp>/data.json` `pokedex_data.weight_pounds`, using the conversion in `pokeplatinum/tools/dataproc/src/speciesproc.c:696-751`. Positive controls: Garchomp = 950, Mr. Mime = 545 (cross-check only). Regenerate if this changes `data/generated/species.json`.
+- [X] T060 [US4] Extend `league_opponents()` in `src/platsim/optimizer/candidates.py` with each foe's level and stats (from `trainers.json` and base stats with the trainer IVs/EVs the battle uses) and weight. Add `variable_power(member variant, move, foe)` implementing the R3 table, sharing formulas with `sim/policy/expectimax2.mjs` `variablePower`:
   - Return 102 (friendship 255);
   - Hidden Power type and power from the variant's IVs (`default_ivs` or `fixed_mon["ivs"]`);
   - Low Kick / Grass Knot from `include/data/battle/weight_to_power.h`;
@@ -308,8 +308,8 @@ description: "Task list for 007 Status Moves and Held Items"
   - Wring Out / Crush Grip 121;
   - Magnitude 71;
   - Punishment 60.
-- [ ] T061 [US4] In `src/platsim/optimizer/candidates.py`, `is_attack` accepts `variable_attack` moves. `move_value` uses `variable_power` per foe, and the Hidden Power type comes from the IVs.
-- [ ] T062 [P] [US4] Write `tests/unit/test_variable_power.py`:
+- [X] T061 [US4] In `src/platsim/optimizer/candidates.py`, `is_attack` accepts `variable_attack` moves. `move_value` uses `variable_power` per foe, and the Hidden Power type comes from the IVs.
+- [X] T062 [P] [US4] Write `tests/unit/test_variable_power.py`:
   - Return = 102;
   - default Hidden Power = Dark 70;
   - an NPC-trade variant with fixed IVs gets its own Hidden Power;

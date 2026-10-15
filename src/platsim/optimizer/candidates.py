@@ -66,6 +66,7 @@ from __future__ import annotations
 
 import difflib
 import itertools
+import math
 import json
 import re
 from dataclasses import dataclass, field
@@ -329,7 +330,121 @@ def legal_moves(variant: Variant, level: int, led) -> list[str]:
 
 
 def is_attack(mv) -> bool:
-    return mv.power > 1 and mv.category != "CLASS_STATUS" and mv.effect not in EXCLUDED_ATTACK_EFFECTS
+    """An attack the coverage search scores: fixed power > 1 (as before 007), or since 007 (US4, spec
+    FR-012) a variable-power attack whose power `variable_power` computes. Fixed damage, conditional
+    and reactive attacks stay out (move_classes, spec FR-003)."""
+    return MC.move_class(mv.const).category in (MC.ATTACK, MC.VARIABLE_ATTACK)
+
+
+# ---- 007 US4: variable power, per member and League foe (research R3) -------------------------------
+FRIENDSHIP = 255  # spec FR-012 (user 2026-10-14): every member at maximum friendship
+
+
+@cache
+def _weight_overrides() -> frozenset[str]:
+    """Species whose imperial weight gets -0.1 lb before conversion (speciesproc.c
+    species_weight_rounding_override)."""
+    text = (PP / "tools" / "dataproc" / "src" / "speciesproc.c").read_text()
+    body = text[text.index("species_weight_rounding_override"):]
+    body = body[:body.index("default:")]
+    return frozenset(re.findall(r"case (SPECIES_\w+):", body))
+
+
+@cache
+def weight_hg(species_const: str) -> int:
+    """Weight in hectograms as speciesproc.c get_weight_hectograms computes it."""
+    d = json.loads((PP / "res" / "pokemon" / species_const.removeprefix("SPECIES_").lower() / "data.json").read_text())["pokedex_data"]
+    if "weight_kilograms" in d:
+        kg = float(d["weight_kilograms"])
+    else:
+        kg = (float(d["weight_pounds"]) - (0.1 if species_const in _weight_overrides() else 0.0)) * 0.45359237
+    return int(math.floor(kg * 10 + 0.5))  # C round(): half away from zero (kg >= 0)
+
+
+@cache
+def _weight_to_power() -> tuple[tuple[int, int], ...]:
+    text = (PP / "include" / "data" / "battle" / "weight_to_power.h").read_text()
+    return tuple((int(a, 0), int(b, 0)) for a, b in re.findall(r"\{\s*(\w+),\s*(\w+)\s*\}", text))
+
+
+@cache
+def _magnitude_expected_power() -> float:
+    """Expected Magnitude power from BtlCmd_CalcMagnitudePower's thresholds (battle_script.c)."""
+    text = (PP / "src" / "battle" / "battle_script.c").read_text()
+    body = text[text.index("static BOOL BtlCmd_CalcMagnitudePower(BattleSystem *battleSys, BattleContext *battleCtx)\n{"):]
+    body = body[:body.index("msgTemp")]
+    thr = [int(x) for x in re.findall(r"magnitude < (\d+)", body)] + [100]
+    pw = [int(x) for x in re.findall(r"movePower = (\d+)", body)]
+    lo, exp = 0, 0.0
+    for t, p in zip(thr, pw):
+        exp += (t - lo) / 100 * p
+        lo = t
+    return exp
+
+
+@cache
+def _type_order() -> tuple[str, ...]:
+    return tuple((PP / "generated" / "pokemon_types.txt").read_text().split())
+
+
+def hidden_power(ivs: dict) -> tuple[str, int]:
+    """(type, power) of Hidden Power for these IVs (BtlCmd_CalcHiddenPowerParams, battle_script.c)."""
+    order = ("hp", "atk", "def", "spe", "spa", "spd")
+    power = sum(((ivs[k] & 2) >> 1) << i for i, k in enumerate(order)) * 40 // 63 + 30
+    t = sum((ivs[k] & 1) << i for i, k in enumerate(order)) * 15 // 63 + 1
+    types = _type_order()
+    if t >= types.index("TYPE_MYSTERY"):
+        t += 1
+    return types[t], power
+
+
+@cache
+def league_foe_details() -> tuple[tuple[int, dict, int], ...]:
+    """(level, stats, weight_hg) for every League mon, aligned with league_opponents()."""
+    from platsim.decomp.stats import calc_stats
+
+    data = {t["key"]: t for t in json.loads(TRAINERS_JSON.read_text())["trainers"]}
+    out = []
+    for k in GAUNTLET_KEYS:
+        for mon in data[k]["party"]:
+            sp = MS.by_constant()[mon["species"]]
+            iv = {s: int(mon["iv"]) for s in ("hp", "atk", "def", "spa", "spd", "spe")}
+            ev = {s: 0 for s in iv}
+            st = calc_stats(sp.base_stats, iv, ev, int(mon["level"]), mon["nature"], mon["species"])
+            out.append((int(mon["level"]), st, weight_hg(mon["species"])))
+    return tuple(out)
+
+
+def variable_power(const_member: str, move_const: str, foe: int, *, level: int = 50, ivs: dict | None = None) -> tuple[str, float]:
+    """(type, power) of a variable-power attack for this member against League foe `foe` (research R3)."""
+    from platsim.decomp.stats import calc_stats
+    from platsim.legality.models import default_evs, default_ivs
+
+    m = load_moves()[move_const]
+    e = m.effect
+    ivs = ivs or default_ivs()
+    if e == "BATTLE_EFFECT_POWER_BASED_ON_FRIENDSHIP":
+        return m.type, FRIENDSHIP * 10 // 25  # effect_script_0121.s; trainer_ai.c:3019
+    if e == "BATTLE_EFFECT_RANDOM_POWER_BASED_ON_IVS":
+        return hidden_power(ivs)
+    _, fstats, fweight = league_foe_details()[foe]
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_WEIGHT":
+        for limit, power in _weight_to_power():
+            if limit == 0xFFFF:
+                return m.type, 120
+            if limit >= fweight:
+                return m.type, power
+    if e == "BATTLE_EFFECT_POWER_BASED_ON_LOW_SPEED":
+        sp = MS.by_constant()[const_member]
+        mine = calc_stats(sp.base_stats, ivs, default_evs(), level, "NATURE_HARDY", const_member)
+        return m.type, min(150, 1 + 25 * fstats["spe"] // max(1, mine["spe"]))
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_HP":
+        return m.type, 121  # 1 + 120 * curHP / maxHP against a foe at full HP (BtlCmd_CalcWringOutPower)
+    if e == "BATTLE_EFFECT_PSYWAVE":  # Magnitude (the effect name is the decomp's)
+        return m.type, _magnitude_expected_power()
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_STAT_UP":
+        return m.type, 60  # Punishment base, foe without boosts
+    raise ValueError(f"{move_const}: no variable-power rule for {e}")
 
 
 def dominates(a, b) -> bool:
@@ -354,14 +469,23 @@ def prune(move_consts: list[str]) -> tuple[list[str], dict[str, str]]:
     return kept, dropped
 
 
-def move_value(const_member: str, move_const: str) -> list[float]:
-    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order."""
+def move_value(const_member: str, move_const: str, *, level: int = 50, ivs: dict | None = None) -> list[float]:
+    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order.
+    A variable-power attack uses its computed type and power per foe (007 US4)."""
     m = load_moves()[move_const]
     sp = MS.by_constant()[const_member]
     acc = 1.0 if m.accuracy == 0 else m.accuracy / 100
-    stab = STAB_WEIGHT if m.type in sp.types else 1.0
     stat = sp.base_stats["atk"] if m.category == "CLASS_PHYSICAL" else sp.base_stats["spa"]
-    base = m.power * acc * stab * stat * EFFECT_WEIGHT.get(m.effect, 1.0)
+    w_eff = EFFECT_WEIGHT.get(m.effect, 1.0)
+    if MC.move_class(move_const).category == MC.VARIABLE_ATTACK:
+        out = []
+        for i, (_, types, w) in enumerate(league_opponents()):
+            t, power = variable_power(const_member, move_const, i, level=level, ivs=ivs)
+            stab = STAB_WEIGHT if t in sp.types else 1.0
+            out.append(w * power * acc * stab * stat * w_eff * type_mult(t, types))
+        return out
+    stab = STAB_WEIGHT if m.type in sp.types else 1.0
+    base = m.power * acc * stab * stat * w_eff
     return [w * base * type_mult(m.type, types) for _, types, w in league_opponents()]
 
 
@@ -447,6 +571,17 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
     return out or [None]
 
 
+def _variant_ivs(variant: Variant, led) -> dict:
+    """The IVs this variant battles with: an NPC trade's fixed IVs, else the default (FR-008)."""
+    from platsim.legality.models import default_ivs
+
+    ivs = default_ivs()
+    for o in variant.options(led):
+        if o.fixed_mon and o.fixed_mon.get("ivs"):
+            ivs.update({k: x for k, x in o.fixed_mon["ivs"].items() if x is not None})
+    return ivs
+
+
 def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS,
                       team: tuple[str, ...] | None = None, policy: str = MC.ALT_POLICY) -> MemberCandidates:
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
@@ -459,9 +594,10 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
         elif MC.move_class(m).category in MC.STATUS_CATEGORIES:
             legal_status.append(m)
     attacks, dropped = prune(legal)
-    scores = {m: sum(move_value(const, m)) for m in attacks}
+    ivs = _variant_ivs(variant, led)
+    scores = {m: sum(move_value(const, m, level=level, ivs=ivs)) for m in attacks}
     pool = sorted(attacks, key=lambda m: (-scores[m], m))[:POOL]
-    vals = {m: move_value(const, m) for m in pool}
+    vals = {m: move_value(const, m, level=level, ivs=ivs) for m in pool}
     size = min(4, len(pool))
     combos = []
     for combo in itertools.combinations(sorted(pool), size):
