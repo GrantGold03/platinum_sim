@@ -128,7 +128,7 @@ description: "Task list for 007 Status Moves and Held Items"
 
 ### Player mechanics for status moves (v3, behind flags; each with a decomp-cited unit test in `sim/test/expectimax2_v3_mechanics.test.mjs`)
 
-- [ ] T021 [US1] Weather setting in `sim/policy/expectimax2.mjs`:
+- [X] T021 [US1] Weather setting in `sim/policy/expectimax2.mjs`:
   - Rain Dance, Sunny Day, Sandstorm and Hail set `S.weather` for 5 turns, or 8 with the matching rock (ES 0136/0137/0115/0164, effect_param 3);
   - weather expires at end of turn (BCP:1113-1212);
   - Sand Stream and the other weather abilities apply on switch-in;
@@ -137,17 +137,17 @@ description: "Task list for 007 Status Moves and Held Items"
   - Moonlight, Morning Sun and Synthesis heal 1/2, 2/3 or 1/4 by weather (BS:5966-5978), fixing the v2 model bug **only under v3 flags**.
 
   Tests check each turn count and heal fraction against the cited lines.
-- [ ] T022 [US1] Leech Seed: Grass types are immune; Substitute blocks it; it drains 1/8 at end of turn to the seeder's active (BCP:1378-1392); it clears on switch (BL:2055-2076).
-- [ ] T023 [US1] Substitute:
+- [X] T022 [US1] Leech Seed: Grass types are immune; Substitute blocks it; it drains 1/8 at end of turn to the seeder's active (BCP:1378-1392); it clears on switch (BL:2055-2076).
+- [X] T023 [US1] Substitute:
   - costs ¼ max HP and fails at or below that (BS:5211-5226);
   - damage goes to the substitute's HP, and the outcome buckets include "breaks the substitute";
   - it blocks status, stat drops and Leech Seed (BS:9173);
   - read recoil/drain on hitting a substitute from the decomp and record it.
-- [ ] T024 [US1] Wish (heals ½ of the recipient's max HP at the end of the next turn, BCP:1085-1110), Aqua Ring and Ingrain (1/16, BCP:1311-1345; Ingrain also removes our switch actions), Safeguard (5 turns; blocks major status and confusion, BS:5754-5766), Endure (shares the Protect counter, BS:5149-5160; survives at 1 HP, BCP:3387-3403).
-- [ ] T025 [US1] Taunt (blocks status moves, BCP:2558; the turn count read from BS TryTaunt and recorded), Encore (BS:4725, BCP:1591-1616; our own lock is honoured in `playerMoveActs` and at ply 2), confusion from Confuse Ray, Swagger and Flatter (50% self-hit at 40 power, typeless, BCP:2617-2668; Swagger +2 Atk, Flatter +1 SpA), Attract (gender check BS:5727; 50% immobilised, BCP:2669). Measure and record the added decision time per chance node.
-- [ ] T026 [US1] Hazards in `doSwitch`: Spikes (1/8, 1/6, 1/4, BS:5388-5450), Stealth Rock (scaled by Rock-type effectiveness, BS:8302-8335), Toxic Spikes (BS:7592-7650; absorbed by Poison types). The leaf hazard term per remaining foe switch-in is behind flag `leafHazards`.
-- [ ] T027 [US1] Baton Pass: detect the mid-turn switch request (find Showdown's field for it and record it), choose the target, and pass boosts, substitute and volatiles (BL:2055-2110 `SYSCTL_BATON_PASS`) without zeroing them in `doSwitch`.
-- [ ] T028 [US1] Residual-projection leaf behind flag `leafResidual`: per active, the per-turn HP drift from tox n/16, psn/brn 1/8, Leech Seed ±1/8, weather 1/16, Leftovers/Black Sludge, Aqua Ring/Ingrain and a pending Wish, projected over H turns (option `leafHorizon`). Also add state-dependent status penalties behind `leafStatusState`. Both are off in `V3_REF_OPTS` (the reference relies on search, not projection).
+- [X] T024 [US1] Wish (heals ½ of the recipient's max HP at the end of the next turn, BCP:1085-1110), Aqua Ring and Ingrain (1/16, BCP:1311-1345; Ingrain also removes our switch actions), Safeguard (5 turns; blocks major status and confusion, BS:5754-5766), Endure (shares the Protect counter, BS:5149-5160; survives at 1 HP, BCP:3387-3403).
+- [X] T025 [US1] Taunt (blocks status moves, BCP:2558; the turn count read from BS TryTaunt and recorded), Encore (BS:4725, BCP:1591-1616; our own lock is honoured in `playerMoveActs` and at ply 2), confusion from Confuse Ray, Swagger and Flatter (50% self-hit at 40 power, typeless, BCP:2617-2668; Swagger +2 Atk, Flatter +1 SpA), Attract (gender check BS:5727; 50% immobilised, BCP:2669). Measure and record the added decision time per chance node.
+- [X] T026 [US1] Hazards in `doSwitch`: Spikes (1/8, 1/6, 1/4, BS:5388-5450), Stealth Rock (scaled by Rock-type effectiveness, BS:8302-8335), Toxic Spikes (BS:7592-7650; absorbed by Poison types). The leaf hazard term per remaining foe switch-in is behind flag `leafHazards`.
+- [X] T027 [US1] Baton Pass: detect the mid-turn switch request (find Showdown's field for it and record it), choose the target, and pass boosts, substitute and volatiles (BL:2055-2110 `SYSCTL_BATON_PASS`) without zeroing them in `doSwitch`.
+- [X] T028 [US1] Residual-projection leaf behind flag `leafResidual`: per active, the per-turn HP drift from tox n/16, psn/brn 1/8, Leech Seed ±1/8, weather 1/16, Leftovers/Black Sludge, Aqua Ring/Ingrain and a pending Wish, projected over H turns (option `leafHorizon`). Also add state-dependent status penalties behind `leafStatusState`. Both are off in `V3_REF_OPTS` (the reference relies on search, not projection).
 - [ ] T028b [US1] Speed probe: 20 gauntlets each of `expectimax2-v3` (current `V3_OPTS`) and `expectimax2-v3-ref` on `tests/fixtures/policy_benchmark_team.json`. Record gauntlets/s and ms per decision against v2's measured 37-49 ms. T031 uses these numbers; T063 records the final ones and logs any change to the round sizes.
 - [ ] T029 [US1] SC-008 positions for status categories in `sim/test/expectimax2_v3_positions.test.mjs`, built with `sim/test/ai_fixtures.mjs` `leagueBattle`. For each of weather, Leech Seed, Substitute, Toxic stall, a sleep move, Thunder Wave, Wish/Recover at low HP, Taunt, hazards and Baton Pass:
   - a position where `expectimax2-v3-ref` chooses the move and v2 doesn't;

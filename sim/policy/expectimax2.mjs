@@ -153,7 +153,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { calcDamage, critChance, fromShowdown, DECOMP, ENUMS } from '../damage.mjs';
+import { calcDamage, critChance, fromShowdown, DECOMP, ENUMS, TYPE_CHART } from '../damage.mjs';
 import { createAdapter } from '../ai/adapter.mjs';
 import { AIRng, checkInvalidMoves, speedValuesNow, trainerAIMain } from '../ai/choose.mjs';
 import { createAIState, processLog, stateFor } from '../ai/opponent.mjs';
@@ -177,7 +177,7 @@ export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 // behaves as v2, but draws its own AI sample streams because the name seeds them). v3-ref is the
 // expensive reference the production v3 settings are accepted against (Constitution VI).
 export const V3_OPTS = Object.freeze({ ...V2_OPTS, v3State: true });
-export const V3_REF_OPTS = Object.freeze({ ...V2_OPTS, v3State: true, ref: true });
+export const V3_REF_OPTS = Object.freeze({ ...V2_OPTS, v3State: true, ref: true, kRoot: 32, kPly2: 8, switchBeam: 6, ply2Switches: true, fullRolls: true });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0 };
@@ -280,6 +280,30 @@ export const MODELLED = {
   },
 };
 const eff = (rec) => rec.effect.replace(/^BATTLE_EFFECT_/, '');
+
+// ---- 007 v3 mechanics tables (decomp locations in the comments; active only when S.v3) ----------
+// Weather moves (effect_script_0136/0137/0115/0164): 5 turns, + the matching rock's effectParam.
+const WEATHER_MOVES = { WEATHER_RAIN: 'rain', WEATHER_SUN: 'sun', WEATHER_SANDSTORM: 'sand', WEATHER_HAIL: 'hail' };
+const ROCK_OF = { rain: 'HOLD_EFFECT_EXTEND_RAIN', sun: 'HOLD_EFFECT_EXTEND_SUN', sand: 'HOLD_EFFECT_EXTEND_SANDSTORM', hail: 'HOLD_EFFECT_EXTEND_HAIL' };
+// Weather abilities on switch-in: permanent weather (no turn count; adapter reads *_PERM).
+const WEATHER_ABILITY = { ABILITY_DRIZZLE: 'rain', ABILITY_DROUGHT: 'sun', ABILITY_SAND_STREAM: 'sand', ABILITY_SNOW_WARNING: 'hail' };
+// Durations drawn at random in the game are modelled by their mean (policy model, not a game fact):
+// Taunt `Random 2, 3` = 3-5 (subscript_taunt_start.s:8) -> 4; Encore % 5 + 3 = 3-7
+// (battle_script.c:4742) -> 5; confusion `Random 3, 2` = 2-5 (subscript_confuse.s:34) -> 3.
+const TAUNT_TURNS = 4, ENCORE_TURNS = 5, CONFUSION_TURNS = 3;
+const CONFUSE_EFFECTS = { STATUS_CONFUSE: null, ATK_UP_2_STATUS_CONFUSION: { atk: 2 }, SP_ATK_UP_CAUSE_CONFUSION: { spa: 1 } };
+const V3_TARGETED = new Set(['STATUS_LEECH_SEED', 'TAUNT', 'ENCORE', 'INFATUATE', ...Object.keys(CONFUSE_EFFECTS)]);
+
+// Rock-type multiplier for Stealth Rock (battle_script.c:8313-8335: maxHP / 2,4,8,16,32 by the
+// TYPE_ROCK matchup), from the decomp type chart the damage port parses.
+function rockMultiplier(types) {
+  let m = 1;
+  for (const t of types) {
+    const def = `TYPE_${t.toUpperCase()}`;
+    for (const e of TYPE_CHART.entries) if (e.atk === 'TYPE_ROCK' && e.def === def) m *= e.mul / 10;
+  }
+  return m;
+}
 
 function moveInfo(gd, sdId) {
   const key = gd.fromSdMove.get(sdId);
@@ -681,7 +705,11 @@ function damageOutcomes(X, S, u, t, rec) {
     non.sort((a, b) => a[0] - b[0]);
     const tot = non.reduce((s, x) => s + x[1], 0);
     const lo = non[0][0], hi = non[non.length - 1][0];
-    if (hi - lo <= Math.max(2, t.maxhp * 0.06)) {
+    if (X.opts.fullRolls) { // v3-ref: every distinct damage value is its own branch (no bucket compression)
+      const by = new Map();
+      for (const [dmg, w] of non) by.set(dmg, (by.get(dmg) ?? 0) + w);
+      for (const [dmg, w] of by) out.push({ p: w, dmg });
+    } else if (hi - lo <= Math.max(2, t.maxhp * 0.06)) {
       out.push({ p: tot, dmg: Math.round(non.reduce((s, x) => s + x[0] * x[1], 0) / tot) });
     } else {
       let acc = 0, s1 = 0, w1 = 0, s2 = 0, w2 = 0;
@@ -703,6 +731,12 @@ function hitChance(X, S, u, t, rec) {
   if (e === 'BYPASS_ACCURACY' || e === 'PRIORITY_NEG_1_BYPASS_ACCURACY') return 1;
   const ua = staticInfo(X, u).ability, ta = staticInfo(X, t).ability;
   const moldBreaker = ua === 'ABILITY_MOLD_BREAKER';
+  let baseAcc = rec.accuracy;
+  if (S.v3 && ![ua, ta].some((a) => a === 'ABILITY_CLOUD_NINE' || a === 'ABILITY_AIR_LOCK')) {
+    if (e === 'THUNDER' && S.weather === 'rain') return 1; // :3025
+    if (e === 'BLIZZARD' && S.weather === 'hail') return 1; // :3029
+    if (e === 'THUNDER' && S.weather === 'sun') baseAcc = 50; // :2915
+  }
   let accStages = u.boosts.accuracy;
   let evaStages = -t.boosts.evasion;
   if (ua === 'ABILITY_SIMPLE') accStages *= 2;
@@ -711,7 +745,7 @@ function hitChance(X, S, u, t, rec) {
   if (ua === 'ABILITY_UNAWARE') evaStages = 0;
   if (!t.fresh && t.ref.volatiles?.foresight && evaStages < 0) evaStages = 0;
   const sum = Math.max(0, Math.min(12, 6 + evaStages + accStages));
-  let hitRate = rec.accuracy;
+  let hitRate = baseAcc;
   const [num, den] = HIT_RATE_BY_STAGE[sum];
   hitRate = Math.floor((hitRate * num) / den);
   if (ua === 'ABILITY_COMPOUND_EYES') hitRate = Math.floor(hitRate * 130 / 100);
@@ -740,24 +774,55 @@ function afterHpLoss(X, m) {
   }
 }
 
-function doSwitch(X, S, side, idx) {
+function doSwitch(X, S, side, idx, batonPass = false) {
   const sd = S.sides[side];
   const old = activeOf(S, side);
+  // 007 v3 Baton Pass (battle_lib.c:2055-2110 SYSCTL_BATON_PASS): the modelled passed state.
+  const passed = batonPass && S.v3 && old
+    ? { boosts: { ...old.boosts }, subHp: old.subHp, seeded: old.seeded, confusion: old.confusion, aquaRing: old.aquaRing, ingrain: old.ingrain }
+    : null;
   if (old) {
     old.boosts = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
     old.fresh = true; old.recharge = false; old.charging = -1; old.yawn = 0; old.protectOk = 1;
     if (old.status === 'tox') old.tox = 0;
     old.lastMoveId = null;
+    if (S.v3) { // battle_lib.c:2055-2076: switching out clears the volatile effects
+      Object.assign(old, V3_CLEAR);
+      const foe = activeOf(S, 1 - side);
+      if (foe && foe.attract) foe.attract = 0; // infatuation ends when its source leaves
+    }
   }
   sd.active = idx;
   const m = sd.mons[idx];
   m.fresh = true; m.activeTurns = 0; m.lastMoveId = null; m.lastMoveOk = true;
   m.boosts = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
   S.moveHit[side === 0 ? 0 : 1] = 0;
+  if (passed) Object.assign(m, passed);
+  if (S.v3) switchInV3(X, S, side, m);
   if (staticInfo(X, m).ability === 'ABILITY_INTIMIDATE') {
     const foe = activeOf(S, 1 - side);
     if (foe && foe.hp > 0) addBoosts(foe, { atk: -1 });
   }
+}
+
+// 007: entry hazards (battle_script.c BtlCmd_CheckSpikes :5434-5436, Stealth Rock :8313-8335,
+// BtlCmd_CheckToxicSpikes :7592-7650) and weather abilities, on a switch-in.
+function switchInV3(X, S, side, m) {
+  const info = staticInfo(X, m);
+  const sc = S.sides[side].sc;
+  const magicGuard = info.ability === 'ABILITY_MAGIC_GUARD';
+  const grounded = !info.types.includes('Flying') && info.ability !== 'ABILITY_LEVITATE';
+  if (!magicGuard && m.hp > 0) {
+    if (sc.spikes && grounded) m.hp = Math.max(0, m.hp - Math.floor(m.maxhp / ((5 - sc.spikes) * 2)));
+    if (sc.rocks) m.hp = Math.max(0, m.hp - Math.floor(m.maxhp * rockMultiplier(info.types) / 8));
+  }
+  if (sc.tspikes && grounded && m.hp > 0) {
+    if (info.types.includes('Poison')) sc.tspikes = 0; // a grounded Poison type absorbs them
+    else if (!m.status && !sc.safeguard && !statusImmune(X, m, 'psn')) { m.status = sc.tspikes >= 2 ? 'tox' : 'psn'; m.tox = 0; }
+  }
+  afterHpLoss(X, m);
+  const w = WEATHER_ABILITY[info.ability];
+  if (w && m.hp > 0) { S.weather = w; S.weatherTurns = 0; }
 }
 
 const statusImmune = (X, t, status) => {
@@ -796,11 +861,53 @@ function doMove(X, br, side, act, foeAct, foeMovesLater) {
     br.p *= 0.25;
     u.lastMoveOk = false;
     pre.push(moves);
-    return [br, ...pre.flatMap((b) => execMove(X, b, side, act, foeAct, foeMovesLater))];
+    return [br, ...pre.flatMap((b) => proceed(X, b, side, act, foeAct, foeMovesLater))];
   } else {
     pre.push(br);
   }
-  return pre.flatMap((b) => execMove(X, b, side, act, foeAct, foeMovesLater));
+  return pre.flatMap((b) => proceed(X, b, side, act, foeAct, foeMovesLater));
+}
+
+const proceed = (X, b, side, act, foeAct, foeMovesLater) =>
+  (b.S.v3 ? preMoveV3(X, b, side, act, foeAct, foeMovesLater) : execMove(X, b, side, act, foeAct, foeMovesLater));
+
+// 007 v3: battle_controller_player.c CHECK_STATUS (taunt :2558, confusion :2614-2668, infatuation
+// :2669ff) and the Encore lock (:1591-1616). Confusion self-hit: CALC_SELF_HIT(MOVE_STRUGGLE, 40),
+// a typeless 40-power physical hit on itself (no random factor here: policy model).
+function preMoveV3(X, b, side, act, foeAct, foeMovesLater) {
+  const u = activeOf(b.S, side);
+  if (u.encoreTurns > 0 && act.id !== u.encoreMove) {
+    const slot = u.ref.moveSlots.findIndex((s) => s.id === u.encoreMove);
+    if (slot >= 0 && u.pp[slot] > 0) act = moveAct(X, u, slot);
+  }
+  if (u.taunt > 0 && act.rec && act.rec.category === 'CLASS_STATUS') { u.lastMoveOk = false; return [b]; }
+  const out = [];
+  if (u.confusion > 0) {
+    u.confusion--;
+    if (u.confusion > 0) {
+      const hurt = { p: b.p * 0.5, S: cloneState(b.S) };
+      const h = activeOf(hurt.S, side);
+      h.hp = Math.max(0, h.hp - selfHitDamage(h));
+      h.lastMoveOk = false;
+      afterHpLoss(X, h);
+      out.push(hurt);
+      b.p *= 0.5;
+    }
+  }
+  if (u.attract) {
+    const still = { p: b.p * 0.5, S: cloneState(b.S) };
+    activeOf(still.S, side).lastMoveOk = false;
+    out.push(still);
+    b.p *= 0.5;
+  }
+  return [...out, ...execMove(X, b, side, act, foeAct, foeMovesLater)];
+}
+
+function selfHitDamage(m) {
+  const st = m.ref.storedStats;
+  const stage = (k) => { const x = m.boosts[k]; return x >= 0 ? (2 + x) / 2 : 2 / (2 - x); };
+  const atk = Math.floor(st.atk * stage('atk')), def = Math.max(1, Math.floor(st.def * stage('def')));
+  return Math.floor(Math.floor(Math.floor((2 * m.ref.level) / 5 + 2) * 40 * atk / def) / 50) + 2;
 }
 
 function execMove(X, br, side, act, foeAct, foeMovesLater) {
@@ -860,8 +967,21 @@ function selfKO(X, br, side, e) {
 
 function applyHit(X, S, side, rec, e, dmgIn) {
   const u = activeOf(S, side), t = activeOf(S, 1 - side);
+  if (S.v3 && t.subHp > 0) { // the substitute takes the hit (subscript_hit_substitute.s); no secondary effects
+    const dealt = Math.min(dmgIn, t.subHp);
+    t.subHp -= dealt;
+    S.moveHit[1 - side] = rec.id; S.moveHitBattler[1 - side] = side; S.moveHit[side] = 0;
+    const ua0 = staticInfo(X, u).ability;
+    if (RECOIL[e] && dealt > 0 && ua0 !== 'ABILITY_ROCK_HEAD' && ua0 !== 'ABILITY_MAGIC_GUARD') {
+      u.hp = Math.max(0, u.hp - Math.max(1, Math.floor(dealt / RECOIL[e])));
+    }
+    if (e === 'RECHARGE_AFTER') u.recharge = true;
+    afterHpLoss(X, u);
+    return;
+  }
   let dmg = Math.min(dmgIn, t.hp);
   if (dmg >= t.hp && t.hp === t.maxhp && t.item && itemConst(X, t.item) === 'ITEM_FOCUS_SASH') { dmg = t.hp - 1; t.item = ''; }
+  if (S.v3 && t.enduring && dmg >= t.hp) dmg = t.hp - 1; // battle_controller_player.c:3387-3403
   t.hp -= dmg;
   S.taken[1 - side][rec.category === 'CLASS_PHYSICAL' ? 'phys' : 'spec'] += dmg;
   S.moveHit[1 - side] = rec.id; // battleCtx->moveHit[defender] (opponent.mjs processLog)
@@ -894,6 +1014,10 @@ function statusMove(X, br, side, act, e, protectOk, foeMovesLater) {
     u.protectOk = 1; u.lastMoveOk = false;
     return protectOk >= 1 ? [ok] : [ok, br];
   }
+  if (S.v3) {
+    const r = statusMoveV3(X, br, side, act, e, protectOk, foeMovesLater);
+    if (r) return r;
+  }
   if (SELF_BOOSTS[e]) { addBoosts(u, SELF_BOOSTS[e]); return [br]; }
   if (e === 'MAX_ATK_LOSE_HALF_MAX_HP') {
     if (u.hp > Math.floor(u.maxhp / 2)) { u.hp -= Math.floor(u.maxhp / 2); u.boosts.atk = 6; }
@@ -911,6 +1035,8 @@ function statusMove(X, br, side, act, e, protectOk, foeMovesLater) {
   if (!t || t.hp <= 0) { u.lastMoveOk = false; return [br]; }
   if (t.protecting && rec.flags.includes('MOVE_FLAG_CAN_PROTECT')) { u.lastMoveOk = false; return [br]; }
   const status = STATUS_OF[e];
+  if (S.v3 && t.subHp > 0) { u.lastMoveOk = false; return [br]; } // the substitute blocks it
+  if (S.v3 && (status || e === 'STATUS_SLEEP_NEXT_TURN') && S.sides[1 - side].sc.safeguard) { u.lastMoveOk = false; return [br]; }
   if (status || e === 'STATUS_SLEEP_NEXT_TURN') {
     if (t.status || (status && statusImmune(X, t, status)) || (e === 'STATUS_SLEEP_NEXT_TURN' && (t.yawn || statusImmune(X, t, 'slp')))) {
       u.lastMoveOk = false; return [br];
@@ -934,7 +1060,97 @@ function statusMove(X, br, side, act, e, protectOk, foeMovesLater) {
   return [hitBr, br];
 }
 
+// 007 v3 status moves. Returns the branches, or null to fall through to the v1/v2 handlers.
+function statusMoveV3(X, br, side, act, e, protectOk, foeMovesLater) {
+  const S = br.S;
+  const u = activeOf(S, side), t = activeOf(S, 1 - side);
+  const sc = S.sides[side].sc, foeSc = S.sides[1 - side].sc;
+  const fail = () => { u.lastMoveOk = false; return [br]; };
+  if (e === 'SURVIVE_WITH_1_HP') { // Endure shares the Protect counter (battle_script.c:5149-5160)
+    if (!foeMovesLater) { u.protectOk = 1; return fail(); }
+    const ok = { p: br.p * protectOk, S: cloneState(S) };
+    const m = activeOf(ok.S, side);
+    m.enduring = true; m.protectOk = protectOk * 0.5;
+    br.p *= 1 - protectOk;
+    u.protectOk = 1; u.lastMoveOk = false;
+    return protectOk >= 1 ? [ok] : [ok, br];
+  }
+  const w = WEATHER_MOVES[e];
+  if (w) {
+    if (S.weather === w) return fail();
+    S.weather = w;
+    S.weatherTurns = 5 + (holdEffect(X, u.item) === ROCK_OF[w] ? itemParam(X, u.item) : 0);
+    return [br];
+  }
+  if (e === 'HEAL_HALF_MORE_IN_SUN') { // BtlCmd_WeatherHPRecovery (battle_script.c:5966-5978)
+    const amt = !S.weather ? Math.floor(u.maxhp / 2) : S.weather === 'sun' ? Math.floor(u.maxhp * 20 / 30) : Math.floor(u.maxhp / 4);
+    u.hp = Math.min(u.maxhp, u.hp + amt);
+    return [br];
+  }
+  if (e === 'SET_SUBSTITUTE') { // battle_script.c:5211-5226
+    const cost = Math.floor(u.maxhp / 4);
+    if (u.subHp > 0 || u.hp <= cost) return fail();
+    u.hp -= cost; u.subHp = cost;
+    return [br];
+  }
+  if (e === 'HEAL_IN_3_TURNS') { if (sc.wish) return fail(); sc.wish = 2; return [br]; } // battle_script.c:6373-6385
+  if (e === 'RESTORE_HP_EVERY_TURN') { if (u.aquaRing) return fail(); u.aquaRing = 1; return [br]; }
+  if (e === 'GROUND_TRAP_USER_CONTINUOUS_HEAL') { if (u.ingrain) return fail(); u.ingrain = 1; return [br]; }
+  if (e === 'PREVENT_STATUS') { if (sc.safeguard) return fail(); sc.safeguard = 5; return [br]; } // :5754-5766
+  if (e === 'SET_SPIKES') { if (foeSc.spikes >= 3) return fail(); foeSc.spikes++; return [br]; } // :5394
+  if (e === 'TOXIC_SPIKES') { if (foeSc.tspikes >= 2) return fail(); foeSc.tspikes++; return [br]; }
+  if (e === 'STEALTH_ROCK') { if (foeSc.rocks) return fail(); foeSc.rocks = 1; return [br]; }
+  if (e === 'PASS_STATS_AND_STATUS') { // Baton Pass: switch to the best bench member by the damage race
+    let best = -1, bs = -Infinity;
+    for (const c of S.sides[side].mons) {
+      if (c.hp <= 0 || c.idx === S.sides[side].active) continue;
+      const v = side === 0 ? matchupScore(X, S, c) : 0;
+      if (v > bs) { bs = v; best = c.idx; }
+    }
+    if (best < 0) return fail();
+    doSwitch(X, S, side, best, true);
+    return [br];
+  }
+  if (!V3_TARGETED.has(e)) return null;
+  if (!t || t.hp <= 0) return fail();
+  if (t.protecting && act.rec.flags.includes('MOVE_FLAG_CAN_PROTECT')) return fail();
+  const ti = staticInfo(X, t);
+  if (e === 'STATUS_LEECH_SEED' && (t.seeded || t.subHp > 0 || ti.types.includes('Grass'))) return fail();
+  if (e === 'TAUNT' && t.taunt) return fail();
+  if (e === 'ENCORE' && (t.encoreTurns || !t.lastMoveId || t.lastMoveId === 'encore' || t.lastMoveId === 'struggle')) return fail();
+  if (e in CONFUSE_EFFECTS && (t.subHp > 0 || (!CONFUSE_EFFECTS[e] && (t.confusion || ti.ability === 'ABILITY_OWN_TEMPO' || foeSc.safeguard)))) return fail();
+  if (e === 'INFATUATE') {
+    const g1 = u.ref.gender, g2 = t.ref.gender;
+    if (t.attract || ti.ability === 'ABILITY_OBLIVIOUS' || !g1 || !g2 || g1 === 'N' || g2 === 'N' || g1 === g2) return fail();
+  }
+  const hc = hitChance(X, S, u, t, act.rec);
+  const hitBr = hc < 1 ? { p: br.p * hc, S: cloneState(S) } : br;
+  const tt = activeOf(hitBr.S, 1 - side);
+  if (e === 'STATUS_LEECH_SEED') tt.seeded = 1;
+  else if (e === 'TAUNT') tt.taunt = TAUNT_TURNS;
+  else if (e === 'ENCORE') { tt.encoreMove = tt.lastMoveId; tt.encoreTurns = ENCORE_TURNS; }
+  else if (e === 'INFATUATE') tt.attract = 1;
+  else {
+    if (CONFUSE_EFFECTS[e]) addBoosts(tt, CONFUSE_EFFECTS[e]);
+    if (!tt.confusion && ti.ability !== 'ABILITY_OWN_TEMPO' && !foeSc.safeguard) tt.confusion = CONFUSION_TURNS;
+  }
+  if (hc >= 1) return [hitBr];
+  br.p *= 1 - hc;
+  u.lastMoveOk = false;
+  return [hitBr, br];
+}
+
 function endOfTurn(X, S) {
+  if (S.v3) { // field conditions first (battle_controller_player.c FIELD_COND_CHECK: Wish :1085-1110, weather :1113-1212)
+    for (const side of [0, 1]) {
+      const sc = S.sides[side].sc;
+      if (sc.wish && --sc.wish === 0) {
+        const m = activeOf(S, side);
+        if (m && m.hp > 0) m.hp = Math.min(m.maxhp, m.hp + Math.floor(m.maxhp / 2));
+      }
+    }
+    if (S.weather && S.weatherTurns > 0 && --S.weatherTurns === 0) S.weather = '';
+  }
   for (const side of [0, 1]) {
     const m = activeOf(S, side);
     if (!m || m.hp <= 0) continue;
@@ -948,7 +1164,19 @@ function endOfTurn(X, S) {
         m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.maxhp / 16)));
       }
     }
+    if (S.v3 && m.hp > 0) { // Ingrain, Aqua Ring: maxHP / 16 (battle_controller_player.c:1311-1345)
+      if (m.ingrain) m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
+      if (m.aquaRing) m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
+    }
     if (m.hp > 0 && m.item && holdEffect(X, m.item) === 'HOLD_EFFECT_HP_RESTORE_GRADUAL') m.hp = Math.min(m.maxhp, m.hp + Math.max(1, Math.floor(m.maxhp / 16)));
+    if (S.v3 && m.seeded && m.hp > 0 && !magicGuard) { // Leech Seed: maxHP / 8 to the seeder's side (:1378-1392)
+      const r = activeOf(S, 1 - side);
+      if (r && r.hp > 0) {
+        const amt = Math.min(m.hp, Math.max(1, Math.floor(m.maxhp / 8)));
+        m.hp -= amt;
+        r.hp = Math.min(r.maxhp, r.hp + amt);
+      }
+    }
     if (m.hp > 0 && !magicGuard) {
       if (m.status === 'brn') m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.maxhp / (info.ability === 'ABILITY_HEATPROOF' ? 16 : 8))));
       else if (m.status === 'psn' && info.ability !== 'ABILITY_POISON_HEAL') m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.maxhp / 8)));
@@ -968,6 +1196,15 @@ function endOfTurn(X, S) {
   for (const sd of S.sides) {
     if (sd.sc.reflect) sd.sc.reflect--;
     if (sd.sc.lightscreen) sd.sc.lightscreen--;
+    if (S.v3) {
+      if (sd.sc.safeguard) sd.sc.safeguard--;
+      const m = sd.active >= 0 ? sd.mons[sd.active] : null;
+      if (m) {
+        m.enduring = false;
+        if (m.taunt) m.taunt--; // battle_controller_player.c:1637
+        if (m.encoreTurns && --m.encoreTurns === 0) m.encoreMove = null; // :1591-1616
+      }
+    }
   }
   S.turn++;
   S.taken = [{ phys: 0, spec: 0 }, { phys: 0, spec: 0 }];
@@ -1173,7 +1410,79 @@ export function leafValue(X, S) {
   if (oa && oa.hp > 0) { v -= boostValue(oa); if (oa.recharge) v += 0.1; }
   v += 0.05 * ((S.sides[0].sc.reflect ?? 0) + (S.sides[0].sc.lightscreen ?? 0)) / 5;
   v -= 0.05 * ((S.sides[1].sc.reflect ?? 0) + (S.sides[1].sc.lightscreen ?? 0)) / 5;
+  if (S.v3) v += leafV3(X, S);
   return v;
+}
+
+// 007 v3 leaf terms (policy heuristics, each behind a V3 option; their value is measured against
+// expectimax2-v3-ref, never assumed: Constitution VI).
+//   leafResidual   per active mon, the HP drift of the next `leafHorizon` turns from tox n/16, psn /
+//                  brn 1/8, Leech Seed 1/8 (to the other side), sand/hail 1/16, Leftovers, Black Sludge,
+//                  Aqua Ring, Ingrain 1/16, and a pending Wish (1/2 once); plus half the HP a
+//                  substitute still holds.
+//   leafStatusState  tox penalty grows with the counter; Leech Seed, confusion and Taunt cost a little.
+//   leafHazards    each side's hazards cost (expected entry damage x 0.5) per benched member alive.
+function leafV3(X, S) {
+  const o = X.opts;
+  let v = 0;
+  for (const side of [0, 1]) {
+    const sign = side === 0 ? 1 : -1;
+    const m = activeOf(S, side);
+    if (m && m.hp > 0) {
+      if (o.leafResidual) v += sign * residualDrift(X, S, side, m, o.leafHorizon ?? 3);
+      if (o.leafStatusState) {
+        let pen = 0;
+        if (m.status === 'tox') pen += Math.min(0.3, 0.02 * (m.tox + 1));
+        if (m.seeded) pen += 0.06;
+        if (m.confusion) pen += 0.03 * m.confusion;
+        if (m.taunt) pen += 0.02;
+        v -= sign * pen;
+      }
+    }
+    if (o.leafHazards) {
+      const sc = S.sides[side].sc;
+      if (sc.spikes || sc.rocks) {
+        for (const b of S.sides[side].mons) {
+          if (b.hp <= 0 || b.idx === S.sides[side].active) continue;
+          const info = staticInfo(X, b);
+          if (info.ability === 'ABILITY_MAGIC_GUARD') continue;
+          const grounded = !info.types.includes('Flying') && info.ability !== 'ABILITY_LEVITATE';
+          let frac = 0;
+          if (sc.spikes && grounded) frac += 1 / ((5 - sc.spikes) * 2);
+          if (sc.rocks) frac += rockMultiplier(info.types) / 8;
+          v -= sign * 0.5 * Math.min(frac, b.hp / b.maxhp);
+        }
+      }
+    }
+  }
+  return v;
+}
+
+function residualDrift(X, S, side, m, H) {
+  const info = staticInfo(X, m);
+  const magicGuard = info.ability === 'ABILITY_MAGIC_GUARD';
+  const other = activeOf(S, 1 - side);
+  let frac = m.hp / m.maxhp, tox = m.tox;
+  const start = frac;
+  const he = holdEffect(X, m.item);
+  for (let k = 0; k < H && frac > 0; k++) {
+    let d = 0;
+    if (!magicGuard) {
+      if (S.weather === 'sand' && !info.types.some((x) => x === 'Rock' || x === 'Ground' || x === 'Steel')) d -= 1 / 16;
+      if (S.weather === 'hail' && !info.types.includes('Ice')) d -= 1 / 16;
+      if (m.status === 'tox') { tox = Math.min(15, tox + 1); d -= tox / 16; }
+      else if (m.status === 'psn' || m.status === 'brn') d -= 1 / 8;
+      if (m.seeded && other && other.hp > 0) d -= 1 / 8;
+    }
+    if (other && other.hp > 0 && other.seeded) d += 1 / 8;
+    if (he === 'HOLD_EFFECT_HP_RESTORE_GRADUAL') d += 1 / 16;
+    if (he === 'HOLD_EFFECT_HP_RESTORE_PSN_TYPE') d += info.types.includes('Poison') ? 1 / 16 : -1 / 8;
+    if (m.aquaRing) d += 1 / 16;
+    if (m.ingrain) d += 1 / 16;
+    if (k === 0 && S.sides[side].sc.wish) d += 1 / 2;
+    frac = Math.max(0, Math.min(1, frac + d));
+  }
+  return frac - start + 0.5 * (m.subHp / m.maxhp);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1186,6 +1495,11 @@ function playerMoveActs(X, S) {
   if (m.charging >= 0) return [moveAct(X, m, m.charging)];
   const acts = [];
   m.ref.moveSlots.forEach((s, i) => { if (m.pp[i] > 0 && i < 4) acts.push(moveAct(X, m, i)); });
+  if (S.v3) { // Encore lock, Taunt, choice lock restrict our own choices
+    const allowed = acts.filter((a) => (!m.encoreTurns || a.id === m.encoreMove) && !(m.taunt && a.rec?.category === 'CLASS_STATUS')
+      && (!m.choiceLock || a.id === m.choiceLock));
+    if (allowed.length) return allowed;
+  }
   return acts.length ? acts : [{ kind: 'none' }];
 }
 
@@ -1242,9 +1556,13 @@ function valuePly2(X, S) {
   X.nodes++;
   replaceFainted(X, S);
   if (terminal(S)) return leafValue(X, S);
-  const opp = predictOpponent(X, S, 'p2', PARAMS.K_PLY2);
+  const opp = predictOpponent(X, S, 'p2', X.opts.kPly2 ?? PARAMS.K_PLY2);
   let best = -Infinity;
-  for (const a of playerMoveActs(X, S)) {
+  const acts = playerMoveActs(X, S);
+  if (X.opts.ply2Switches && !activeOf(S, 0)?.ingrain) { // v3-ref: our switches are searched at ply 2 too
+    for (const c of S.sides[0].mons) if (c.hp > 0 && c.idx !== S.sides[0].active) acts.push({ kind: 'switch', idx: c.idx });
+  }
+  for (const a of acts) {
     let q = 0;
     for (const { p, act } of opp) {
       for (const br of resolveTurn(X, S, a, act)) q += p * br.p * leafValue(X, br.S);
@@ -1324,7 +1642,7 @@ export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
     side.pokemon.forEach((p, i) => { if (!p.isActive && !p.fainted && p.hp > 0) acts.push({ kind: 'switch', idx: i, choice: `switch ${i + 1}` }); });
     const scores = acts.map((a) => {
       const T = cloneState(S);
-      doSwitch(X, T, 0, a.idx);
+      doSwitch(X, T, 0, a.idx, !!S.v3 && side.active[0]?.switchFlag === 'batonpass'); // Showdown battle-actions.ts:1301
       return valuePly2(X, T);
     });
     return { X, acts, scores };
@@ -1344,17 +1662,18 @@ export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
   // Switch beam: only the PARAMS.SWITCH_BEAM best switch targets by the damage-race heuristic are
   // searched (the others are scored -Infinity). Ties keep party order.
   const ranked = switches.map((a) => ({ a, r: matchupScore(X, S, S.sides[0].mons[a.idx]) }))
-    .sort((x, y) => y.r - x.r).slice(0, PARAMS.SWITCH_BEAM).map((x) => x.a);
+    .sort((x, y) => y.r - x.r).slice(0, X.opts.switchBeam ?? PARAMS.SWITCH_BEAM).map((x) => x.a);
   const searched = new Set(ranked);
   acts.push(...switches);
   if (acts.length <= 1) return { X, acts, scores: acts.map(() => 0) };
-  const opp = X.battle.p2.requestState === 'move' ? predictOpponent(X, S, 'root', PARAMS.K_ROOT) : [{ p: 1, act: { kind: 'none' } }];
+  const opp = X.battle.p2.requestState === 'move' ? predictOpponent(X, S, 'root', X.opts.kRoot ?? PARAMS.K_ROOT) : [{ p: 1, act: { kind: 'none' } }];
   const scores = acts.map((a) => (a.kind === 'switch' && !searched.has(a) ? -Infinity : qValue(X, S, a, opp)));
   return { X, acts, scores, opp };
 }
 
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, rootState, makeContext };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, rootState, makeContext,
+  moveAct, hitChance, doSwitch, endOfTurn, leafValue, activeOf };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {
