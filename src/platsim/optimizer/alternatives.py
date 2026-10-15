@@ -6,7 +6,8 @@ the strong player that can use status moves (`move_classes.ALT_POLICY`) on paire
 never eliminated by greedy-v1, which scores status moves as worth nothing (FR-007).
 
 Generation (deterministic, sorted; spec FR-005):
-- every replacement of 1 or 2 slots of the member's current set by offered status moves;
+- every replacement of the member's weakest attack, its second-weakest attack, or both, by offered
+  status moves (user 2026-10-15; `all_slots=True` gives every slot, used by the T066 check);
 - structured 3-4-status sets: for every choice of 3 or 4 categories the member can fill (inflict
   status, protection, recovery, Leech Seed, self-boost, screen), each category's first move in
   `_category_order` and, for a 3-status set, the member's best current attack in the 4th slot.
@@ -46,6 +47,7 @@ from platsim.stats import mcnemar_exact
 OPPONENT = "decomp-ai"
 ALPHA = 0.05
 FINALISTS = 3
+DEFAULT_ROUND = 25  # reference first-round size r (research R5: the 25-run minimum fits the 10 h share)
 STRUCTURED_CATEGORIES = (MC.INFLICT_STATUS, MC.PROTECTION, MC.RECOVERY, MC.LEECH_SEED, MC.SELF_BOOST, MC.SCREEN)
 
 
@@ -61,22 +63,39 @@ class Alternative:
         return (self.kind, tuple(sorted(self.moves)), self.item or "")
 
 
+# Preference within a category for structured sets (policy heuristic, not game data; validated by T066).
+# Effects not listed rank after the listed ones. Within an effect: self-boosts by boost_score, others by
+# accuracy (0 = never misses first), then key.
+EFFECT_RANK = {
+    MC.PROTECTION: ("BATTLE_EFFECT_PROTECT", "BATTLE_EFFECT_SET_SUBSTITUTE", "BATTLE_EFFECT_SURVIVE_WITH_1_HP"),
+    MC.RECOVERY: ("BATTLE_EFFECT_RESTORE_HALF_HP", "BATTLE_EFFECT_HEAL_HALF_REMOVE_FLYING_TYPE",
+                  "BATTLE_EFFECT_HEAL_HALF_MORE_IN_SUN", "BATTLE_EFFECT_HEAL_IN_3_TURNS", "BATTLE_EFFECT_REST",
+                  "BATTLE_EFFECT_RESTORE_HP_EVERY_TURN", "BATTLE_EFFECT_GROUND_TRAP_USER_CONTINUOUS_HEAL"),
+    MC.INFLICT_STATUS: ("BATTLE_EFFECT_STATUS_BADLY_POISON", "BATTLE_EFFECT_STATUS_SLEEP", "BATTLE_EFFECT_STATUS_PARALYZE",
+                        "BATTLE_EFFECT_STATUS_BURN", "BATTLE_EFFECT_STATUS_SLEEP_NEXT_TURN", "BATTLE_EFFECT_STATUS_POISON"),
+    MC.SCREEN: ("BATTLE_EFFECT_SET_REFLECT", "BATTLE_EFFECT_SET_LIGHT_SCREEN", "BATTLE_EFFECT_PREVENT_STATUS"),
+}
+
+
 def _category_order(const: str, moves: list[str]) -> list[str]:
-    """Deterministic per-category preference for structured sets (policy heuristic, validated by T066):
-    self-boosts by the existing boost score, everything else by accuracy (0 = never misses first), then key."""
+    """Deterministic per-category preference for structured sets (EFFECT_RANK; validated by T066)."""
     from platsim.decomp.moves import load_moves
 
     mv = load_moves()
 
     def k(m):
-        if MC.move_class(m).category == MC.SELF_BOOST:
-            return (-(C.boost_score(const, m) or 0.0), m)
+        c = MC.move_class(m)
+        ranks = EFFECT_RANK.get(c.category, ())
+        r = ranks.index(c.effect) if c.effect in ranks else len(ranks)
+        if c.category == MC.SELF_BOOST:
+            return (r, -(C.boost_score(const, m) or 0.0), m)
         acc = mv[m].accuracy
-        return (-(101 if acc == 0 else acc), m)
+        return (r, -(101 if acc == 0 else acc), m)
     return sorted(moves, key=k)
 
 
-def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structured: bool = True) -> list[Alternative]:
+def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structured: bool = True,
+             all_slots: bool = False) -> list[Alternative]:
     cur = tuple(spec.moves)
     status = [m for m in mc.legal_status if m not in cur]
     seen, out = set(), []
@@ -88,13 +107,15 @@ def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structure
         seen.add(a.key())
         out.append(a)
 
-    n = len(cur)
-    for j in range(n):
+    # the member's two weakest current moves by League value (status moves count 0), ties by slot
+    # (user 2026-10-15: weakest two slots; checked against all slots in T066)
+    slots = sorted(range(len(cur)), key=lambda j: (mc.scores.get(cur[j], 0.0), j))[:2] if all_slots is False else list(range(len(cur)))
+    for j in slots:
         for m in status:
             mv = list(cur); mv[j] = m
             add("status", mv, [m])
-    if n >= 2:
-        for j, k in itertools.combinations(range(n), 2):
+    if len(slots) >= 2:
+        for j, k in itertools.combinations(slots, 2):
             for a, b in itertools.combinations(status, 2):
                 mv = list(cur); mv[j], mv[k] = a, b
                 add("status", mv, [a, b])
@@ -198,6 +219,8 @@ def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_
                 progress(slot, r + 1, len(alts), len(alive))
         # finalists vs the current team, paired on the first n_full seeds
         cur_team = wteam(specs, levels)
+        if cur_team is None:
+            raise RuntimeError(f"alternatives: the current team cannot be built at {levels}")
         cur = [bool(x["cleared"]) for x in _run(pool, cur_team, master, 0, n_full, policy)]
         comps = []
         for c in alive:
@@ -248,4 +271,4 @@ def _run(pool, team, master, lo, hi, policy):
     return rs
 
 
-__all__ = ["Alternative", "FINALISTS", "generate", "holm", "run_stage"]
+__all__ = ["Alternative", "DEFAULT_ROUND", "FINALISTS", "generate", "holm", "run_stage"]

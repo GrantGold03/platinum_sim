@@ -121,3 +121,12 @@ Battles already use 255 and Return 102 (R3). T016 makes this explicit for player
   Endure has no value while Reversal/Flail are not modelled (excluded, research R3).
 
 These payoffs lie beyond 2 plies. A deeper reference (T063: depth 3 or rollouts) is the way to test them. Until a position passes, they stay listed here and are not claimed.
+
+## T030-T035 Alternatives stage (2026-10-15)
+
+- **Measured N** (alternatives per team; offered status moves with v3 MODELLED; Lv 55; member's first moveset):
+  - **All-slot 1-2 replacements:** B1 3,136, B2 3,260, B3 2,922, B4 4,794, B5 4,966. At the 25-run minimum, B4 alone is about 22 h, over its 10 h share. Per T031 the user was asked.
+  - **User decision (2026-10-15):** weakest two slots. The new N is B1 667, B2 682, B3 612, B4 984, B5 1,039. Per member: B4 Roserade 18 status moves → 204; Blissey 19 → 224; Milotic 13 → 119.
+- **Per-category order for structured sets.** The first version broke ties alphabetically and chose Endure over Protect, Aqua Ring over Recover and Double Team as the boost. That is replaced by an explicit effect preference (`EFFECT_RANK`, a policy heuristic checked by T066). The test `test_structured_stall_set_for_milotic` caught it.
+- **`tests/unit/test_alternatives.py`: 7 passed** (generation sorted, unique and without excluded moves; the weakest-two-slots rule; a structured Toxic + Recover set; determinism across PYTHONHASHSEED; Holm; adopted moves survive Waterfall placement with a positive control; the stage records every alternative exactly once and adopts a clear winner (fake pool)).
+- **Fingerprints:** `STATE_VERSION` 4 and `candidates` were added, and the pinned fingerprints in `test_required_hms.py` and `test_legality_options.py` were updated to `"state_version": 4, "candidates": "reference"`.

@@ -157,22 +157,22 @@ description: "Task list for 007 Status Moves and Held Items"
 
 ### Optimizer: alternatives stage (reference mode)
 
-- [ ] T030 [US1] In `src/platsim/optimizer/candidates.py` `member_candidates`:
+- [X] T030 [US1] In `src/platsim/optimizer/candidates.py` `member_candidates`:
   - record `excluded = {move: reason}` for every legal move whose `move_class` is not offered (FR-002/003);
   - record `legal_status`, the offered status moves sorted;
   - a status move is offered only if `move_classes.modelled(policy)` (T017) contains its effect. Otherwise it goes in `excluded` as `"not offered: not modelled by <policy>"` (spec FR-001, analysis U2);
   - remove `setup_moveset` and its uses (the alternatives stage replaces it), and update the tests that reference it (`tests/unit/test_optimizer_candidates.py` and any others found by `grep -rn setup_moveset tests/`);
   - extend `summary()` with `excluded`, `legal_status` and the alternative count.
-- [ ] T031 [US1] Create `src/platsim/optimizer/alternatives.py`:
+- [X] T031 [US1] Create `src/platsim/optimizer/alternatives.py`:
   - `generate(member_spec, mc, led, team, required_hms)` yields `Alternative`s, deterministic and sorted:
-    - the current set with 1 or 2 slots replaced by offered status moves from `mc.legal_status`;
+    - the current set with its weakest attack, its second-weakest attack, or both, replaced by offered status moves from `mc.legal_status` (user 2026-10-15; weakest by `mc.scores`, ties by slot);
     - **structured** 3-4-status sets (spec FR-005, research R5.1): for every choice of 3 or 4 categories the member can fill (inflict-status, protection, recovery, Leech Seed, self-boost, screen), each category's best move under the deterministic per-category order, plus the best attack in the 4th slot of a 3-status set.
 
     Items are added in T040 (US2).
   - Record the measured N (alternatives per member and per team) for B1-B5 in `validation-log.md`, before any reference run. With the v3 throughput from T028b, compute the round size r for the reference teams B4, B5 and B3 from research R5. If r = 25 doesn't fit a team's 10 h share, stop and ask the user.
   - Every alternative is made buildable with `resources.repair` (copies), never skipped silently. An unbuildable one is recorded with the refusal reason.
   - The moves under test go into `adopted` for the duration of the test (research R6).
-- [ ] T032 [US1] In `src/platsim/optimizer/alternatives.py`, `run_stage(...)`:
+- [X] T032 [US1] In `src/platsim/optimizer/alternatives.py`, `run_stage(...)`:
   - levels are the current team's first failing neighbour from the bisection (`fail_u` from `LevelSearch`), or the bisection levels when there is none; record which;
   - per member in slot order, **successive halving** over all of that member's alternatives with the expectimax2-v3 player: rounds r/2r/4r/8r paired runs, with r from the request (`alternatives_round` option, chosen per research R5; record it), recording every seed's outcome for every alternative so prefilters can be compared offline (seeds `derive_seed(f"{seed}|alternatives", i, 0)`, the same seeds for every alternative), keeping the top third each round. Reuse `optimizer/screen.py` `successive_halving` if it fits; otherwise write it in `alternatives.py` and record why. Record each alternative's `round_reached` and counts;
   - the finalists (the last round's top 3) are each played against the current team for `preset.ability_screen` paired runs, compared with McNemar exact (`stats.mcnemar_exact`) and Holm-corrected within the member;
@@ -180,14 +180,14 @@ description: "Task list for 007 Status Moves and Held Items"
   - `adopted` is set on the spec;
   - state is checkpointed after every alternative under `state.data["stages"]["level_search"]["alternatives"]`;
   - `mode="reference"` puts every alternative through the successive halving (spec FR-017 step 1).
-- [ ] T033 [US1] Wire the stage into `src/platsim/optimizer/run.py` in place of the setup check (~:485-519):
+- [X] T033 [US1] Wire the stage into `src/platsim/optimizer/run.py` in place of the setup check (~:485-519):
   - add `candidates: str = "reference"` to `OptimizeRequest` in `src/platsim/optimizer/api.py`;
   - put the mode in `job_fingerprint`;
   - `STATE_VERSION = 4`;
   - add `alternatives` to `_optimizer_provenance` `policy_per_stage` and `seeds`;
   - keep the "adopted set must still pass at the bisection levels" re-check.
-- [ ] T034 [US1] Add `--candidates reference|prefilter` to `src/platsim/cli.py` optimize, and the optional `candidates` field to the web optimize request in `src/platsim/web/` (no UI control). Add `alternatives` to `src/platsim/web/eta.py` `STAGE_ORDER`, with `setup_check` mapped to it for old state files.
-- [ ] T035 [P] [US1] Write `tests/unit/test_alternatives.py`:
+- [X] T034 [US1] Add `--candidates reference|prefilter` to `src/platsim/cli.py` optimize, and the optional `candidates` field to the web optimize request in `src/platsim/web/` (no UI control). Add `alternatives` to `src/platsim/web/eta.py` `STAGE_ORDER`, with `setup_check` mapped to it for old state files.
+- [X] T035 [P] [US1] Write `tests/unit/test_alternatives.py`:
   - generation is deterministic across two processes (`PYTHONHASHSEED` differs) and sorted;
   - Screech and Seismic Toss never appear (SC-007; a member that learns both, e.g. found via `legal_moves`);
   - an alternative needing an exhausted 1-copy TM (Toxic TM06 taken by an earlier member) is repaired or recorded with its reason;
@@ -334,6 +334,7 @@ description: "Task list for 007 Status Moves and Held Items"
 - [ ] T064 Acceptance of v3 against v2 and against greedy-v1 using the `tests/integration/test_policy_strength.py` pattern (add v3 to it). Run the SC-008 positions with the production v3. A position that passes with v3-ref but fails with v3 is a finding, recorded with its effect on the T063 choice. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.
 - [ ] T065 Switch the defaults to `expectimax2-v3`: `src/platsim/optimizer/run.py` `POLICY`, `src/platsim/optimizer/levels.py` `POLICY`, `src/platsim/evaluate.py` `DEFAULT_PLAYER_POLICY`, the `src/platsim/cli.py` default. The golden v1/v2 test still passes. Commit and push.
 - [ ] T066 Generation-rule and item-relevance references (spec FR-005, FR-009, FR-019, Complexity Tracking; 8 h of the 100 h budget).
+  - **Weakest-two-slots rule:** for B4 Milotic, also run all-slot 1-2 replacements through the same reference; the rule is accepted if no set outside it wins significantly.
   - **Generation rule:** for B4 Milotic and B4 Roserade, run the alternatives stage again with **full 3-4-slot generation** (every 3- and 4-slot replacement by offered status moves) as well, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. Otherwise widen the rule through `/speckit-converge`.
   - **Item relevance:** for B4 Milotic and B1 Gardevoir, also generate alternatives offering **every** offered (modelled, obtainable) item with each status set, not only the paired items, through the same reference. The pairing rule is accepted if no unpaired item set wins significantly; otherwise widen it through `/speckit-converge`.
   - Record both comparisons with their run times. Add its wall-clock hours to the running total of one-time hours in `validation-log.md` (budget: 100 h for every one-time run, spec FR-017 table); stop and ask the user before any run would take the total over 100 h.

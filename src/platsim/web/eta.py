@@ -62,7 +62,7 @@ def _remaining_from(stage: str, seen: list[str]) -> tuple[str | None, int | None
     """(stage whose own time counts as "current", index in STAGE_ORDER of the first later stage)."""
     if stage in STAGE_ORDER:
         return stage, STAGE_ORDER.index(stage) + 1
-    if stage == "setup_check":  # interleaved with level_search (optimizer/run.py)
+    if stage in ("setup_check", "alternatives"):  # interleaved with level_search (optimizer/run.py; 007 renamed it)
         return "level_search", STAGE_ORDER.index("level_search") + 1
     if stage in ("starting", "resolve"):
         return None, 0

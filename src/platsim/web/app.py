@@ -312,7 +312,8 @@ class JobRunner:
             legality = _legality(opts)
             req = OptimizeRequest(species=tuple(job["species"]), min_clear=float(opts["min_clear"]),
                                   seed=str(opts["seed"]), budget=str(opts["budget"]), out_dir=store.path(jid),
-                                  legality=legality, required_hms=tuple(opts.get("required_hms", ())))
+                                  legality=legality, required_hms=tuple(opts.get("required_hms", ())),
+                                  **({"candidates": opts["candidates"]} if "candidates" in opts else {}))
             started = _now()
             # stage_started and seen_stages are web-side fields: a Progress update replaces the whole
             # progress dict, so they are carried forward here (002 T005, analysis P3-01 / P4-09).
@@ -563,6 +564,11 @@ def _options(payload: dict) -> dict:
             out["required_hms"] = list(normalize_hms(hms))
         except KeyError as e:
             raise InvalidRequest(str(e.args[0])) from None
+    cand = payload.get("candidates")  # 007: optional; stored only when given (no UI control)
+    if cand is not None:
+        if cand not in ("reference", "prefilter"):
+            raise InvalidRequest(f"candidates must be 'reference' or 'prefilter', got {cand!r}")
+        out["candidates"] = cand
     return out
 
 

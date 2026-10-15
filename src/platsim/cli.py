@@ -186,6 +186,9 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
                    help="simulation budget preset (research R8; 'quick' is for testing and never qualifies)")
     p.add_argument("--out", type=Path, default=None,
                    help="output directory (default runs/optimize-<hash of the request>/; re-running resumes from its state.json)")
+    p.add_argument("--candidates", choices=("reference", "prefilter"), default="reference",
+                   help="007: how status-move / held-item alternatives reach the strong player: 'reference' plays "
+                        "every alternative (expensive), 'prefilter' a cheaper subset accepted against it")
     p.add_argument("--force-new", action="store_true",
                    help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
                         "checkpoint was made by different code or data, which is never resumed")
@@ -201,7 +204,7 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
         req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
                               budget=args.budget, workers=args.workers, out_dir=args.out,
                               force_new=args.force_new, legality=_legality(args),
-                              required_hms=tuple(args.require_hm))
+                              required_hms=tuple(args.require_hm), candidates=args.candidates)
         try:
             res = run_optimization(req)
         except InvalidRequest as e:

@@ -25,12 +25,12 @@ code fingerprint matches - see _State; `--force-new` starts over)
 4. screen (screen.py, greedy-v1): successive halving over up to N_CANDIDATES teams = the baseline,
    every single-member variation (moveset x item x source variant), then seeded random combinations;
    rounds and the top-third rule from the budget preset; finalists = best two.
-5. level_search (levels.py, expectimax2-v2): bisection on the uniform level, then the setup check,
+5. level_search (levels.py, expectimax2-v2): bisection on the uniform level, then the alternatives stage (007),
    then the balanced per-member descent; each point PASS/FAIL by the sequential rule in levels.py.
-   setup check (expectimax2-v2): for each member with a modelled setup moveset (candidates.py step 6),
-   the team with that set vs the current team at the bisection levels, `ability_screen` paired runs
-   (seeds derive_seed(f"{seed}|setup", i, 0)), McNemar exact; adopted only if significantly better
-   (alpha 0.05), otherwise the attack set is kept (FR-019: not "better" without support).
+   alternatives (007, optimizer/alternatives.py, played by move_classes.ALT_POLICY = expectimax2-v3): per
+   member, status-move alternatives at the current team's first failing neighbour U - 1; successive
+   halving, then the top 3 vs the current team (McNemar exact, Holm), the winner confirmed on a fresh
+   block and adopted only if both are significant (FR-008: not "better" without support).
 6. confirm (evaluate.evaluate_team, the `platsim evaluate` path): the winner at its final levels,
    >= `confirm_min` expectimax2-v2 runs, more until the CI target is met and, for qualifying presets,
    more while the CI straddles the threshold (up to 4 x confirm_min); Cynthia top-up (T057); loss causes.
@@ -63,6 +63,7 @@ from platsim import pins, version
 from platsim.budget import get_preset
 from platsim.legality import movesources as MS
 from platsim.optimizer import candidates as C
+from platsim.optimizer import move_classes as MC
 from platsim.optimizer import resources as R
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest, OptimizeResult, Progress, ProgressCallback
 from platsim.optimizer.levels import LevelSearch, Point, team_key
@@ -70,7 +71,7 @@ from platsim.optimizer.screen import ScreenResult, successive_halving
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import mcnemar_exact, wilson_ci
 
-STATE_VERSION = 3  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2 (a v1 state is not resumed)
+STATE_VERSION = 4  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2; 4: 007 alternatives stage
 CALIBRATION_TARGET = 0.5
 REF_MARGIN = 5
 N_CANDIDATES = 81
@@ -89,6 +90,11 @@ def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
           "legality_options": req.legality.to_dict(compact=True), "state_version": STATE_VERSION}
     if req.required_hms:  # 006 FR-009: only when set, so default fingerprints (and resume) are unchanged
         fp["required_hms"] = list(req.required_hms)
+    fp["candidates"] = req.candidates  # 007 (state version 4)
+    if req.alternatives_round is not None:
+        fp["alternatives_round"] = req.alternatives_round
+    if req.alternatives_members is not None:
+        fp["alternatives_members"] = req.alternatives_members
     return fp
 
 
@@ -304,7 +310,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     seed = str(req.seed)
     thr = float(req.min_clear)
     hello = pool.hello
-    for need, key in ((POLICY, "policies"), (SCREEN_POLICY, "policies"), (OPPONENT, "opponent_policies")):
+    for need, key in ((POLICY, "policies"), (SCREEN_POLICY, "policies"), (MC.ALT_POLICY, "policies"), (OPPONENT, "opponent_policies")):
         if need not in hello[key]:
             raise RuntimeError(f"worker does not offer {need!r} ({key}: {hello[key]})")
 
@@ -483,46 +489,36 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
                               "U = 100 (every member at Lv 100 or its floor) does not pass the level-search rule")
 
     levels = list(pt.levels)
-    # setup check (expectimax2) at the bisection levels
-    setup = ls_state.get("setup_check")
-    if setup is None:
-        setup = []
-        n_set = preset.ability_screen
-        cur_team = wteam(winner, levels)
-        cur = _paired(pool, cur_team, f"{seed}|setup", n_set, POLICY)
-        for slot, s in enumerate(winner):
-            mc = cands[slot].get(s.variant)
-            if mc is None or not mc.setup_moveset or s.moves == mc.setup_moveset:
-                continue
-            alt = list(winner)
-            alt[slot] = replace(s, moves=mc.setup_moveset)
-            alt = tuple(alt)
-            alt_team = wteam(alt, levels)
-            entry = {"slot": slot + 1, "moves": list(mc.setup_moveset), "levels": levels}
-            if alt_team is None:
-                entry["result"] = "not buildable at these levels with the copies left; skipped"
-                setup.append(entry)
-                continue
-            prog("setup_check", detail=f"slot {slot + 1}: {alt[slot].label()} vs current ({n_set} paired runs)")
-            alt_res = _paired(pool, alt_team, f"{seed}|setup", n_set, POLICY)
-            cmp = mcnemar_exact(alt_res, cur)
-            entry.update({"n_paired": cmp.n, "clear_rate_setup": cmp.a_rate, "clear_rate_current": cmp.b_rate,
-                          "setup_only": cmp.a_only, "current_only": cmp.b_only, "p_value": cmp.p_value,
-                          "verdict": {"A": "setup better", "B": "current better"}.get(cmp.verdict, "indistinguishable")})
-            if cmp.verdict == "A":
-                winner, cur = alt, alt_res
-                entry["adopted"] = True
-            else:
-                entry["adopted"] = False
-            setup.append(entry)
-        ls_state["setup_check"] = setup
-        ls_state["winner_after_setup"] = R.spec_to_json(winner)
+    # 007 alternatives stage (replaces the setup check; optimizer/alternatives.py, spec FR-007/FR-008/FR-017):
+    # status-move alternatives per member, played by ALT_POLICY near the clear threshold.
+    from platsim.optimizer import alternatives as ALT
+    from platsim.optimizer.levels import MAX_GAP
+
+    alt_state = ls_state.setdefault("alternatives", {})
+    if not alt_state.get("done"):
+        lo_bound = max(1, max(search.floors) - MAX_GAP)
+        cmp_levels = search.vector(u - 1) if u - 1 >= lo_bound else list(levels)
+        alt_state["levels"] = cmp_levels
+        alt_state["level_rule"] = "U - 1 (first failing neighbour)" if u - 1 >= lo_bound else "bisection levels (U - 1 below the bound)"
+        alt_state["round_size"] = req.alternatives_round or ALT.DEFAULT_ROUND
+        alt_state["policy"] = MC.ALT_POLICY
+
+        def save(records):
+            alt_state["records"] = records
+            state.save()
+
+        winner, records = ALT.run_stage(
+            pool=pool, specs=winner, cands=cands, levels=cmp_levels, led=led, seed=seed, n_full=preset.ability_screen,
+            round_size=alt_state["round_size"], wteam=wteam, members=req.alternatives_members, save=save,
+            done=alt_state.get("records"),
+            progress=lambda slot, r, n, alive: prog("alternatives", detail=f"slot {slot + 1}: round {r}, {alive} of {n} alternatives kept"))
+        alt_state.update({"records": records, "winner": R.spec_to_json(winner), "done": True})
         state.save()
     else:
-        winner = R.spec_from_json(ls_state["winner_after_setup"])
+        winner = R.spec_from_json(alt_state["winner"])
     search = make_search(winner)
     p0 = search.test(levels)
-    if not p0.passed:  # the adopted setup set must still pass at the bisection levels
+    if not p0.passed:  # an adopted alternative must still pass at the bisection levels
         u2, p0 = search.bisect_uniform(u)
         if u2 is None:
             best = max(search.points, key=lambda p: (p.rate, -sum(p.levels)))
@@ -638,16 +634,21 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
                      "and final gap <= 10 (FR-016)",
         "request": {"species": state.data["fingerprint"]["species"], "min_clear": req.min_clear,
                     "seed": str(req.seed), "budget": preset.name, "legality_options": req.legality.to_dict(),
-                    **({"required_hms": list(req.required_hms)} if req.required_hms else {})},
+                    **({"required_hms": list(req.required_hms)} if req.required_hms else {}),
+                    "candidates": req.candidates,
+                    **({"alternatives_round": req.alternatives_round} if req.alternatives_round is not None else {}),
+                    **({"alternatives_members": req.alternatives_members} if req.alternatives_members is not None else {})},
+        "candidate_mode": req.candidates,
         "budget_preset": {"name": preset.name, "screening_rounds": list(preset.screening_rounds),
                           "ability_screen": preset.ability_screen, "confirm_min": preset.confirm_min,
                           "ci_half_width": preset.ci_half_width, "qualifying": preset.qualifying},
         "policy_per_stage": {"calibrate": SCREEN_POLICY, "ability_screen": SCREEN_POLICY, "screen": SCREEN_POLICY,
-                             "level_search": POLICY, "setup_check": POLICY, "confirm": POLICY,
+                             "level_search": POLICY, "alternatives": MC.ALT_POLICY, "confirm": POLICY,
                              "opponent": OPPONENT},
         "seeds": {"scheme": SCHEME, "calibrate": f"{req.seed}|calibrate", "screen": f"{req.seed}|screen",
                   "ability_screen": "abilities.screen_master(seed, slot)", "level_search": f"{req.seed}|levels",
-                  "setup_check": f"{req.seed}|setup", "confirm": f"{req.seed}|confirm",
+                  "alternatives": f"{req.seed}|alternatives", "alternatives_confirm": f"{req.seed}|alternatives-confirm|<slot>",
+                  "confirm": f"{req.seed}|confirm",
                   "candidate_sampling": f"random.Random(sha256('{req.seed}|screen-candidates'))"},
         "stages": {k: st.get(k) for k in ("calibrate", "prune", "ability_screen", "screen", "level_search", "confirm")},
         "level_points": [state.data["level_points"][k] for k in sorted(state.data["level_points"])],
