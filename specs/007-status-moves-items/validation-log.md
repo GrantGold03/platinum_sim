@@ -458,3 +458,45 @@ B5 greedy-v1 vs ref: rate 0.828 vs 0.885, only 32/55, p 0.0178, verdict B
   1 passed in 12711.24s (3:31:51)
   ```
   result.json is byte-identical across 16 and 7 workers (SC-005 for reference mode).
+
+## T072 Full suite (2026-10-16, code `4dccb8d`)
+
+- `uv run pytest -q --deselect tests/integration/test_alternatives_quick.py::test_alternatives_stage_quick_smoke`, 17:20-19:40Z:
+  `1 failed, 659 passed, 1 deselected, 4 xfailed, 1 warning in 8410.32s (2:20:10)`.
+  - The deselected smoke test passed on the same commit a few hours earlier (T075-T080 section, 3:31:51); it was not run twice.
+  - **The failure:** `tests/integration/test_web_result_view.py::test_result_view`, `Extra items in the left set: 'alternatives'`. T051 added the `alternatives` key to the web summary (None for runs without the stage), but this test's fixed `SUMMARY_KEYS` was not updated, and only `test_web.py` was run at T051. The test is fixed (key added, and `None` asserted for the frozen pre-007 run): `4 passed in 36.10s`. Positive control on `_alternatives_summary`: the T073 off-mode result gives `None`; the same result with one test record gives `offered 1 / tested 0 / adopted 0 (...)`.
+- **Count change vs T002** (`pytest --collect-only`, current tree vs the `f88cdd0` snapshot): 508 → 665 collected, **157 added, 0 removed**: test_move_classes 70, test_item_classes 44, test_variable_power 11, test_alternatives 9, test_item_pairings 7, test_modelled_table 5, test_availability_controls 4, test_required_hms_adopted 4, test_alternatives_quick 1, test_reports 1, test_validator 1. 659 + 1 + 1 + 4 = 665.
+- The T002 failure (`test_evaluate.py::test_determinism_fast`, None commit in the git-less snapshot) passes in the real checkout, as predicted.
+- Node `node --test sim/test/*.test.mjs`: `# tests 343`, `# pass 343`, `# fail 0` (T002: 314; +29 from the v3 state, mechanics and positions tests).
+- Hours: not counted in the one-time budget (test runs, like the smoke tests).
+
+## T073 SC-005 (2026-10-16, code `4dccb8d`)
+
+- **Reference mode:** the T075-T080 smoke run (B4, quick, `alternatives_round=5`, `alternatives_members=2`, seed t036): result.json byte-identical between 16 and 7 workers.
+- **Off mode (the new default):** B4, quick, seed t073, `scratchpad/t07x.sh`:
+  ```
+  off w16 exit 0 1766s
+  off w7 exit 0 1919s
+  result.json identical
+  ```
+  Both: clear 0.846, expected average final level 60.06, validator `[]`.
+
+## T074 Final summary (2026-10-16)
+
+**Split.** User decision 2026-10-16: 007 ships with the alternatives stage off by default; feature 008 takes the reference benchmark, the prefilter, FR-017 step 2, SC-002, SC-006 and the FR-019 checks. One-time hours: 32.2 h of about 110 h.
+
+| SC | Status | Evidence |
+|---|---|---|
+| SC-001 | **Partly met** | The alternatives stage plays every generated alternative in battle (screening), shown in the B4 smoke runs (690 recorded: `status`, `item`, `status+item` kinds, finalists tested in full). A per-category positive control on a test team (every FR-001 category evaluated) was not run; it belongs with the 008 reference benchmark. |
+| SC-002 | Moved to 008 | — |
+| SC-003 | **Met** | `test_run_stage_records_every_alternative...` (each alternative exactly once, items included); the smoke test asserts it per member on real runs. |
+| SC-004 | **Met** on what was run | Validator `[]` on the smoke final team and both T073 off-mode teams; validator and required-HM tests in the suite (T072). The 5-team benchmark is not rerun on 007 code (008). |
+| SC-005 | **Met** | T073: reference and off mode, byte-identical result.json across worker counts. |
+| SC-006 | Moved to 008 | **Not measured in 007:** a standard-budget off-mode run time against the T005 baseline (the 2.0× cap). Expected not slower (v3 2.36 vs v2 2.03 gauntlets/s in the speed probe), but unverified. |
+| SC-007 | **Met** | `test_generation_sorted_and_without_excluded_moves` (no Screech, Seismic Toss, Frustration offered). |
+| SC-008 | **Partly met** | Helps / doesn't-help pairs pass for Leech Seed, confusion, Baton Pass, hazards, Light Clay, Chesto, and with production v3 (T064). **Not met:** weather, Substitute, Wish, Taunt, Endure, Damp Rock — no helps-position at the 2-ply reference (payoffs past the horizon). |
+| SC-009 | **Met** | T052-T058: Route 221 house (Focus Sash, Expert Belt, Black Belt, 1 each), Pastoria berry house, Amity Square, with decomp sources; count checks in `test_availability_controls.py` (63 passed). |
+
+**Adopted status moves and items per benchmark team:** not measured on the benchmark (008). Smoke evidence only (B4, quick, 2 members): the 2026-10-15 run adopted nothing (6 finalists indistinguishable at 100 paired runs); the 2026-10-16 rerun with fresh-seed finalists adopted 1 (its record was in the test's temp dir and was not kept).
+
+**What v3 still doesn't model:** payoffs past 2 plies (weather, Wish, Taunt, Substitute, Damp Rock's extra turns); Endure value (Reversal/Flail excluded); Liquid Ooze, Rain Dish, Ice Body, Dry Skin; the items skipped as not modelled (pinch berries such as Figy/Aguav/Iapapa/Mago/Wiki, Oran, Leppa, Full Incense, Grip Claw, Iron Ball, Lagging Tail, Mental Herb, Shed Shell, Sticky Barb); the accepted divergences in T044 and its unchecked list; mean durations for Taunt/Encore/confusion inside the search.

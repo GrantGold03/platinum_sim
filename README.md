@@ -20,8 +20,11 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   applied at runtime.
 - **Opponents use the game's own trainer AI.** The decomp's AI script (`trainer_ai/script.s`) is run
   by an interpreter (`decomp-ai`), and that includes Cynthia's 4× Full Restore.
-- **The player uses a named look-ahead policy**, `expectimax2-v2` (the default everywhere since
-  2026-10-08). It replaced `expectimax2-v1`, which lost to `greedy-v1` on some optimizer teams because
+- **The player uses a named look-ahead policy**, `expectimax2-v3` (the default everywhere since
+  2026-10-16, feature 007). v3 adds status moves, weather, hazards and held items to v2's model and was
+  accepted against a slower reference player; on the 007 benchmark teams it is neither better nor
+  worse than v2 (T063/T064 in `specs/007-status-moves-items/validation-log.md`). `expectimax2-v2`
+  (default 2026-10-08 to 2026-10-16) replaced `expectimax2-v1`, which lost to `greedy-v1` on some optimizer teams because
   its search rewarded delaying KOs and its leaf weights were mis-scaled (research R7 – v2 correction).
   In 600 fresh paired runs v2 beat greedy on the reference team (568 vs 442, p = 1.8e-23) and was at
   parity on the team where v1 had lost. `expectimax2-v1` stays registered for comparison.
@@ -155,7 +158,7 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
 | `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules) |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v3`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
 | `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags |
@@ -397,7 +400,7 @@ picker lists the web jobs the server knows about, up to 50. Command-line runs su
 
 ## Budget presets and run times
 
-| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v2) | CI half-width target | Borderline cap (total runs) |
+| Preset | Screening rounds (greedy-v1) | Ability screen | Confirm per finalist (expectimax2-v3) | CI half-width target | Borderline cap (total runs) |
 |---|---|---|---|---|---|
 | `standard` (default) | 100 → 200 → 400 | 200 | ≥ 2,000, more until the target is met | ±2 points | 4,000 |
 | `thorough` | 200 → 400 → 800 | 400 | ≥ 5,000, more until the target is met | ±1.5 points | 10,000 |
@@ -415,7 +418,8 @@ runs on 2026-10-08:
 
 | Setup | Throughput |
 |---|---|
-| `expectimax2-v2` (default player) | **2.1–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (T076 optimizer confirmation), 2.14–2.25 (`runs/final-defaults` confirmation); 2.74 on 8 workers |
+| `expectimax2-v3` (default player since 007) | 2.36 gauntlets/s (007 speed probe, 16 workers) |
+| `expectimax2-v2` | **2.1–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (T076 optimizer confirmation), 2.14–2.25 (`runs/final-defaults` confirmation); 2.74 on 8 workers |
 | `expectimax2-v1` | 1.79 gauntlets/s (T056 benchmark team, 16 workers) |
 | `greedy-v1` | 55.8 gauntlets/s (T056 benchmark team, 16 workers) |
 | Bare engine | 59 gauntlets/s ceiling (T008 spike, no AI or policy) |
@@ -509,7 +513,7 @@ src/platsim/          Python: everything that is not battle-time
   budget.py stats.py evaluate.py explain.py extract.py cli.py
 sim/                  Node: Showdown worker, gauntlet, exp/level-up, damage port
   ai/                 decomp trainer-AI parser + interpreter
-  policy/             greedy-v1, expectimax2-v1, expectimax2-v2 (default)
+  policy/             greedy-v1, expectimax2-v1, expectimax2-v2, expectimax2-v3 (default)
   spikes/  test/
 data/divergences.json divergence ledger;  data/generated/ (git-ignored, from `extract`)
 tests/                pytest unit/, integration/, browser/ (Playwright), fixtures/

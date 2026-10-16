@@ -25,7 +25,7 @@ code fingerprint matches - see _State; `--force-new` starts over)
 4. screen (screen.py, greedy-v1): successive halving over up to N_CANDIDATES teams = the baseline,
    every single-member variation (moveset x item x source variant), then seeded random combinations;
    rounds and the top-third rule from the budget preset; finalists = best two.
-5. level_search (levels.py, expectimax2-v2): bisection on the uniform level, then the alternatives stage (007),
+5. level_search (levels.py, expectimax2-v3 since 007 T065): bisection on the uniform level, then the alternatives stage (007),
    then the balanced per-member descent; each point PASS/FAIL by the sequential rule in levels.py.
    alternatives (007, optimizer/alternatives.py, played by move_classes.ALT_POLICY = expectimax2-v3): per
    member, status-move alternatives at the current team's first failing neighbour U - 1; successive
@@ -34,7 +34,7 @@ code fingerprint matches - see _State; `--force-new` starts over)
    `candidates="reference"`; the default `"off"` skips it (Clarifications 2026-10-16). The cheaper
    `"prefilter"` mode and its acceptance against the reference are feature 008.
 6. confirm (evaluate.evaluate_team, the `platsim evaluate` path): the winner at its final levels,
-   >= `confirm_min` expectimax2-v2 runs, more until the CI target is met and, for qualifying presets,
+   >= `confirm_min` expectimax2-v3 runs, more until the CI target is met and, for qualifying presets,
    more while the CI straddles the threshold (up to 4 x confirm_min); Cynthia top-up (T057); loss causes.
    If the confirmed rate misses the threshold or is borderline, every start level is raised by 1; if
    only the final gap (> 10) fails, the lowest members are raised by 1; the confirm is repeated at most

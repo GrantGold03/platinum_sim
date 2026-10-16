@@ -16,7 +16,8 @@ from _web_helpers import FIXTURE_DIR, FIXTURE_ID, RESULT_NAMES, make_app
 
 SUMMARY_KEYS = {"verdict", "clear_rate", "clear_ci95", "n_runs", "avg_final_level", "level_gap", "threshold",
                 "budget", "legality_options", "warnings", "no_qualifying", "platsim_version",
-                "required_hms"}  # 006: null for runs made without required HMs
+                "required_hms",  # 006: null for runs made without required HMs
+                "alternatives"}  # 007: null for runs without the alternatives stage
 HIDDEN_TEAM_KEYS = {"nature", "ivs", "evs", "ability_choice", "held_item_source"}
 
 
@@ -29,6 +30,7 @@ def test_result_view(fixture_runs_dir, catalog):
     assert set(s) == SUMMARY_KEYS
     assert s["verdict"] == "qualified" and s["platsim_version"] is None
     assert s["required_hms"] is None  # 006: the frozen default run had none
+    assert s["alternatives"] is None  # 007: the frozen run predates the alternatives stage
     assert abs(s["avg_final_level"] - 58.227) < 0.001 and s["level_gap"] == 4.0
     assert s["n_runs"] == 2000 and s["budget"] == "standard" and s["threshold"] == 0.75
 

@@ -363,9 +363,9 @@ description: "Task list for 007 Status Moves and Held Items"
 
 - [X] T070 [P] Update `README.md`: `--candidates`, `expectimax2-v3`, the status-move and item behaviour, the friendship assumption, the new ledger sources, and the Pickup ability as a known gap.
 - [X] T071 [P] Update the docstrings in `src/platsim/optimizer/candidates.py` (module doc steps 2, 5 and 6), `src/platsim/optimizer/run.py` (stage list: alternatives replaces the setup check) and `src/platsim/optimizer/resources.py` (slot tiers).
-- [ ] T072 Full Python suite `uv run pytest -q` and `node --test sim/test`. Record the output against the T002 baseline, and explain every changed count. Add its hours to the running total.
-- [ ] T073 SC-005: re-run one smoke request (B4, `--budget quick`, both modes, `alternatives_round=5`, `alternatives_members=2`) with the same seed and confirm `result.json` is byte-identical. Record it.
-- [ ] T074 Write the final summary in `validation-log.md` and `RUN-STATE.md`: SC-001 to SC-009 each with its evidence or "not met" and why; adopted status moves and items per benchmark team; what v3 still doesn't model. Then hand over for the user's hands-on testing (restart `uv run platsim serve` from this branch on request). Don't merge.
+- [X] T072 Full Python suite `uv run pytest -q` and `node --test sim/test`. Record the output against the T002 baseline, and explain every changed count. Add its hours to the running total.
+- [X] T073 SC-005: re-run one smoke request (B4, `--budget quick`, both modes, `alternatives_round=5`, `alternatives_members=2`) with the same seed and confirm `result.json` is byte-identical. Record it.
+- [X] T074 Write the final summary in `validation-log.md` and `RUN-STATE.md`: SC-001 to SC-009 each with its evidence or "not met" and why; adopted status moves and items per benchmark team; what v3 still doesn't model. Then hand over for the user's hands-on testing (restart `uv run platsim serve` from this branch on request). Don't merge.
 
 ---
 

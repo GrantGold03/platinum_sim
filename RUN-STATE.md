@@ -301,29 +301,18 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 ## 007 status moves and held items (started 2026-10-14)
 
 - **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with expectimax2-v3. Add the Route 221, Pastoria and Amity Square item sources. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
-- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed. The web server is stopped.
-- **Done (2026-10-15)**, see `specs/007-status-moves-items/validation-log.md`:
-  - T001, T003, T004, T006;
-  - T007-T019 and T021-T035;
-  - T037-T045 and T047-T062;
-  - T070, T071.
-- **Running.** Background task `b2dtnjbi2`, script `scratchpad/baseline_chain.sh`. It runs on an `f88cdd0` snapshot at `scratchpad/baseline-f88cdd0`:
-  1. `uv run pytest -q` (log `scratchpad/suite_baseline.txt`);
-  2. `node --test sim/test`;
-  3. standard optimizations of B4, B5, B3, B1 and B2, seed bench-007, writing to `runs/bench-007-baseline/<B>`.
-
-  The progress log is `scratchpad/baseline_chain.log`. Started 2026-10-15T00:04Z; expect about 11-13 h in total.
-- **Next, after the chain finishes.** No heavy run may overlap the baseline, because its wall time is the SC-006 yardstick.
-  1. Record T002 and T005 in the validation log, with their hours in the running total.
-  2. T020: node tests and unit tests.
-  3. T028b: v3 / v3-ref speed probe; then compute the round sizes (T031).
-  4. T036 and T046 smoke runs.
-  5. Phase 8: T063-T069, within the 100 h budget for all one-time runs, with the running total kept in the validation log.
-  6. T072-T074.
+- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed (latest code commit `4dccb8d`). The web server is stopped. Not merged: waits for the user's hands-on testing.
+- **Split (user, 2026-10-16).** 007 ships what is built, with the alternatives stage **off by default** (`--candidates off|reference`). **Feature 008** (not yet specified) takes: the reference benchmark (T066, T066b, T067), the prefilter (T068, T069), FR-017 step 2, SC-002, SC-006 and the FR-019 checks. Recorded in spec Clarifications "Session 2026-10-16" and the contract.
+- **Hours.** One-time budget raised to about 110 h (user 2026-10-16), carried over to 008. Used: 32.2 h (validation-log hours table, including the 6.7 h stopped B4 reference run). Smoke tests are outside the budget.
+- **Done:** T001-T065 (except those moved to 008), T070-T071, T075-T080. Evidence in `specs/007-status-moves-items/validation-log.md`.
+  - Stats fix (T075/T076): the stopped B4 reference run showed selection bias (finalists tested on the seeds that selected them: Blissey stall 91.5% vs 79.5% there, 82% vs 77.5%, p 0.31, on fresh seeds). Finalists now use a fresh seed block `<seed>|alternatives-final|<slot>`, 800 paired runs per arm (qualifying budget), Holm; no confirm block; per-seed `screening_bits` kept in state.json for 008's offline prefilter comparison.
+- **Done 2026-10-16:** T072 (full suite; one stale web test fixed), T073 (SC-005, both modes), T074 (summary in the validation log). Every 007 task is done except the five moved to 008.
+- **Next.** The user's hands-on testing (restart `uv run platsim serve` from this branch on request). Not measured yet: a standard-budget off-mode run time against the T005 baseline (the user's 2.0× cap); the user's standard test run measures it. Merge only after the user's testing. Then propose `/speckit-specify` for 008, split small (memory `feature-size-limits`).
 - **Traps:**
   - Don't `git commit -a`: the user's uncommitted deletion of `.claude/scheduled_tasks.lock` must stay out of commits.
   - Any `sim/*.mjs` edit changes the code hash, so old checkpoints won't resume.
   - The golden v1/v2 test takes about 5 min.
-  - The suite's one early `F` in the baseline log may be contention from concurrent runs (unverified); check it when the suite finishes.
+  - On Node 22 use `node --test sim/test/*.test.mjs` (a directory argument exits at once).
   - The Pickup ability is a known unmodelled source, out of scope.
   - Never wait on a run with `pgrep -f <name>` from a shell whose own command line contains `<name>`: it matches itself and waits forever. This lost 3 h on 2026-10-15 (the T063 B4/B5 queue). Wait on the PID instead.
+  - The reference player (v3-ref) is not uniformly better than the cheap ones (worse than v2 on B4, p 0.03); don't treat it as ground truth without per-team checks.
