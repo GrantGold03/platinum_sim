@@ -4,16 +4,16 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 
 ## CLI
 
-`platsim optimize … [--candidates reference|prefilter]`
+`platsim optimize … [--candidates off|reference]` (007; `prefilter` comes with feature 008)
 
-- Default: `prefilter`, once it is accepted against the reference (FR-017). Until then the default is `reference`.
+- Default: `off` (no alternatives stage; the result records `candidate_mode: off` and no candidate_tests). `reference` plays every alternative (about 8-10 h per standard run). Feature 008 adds `prefilter` and makes it the default once accepted.
 - The value is recorded in `provenance.optimizer.candidate_mode` and in the job fingerprint, so a run in a different mode never resumes another mode's state.
 - Test-only request fields (not on the CLI or the web): `alternatives_round` (the reference's first-round size r) and `alternatives_members` (limit the stage to the first N members). Both are recorded in provenance when set.
 - `--player-policy` (evaluate) accepts `expectimax2-v3`. After acceptance (research R4.6), the default becomes `expectimax2-v3`. `expectimax2-v1` and `-v2` stay available.
 
 ## HTTP
 
-- The optimize request body accepts an optional `"candidates": "reference" | "prefilter"`. If it's absent, the CLI default applies.
+- The optimize request body accepts an optional `"candidates": "off" | "reference"`. If it's absent, the default `off` applies.
 - No UI control is added. The web uses the default.
 
 ## result.json
@@ -40,6 +40,7 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 
 - Every offered alternative appears exactly once. `kind` is one of `status`, `status+item`, `structured`, `structured+item` and `item`.
 - An alternative dropped in a successive-halving round has `round_reached` (e.g. `"round 2 of 4"`), its round's clear count and run count, and `verdict: "dropped in screening"`.
+- The full test of a finalist uses a fresh seed block (`alternatives_final_seeds`); `confirmed` is null (no separate confirmation since 2026-10-16). Each alternative's per-seed screening outcomes are in the run's state.json (`screening_outcomes`), not in result.json.
 - One that wasn't tested at all has `verdict: "not tested: <reason>"` and null statistics (SC-003).
 - The numbers are those of the recorded battles. `n_paired` equals the number of runs actually played.
 

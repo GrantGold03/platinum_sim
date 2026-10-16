@@ -205,6 +205,7 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
    - all copy conflicts **repaired** (`resources.repair`), not skipped.
 2. **Comparison level.** Each alternative is compared with the current team at the current team's **first failing neighbour level** from the bisection (`fail_u`). "The alternative passes the PASS rule where the current team fails" means strictly better under the objective, which is lower levels. When no failing neighbour exists, the bisection levels are used. Paired seeds come from the namespace `f"{seed}|alternatives"`.
 3. **Statistics.** McNemar exact per alternative, with Holm correction within each member. The winner is confirmed on a fresh seed block before adoption, so it isn't greedy on noise. Adoption is slot by slot, as today.
+   - **Revised 2026-10-16 (spec Clarifications, T067 finding):** the finalist test uses a fresh seed block (`f"{seed}|alternatives-final|<slot>"`) disjoint from the screening seeds, with 800 paired runs per arm and Holm over the finalists. The separate confirm block is dropped. Reason: testing finalists on the seeds that selected them inflated p-values (Blissey 91.5% vs 79.5%, p 0.005 on the screening seeds; 82% vs 77.5%, p 0.31 on fresh seeds).
 4. **Checkpointing.** After each alternative, in `state.json` under `level_search.alternatives`.
 5. **Two modes, FR-017:**
    - **`reference`, two levels (analysis C1, user 2026-10-14):** every alternative of a member reaches the strong player.

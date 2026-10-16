@@ -95,6 +95,20 @@
 
 ## Clarifications
 
+### Session 2026-10-16: split into 007 and 008
+
+- Q: Is 007 split, now that the run is stopped for the stats fix? → A: Yes (user, 2026-10-16; see also the standing rule to keep features small).
+  - **007 keeps:** everything built so far (US1-US5 code, player v3 with the production c3 settings, the defaults switched to v3), the stats fix (fresh-seed finalist test, 800 runs per arm, per-seed outcomes), and a fast default `--candidates off` (no alternatives stage).
+  - **`--candidates reference`** stays available, opt-in.
+  - **Moved to feature 008** (prefilter acceptance):
+    - the reference benchmark (old T066, T066b, T067);
+    - the prefilter (T068, T069);
+    - FR-017 step 2;
+    - SC-002 and SC-006 as stated;
+    - the FR-019 checks of the generation and item-relevance rules and of the screening.
+  - The 110 h one-time budget carries over to 008. 32.2 h are spent (validation log).
+  - **Default `off` is the conservative interim choice.** Without an accepted prefilter, the only working mode costs about 8-10 h per run, and Constitution VI forbids adopting an unchecked cheap version.
+
 ### Session 2026-10-14
 
 - Q: Is the battle player (expectimax2) changed in this feature? → A: Yes, where needed so it can use the offered status moves and items. The user withdrew an earlier deferral to a separate branch.
@@ -116,6 +130,7 @@
 
   The successive-halving round sizes in the reference are chosen to fit that budget. See FR-017 and FR-019.
 - Q (second analysis I1): Are held items the player doesn't model offered? → A: No (user). They are skipped like unmodelled moves and listed as "not offered: not modelled". See FR-009 and FR-016.
+- Q (implementation T067, 2026-10-16): the B4 reference run showed that finalists picked by successive halving and then tested on the same seeds look better than they are. Blissey's stall set scored 91.5% vs 79.5% (p 0.005) on the screening seeds, but 82% vs 77.5% (p 0.31) on fresh seeds; Gliscor's Swords Dance set did the same. At 200 runs the honest gains of a few points can't reach significance. Per-seed outcomes were not saved either. → A: Stop and fix (user). Finalists are tested on a fresh seed block the screening never used, with 800 paired runs per arm (about 80% power for a 5-point gain at Holm-corrected alpha). The separate confirmation block is dropped, because the fresh-seed test is already unbiased. Every alternative's per-seed screening outcomes are saved. The one-time budget rises from 100 h to 110 h (user, 2026-10-16). The stopped B4 run (6.7 h) counts toward it.
 - Q (analysis U2): Are "other" status moves that the player doesn't model offered? → A: No (user). They are skipped and listed in the result as "not offered: not modelled by <player>". This applies to any in-scope move whose effect the player version in use does not model. See FR-001 and FR-013.
 - Q (implementation T031, 2026-10-15): with v3's mechanics offered, the reference teams have 2,900-5,000 alternatives each (B4 at the 25-run minimum is about 22 h, over its 10 h share). How should the reference handle this? → A: Status moves replace only the member's weakest and second-weakest attacks (by League value), alone or together. Structured 3-4-status sets are unchanged. Measured N: B4 984, B5 1,039, B3 612, B1 667, B2 682 (user). The slot rule is a shortcut, checked against all-slot generation on Milotic (T066).
 - Q (analysis I1): How are sets with 3-4 status moves generated? → A: Option (b) (user). Every 1-2-slot replacement, plus a structured set of 3-4-status sets built from one move per category (for example inflict-status + protection + recovery, + Leech Seed). The structured rule is a shortcut, so it is validated against full 3-4-slot generation on two members. See FR-005.
@@ -272,7 +287,7 @@ Three in-game sources that the availability ledger doesn't model today are added
   The structured rule is a shortcut (FR-019). It MUST be validated against full 3-4-slot generation on at least two members.
 - **FR-006**: Moves and held items MUST be chosen together where an item depends on a move: Light Clay with screens, a weather rock with its weather move, Chesto or Lum Berry with Rest. A candidate pairs them as one choice.
 - **FR-007**: Every candidate moveset or item that contains a status move, or an item the screening player can't value, MUST be judged by a battle player that can use status moves. It MUST NOT be eliminated by a player that scores status moves as worth nothing.
-- **FR-008**: A status-move or new-item candidate MUST replace the attack-only alternative only when it is statistically better on paired runs with the same seeds, under the optimizer's stated objective (Constitution IV). Otherwise the comparison MUST be reported as indistinguishable or worse.
+- **FR-008**: A status-move or new-item candidate MUST replace the attack-only alternative only when it is statistically better on paired runs with the same seeds, under the optimizer's stated objective (Constitution IV). Otherwise the comparison MUST be reported as indistinguishable or worse. (2026-10-16) The comparison uses a seed block disjoint from any seeds used to choose the candidate (no selection on the test seeds), with at least 800 paired runs per arm in reference mode, and Holm's correction over the finalists of a member.
 - **FR-009**: Held-item candidates MUST include every item that:
   - has an in-battle effect in a single trainer battle;
   - has at least one copy under the active legality options (including the team-gated rule);
@@ -290,9 +305,9 @@ Three in-game sources that the availability ledger doesn't model today are added
 - **FR-014**: Required HMs (006) MUST still be carried. When a slot must give way, an adopted status move MUST be replaced only after every non-adopted move. The order MUST be documented.
 - **FR-015**: Results MUST stay reproducible: the same request, seed and pinned commits give the same result (Constitution IV).
 - **FR-016**: The strong battle player MUST model the in-battle effect of every offered status-move category and every offered held item, well enough to choose them when they help (user, 2026-10-14). This covers the categories it treats as having no effect today, such as weather, Leech Seed and Substitute. A changed player MUST be a new named version. The previous version MUST stay available so earlier results can be reproduced, and every result MUST name the version used (Constitution II, IV). Moves and items the player doesn't model are not offered (FR-001, FR-009), so every offered move and item is modelled by construction. A required HM that isn't modelled is flagged (FR-013).
-- **FR-017**: The feature MUST be built in two steps (user, 2026-10-14).
-  1. **Reference (one-time, within the 100 h development budget).** First, every offered candidate is judged by the strong player, with no prefilter.
-     - Successive halving narrows the candidates. Its round sizes are the largest that fit the reference's share of the 100 h budget, given the measured number of alternatives, with a first round of at least 25 paired runs. If even 25 doesn't fit, the user is asked before the reference runs.
+- **FR-017** (split 2026-10-16: 007 delivers the `off` default and the reference mode; step 2 and the acceptance move to feature 008): The feature MUST be built in two steps (user, 2026-10-14).
+  1. **Reference (one-time, within the 110 h development budget).** First, every offered candidate is judged by the strong player, with no prefilter.
+     - Successive halving narrows the candidates. Its round sizes are the largest that fit the reference's share of the 110 h budget, given the measured number of alternatives, with a first round of at least 25 paired runs. If even 25 doesn't fit, the user is asked before the reference runs.
      - The finalists get the full paired test.
      - It runs on three benchmark teams, B4, B5 and B3 (SC-002 itself still covers all five). Its results, including every seed's outcome for every alternative, are recorded as the reference.
      - The screening inside the reference is itself a shortcut. It is checked once on one member against a full test of a sample of alternatives (FR-019).
@@ -301,7 +316,7 @@ Three in-game sources that the availability ledger doesn't model today are added
      - It MUST NOT be worse by a statistically supported margin (as defined in SC-002).
      - It MUST take at most 2.0× the measured baseline time per standard run, for each benchmark team (user, 2026-10-14: a hard maximum).
   - The reference mode MUST remain available after the prefilter is added, so the prefilter can be re-checked against it.
-  - **Budget for the one-time runs (100 h in total):**
+  - **Budget for the one-time runs (100 h in total; raised to 110 h on 2026-10-16, see Clarifications):**
 
     | One-time run | Task | Hours |
     |---|---|---|
@@ -339,11 +354,11 @@ Three in-game sources that the availability ledger doesn't model today are added
 ### Measurable Outcomes
 
 - **SC-001**: For each in-scope category (FR-001), at least one test team exists where a member's candidates include a moveset from that category, and the result shows it was evaluated in battle (positive control per category).
-- **SC-002**: Across a fixed benchmark of at least 5 teams, chosen in planning, at standard budget, no team's result gets worse than before. Both final teams are evaluated with the same player version and seeds at their own reported start levels. "Worse" means the new team's clear rate is significantly lower (McNemar exact, alpha 0.05), or its expected average final level is higher by more than the two confirm CIs' combined half-width.
+- **SC-002**: (moved to feature 008, 2026-10-16) Across a fixed benchmark of at least 5 teams, chosen in planning, at standard budget, no team's result gets worse than before. Both final teams are evaluated with the same player version and seeds at their own reported start levels. "Worse" means the new team's clear rate is significantly lower (McNemar exact, alpha 0.05), or its expected average final level is higher by more than the two confirm CIs' combined half-width.
 - **SC-003**: 100% of offered status moves and items appear in the result with a tested or not-tested state, and with the not-modelled flag where it applies.
 - **SC-004**: 100% of optimizer outputs pass the independent validator, including required-HM checks, on the benchmark and in the existing test suite.
 - **SC-005**: Re-running any benchmark request with the same seed gives an identical result.
-- **SC-006**: The reference mode (FR-017 step 1) runs to completion on its three teams. All of this feature's one-time runs together (as listed in FR-017's budget) take at most 100 h. Their run times are recorded. With the prefilter, a standard-budget run takes at most 2.0× the measured baseline time, for each benchmark team. Its results are not worse than the reference by a statistically supported margin.
+- **SC-006**: (moved to feature 008, 2026-10-16) The reference mode (FR-017 step 1) runs to completion on its three teams. All of this feature's one-time runs together (as listed in FR-017's budget) take at most 110 h (raised from 100 h, user 2026-10-16). Their run times are recorded. With the prefilter, a standard-budget run takes at most 2.0× the measured baseline time, for each benchmark team. Its results are not worse than the reference by a statistically supported margin.
 - **SC-007**: No offered move falls under FR-002 or FR-003. Positive control: a member that legally learns Screech and Seismic Toss is offered neither.
 - **SC-008**: For each status-move category and held-item effect the player newly models, a positive-control battle position exists where the player chooses that move or benefits from that item. A matching position where it does not help shows the player does not choose it there.
 - **SC-009**: Under default options, each of the four added sources (FR-018) shows up in the item catalog with its decomp source. The before or after the Champion verdict is shown with its reason. A count check on the ledger changes only by the items those sources add.
