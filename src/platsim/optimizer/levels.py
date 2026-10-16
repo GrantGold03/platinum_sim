@@ -52,7 +52,7 @@ from dataclasses import asdict, dataclass
 from platsim.sim.seeds import derive_seed
 from platsim.stats import wilson_ci
 
-POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
+POLICY = "expectimax2-v3"  # 007 T065 (was expectimax2-v2; v1 before the policy-reversal fix)
 OPPONENT_POLICY = "decomp-ai"
 MAX_GAP = 10
 LEVEL_RUNS = {"standard": (200, 800), "thorough": (400, 1600), "quick": (50, 100)}

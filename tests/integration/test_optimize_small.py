@@ -8,7 +8,7 @@ directories (so the second run cannot resume from the first's state.json), and a
 - the optimized team passes the independent validator (or the run is an explicit "no qualifying team"
   report, SC-001), and team.txt re-imports to the same team.
 
-Slow (two full quick optimizations with expectimax2-v2; about 20-40 min each on 16 workers).
+Slow (two full quick optimizations with expectimax2-v3; about 20-40 min each on 16 workers).
 PLATSIM_OPTIMIZE_WORKERS sets the first run's pool size (default os.cpu_count()); the second uses 7.
 """
 
@@ -59,8 +59,8 @@ def test_optimize_quick_deterministic_and_legal(tmp_path):
     assert r["seeds"]["master"] and r["seeds"]["scheme"]
     opt = r["provenance"]["optimizer"]
     assert opt["budget_preset"]["name"] == "quick"
-    assert opt["policy_per_stage"]["screen"] == "greedy-v1" and opt["policy_per_stage"]["confirm"] == "expectimax2-v2"
-    assert r["player_policy"] == "expectimax2-v2" and r["opponent_policy"] == "decomp-ai"
+    assert opt["policy_per_stage"]["screen"] == "greedy-v1" and opt["policy_per_stage"]["confirm"] == "expectimax2-v3"
+    assert r["player_policy"] == "expectimax2-v3" and r["opponent_policy"] == "decomp-ai"  # 007 T065 default
     for name in ("result.xlsx", "result.csv", "team.txt", "state.json"):
         assert (tmp_path / "a" / name).is_file(), name
 

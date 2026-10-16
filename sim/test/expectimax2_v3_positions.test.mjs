@@ -92,3 +92,14 @@ test('Chesto Berry raises the value of Rest, not of Body Slam', () => {
 });
 // Damp Rock: no measurable gain at the 2-ply reference (the extra 3 turns lie past its horizon, and the
 // difference is inside the AI-sampling noise); recorded as a finding in validation-log.md (T043).
+
+// T064: the production v3 settings (T063-accepted c3) pass the same helps / doesn't-help positions.
+test('production expectimax2-v3 passes the status positions', () => {
+  const v3 = PLAYER_POLICIES.get('expectimax2-v3');
+  assert.equal(chosen(v3, () => position(TORTERRA)), 'leechseed');
+  assert.notEqual(chosen(v3, () => position(TORTERRA, { foeSlot: 1 })), 'leechseed');
+  assert.equal(chosen(v3, () => position(GENGAR, { foeSlot: 5 })), 'confuseray');
+  assert.ok(['spikes', 'stealthrock'].includes(chosen(v3, () => position(SKARMORY))));
+  const boosted = (b) => { const m = b.sides[0].active[0]; m.boosts.atk = 4; m.boosts.spe = 2; m.hp = 1; };
+  assert.equal(chosen(v3, () => position(NINJASK, { live: boosted })), 'batonpass');
+});

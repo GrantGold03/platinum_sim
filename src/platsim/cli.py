@@ -137,7 +137,7 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
                    help="minimum full gauntlets (default 2000); more are added until the budget CI target is met")
     p.add_argument("--seed", default="0", help="master seed (any string; default '0')")
     p.add_argument("--workers", type=int, default=None, help="worker processes (default: CPU count)")
-    p.add_argument("--player-policy", default="expectimax2-v2", help="player policy (default expectimax2-v2)")
+    p.add_argument("--player-policy", default="expectimax2-v3", help="player policy (default expectimax2-v3; 007)")
     p.add_argument("--budget", choices=sorted(PRESETS), default=DEFAULT_PRESET,
                    help="budget preset (research R8): CI target for the gauntlet and Cynthia (default standard)")
     p.add_argument("--min-clear", type=float, default=0.75, help="qualification threshold (default 0.75, FR-015)")

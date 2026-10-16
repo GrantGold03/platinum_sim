@@ -68,7 +68,7 @@ def test_determinism_fast(tmp_path):
     _same_json(tmp_path / "a", tmp_path / "b")
     r = json.loads((tmp_path / "a" / "result.json").read_text())
     assert r["n_runs"] == int(n) and r["budget_preset"] == "quick" and not r["qualified"]
-    assert r["player_policy"] == "expectimax2-v2" and r["opponent_policy"] == "decomp-ai"
+    assert r["player_policy"] == "expectimax2-v3" and r["opponent_policy"] == "decomp-ai"  # 007 T065 default
     # Code version (platsim/version.py): which code produced the result; equal across worker counts
     # (the byte-identical check above covers them).
     from platsim import version

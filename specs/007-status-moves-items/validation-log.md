@@ -12,6 +12,7 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | T020 node + unit checkpoint and fix rerun | T020 | (suites, 8) | 0.20 | 11.27 |
 | Speed probe | T028b | (player, 15) | 0.30 | 11.57 |
 | Player comparison, policy benchmark team (400 paired x 7 policies) | T063/T064 | (player, 15) | 3.71 | 15.28 |
+| Player comparison, B4 + B5 (400 paired x 7 policies each) | T063/T064 | (player, 15; 14.2 used in total) | 10.22 | 25.50 |
 
 ## T001 Setup (2026-10-14)
 
@@ -379,3 +380,67 @@ policy_benchmark v3 vs greedy-v1: 0.855 vs 0.117, only 304/9, p 0.0000, verdict 
 - **The expensive reference is not measurably better than plain v3** (0.840 vs 0.855), at 70× the cost: 12,914 s against 186 s.
 - **Reading, unverified until B4 and B5:** on an all-attack team the extra search width buys nothing measurable, and the leaf terms don't hurt. c1 (residual leaf) has the highest point estimate but is not significant.
 - **v3 vs v2:** indistinguishable here. **v3 vs greedy-v1:** better (p ≈ 0).
+
+
+## T063 / T064 Player comparison: B4 and B5; production v3 chosen (2026-10-16)
+
+The B4 and B5 baseline final teams play at their baseline start levels (seeds `v3-accept|<B>|i`, 400 paired runs each). Note: the 3 h lost on 2026-10-15 to a queue that waited on itself (RUN-STATE trap) used no compute and is not counted.
+
+```
+B4 expectimax2-v3-ref cleared 320/400 in 19641s
+B4 expectimax2-v3 cleared 337/400 in 164s
+B4 expectimax2-v3-c1 cleared 341/400 in 156s
+B4 expectimax2-v3-c2 cleared 341/400 in 152s
+B4 expectimax2-v3-c3 cleared 339/400 in 152s
+B4 expectimax2-v2 cleared 343/400 in 147s
+B4 greedy-v1 cleared 189/400 in 9s
+B4 expectimax2-v3 vs ref: rate 0.843 vs 0.800, only 66/49, p 0.1354, verdict indistinguishable
+B4 expectimax2-v3-c1 vs ref: rate 0.853 vs 0.800, only 64/43, p 0.0527, verdict indistinguishable
+B4 expectimax2-v3-c2 vs ref: rate 0.853 vs 0.800, only 65/44, p 0.0549, verdict indistinguishable
+B4 expectimax2-v3-c3 vs ref: rate 0.848 vs 0.800, only 61/42, p 0.0756, verdict indistinguishable
+B4 expectimax2-v2 vs ref: rate 0.858 vs 0.800, only 63/40, p 0.0297, verdict A
+B4 greedy-v1 vs ref: rate 0.472 vs 0.800, only 38/169, p 0.0000, verdict B
+B5 expectimax2-v3-ref cleared 354/400 in 15462s
+B5 expectimax2-v3 cleared 327/400 in 134s
+B5 expectimax2-v3-c1 cleared 336/400 in 132s
+B5 expectimax2-v3-c2 cleared 342/400 in 132s
+B5 expectimax2-v3-c3 cleared 343/400 in 132s
+B5 expectimax2-v2 cleared 336/400 in 128s
+B5 greedy-v1 cleared 331/400 in 7s
+B5 expectimax2-v3 vs ref: rate 0.818 vs 0.885, only 24/51, p 0.0024, verdict B
+B5 expectimax2-v3-c1 vs ref: rate 0.840 vs 0.885, only 27/45, p 0.0444, verdict B
+B5 expectimax2-v3-c2 vs ref: rate 0.855 vs 0.885, only 30/42, p 0.1945, verdict indistinguishable
+B5 expectimax2-v3-c3 vs ref: rate 0.858 vs 0.885, only 34/45, p 0.2604, verdict indistinguishable
+B5 expectimax2-v2 vs ref: rate 0.840 vs 0.885, only 25/43, p 0.0385, verdict B
+B5 greedy-v1 vs ref: rate 0.828 vs 0.885, only 32/55, p 0.0178, verdict B
+```
+
+**Reading:**
+- **The reference is not uniformly better.** On B5 it beats plain v3, c1, v2 and greedy significantly. On B4 it is significantly *worse* than v2 (0.800 vs 0.858, p 0.030), and below every cheap setting by point estimate. On the policy benchmark team everything ties.
+  - A plausible cause (unverified): the reference's wider search with ply-2 switches makes it switch more on a slow, bulky team. That is the v1 failure mode the v2 header describes.
+- **The leaf terms matter on B5.** Plain v3 and c1 are significantly worse than the reference there; c2 and c3, which add the status-state and hazard terms, are not.
+
+**Decision (T063 rule: the cheapest setting not significantly worse than the reference on any team):**
+- c2 and c3 qualify; v3, c1, v2 and greedy-v1 fail on B5.
+- c2 and c3 cost the same (about 132-190 s per 400). c3 has the higher combined point estimate (0.868 + 0.848 + 0.858 vs 0.840 + 0.853 + 0.855).
+- **Production `V3_OPTS` = c3:** v3 state plus leafResidual, leafStatusState and leafHazards.
+- Caveats: no correction across the three teams; "not significantly worse" at n = 400 is not proof of equivalence.
+
+**T064 (production v3 = c3, against v2 and greedy-v1, same games):**
+
+| Team | c3 | v2 | p | greedy-v1 | p |
+|---|---|---|---|---|---|
+| policy benchmark | 0.868 | 0.833 | 0.20 | 0.117 | ≈0 (better) |
+| B4 | 0.848 | 0.858 | 0.73 | 0.472 | ≈0 (better) |
+| B5 | 0.858 | 0.840 | 0.50 | 0.828 | 0.28 |
+
+- v3 is **not shown better than v2** on these teams. They carry v2-era attack movesets, so v3's status modelling has little to use. It is not worse either.
+- **Why the default changes to v3 anyway (T065):** v3 models the status moves and items the alternatives stage now adopts. Level search and confirm must judge those sets with the player that can use them (FR-007), and v3 is not worse than v2 on any team. This is a modelling-consistency choice, not a claim that v3 is "better" (Constitution IV).
+
+**SC-008 with production v3:** a new test, "production expectimax2-v3 passes the status positions": Leech Seed, Confuse Ray, Spikes and Baton Pass are chosen where they help, and Leech Seed is not chosen against Grass. Node: positions + mechanics + golden v1/v2 = `# pass 25 # fail 0`.
+
+**T065:**
+- `POLICY` = expectimax2-v3 in `optimizer/run.py` and `optimizer/levels.py`.
+- `DEFAULT_PLAYER_POLICY` (`evaluate.py`) and the CLI `--player-policy` default are now v3.
+- The tests asserting the default (`test_evaluate.py`, `test_optimize_small.py`) are updated.
+- v1 and v2 stay registered and byte-identical (golden test).

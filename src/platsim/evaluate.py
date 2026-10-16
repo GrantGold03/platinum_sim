@@ -51,7 +51,7 @@ from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import runs_needed, wilson_ci, wilson_half_width
 
 DEFAULT_RUNS = 2000
-DEFAULT_PLAYER_POLICY = "expectimax2-v2"  # research.md R8 "Policy per stage": every reported rate
+DEFAULT_PLAYER_POLICY = "expectimax2-v3"  # 007 T065 (was v2); research.md R8 "Policy per stage": every reported rate
 OPPONENT_POLICY = "decomp-ai"  # FR-010
 GAUNTLET = ("aaron", "bertha", "flint", "lucian", "cynthia")  # FR-009, sim/gauntlet.mjs default order
 MAX_LEVEL_GAP = 10  # FR-016

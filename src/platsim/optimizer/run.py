@@ -76,7 +76,7 @@ CALIBRATION_TARGET = 0.5
 REF_MARGIN = 5
 N_CANDIDATES = 81
 MAX_CONFIRM_BUMPS = 2
-POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
+POLICY = "expectimax2-v3"  # 007 T065 (was expectimax2-v2; v1 before the policy-reversal fix; sim/policy/expectimax2.mjs VERSIONS)
 SCREEN_POLICY = "greedy-v1"
 OPPONENT = "decomp-ai"
 

@@ -176,7 +176,10 @@ export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 // v3 (007, spec FR-016): v2 plus the 007 mechanics, each behind its own flag (none yet: the scaffold
 // behaves as v2, but draws its own AI sample streams because the name seeds them). v3-ref is the
 // expensive reference the production v3 settings are accepted against (Constitution VI).
-export const V3_OPTS = Object.freeze({ ...V2_OPTS, v3State: true });
+// Production v3 = the T063-accepted candidate c3 (all three leaf terms): the cheapest setting not
+// significantly worse than expectimax2-v3-ref on any benchmark team (specs/007-status-moves-items/
+// validation-log.md T063). v3-ref keeps the leaf terms off and searches wide instead.
+export const V3_OPTS = Object.freeze({ ...V2_OPTS, v3State: true, leafResidual: true, leafStatusState: true, leafHazards: true });
 export const V3_REF_OPTS = Object.freeze({ ...V2_OPTS, v3State: true, ref: true, kRoot: 32, kPly2: 8, switchBeam: 6, ply2Switches: true, fullRolls: true });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
