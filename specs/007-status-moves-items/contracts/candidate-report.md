@@ -40,7 +40,7 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
 
 - Every offered alternative appears exactly once. `kind` is one of `status`, `status+item`, `structured`, `structured+item` and `item`.
 - An alternative dropped in a successive-halving round has `round_reached` (e.g. `"round 2 of 4"`), its round's clear count and run count, and `verdict: "dropped in screening"`.
-- The full test of a finalist uses a fresh seed block (`alternatives_final_seeds`); `confirmed` is null (no separate confirmation since 2026-10-16). Each alternative's per-seed screening outcomes are in the run's state.json (`screening_outcomes`), not in result.json.
+- The full test of a finalist uses a fresh seed block (`seeds.alternatives_final` = `<seed>|alternatives-final|<slot>`); `confirmed` is null (no separate confirmation since 2026-10-16). Each alternative's per-seed screening outcomes are in the run's state.json (`screening_bits` on each record under `level_search.alternatives.records`, `"1"` = cleared, seed order), not in result.json.
 - One that wasn't tested at all has `verdict: "not tested: <reason>"` and null statistics (SC-003).
 - The numbers are those of the recorded battles. `n_paired` equals the number of runs actually played.
 

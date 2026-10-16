@@ -114,10 +114,12 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     scored by their decomp power. **Every member is assumed to have maximum friendship (255)**:
     Return is power 102 and Frustration is never offered.
   - **How they are judged:** the `alternatives` stage plays every alternative with
-    `expectimax2-v3` near the clear threshold (successive halving), compares the best three with
-    the current team on paired seeds (McNemar, Holm), confirms the winner on fresh seeds and adopts
-    it only if both are significant. `--candidates reference|prefilter` picks the expensive
-    reference or the cheaper prefilter accepted against it.
+    `expectimax2-v3` near the clear threshold (successive halving), then compares the best three
+    with the current team on a fresh block of seeds the screening never used (800 paired runs each
+    on a qualifying budget; McNemar, Holm) and adopts the best significant one.
+  - **Off by default.** `--candidates off|reference` (default `off`): `off` skips the stage and
+    keeps the level-search winner's moves and items; `reference` runs the full, expensive stage
+    (hours per team). A cheaper prefilter accepted against the reference is planned as feature 008.
   - **New item sources** in the ledger: the Route 221 house (Black Belt, Expert Belt, Focus Sash,
     1 copy each), the Pastoria City berry house and Amity Square.
 

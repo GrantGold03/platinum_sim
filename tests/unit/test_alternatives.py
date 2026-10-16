@@ -102,12 +102,15 @@ class FakePool:
     def __init__(self, favourite: str):
         self.favourite = favourite
         self.calls = 0
+        self.by_team = {}  # team json -> list of seeds requested
 
     def map(self, reqs):
         out = []
         for q in reqs:
             self.calls += 1
-            h = int(hashlib.sha256(f"{json.dumps(q['team'], sort_keys=True)}|{q['seed']}".encode()).hexdigest(), 16)
+            tk = json.dumps(q["team"], sort_keys=True)
+            self.by_team.setdefault(tk, []).append(q["seed"])
+            h = int(hashlib.sha256(f"{tk}|{q['seed']}".encode()).hexdigest(), 16)
             moves = {m for b in q["team"] for m in [x["move"] if isinstance(x, dict) else x for x in b.get("moves", [])]}
             p = 0.9 if self.favourite in moves else 0.5
             won = (h % 1000) / 1000 < p
@@ -147,3 +150,45 @@ def test_run_stage_records_every_alternative_and_adopts_a_clear_winner(ledger, b
     assert "MOVE_TOXIC" in new[i].adopted
     assert [e for e in recs if not e.get("member_done") and e["slot"] == i + 1 and e.get("adopted")]
     assert next(m for m in members if m["slot"] == i + 1)["adopted_spec"]["moves"] == list(new[i].moves)
+
+
+
+def test_finalists_are_tested_on_fresh_seeds_and_bits_are_saved(ledger, b4):
+    """2026-10-16 fix (spec FR-008): the finalist test never reuses a seed the screening used, and every
+    screened alternative keeps its per-seed outcomes (feature 008's offline prefilter comparison)."""
+    from platsim.evaluate import worker_team
+    from platsim.sim.seeds import derive_seed
+
+    specs, cands = b4
+
+    def wteam(sp, levels):
+        r = R.realize(sp, levels, ledger)
+        return None if isinstance(r, R.Refusal) else worker_team(r.team, ledger)
+
+    pool = FakePool("toxic")
+    _, recs = A.run_stage(pool=pool, specs=specs, cands=cands, levels=[LV] * 6, led=ledger, seed="t", n_full=60,
+                          round_size=3, wteam=wteam, members=1)
+    screen = {derive_seed("t|alternatives", i, 0) for i in range(3 * 15)}
+    final = {derive_seed("t|alternatives-final|0", i, 0) for i in range(60)}
+    assert not screen & final
+    finalists = [e for e in recs if not e.get("member_done") and e.get("n_paired")]
+    assert finalists and all(e["n_paired"] == 60 for e in finalists)
+    for e in finalists:  # each finalist's team played exactly the 60 final seeds besides its screening seeds
+        played = next(v for k, v in pool.by_team.items() if set(final) <= set(v) and len(v) == e["round_runs"] + 60)
+        assert set(played) - screen == final
+    screened = [e for e in recs if not e.get("member_done") and "round_runs" in e]
+    assert screened and all(len(e["screening_bits"]) == e["round_runs"] and set(e["screening_bits"]) <= {"0", "1"} for e in screened)
+    assert all("confirm" not in e for e in recs)
+
+
+def test_candidates_default_off_and_off_provenance():
+    from platsim.optimizer.api import InvalidRequest, OptimizeRequest
+    from platsim.optimizer.run import _candidate_provenance
+
+    assert OptimizeRequest(species=("garchomp",) * 6).candidates == "off"
+    with pytest.raises(InvalidRequest):
+        OptimizeRequest(species=("garchomp",) * 6, candidates="prefilter")  # comes with feature 008
+
+    class St:
+        data = {"stages": {"level_search": {"alternatives": {"mode": "off", "done": True}}}}
+    assert _candidate_provenance(St(), ()) == {"candidate_tests": None, "alternatives": "off"}

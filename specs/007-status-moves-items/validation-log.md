@@ -2,7 +2,7 @@
 
 Real output is pasted for each checkpoint. Times are wall-clock on this machine (16 threads).
 
-## One-time hours (budget: 100 h for every one-time run, spec FR-017)
+## One-time hours (budget: 100 h for every one-time run, spec FR-017; raised to about 110 h by the user 2026-10-16, carried over to feature 008)
 
 | Run | Task | Budget h | Used h | Running total h |
 |---|---|---|---|---|
@@ -13,6 +13,7 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | Speed probe | T028b | (player, 15) | 0.30 | 11.57 |
 | Player comparison, policy benchmark team (400 paired x 7 policies) | T063/T064 | (player, 15) | 3.71 | 15.28 |
 | Player comparison, B4 + B5 (400 paired x 7 policies each) | T063/T064 | (player, 15; 14.2 used in total) | 10.22 | 25.50 |
+| Reference run B4, stopped (selection bias in the finalist test; fixed in T075) | T067 | (reference, moved to 008) | 6.70 | 32.20 |
 
 ## T001 Setup (2026-10-14)
 
@@ -444,3 +445,16 @@ B5 greedy-v1 vs ref: rate 0.828 vs 0.885, only 32/55, p 0.0178, verdict B
 - `DEFAULT_PLAYER_POLICY` (`evaluate.py`) and the CLI `--player-policy` default are now v3.
 - The tests asserting the default (`test_evaluate.py`, `test_optimize_small.py`) are updated.
 - v1 and v2 stay registered and byte-identical (golden test).
+
+## T075-T080 convergence: stats fix and `--candidates off` default (2026-10-16)
+
+- Unit: `490 passed, 4 xfailed in 254.93s` (exit 0). Node: `# tests 343`, `# pass 343`, `# fail 0` (exit 0).
+- Targeted (`test_alternatives.py`, `test_required_hms.py`, `test_legality_options.py`): `39 passed in 189.95s`, including the new fresh-seed / screening-bits test and the off-default test.
+- Smoke test `tests/integration/test_alternatives_quick.py` (reference mode, outside the hours budget like T036), with new checks for `seeds.alternatives_final`, no `screening_bits` in result.json, and bits in state.json:
+  ```
+  run 1 (16 workers) 5892s exit 0
+  run 2 (7 workers) 6784s exit 0
+  alternatives: 690 recorded, 6 tested in full, 1 adopted; levels [59, 59, 59, 59, 59, 59] (U - 1 (first failing neighbour))
+  1 passed in 12711.24s (3:31:51)
+  ```
+  result.json is byte-identical across 16 and 7 workers (SC-005 for reference mode).

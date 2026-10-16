@@ -566,8 +566,8 @@ def _options(payload: dict) -> dict:
             raise InvalidRequest(str(e.args[0])) from None
     cand = payload.get("candidates")  # 007: optional; stored only when given (no UI control)
     if cand is not None:
-        if cand not in ("reference", "prefilter"):
-            raise InvalidRequest(f"candidates must be 'reference' or 'prefilter', got {cand!r}")
+        if cand not in ("off", "reference"):
+            raise InvalidRequest(f"candidates must be 'off' or 'reference', got {cand!r}")
         out["candidates"] = cand
     return out
 

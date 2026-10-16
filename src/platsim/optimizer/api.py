@@ -29,17 +29,18 @@ class OptimizeRequest:
     # 006: HMs that must be carried in some member's final moveset (move keys, HM-number order).
     # Part of the fingerprint and reports only when non-empty, so default jobs are unchanged.
     required_hms: tuple[str, ...] = ()
-    # 007: how status-move / held-item alternatives reach the strong player (spec FR-017):
-    # "reference" (every alternative, successive halving) or "prefilter" (cheaper, accepted against it).
-    candidates: str = "reference"
+    # 007: whether status-move / held-item alternatives are tested (spec FR-017, Clarifications 2026-10-16):
+    # "off" (default: no alternatives stage) or "reference" (every alternative, about 8-10 h per standard run).
+    # Feature 008 adds "prefilter" (cheaper, accepted against the reference).
+    candidates: str = "off"
     # 007 test / benchmark options (not on the CLI or the web): the reference's first-round size r, and
     # a limit on how many members get alternatives. Recorded in the fingerprint and provenance when set.
     alternatives_round: int | None = None
     alternatives_members: int | None = None
 
     def __post_init__(self) -> None:
-        if self.candidates not in ("reference", "prefilter"):
-            raise InvalidRequest(f"unknown candidates mode {self.candidates!r} (reference | prefilter)",
+        if self.candidates not in ("off", "reference"):
+            raise InvalidRequest(f"unknown candidates mode {self.candidates!r} (off | reference)",
                                  {"candidates": self.candidates})
         if self.required_hms:
             from platsim.legality.movesources import normalize_hms

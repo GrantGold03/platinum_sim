@@ -29,8 +29,10 @@ code fingerprint matches - see _State; `--force-new` starts over)
    then the balanced per-member descent; each point PASS/FAIL by the sequential rule in levels.py.
    alternatives (007, optimizer/alternatives.py, played by move_classes.ALT_POLICY = expectimax2-v3): per
    member, status-move alternatives at the current team's first failing neighbour U - 1; successive
-   halving, then the top 3 vs the current team (McNemar exact, Holm), the winner confirmed on a fresh
-   block and adopted only if both are significant (FR-008: not "better" without support).
+   halving, then the top 3 vs the current team on a fresh seed block (McNemar exact, Holm), the best
+   significant one adopted (FR-008: not "better" without support). Runs only with
+   `candidates="reference"`; the default `"off"` skips it (Clarifications 2026-10-16). The cheaper
+   `"prefilter"` mode and its acceptance against the reference are feature 008.
 6. confirm (evaluate.evaluate_team, the `platsim evaluate` path): the winner at its final levels,
    >= `confirm_min` expectimax2-v2 runs, more until the CI target is met and, for qualifying presets,
    more while the CI straddles the threshold (up to 4 x confirm_min); Cynthia top-up (T057); loss causes.
@@ -495,6 +497,8 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     from platsim.optimizer.levels import MAX_GAP
 
     alt_state = ls_state.setdefault("alternatives", {})
+    if req.candidates == "off":  # 007 default (Clarifications 2026-10-16): no alternatives stage
+        alt_state.update({"mode": "off", "done": True, "winner": R.spec_to_json(winner)})
     if not alt_state.get("done"):
         lo_bound = max(1, max(search.floors) - MAX_GAP)
         cmp_levels = search.vector(u - 1) if u - 1 >= lo_bound else list(levels)
@@ -508,7 +512,8 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             state.save()
 
         winner, records = ALT.run_stage(
-            pool=pool, specs=winner, cands=cands, levels=cmp_levels, led=led, seed=seed, n_full=preset.ability_screen,
+            pool=pool, specs=winner, cands=cands, levels=cmp_levels, led=led, seed=seed,
+            n_full=ALT.FINAL_RUNS if preset.qualifying else preset.ability_screen,
             round_size=alt_state["round_size"], wteam=wteam, members=req.alternatives_members, save=save,
             done=alt_state.get("records"),
             progress=lambda slot, r, n, alive: prog("alternatives", detail=f"slot {slot + 1}: round {r}, {alive} of {n} alternatives kept"))
@@ -647,7 +652,7 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
                              "opponent": OPPONENT},
         "seeds": {"scheme": SCHEME, "calibrate": f"{req.seed}|calibrate", "screen": f"{req.seed}|screen",
                   "ability_screen": "abilities.screen_master(seed, slot)", "level_search": f"{req.seed}|levels",
-                  "alternatives": f"{req.seed}|alternatives", "alternatives_confirm": f"{req.seed}|alternatives-confirm|<slot>",
+                  "alternatives": f"{req.seed}|alternatives", "alternatives_final": f"{req.seed}|alternatives-final|<slot>",
                   "confirm": f"{req.seed}|confirm",
                   "candidate_sampling": f"random.Random(sha256('{req.seed}|screen-candidates'))"},
         "stages": {k: st.get(k) for k in ("calibrate", "prune", "ability_screen", "screen", "level_search", "confirm")},
@@ -675,7 +680,10 @@ def _candidate_provenance(state: _State, specs) -> dict:
 
     st = state.data["stages"]
     alt = (st.get("level_search") or {}).get("alternatives") or {}
-    tests = [r for r in alt.get("records") or [] if not r.get("member_done")]
+    if alt.get("mode") == "off":
+        return {"candidate_tests": None, "alternatives": "off"}
+    tests = [{k: v for k, v in r.items() if k != "screening_bits"}  # per-seed bits stay in state.json
+             for r in alt.get("records") or [] if not r.get("member_done")]
     members = (st.get("prune") or {}).get("members") or []
     excluded_moves, excluded_items = {}, {}
     for slot, s in enumerate(specs):

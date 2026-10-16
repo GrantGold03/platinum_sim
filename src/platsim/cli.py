@@ -186,9 +186,9 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
                    help="simulation budget preset (research R8; 'quick' is for testing and never qualifies)")
     p.add_argument("--out", type=Path, default=None,
                    help="output directory (default runs/optimize-<hash of the request>/; re-running resumes from its state.json)")
-    p.add_argument("--candidates", choices=("reference", "prefilter"), default="reference",
-                   help="007: how status-move / held-item alternatives reach the strong player: 'reference' plays "
-                        "every alternative (expensive), 'prefilter' a cheaper subset accepted against it")
+    p.add_argument("--candidates", choices=("off", "reference"), default="off",
+                   help="007: status-move / held-item alternatives: 'off' (default) skips them; 'reference' tests "
+                        "every alternative with expectimax2-v3 (about 8-10 h per standard run)")
     p.add_argument("--force-new", action="store_true",
                    help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
                         "checkpoint was made by different code or data, which is never resumed")

@@ -7,11 +7,11 @@ never eliminated by greedy-v1, which scores status moves as worth nothing (FR-00
 
 Generation (deterministic, sorted; spec FR-005):
 - every replacement of the member's weakest attack, its second-weakest attack, or both, by offered
-  status moves (user 2026-10-15; `all_slots=True` gives every slot, used by the T066 check);
+  status moves (user 2026-10-15; `all_slots=True` gives every slot, used by the feature 008 check);
 - structured 3-4-status sets: for every choice of 3 or 4 categories the member can fill (inflict
   status, protection, recovery, Leech Seed, self-boost, screen), each category's first move in
   `_category_order` and, for a 3-status set, the member's best current attack in the 4th slot.
-  The structured rule is a shortcut, validated against full 3-4-slot generation (tasks T066).
+  The structured rule is a shortcut, validated against full 3-4-slot generation (moved to feature 008).
 Every alternative is checked buildable at the comparison levels with the copies left (resources
 .realize, required HMs included); one that is not is recorded with the refusal, never silently dropped.
 The status moves of the alternative under test are marked `adopted`, so required-HM placement does
@@ -25,11 +25,20 @@ Statistics (`mode="reference"`, the expensive version; Constitution VI):
    (cumulative 15r; seeds derive_seed(f"{seed}|alternatives", i, 0), the same for every alternative),
    keeping the top third (at least 3) each round; ranking by gauntlets cleared, then battles won,
    then generation order.
-2. The last round's top 3 are compared with the current team on the first `n_full` seeds (McNemar
-   exact), with Holm's correction over the three.
-3. The best significant one is confirmed on a fresh block (f"{seed}|alternatives-confirm|<slot>")
-   and adopted only if that confirmation is significant too (FR-008).
-Every alternative appears in the records with how far it got (spec FR-013, SC-003).
+2. The last round's top 3 are compared with the current team on a FRESH seed block that the screening
+   never used (f"{seed}|alternatives-final|<slot>", `n_full` paired runs per arm: FINAL_RUNS = 800 in a
+   qualifying budget), McNemar exact, Holm's correction over the three (FR-008, 2026-10-16).
+3. The best significant one is adopted. (Before 2026-10-16 finalists were tested on the screening seeds,
+   which selected them, and a confirm block followed; the T067 B4 run showed the inflation: Blissey
+   91.5% vs 79.5% on the screening seeds, 82% vs 77.5% on fresh seeds.)
+Every alternative's per-seed screening outcomes are kept as a bit string (`screening_bits`, seed order)
+in state.json, for offline prefilter comparison (feature 008); result.json leaves them out.
+Every alternative appears in the records with how far it got (spec FR-013, SC-003). The `confirmed`
+field stays in each record (always null) so older reports and the Candidates sheet keep their columns.
+
+The stage runs only with `candidates="reference"`; the default is `"off"` (Clarifications 2026-10-16).
+Feature 008 takes over the reference benchmark, the 3-4-slot check of the structured rule, the
+cheaper prefilter (accepted against this reference by Constitution VI) and FR-017 step 2.
 """
 
 from __future__ import annotations
@@ -48,6 +57,7 @@ from platsim.stats import mcnemar_exact
 OPPONENT = "decomp-ai"
 ALPHA = 0.05
 FINALISTS = 3
+FINAL_RUNS = 800  # paired runs per arm for the finalist test in a qualifying budget (about 80% power for +5 points)
 DEFAULT_ROUND = 25  # reference first-round size r (research R5: the 25-run minimum fits the 10 h share)
 STRUCTURED_CATEGORIES = (MC.INFLICT_STATUS, MC.PROTECTION, MC.RECOVERY, MC.LEECH_SEED, MC.SELF_BOOST, MC.SCREEN)
 
@@ -64,7 +74,7 @@ class Alternative:
         return (self.kind, tuple(sorted(self.moves)), self.item or "")
 
 
-# Preference within a category for structured sets (policy heuristic, not game data; validated by T066).
+# Preference within a category for structured sets (policy heuristic, not game data; to be validated in feature 008).
 # Effects not listed rank after the listed ones. Within an effect: self-boosts by boost_score, others by
 # accuracy (0 = never misses first), then key.
 EFFECT_RANK = {
@@ -79,7 +89,7 @@ EFFECT_RANK = {
 
 
 def _category_order(const: str, moves: list[str]) -> list[str]:
-    """Deterministic per-category preference for structured sets (EFFECT_RANK; validated by T066)."""
+    """Deterministic per-category preference for structured sets (EFFECT_RANK; to be validated in feature 008)."""
     from platsim.decomp.moves import load_moves
 
     mv = load_moves()
@@ -111,7 +121,7 @@ def generate(spec: R.MemberSpec, mc: C.MemberCandidates, slot: int, *, structure
         out.append(a)
 
     # the member's two weakest current moves by League value (status moves count 0), ties by slot
-    # (user 2026-10-15: weakest two slots; checked against all slots in T066)
+    # (user 2026-10-15: weakest two slots; to be checked against all slots in feature 008)
     slots = sorted(range(len(cur)), key=lambda j: (mc.scores.get(cur[j], 0.0), j))[:2] if all_slots is False else list(range(len(cur)))
     for j in slots:
         for m in status:
@@ -229,25 +239,22 @@ def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_
             for c in alive:
                 e = teams[c][3]
                 e.update({"round_reached": f"round {r + 1} of {len(rounds)}", "round_cleared": score[c][0],
-                          "round_runs": len(results[id(e)])})
+                          "round_runs": len(results[id(e)]),
+                          "screening_bits": "".join("1" if x["cleared"] else "0" for x in results[id(e)])})
                 if c not in keep:
                     e.update({"verdict": "dropped in screening", "adopted": False})
             alive = keep
             if progress:
                 progress(slot, r + 1, len(alts), len(alive))
-        # finalists vs the current team, paired on the first n_full seeds
+        # finalists vs the current team on a fresh seed block (never used by the screening)
         cur_team = wteam(specs, levels)
         if cur_team is None:
             raise RuntimeError(f"alternatives: the current team cannot be built at {levels}")
-        cur = [bool(x["cleared"]) for x in _run(pool, cur_team, master, 0, n_full, policy)]
+        fmaster = f"{seed}|alternatives-final|{slot}"
+        cur = [bool(x["cleared"]) for x in _run(pool, cur_team, fmaster, 0, n_full, policy)] if alive else []
         comps = []
         for c in alive:
-            e = teams[c][3]
-            have = results[id(e)]
-            if len(have) < n_full:
-                more = _run(pool, teams[c][2], master, len(have), n_full, policy)
-                have = have + more
-            alt = [bool(x["cleared"]) for x in have[:n_full]]
+            alt = [bool(x["cleared"]) for x in _run(pool, teams[c][2], fmaster, 0, n_full, policy)]
             comps.append((c, mcnemar_exact(alt, cur, ALPHA)))
         adj = holm([cmp.p_value for _, cmp in comps])
         winner = None
@@ -264,16 +271,9 @@ def run_stage(*, pool, specs, cands, levels, led, seed: str, n_full: int, round_
         if winner:
             c, _ = winner
             a, alt_specs, team, e = teams[c]
-            cmaster = f"{seed}|alternatives-confirm|{slot}"
-            ca = [bool(x["cleared"]) for x in _run(pool, team, cmaster, 0, n_full, policy)]
-            cc = [bool(x["cleared"]) for x in _run(pool, cur_team, cmaster, 0, n_full, policy)]
-            conf = mcnemar_exact(ca, cc, ALPHA)
-            e["confirmed"] = conf.verdict == "A"
-            e["confirm"] = {"n": conf.n, "rate_alt": conf.a_rate, "rate_current": conf.b_rate, "p_value": conf.p_value}
-            if e["confirmed"]:
-                e["adopted"] = True
-                specs = alt_specs
-                member_rec["adopted_spec"] = specs[slot].to_dict()
+            e["adopted"] = True
+            specs = alt_specs
+            member_rec["adopted_spec"] = specs[slot].to_dict()
         records.extend(entries)
         records.append(member_rec)
         if save:
@@ -289,4 +289,4 @@ def _run(pool, team, master, lo, hi, policy):
     return rs
 
 
-__all__ = ["Alternative", "DEFAULT_ROUND", "FINALISTS", "generate", "holm", "run_stage"]
+__all__ = ["Alternative", "DEFAULT_ROUND", "FINAL_RUNS", "FINALISTS", "generate", "holm", "run_stage"]

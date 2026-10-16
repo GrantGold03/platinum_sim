@@ -59,6 +59,10 @@ def test_alternatives_stage_quick_smoke(tmp_path):
         assert sum(1 for t in tests if t["slot"] == m["slot"]) == m["alternatives"]  # SC-003
     assert all("verdict" in t for t in tests)
     assert any(t["verdict"] == "dropped in screening" for t in tests)
+    # 2026-10-16 (T075/T076): fresh final seed block; per-seed screening bits in state.json only
+    assert opt["seeds"]["alternatives_final"] == "t036|alternatives-final|<slot>" and "alternatives_confirm" not in opt["seeds"]
+    assert all("screening_bits" not in t for t in tests)
+    assert all(len(x["screening_bits"]) == x["round_runs"] for x in alt["records"] if "round_runs" in x)
     assert opt["excluded_moves"]["1"] and all(isinstance(v, str) and v for v in opt["excluded_moves"]["1"].values())
     print(f"alternatives: {len(tests)} recorded, {sum(1 for t in tests if t.get('n_paired'))} tested in full, "
           f"{sum(1 for t in tests if t.get('adopted'))} adopted; levels {alt['levels']} ({alt['level_rule']})")
