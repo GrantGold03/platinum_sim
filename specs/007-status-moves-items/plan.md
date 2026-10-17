@@ -4,6 +4,10 @@
 
 **Input**: Feature specification from `specs/007-status-moves-items/spec.md`
 
+## Status (2026-10-16, after implementation)
+
+The user split the feature: **007 ships** steps 1-4 and 7 with the alternatives stage **off by default** (`--candidates off|reference`); **feature 008** takes step 5 (reference benchmark B1-B5, T066-T067), step 6 (prefilter, T068-T069), SC-002, SC-006 and FR-019. The finalist test now uses a fresh seed block with 800 paired runs and no confirm block (T075). The one-time budget is about 110 h (32.2 h used), carried over to 008. Text below is the plan as written on 2026-10-14; see spec Clarifications "Session 2026-10-16" and `validation-log.md` T074.
+
 ## Summary
 
 The optimizer will offer status moves, variable-power attacks and every useful held item as candidates, and judge them with a battle player that understands them.

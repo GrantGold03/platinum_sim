@@ -60,7 +60,7 @@ New fields:
 | `adopted` | bool | — |
 | `not_modelled` | list | moves or items in it that the player doesn't model |
 
-**State transitions:** offered → screened (successive halving with rounds r/2r/4r/8r, r fitted to the 100 h reference budget) → (dropped in a round | finalist) → finalist tested in full → (adopted after confirm | rejected). In prefilter mode the prefilter may drop it first ("not tested: prefilter").
+**State transitions:** offered → screened (successive halving with rounds r/2r/4r/8r, r fitted to the 100 h reference budget) → (dropped in a round | finalist) → finalist tested in full on a fresh seed block (`<seed>|alternatives-final|<slot>`, 800 paired runs on a qualifying budget; revised 2026-10-16, no confirm) → (adopted | rejected). Per-seed screening outcomes are kept in state.json as `screening_bits`. Mode `off` (the 007 default) has no records. Prefilter mode (feature 008) may drop it first ("not tested: prefilter").
 
 ## MemberSpec (changed; `optimizer/resources.py`, research R6)
 

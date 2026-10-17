@@ -210,7 +210,7 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
 5. **Two modes, FR-017:**
    - **`reference`, two levels (analysis C1, user 2026-10-14):** every alternative of a member reaches the strong player.
      - Successive halving, keeping the top third each round, narrows them. Round sizes are set by the budget below (user revision, 2026-10-14).
-     - The finalists, the last round's top 3, get the full paired test against the current team with Holm correction, plus the confirm block.
+     - The finalists, the last round's top 3, get the full paired test against the current team with Holm correction, plus the confirm block. *(Revised 2026-10-16: fresh seed block, 800 runs, no confirm block; see item 3.)*
      - Budget: part of the 100 h one-time development budget (see the cost note).
      - Why two levels: a probe (2026-10-14, Lv 55, default options) counted 5,604 (B1), 8,540 (B4) and 9,554 (B5) 1-2-slot alternatives per team, before items. A flat 200-run test of each would take about 115-196 h per team.
    - **`prefilter`:** a cheaper path that must be validated against `reference` on the benchmark before it becomes the default. Shapes to try:
@@ -218,12 +218,12 @@ At the bisection levels the team cleared 0.825-0.885, well above the 0.75 thresh
      - a static pre-score (R3 values plus category priors) that keeps the top N per member;
      - a combination.
 
-   The mode is recorded in `job_fingerprint` and provenance. Users can choose `reference` (CLI flag `--candidates reference|prefilter`; the web keeps the default).
+   The mode is recorded in `job_fingerprint` and provenance. Users can choose `reference` (CLI flag `--candidates reference|prefilter`; the web keeps the default). *(Revised 2026-10-16: 007 ships `--candidates off|reference`, default `off`; `prefilter` and its acceptance are feature 008.)*
 6. **The structured 3-4-status rule is itself a cap** (Principle VI). It is validated against **full 3-4-slot generation on two members**, B4 Milotic and B4 Roserade, at the same levels and seeds, through the same two-level reference. The rule is accepted if no full-generation set beats the best structured or 1-2-slot set significantly. This is recorded in Complexity Tracking.
 - **Estimated cost (unverified; from recorded throughput of about 2.7 v2 gauntlets/s, v3 cost unknown).** Successive halving over N alternatives costs about N×100 + (N/3)×200 + (N/9)×400 + (N/27)×800 ≈ 196·N gauntlets. For N ≈ 8,000 per team that is about 1.6 M gauntlets, roughly 160 h at v2 speed. That is still too much, so the first round's size is the main cost driver.
   - **The user's revision (2026-10-14):** that is not feasible.
     - The finished tool MUST take at most 2.0× each team's baseline, which is about 8-11 h for all five teams.
-    - **Every** one-time run MAY take up to 100 h **in total** (user, second analysis).
+    - **Every** one-time run MAY take up to 100 h **in total** (user, second analysis). *(Raised to about 110 h by the user on 2026-10-16, carried over to feature 008.)*
   - **Allocation of the 100 h** (a planning decision, adjusted only with a record in the validation log):
 
     | One-time run | Task | Hours |

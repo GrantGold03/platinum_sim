@@ -30,7 +30,7 @@ This contract amends `specs/001-champion-team-optimizer/contracts/cli.md`, `http
      "moves": ["MOVE_SURF", "MOVE_ICE_BEAM", "MOVE_RECOVER", "MOVE_TOXIC"], "item": "leftovers",
      "levels": [54, 54, 54, 54, 54, 54], "mode": "reference",
      "n_paired": 200, "rate_alt": 0.79, "rate_current": 0.71, "alt_only": 22, "current_only": 6,
-     "p_value": 0.003, "p_holm": 0.012, "verdict": "alternative better", "confirmed": true,
+     "p_value": 0.003, "p_holm": 0.012, "verdict": "alternative better", "confirmed": null,
      "adopted": true, "not_modelled": []}
   ],
   "policy_per_stage": {"alternatives": "expectimax2-v3"},

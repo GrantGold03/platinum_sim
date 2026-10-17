@@ -2,13 +2,13 @@
 
 Run everything locally with `uv run`. The benchmark teams B1-B5 are defined in `research.md` R9.
 
-Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. All one-time reference runs together may take at most 100 h (research R5 allocation); stop and ask before going over. The finished tool must take at most 2.0× each team's baseline.
+Compute estimates are rough and unverified, taken from recorded throughput on 16 workers. The baseline is about 8-11 h. All one-time reference runs together may take at most 100 h (research R5 allocation; raised to about 110 h on 2026-10-16 and carried over to feature 008); stop and ask before going over. The finished tool must take at most 2.0× each team's baseline.
 
 ## 0. Before any change
 
 ```bash
 uv run pytest -q                        # full suite, about 2.5 h; record the output in validation-log.md
-node --test sim/test                   # JS tests
+node --test sim/test/*.test.mjs        # JS tests (Node 22: a directory argument exits at once)
 ```
 
 - Record the golden v1/v2 `log_hash`es (contract `player-v3.md`).
@@ -40,7 +40,7 @@ Positive controls:
 ## 4. Player v3
 
 ```bash
-node --test sim/test                         # golden v1/v2 hashes unchanged; v3 mechanic tests; SC-008 positions
+node --test sim/test/*.test.mjs              # golden v1/v2 hashes unchanged; v3 mechanic tests; SC-008 positions
 uv run pytest -q tests/integration/test_policy_strength.py
 ```
 
@@ -48,6 +48,8 @@ uv run pytest -q tests/integration/test_policy_strength.py
 - Each cheap v3 candidate against `expectimax2-v3-ref`, paired. Record run times and the accepted settings.
 
 ## 5. Optimizer, reference mode
+
+The default is `--candidates off` (no alternatives stage, 2026-10-16); pass `reference` explicitly. A full standard reference run takes many hours per team.
 
 ```bash
 uv run platsim optimize --candidates reference --seed bench-007 <B4 team>   # reference teams: B4, B5, B3
@@ -59,7 +61,7 @@ Expected in `result.json`:
 - The validator passes.
 - For B3, Surf and Waterfall are still carried, and no adopted status move was displaced by an HM.
 
-## 6. Prefilter acceptance (FR-017, FR-019, SC-002, SC-006)
+## 6. Prefilter acceptance (FR-017, FR-019, SC-002, SC-006) — moved to feature 008 (2026-10-16)
 
 - Compare the prefilter versions offline against the reference's recorded per-seed outcomes on B4, B5 and B3 (T068).
 - Run only the chosen version live on B1-B5 on the same seeds. Compare it with the reference (B4, B5, B3) and with the baseline (all five), using spec SC-002's test. Record the table, run times and the running hour total in `validation-log.md`.
@@ -67,4 +69,4 @@ Expected in `result.json`:
 
 ## 7. Reproducibility (SC-005)
 
-Re-run one benchmark request with the same seed. `result.json` must be byte-identical.
+Re-run one benchmark request with the same seed. `result.json` must be byte-identical. Done in T073 for both `off` and `reference` mode (validation-log).

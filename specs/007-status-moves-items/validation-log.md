@@ -15,6 +15,8 @@ Real output is pasted for each checkpoint. Times are wall-clock on this machine 
 | Player comparison, B4 + B5 (400 paired x 7 policies each) | T063/T064 | (player, 15; 14.2 used in total) | 10.22 | 25.50 |
 | Reference run B4, stopped (selection bias in the finalist test; fixed in T075) | T067 | (reference, moved to 008) | 6.70 | 32.20 |
 
+**Raw evidence** (scratchpad copies saved before a reboot, 2026-10-17): `runs/007-evidence/` (git-ignored), see its README.txt.
+
 ## T001 Setup (2026-10-14)
 
 - Branch `007-status-moves-items`, HEAD `2fa6059` (docs only since `f88cdd0`).
@@ -46,7 +48,7 @@ B5 ['SPECIES_TORTERRA', 'SPECIES_MAGNEZONE', 'SPECIES_CLEFABLE', 'SPECIES_LUMINE
   - 20 seeds (`golden-007|0..19`), `stop_on_loss: false`, so every battle is played.
   - Per battle it records (trainer, won, turns, log_hash).
 - Record and verify in one run: `# pass 1 # fail 0`, real 9m23s. Verifying alone takes about 4.7 min.
-- **Positive control** (scratchpad `golden_pc.mjs`):
+- **Positive control** (`golden_pc.mjs`, kept in `runs/007-evidence/scripts/`):
 
 ```
 matches own key: true
@@ -117,7 +119,7 @@ Battles already use 255 and Return 102 (R3). T016 makes this explicit for player
 - The hazards pair needs the hazard leaf term; the plain 2-ply reference picks Peck.
 - Without boosts, Baton Pass is still chosen. It works like a switch to a better matchup, so the doesn't-help case uses no bench member.
 
-**Findings: no helps-position found at the 2-ply reference** (probe: scratchpad `positions.mjs`, v2 / v3 / v3+leaf / v3-ref / v3-ref+leaf):
+**Findings: no helps-position found at the 2-ply reference** (probe: `positions.mjs`, kept in `runs/007-evidence/scripts/`, v2 / v3 / v3+leaf / v3-ref / v3-ref+leaf):
 - weather (Rain Dance Ludicolo vs Garchomp);
 - Substitute;
 - Wish (Vaporeon at 30%);
@@ -357,7 +359,7 @@ expectimax2-v3-ref n 32 cleared 28 sec 1015.2 gauntlets/s 0.032
 
 ## T063 / T064 Player comparison: policy benchmark team (2026-10-15)
 
-400 paired gauntlets per policy (seeds `v3-accept|policy_benchmark|i`), `tests/fixtures/policy_benchmark_team.json`; script `scratchpad/t063.py`:
+400 paired gauntlets per policy (seeds `v3-accept|policy_benchmark|i`), `tests/fixtures/policy_benchmark_team.json`; script `t063.py` (kept with its per-seed JSON in `runs/007-evidence/`):
 
 ```
 policy_benchmark expectimax2-v3-ref cleared 336/400 in 12914s
@@ -473,7 +475,7 @@ B5 greedy-v1 vs ref: rate 0.828 vs 0.885, only 32/55, p 0.0178, verdict B
 ## T073 SC-005 (2026-10-16, code `4dccb8d`)
 
 - **Reference mode:** the T075-T080 smoke run (B4, quick, `alternatives_round=5`, `alternatives_members=2`, seed t036): result.json byte-identical between 16 and 7 workers.
-- **Off mode (the new default):** B4, quick, seed t073, `scratchpad/t07x.sh`:
+- **Off mode (the new default):** B4, quick, seed t073, `t07x.sh` (kept in `runs/007-evidence/`):
   ```
   off w16 exit 0 1766s
   off w7 exit 0 1919s
