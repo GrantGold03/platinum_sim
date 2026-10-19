@@ -10,15 +10,15 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 benchmarked against main, so a regression points at one change. Triggered by the 2026-10-19 B2 run
 (average final level 55.27 vs 53.49 on Oct 8; cause: the team's movesets, not the player; see the 007 validation-log).
 
-1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, implemented 2026-10-19; awaiting the user's test.**
-2. Move and item classification, item pairings (no optimizer behaviour change).
+1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, merged 2026-10-19.**
+2. Move and item classification (no optimizer behaviour change). **Feature 009, implemented 2026-10-19 from `9e1f065`; awaiting the user's test.** Item pairings move to slice 5 (only the alternatives stage uses them).
 3. Variable-power attacks (Return, Grass Knot, Hidden Power, ...): paired runs on B1-B5. **Known regression
    (2026-10-19):** on B2 the 007 team clears 8-10 points less than the Oct 8 team under the same player and
    levels; 4 of 6 moveset changes add a variable-power move and drop coverage (Ice Beam, Close Combat). Find
    and fix the cause (candidate ranking and/or the greedy-v1 screen) before this slice lands.
 4. expectimax2-v3 as the default player: paired v3 vs v2 on B1-B5. B2 check 2026-10-19: v3 >= v2 (p 0.025 on
    the Oct 8 team; tie on the 007 team).
-5. Alternatives stage, off by default.
+5. Alternatives stage, off by default, with the item pairings.
 
 ## 2. Alternatives acceptance (moved out of 007 on 2026-10-16; was called "008", renumbered when the re-slice took 008)
 

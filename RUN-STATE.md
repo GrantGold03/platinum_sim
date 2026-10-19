@@ -325,6 +325,13 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Branch.** `008-ledger-item-sources` from `main` `f88cdd0`, main checkout. The web server is stopped.
 - **Done (2026-10-19).** Spec, plan, tasks; constitution v1.4.0 brought over (`7deb5d9`). T001-T009: `a8b529b` applied byte-identically (src/tests only); counts 66/37/55 → 74/40/44 (11 items, all from Route 221 / Pastoria); 114 focused tests pass; held-item candidates for B1-B5 identical; same-seed quick B2 run identical except the two provenance hashes. Evidence: `specs/008-ledger-item-sources/validation-log.md`, `runs/008-evidence/`.
 - **Finding.** The same script reading also adds Amity (9 non-held berries), Route 208 house, News Press and Flower Shop entries; none changes a held item's availability.
-- **Running / next.** T010 full suite (logs `runs/008-evidence/t010-*.log`), then commit, push, user test. Do not merge before the user's test. Then slice 2 (classification), which needs no optimizer change.
+- **Merged 2026-10-19** after the user's test (`explain` of Focus Sash, Occa, Belue): `main` = `de102fa` (fast-forward). Full suite 509 passed, node 314.
 - **Traps.** `data/generated/` is shared between branches: rebuild with `uv run platsim extract` after every checkout. `pkill -f "platsim serve"` from a shell whose command line contains that text kills the shell itself (exit 144); stop the server by PID.
+
+## 009 move and item classification — re-slice 2 of 007 (started 2026-10-19)
+
+- **Branch.** `009-move-item-classes` from `main` `de102fa`. Brings 007 commit `9e1f065` (src/tests only, byte-identical): `move_classes.py`, `item_classes.py`, their tests, `MemberSpec.adopted` and HM-placement tiers, small refactors. Groundwork; no behaviour change.
+- **Done.** Spec, plan, tasks. T001-T009: 114 classification tests + 13 HM tests pass; B1-B5 candidates identical (93 entries); HM placement identical (7,440 cases, 2,301 replacing a move); same-seed quick B2 identical except the code hash. Evidence `specs/009-move-item-classes/validation-log.md`, `runs/009-evidence/`.
+- **Running / next.** T010 full suite (`runs/009-evidence/t010-*.log`); then commit, push, user test, merge. Then slice 3 (variable-power attacks), which carries the known B2 regression: find and fix the cause before it lands.
+- **Note.** The first version of `move_classes.py` reads the player's MODELLED table, which `main` does not have yet; it returns `{}` and nothing calls it until the player slice.
 

@@ -75,6 +75,8 @@ from platsim.decomp.items import load_items, tm_moves
 from platsim.decomp.moves import load_moves
 from platsim.legality import movesources as MS
 from platsim.optimizer.api import InvalidRequest
+from platsim.optimizer import item_classes as IC
+from platsim.optimizer import move_classes as MC
 from platsim.pins import DECOMP_ROOT, REPO_ROOT
 
 PP = DECOMP_ROOT
@@ -89,14 +91,7 @@ K_MOVESETS = 3
 RANKED = 210  # combos kept for resource-conflict repair (resources.repair); C(POOL, 4) = all of them
 STAB_WEIGHT = 1.5  # heuristic weight (search tuning)
 PLAIN = "BATTLE_EFFECT_HIT"
-# Attacks that only work under a condition the search cannot arrange (heuristic): first turn only,
-# target asleep / user asleep, all other moves used, user not hit first, user faints, delayed hit.
-EXCLUDED_ATTACK_EFFECTS = frozenset({
-    "BATTLE_EFFECT_ONE_HIT_KO", "BATTLE_EFFECT_HALVE_DEFENSE", "BATTLE_EFFECT_HIT_IN_3_TURNS",
-    "BATTLE_EFFECT_ALWAYS_FLINCH_FIRST_TURN_ONLY", "BATTLE_EFFECT_DAMAGE_WHILE_ASLEEP",
-    "BATTLE_EFFECT_FAIL_IF_NOT_USED_ALL_OTHER_MOVES", "BATTLE_EFFECT_HIT_LAST_WHIFF_IF_HIT",
-    "BATTLE_EFFECT_RECOVER_DAMAGE_SLEEP", "BATTLE_EFFECT_STRUGGLE", "BATTLE_EFFECT_LEAVE_WITH_1_HP",
-})
+EXCLUDED_ATTACK_EFFECTS = MC.EXCLUDED_ATTACK_EFFECTS  # moved to move_classes (007)
 EFFECT_WEIGHT = {
     "BATTLE_EFFECT_RECHARGE_AFTER": 0.5,
     "BATTLE_EFFECT_SKIP_CHARGE_TURN_IN_SUN": 0.5,
@@ -110,7 +105,6 @@ EFFECT_WEIGHT = {
     "BATTLE_EFFECT_CRASH_ON_MISS": 0.8, "BATTLE_EFFECT_DOUBLE_POWER_EACH_TURN_LOCK_INTO": 0.5,
     "BATTLE_EFFECT_MULTI_HIT": 3.0, "BATTLE_EFFECT_HIT_TWICE": 2.0, "BATTLE_EFFECT_POISON_MULTI_HIT": 2.0,
 }
-EXP_HOLD_EFFECTS = frozenset({"HOLD_EFFECT_EXP_UP", "HOLD_EFFECT_EXP_SHARE", "HOLD_EFFECT_LVLUP_SPEED_DOWN"})
 HP_BERRY_EFFECT = "HOLD_EFFECT_HP_PCT_RESTORE"
 
 
@@ -438,7 +432,7 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
         t = load_moves()[best].type
         effs = set(type_boost_items().get(t, []))
         boosts = [it for it in items.values() if it.hold_effect in effs and _item_copies(led, it.const) != 0
-                  and it.hold_effect not in EXP_HOLD_EFFECTS]
+                  and it.hold_effect not in IC.exp_ev_effects()]
         boosts.sort(key=lambda it: (_item_copies(led, it.const) != MS.UNLIMITED, -it.effect_param, it.key))
         if boosts:
             out.append(boosts[0].key)
