@@ -12,7 +12,7 @@ benchmarked against main, so a regression points at one change. Triggered by the
 
 1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, merged 2026-10-19.**
 2. Move and item classification (no optimizer behaviour change). **Feature 009, implemented 2026-10-19 from `9e1f065`; awaiting the user's test.** Item pairings move to slice 5 (only the alternatives stage uses them).
-3. Variable-power attacks (Return, Grass Knot, Low Kick, ...; **not Hidden Power or Secret Power**, user 2026-10-19; Secret Power is offered on `main` today and in the B1 baseline team): feature 010, paired runs on B1-B5. **Known regression
+3. Variable-power attacks (Return, Grass Knot, Low Kick, ...; **not Hidden Power**, user 2026-10-19: IVs are a uniform 15 by assumption): feature 010, paired runs on B1-B5. **Known regression
    (2026-10-19):** on B2 the 007 team clears 8-10 points less than the Oct 8 team under the same player and
    levels; 4 of 6 moveset changes add a variable-power move and drop coverage (Ice Beam, Close Combat). Find
    and fix the cause (candidate ranking and/or the greedy-v1 screen) before this slice lands.
