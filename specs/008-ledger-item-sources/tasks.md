@@ -51,7 +51,7 @@ code is applied, `main`'s count pins (66/55) are the positive control that must 
 
 - [X] T010 Full suite: `uv run pytest -q` and `node --test sim/test/*.test.mjs`; record the output against `main`'s last full run and explain every changed count (SC-004)
 - [X] T011 Update `README.md` where it lists item sources or the held-item counts, and `RUN-STATE.md` (re-slice progress); move `FUTURE-FEATURES.md` from the 007 branch to this branch and mark slice 1 done, renumbering the old "008" items
-- [ ] T012 Commit (src, tests, docs; not the lock deletion), push, and hand over for the user's hands-on test. Do not merge
+- [X] T012 Commit (src, tests, docs; not the lock deletion), push, and hand over for the user's hands-on test. Do not merge
 
 ## Dependencies
 
