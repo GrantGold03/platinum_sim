@@ -27,6 +27,7 @@ Third slice of landing 007 on `main` (`FUTURE-FEATURES.md` item 1). Slices 1 (le
 ### Session 2026-10-19
 
 - Q: Is Hidden Power offered? → A: No (user): "hidden power relies on the ivs of a pokemon which we use 15 across the board to simulate the average stats. Hidden power should not be used in this simulator." Its type and power would be an artifact of the IV assumption. Never offered, including for NPC-trade Pokémon with fixed IVs.
+- Q: Is Secret Power offered? → A: No (user, 2026-10-19: "also do not include secret power"). Its added effect depends on the battle terrain. It is a fixed-power attack that `main` offers today: it is in the candidates of Staraptor (B1, B2, B3) and Chatot (B3), and the **B1 baseline final team carries it** (Staraptor). So this exclusion changes B1's result on its own; B1's comparison with its baseline measures both changes together, and the log says so.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -36,13 +37,13 @@ A player's Pokémon can learn Return, Grass Knot or another variable-power attac
 
 **Why this priority**: Strong moves such as Return are currently never considered, which can leave levels on the table.
 
-**Independent Test**: The power of each variable-power attack matches the game's formula on hand-checked cases (Return 102; Low Kick 120 against Hippowdon and 40 against Roserade); Return enters the candidate pool of a member that learns it; Hidden Power, Frustration, Seismic Toss and other fixed-damage moves stay out.
+**Independent Test**: The power of each variable-power attack matches the game's formula on hand-checked cases (Return 102; Low Kick 120 against Hippowdon and 40 against Roserade); Return enters the candidate pool of a member that learns it; Hidden Power, Secret Power, Frustration, Seismic Toss and other fixed-damage moves stay out.
 
 **Acceptance Scenarios**:
 
 1. **Given** a member that learns Return, **When** its candidates are built, **Then** Return is scored at power 102 and can appear in its movesets.
 2. **Given** a member that learns Hidden Power (any variant, including an NPC trade with fixed IVs), **When** its candidates are built, **Then** Hidden Power is not offered.
-3. **Given** Frustration or a fixed-damage move, **When** candidates are built, **Then** it is not offered.
+3. **Given** Frustration, Secret Power or a fixed-damage move, **When** candidates are built, **Then** it is not offered.
 
 ---
 
@@ -85,12 +86,12 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 ### Functional Requirements
 
 - **FR-001**: Variable-power attacks MUST be scored with the power the game computes, per member and per League foe where it depends on the foe, from decomp formulas (Constitution I); every member is assumed at friendship 255.
-- **FR-002**: Fixed-damage and conditional attacks, Frustration, and Hidden Power MUST stay out of candidate movesets (Hidden Power: user 2026-10-19, IVs are a uniform 15 by assumption, so its type and power are not meaningful).
+- **FR-002**: Fixed-damage and conditional attacks, Frustration, Hidden Power and Secret Power MUST stay out of candidate movesets (user 2026-10-19: Hidden Power because IVs are a uniform 15 by assumption, so its type and power are not meaningful; Secret Power by user decision, its effect depends on terrain).
 - **FR-003**: The cause of 007's B2 regression MUST be established by paired experiment and recorded before the fix is chosen.
 - **FR-004**: Every stage that judges movesets MUST value a variable-power attack consistently with its real power, or the feature MUST otherwise prevent a stage's blind spot from choosing weaker teams; the chosen approach is recorded with its evidence.
 - **FR-005**: On each of B1-B5 at the standard budget, the new final team MUST NOT be worse than the baseline final team ("worse" as defined in User Story 2, McNemar exact, alpha 0.05).
 - **FR-006**: Standard-budget run time MUST stay within 2.0x the baseline per team (user's hard maximum).
-- **FR-007**: Results for a team with no variable-power learner MUST be identical except fingerprints.
+- **FR-007**: Results for a team with no variable-power learner and no Secret Power learner MUST be identical except fingerprints.
 - **FR-008**: The 007 implementation (commit `d3d53e7` and the parts of the battle player it relies on) MUST be reused where it applies; adaptations are recorded.
 
 ### Key Entities
@@ -102,7 +103,7 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 
 ### Measurable Outcomes
 
-- **SC-001**: The hand-checked powers (Return 102, Low Kick 120/40, Gyro Ball cap 150, Magnitude expected value) all match, and Hidden Power is offered to 0 members.
+- **SC-001**: The hand-checked powers (Return 102, Low Kick 120/40, Gyro Ball cap 150, Magnitude expected value) all match, and Hidden Power and Secret Power are offered to 0 members.
 - **SC-002**: 0 of the 5 benchmark teams is significantly worse than its baseline; the table with clear rates, average final levels, p-values and run times is recorded.
 - **SC-003**: Each team's standard run takes at most 2.0x its baseline time.
 - **SC-004**: The regression's cause is recorded with paired evidence (p-value and run counts).
