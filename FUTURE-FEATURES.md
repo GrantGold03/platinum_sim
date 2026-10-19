@@ -50,7 +50,21 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 - **Order.** After re-slice items 3 and 4, so a level change is attributable to Shift alone. It changes
   every result, so it lands on its own.
 
-## 4. Smaller follow-ups
+## 4. Plain-language user-facing output (added 2026-10-19)
+
+- **Gap.** User-facing text carries internal labels and developer jargon. Found in user testing of slice 1:
+  `platsim explain item:<x>` source lines end with "(007 dataflow: Return-aware calls / GetRandom+AddVar /
+  save-var literals / C table)". Other outputs likely have similar text (unverified; not yet searched).
+- **Scope.**
+  1. Inventory every user-facing text surface: CLI output (`explain`, `validate`, `evaluate`, `optimize`
+     progress), report files (xlsx, csv, `team.txt`, result.json `warnings`), and the web UI.
+  2. Remove or rewrite feature numbers, task ids, internal function/rule names and implementation terms
+     in plain language. Keep decomp file:line references (Constitution I: every claim cites its source).
+  3. A test that fails if user-facing text contains internal labels (e.g. feature or task ids, "dataflow").
+- **Size.** Text-only; no behaviour change. Result files differ only in wording, so same-seed runs must
+  match apart from changed strings.
+
+## 5. Smaller follow-ups
 
 - Pickup ability as an item source (Leftovers, King's Rock), proposed after 007; after-battle Pickup/Honey
   Gather items are an accepted divergence.
