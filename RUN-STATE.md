@@ -27,7 +27,7 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
 - **Headline result** (2026-10-08, defaults: no egg moves, no trade evolutions): the six reference species qualify at
   average final level **58.23** (start 58/57/57/58/58/59, clear 0.8645). Output in `runs/final-defaults/`. The earlier
   56.10 used egg moves and the old TM counts and is superseded.
-- **Optional follow-ups** (see validation-log T077):
+- **Optional follow-ups** (see validation-log T077; now tracked in `FUTURE-FEATURES.md`):
   - two stale comments in `sim/` (`sim/policy/greedy.mjs:2` calls v1 the strong player; `sim/gauntlet.mjs:41` names only
     v1). Deliberately left alone: any `sim/` edit changes `sim_code_hash`, so fix them with the next real sim change;
   - with `--allow-trade-evolutions`, an NPC-trade pre-evolution (e.g. Gaspar's Haunter) is not offered as a source for
@@ -297,3 +297,34 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   - A required HM must be in a final moveset, not merely learnable.
   - The web gets a new step 3 with eight toggles, all off by default.
   - A required HM that no team member can learn is refused before the run.
+
+## 007 status moves and held items (started 2026-10-14)
+
+- **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with expectimax2-v3. Add the Route 221, Pastoria and Amity Square item sources. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
+- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed (latest code commit `4dccb8d`). The web server is stopped. Not merged: waits for the user's hands-on testing.
+- **Split (user, 2026-10-16).** 007 ships what is built, with the alternatives stage **off by default** (`--candidates off|reference`). **Feature 008** (not yet specified; renumbered 2026-10-19, now `FUTURE-FEATURES.md` item 2) takes: the reference benchmark (T066, T066b, T067), the prefilter (T068, T069), FR-017 step 2, SC-002, SC-006 and the FR-019 checks. Recorded in spec Clarifications "Session 2026-10-16" and the contract.
+- **Hours.** One-time budget raised to about 110 h (user 2026-10-16), carried over to 008. Used: 32.2 h (validation-log hours table, including the 6.7 h stopped B4 reference run). Smoke tests are outside the budget.
+- **Done:** T001-T065 (except those moved to 008), T070-T071, T075-T080. Evidence in `specs/007-status-moves-items/validation-log.md`.
+  - Stats fix (T075/T076): the stopped B4 reference run showed selection bias (finalists tested on the seeds that selected them: Blissey stall 91.5% vs 79.5% there, 82% vs 77.5%, p 0.31, on fresh seeds). Finalists now use a fresh seed block `<seed>|alternatives-final|<slot>`, 800 paired runs per arm (qualifying budget), Holm; no confirm block; per-seed `screening_bits` kept in state.json for 008's offline prefilter comparison.
+- **Done 2026-10-16:** T072 (full suite; one stale web test fixed), T073 (SC-005, both modes), T074 (summary in the validation log). Every 007 task is done except the five moved to 008.
+- **Saved for the reboot (2026-10-17).** Scratchpad evidence copied to `runs/007-evidence/` (git-ignored; README.txt inside): T063 per-seed player comparison JSON, T067 log, T073 pair, scripts (t063.py, t067.py, positions.mjs, speed.py, ...), suite logs. The stopped T067 run state is in `runs/bench-007-reference/B4` (old design, not resumable). Baselines: `runs/bench-007-baseline/`.
+- **Hands-on testing found a regression (2026-10-19).** The user's B2 run: 86.5 min (time OK), but avg final level 55.27 vs 53.49 before 007. Paired check: the player is not the cause (v3 >= v2); the 007 team's movesets are worse (4 of 6 changes add Return/Grass Knot/Hidden Power, dropping coverage). Evidence in the validation log and `runs/007-evidence/b2cmp/`. 007 is not merged as is; the user is considering re-slicing it onto main (`FUTURE-FEATURES.md` item 1).
+- **Next.** The user's hands-on testing (restart `uv run platsim serve` from this branch on request). Not measured yet: a standard-budget off-mode run time against the T005 baseline (the user's 2.0× cap); the user's standard test run measures it. Merge only after the user's testing. Then propose `/speckit-specify` for 008, split small (memory `feature-size-limits`).
+- **Traps:**
+  - Don't `git commit -a`: the user's uncommitted deletion of `.claude/scheduled_tasks.lock` must stay out of commits.
+  - Any `sim/*.mjs` edit changes the code hash, so old checkpoints won't resume.
+  - The golden v1/v2 test takes about 5 min.
+  - On Node 22 use `node --test sim/test/*.test.mjs` (a directory argument exits at once).
+  - The Pickup ability is a known unmodelled source, out of scope.
+  - Never wait on a run with `pgrep -f <name>` from a shell whose own command line contains `<name>`: it matches itself and waits forever. This lost 3 h on 2026-10-15 (the T063 B4/B5 queue). Wait on the PID instead.
+  - The reference player (v3-ref) is not uniformly better than the cheap ones (worse than v2 on B4, p 0.03); don't treat it as ground truth without per-team checks.
+
+## 008 ledger item sources — re-slice 1 of 007 (started 2026-10-19)
+
+- **Why.** The user's B2 test of 007 found a regression (worse movesets); 007 is not merged as one piece. It lands on `main` as small slices, each tested against `main` (`FUTURE-FEATURES.md` item 1).
+- **Branch.** `008-ledger-item-sources` from `main` `f88cdd0`, main checkout. The web server is stopped.
+- **Done (2026-10-19).** Spec, plan, tasks; constitution v1.4.0 brought over (`7deb5d9`). T001-T009: `a8b529b` applied byte-identically (src/tests only); counts 66/37/55 → 74/40/44 (11 items, all from Route 221 / Pastoria); 114 focused tests pass; held-item candidates for B1-B5 identical; same-seed quick B2 run identical except the two provenance hashes. Evidence: `specs/008-ledger-item-sources/validation-log.md`, `runs/008-evidence/`.
+- **Finding.** The same script reading also adds Amity (9 non-held berries), Route 208 house, News Press and Flower Shop entries; none changes a held item's availability.
+- **Running / next.** T010 full suite (logs `runs/008-evidence/t010-*.log`), then commit, push, user test. Do not merge before the user's test. Then slice 2 (classification), which needs no optimizer change.
+- **Traps.** `data/generated/` is shared between branches: rebuild with `uv run platsim extract` after every checkout. `pkill -f "platsim serve"` from a shell whose command line contains that text kills the shell itself (exit 144); stop the server by PID.
+

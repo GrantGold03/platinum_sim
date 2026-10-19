@@ -109,4 +109,5 @@ Existing results stay the same. The optimizer, battle player and held-item candi
 - The 007 implementation of these sources is correct as verified there (63 ledger tests passed, 2026-10-15); this feature re-verifies it on `main`, it does not re-derive it.
 - "Unlimited" for the Pastoria berry house and Amity Square follows the ledger's existing rules for repeatable, flagless gifts, as in 007.
 - Whether each source is truly before the Champion is decided by the decomp scripts, as in 007; no cartridge check is made.
+- The same script-reading improvement also records three more gift sites (Route 208 house, Solaceon News Press, Flower Shop) for items that are already available before the Champion. They add ledger entries but change no item's availability (measured 2026-10-19, validation-log T003-T007).
 - Constitution v1.4.0 (Principle VI, reference-first) exists only on the 007 branch. This feature has no approximations, so it does not depend on it; bringing the amendment to `main` is a separate docs change.
