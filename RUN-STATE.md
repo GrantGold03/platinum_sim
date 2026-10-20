@@ -332,6 +332,15 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **Branch.** `009-move-item-classes` from `main` `de102fa`. Brings 007 commit `9e1f065` (src/tests only, byte-identical): `move_classes.py`, `item_classes.py`, their tests, `MemberSpec.adopted` and HM-placement tiers, small refactors. Groundwork; no behaviour change.
 - **Done.** Spec, plan, tasks. T001-T009: 114 classification tests + 13 HM tests pass; B1-B5 candidates identical (93 entries); HM placement identical (7,440 cases, 2,301 replacing a move); same-seed quick B2 identical except the code hash. Evidence `specs/009-move-item-classes/validation-log.md`, `runs/009-evidence/`.
-- **Running / next.** T010 full suite (`runs/009-evidence/t010-*.log`); then commit, push, user test, merge. Then slice 3 (variable-power attacks), which carries the known B2 regression: find and fix the cause before it lands.
+- **Merged 2026-10-19** (`main` = `27d51b0`, fast-forward). Full suite 627 passed, node 314.
 - **Note.** The first version of `move_classes.py` reads the player's MODELLED table, which `main` does not have yet; it returns `{}` and nothing calls it until the player slice.
+
+## 010 variable-power attacks without regression — re-slice 3 of 007 (started 2026-10-19)
+
+- **Branch.** `010-variable-power` from `main` `27d51b0`; code commit `a0e90a9` (pushed).
+- **Cause of the 007 B2 regression (research R3-R4, paired 2,000 runs):** Return and Grass Knot are fine in battle; Infernape losing Close Combat costs ~10 points. 007 produced a Close-Combat-less candidate set and the greedy screen (scores variable-power moves as 0) picked it.
+- **Fix (user: A + B):** greedy-v2 screen (variable power at real power; greedy-v1 byte-identical) and an additive pool. Offered: Return, Grass Knot, Low Kick, Gyro Ball. Not offered: Hidden Power (user: IVs are a uniform 15), Magnitude / Wring Out / Crush Grip / Punishment (no player computes their power; 007 offered them anyway).
+- **Running (started 2026-10-19 ~9:40 PM EDT).** `runs/010-evidence/accept_chain.sh`: standard B4, B5, B3, B1, B2 (seed bench-007, same commands as the baseline) into `runs/bench-010/<B>`, then `accept_pair.py` (each final team vs `runs/bench-007-baseline/<B>`, 2,000 paired, expectimax2-v2). Progress: `runs/010-evidence/accept_chain.log`. About 10-12 h.
+- **Next.** Record wall times vs baseline (2.0x cap) and the paired table (T011-T012); if any team is worse, stop and ask the user (T013). Then full suite, docs, user test, merge.
+- **Note.** The known-bad Infernape set (Focus Blast instead of Close Combat) is still a candidate (diversity rule); the quick smoke run's screen ranked it second. The acceptance decides.
 
