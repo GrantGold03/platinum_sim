@@ -27,6 +27,7 @@ Third slice of landing 007 on `main` (`FUTURE-FEATURES.md` item 1). Slices 1 (le
 ### Session 2026-10-19
 
 - Q: Is Hidden Power offered? → A: No (user): "hidden power relies on the ivs of a pokemon which we use 15 across the board to simulate the average stats. Hidden power should not be used in this simulator." Its type and power would be an artifact of the IV assumption. Never offered, including for NPC-trade Pokémon with fixed IVs.
+- Q (after the cause was found, research R3-R4): How is the regression fixed? → A: Both (user, 2026-10-19): (A) the team screen gets a player that values variable-power attacks at their real power, as a new screen policy `greedy-v2`, with `greedy-v1` kept byte-identical for its pinned test; (B) variable-power attacks may only add to a member's move pool, never push out an attack that `main` would consider. The B1-B5 acceptance runs then decide (FR-005).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -91,6 +92,8 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 - **FR-005**: On each of B1-B5 at the standard budget, the new final team MUST NOT be worse than the baseline final team ("worse" as defined in User Story 2, McNemar exact, alpha 0.05).
 - **FR-006**: Standard-budget run time MUST stay within 2.0x the baseline per team (user's hard maximum).
 - **FR-007**: Results for a team with no variable-power learner MUST be identical except fingerprints.
+- **FR-009**: The team screen MUST value variable-power attacks at their real power (new screen player `greedy-v2`; `greedy-v1` unchanged and still selectable), and for a team without variable-power attacks it MUST choose exactly as `greedy-v1` does.
+- **FR-010**: A member's move pool MUST contain every attack `main` would put in it; variable-power attacks are added on top.
 - **FR-008**: The 007 implementation (commit `d3d53e7` and the parts of the battle player it relies on) MUST be reused where it applies; adaptations are recorded.
 
 ### Key Entities
