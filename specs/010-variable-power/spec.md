@@ -24,6 +24,10 @@ Third slice of landing 007 on `main` (`FUTURE-FEATURES.md` item 1). Slices 1 (le
 
 - Q: What friendship is assumed for Return? → A: Maximum (255): Return power 102, Frustration power 0 and never offered.
 
+### Session 2026-10-20
+
+- Q (after the acceptance runs, validation-log T012): The comparison at each team's own start levels marks lower-level teams as worse, though the objective rewards lower levels. How is slice 3 accepted? → A: Equal-levels test (user): the new and the baseline final team play at the same levels (the new team's start levels), 2,000 paired runs; a team is worse if it clears significantly less at equal levels (McNemar exact, alpha 0.05) or its average final level is higher. FR-005 is amended accordingly.
+
 ### Session 2026-10-19
 
 - Q: Is Hidden Power offered? → A: No (user): "hidden power relies on the ivs of a pokemon which we use 15 across the board to simulate the average stats. Hidden power should not be used in this simulator." Its type and power would be an artifact of the IV assumption. Never offered, including for NPC-trade Pokémon with fixed IVs.
@@ -89,7 +93,7 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 - **FR-002**: Fixed-damage and conditional attacks, Frustration, and Hidden Power MUST stay out of candidate movesets (Hidden Power: user 2026-10-19, IVs are a uniform 15 by assumption, so its type and power are not meaningful).
 - **FR-003**: The cause of 007's B2 regression MUST be established by paired experiment and recorded before the fix is chosen.
 - **FR-004**: Every stage that judges movesets MUST value a variable-power attack consistently with its real power, or the feature MUST otherwise prevent a stage's blind spot from choosing weaker teams; the chosen approach is recorded with its evidence.
-- **FR-005**: On each of B1-B5 at the standard budget, the new final team MUST NOT be worse than the baseline final team ("worse" as defined in User Story 2, McNemar exact, alpha 0.05).
+- **FR-005** (amended 2026-10-20): On each of B1-B5 at the standard budget, the new final team MUST NOT be worse than the baseline final team: playing both at the new team's start levels, the new team MUST NOT clear significantly less (McNemar exact, alpha 0.05, 2,000 paired runs), and its expected average final level MUST NOT be higher.
 - **FR-006**: Standard-budget run time MUST stay within 2.0x the baseline per team (user's hard maximum).
 - **FR-007**: Results for a team with no variable-power learner MUST be identical except fingerprints.
 - **FR-009**: The team screen MUST value variable-power attacks at their real power (new screen player `greedy-v2`; `greedy-v1` unchanged and still selectable), and for a team without variable-power attacks it MUST choose exactly as `greedy-v1` does.
