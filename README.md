@@ -446,10 +446,6 @@ Measured run times:
   - alternate forms are rejected;
   - field-move gating is not modelled;
   - 48 "uncertain" entries are treated as unavailable.
-- **Conditional gift sources** (008): the Route 221 house gives Black Belt, Expert Belt and Focus Sash only
-  for a party Pokémon at that day's random level, so each counts as **1 copy** (conservative reading). The
-  Pastoria City berry house (daily resist berry) counts as unlimited. Amity Square's berries need one of
-  16 partner species in the party; the condition is shown with the source.
 - `expectimax2-v2` keeps v1's model gaps (listed in the header of `sim/policy/expectimax2.mjs`):
   unmodelled status/setup moves, weather that never expires, hazards, and multi-hit moves. Its leaf
   weights were fitted on greedy-played games.

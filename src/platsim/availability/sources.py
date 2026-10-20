@@ -38,7 +38,6 @@ from platsim.decomp._util import line_of, ref
 from platsim.decomp.constants import Ref, load_enum, rel
 from platsim.decomp.scripts import (
     OP_CALL_COMMON,
-    ends_procedure,
     all_script_stems,
     load_script_file,
     parse_int,
@@ -912,9 +911,9 @@ def _give_common_nodes() -> frozenset[tuple[str, int]]:
     return frozenset(out)
 
 
-def _const_dataflow_literal(sf) -> dict[int, dict[str, frozenset]]:
-    """The pre-007 dataflow (literal SetVar only; calls followed but not returned from). Kept so that
-    npc_gift_entries can tag the give sites that 007's dataflow changes (the sentinel test)."""
+def _const_dataflow(sf) -> dict[int, dict[str, frozenset]]:
+    """Possible literal values of VAR_0x8004 / VAR_0x8005 before each command (intra-file, calls
+    followed, union at joins; '?' = written non-literally)."""
     tracked = ("VAR_0x8004", "VAR_0x8005")
     state: dict[int, dict[str, frozenset]] = {}
     work = [(sf.command_for_entry(i), {v: frozenset({"?"}) for v in tracked}) for i in range(len(sf.entries))]
@@ -943,137 +942,6 @@ def _const_dataflow_literal(sf) -> dict[int, dict[str, frozenset]]:
     return state
 
 
-TRACKED = ("VAR_0x8004", "VAR_0x8005")
-MAX_CALL_DEPTH = 8
-
-
-@cache
-def items_txt() -> tuple[str, ...]:
-    """ITEM_* constants in item-id order (pokeplatinum/generated/items.txt; line index = item id)."""
-    return tuple((DECOMP_ROOT / "generated" / "items.txt").read_text().split())
-
-
-@cache
-def amity_man_items() -> tuple[str, ...]:
-    """The ITEM_* entries of sBerryAndAccessoryManOptions (src/scrcmd_amity_square.c), in table order;
-    the ACCESSORY_* entries are not items."""
-    text = (DECOMP_ROOT / "src" / "scrcmd_amity_square.c").read_text()
-    body = text[text.index("sBerryAndAccessoryManOptions[] = {"):]
-    return tuple(re.findall(r"\bITEM_\w+", body[:body.index("};")]))
-
-
-@cache
-def _save_var_literals(stem: str) -> dict[str, frozenset]:
-    """Script vars (VAR_* other than the 0x8000 temporaries) whose every write in the file is a literal
-    ITEM_* SetVar: var -> the possible items (e.g. VAR_FOLLOWER_MON_PICKUP_ITEM_ID in Amity Square)."""
-    writes: dict[str, set] = {}
-    bad: set[str] = set()
-    for c in load_script_file(stem).commands:
-        for p in c.prims:
-            ops = [o.text for o in p.operands]
-            if not ops or not ops[0].startswith("VAR_") or ops[0].startswith("VAR_0x"):
-                continue
-            if p.op == "SCRCMD_SETVARFROMVALUE":
-                (writes.setdefault(ops[0], set()).add(ops[1]) if ops[1].startswith("ITEM_") else bad.add(ops[0]))
-            elif p.op in ("SCRCMD_SETVARFROMVAR", "SCRCMD_ADDVAR", "SCRCMD_SUBVAR", "SCRCMD_GETRANDOM"):
-                bad.add(ops[0])
-    return {v: frozenset(w) for v, w in writes.items() if v not in bad}
-
-
-def _const_dataflow(sf) -> dict[int, dict[str, frozenset]]:
-    """Possible values of VAR_0x8004 / VAR_0x8005 before each command (007, research R7):
-    - a `Return` carries the callee's state back to the command after its `Call` (a call stack per
-      work item, depth <= MAX_CALL_DEPTH), so a subroutine that sets the item is seen at the give;
-    - `GetRandom V, N` then `AddVar V, ITEM_X` is the item-id range [id(X), id(X) + N);
-    - `SetVar V, VAR_S`, where every write of the script var S in the file is a literal item, is that set;
-    - GetAmitySquareBerryOrAccessoryIDFromMan is the item part of its C table.
-    Union at joins; '?' = not known."""
-    svl = _save_var_literals(sf.stem)
-    names = items_txt()
-    state: dict[tuple, dict[str, frozenset]] = {}
-    out: dict[int, dict[str, frozenset]] = {}
-    work = [(sf.command_for_entry(i), {v: frozenset({"?"}) for v in TRACKED}, ()) for i in range(len(sf.entries))]
-    while work:
-        idx, st, stack = work.pop()
-        if idx >= len(sf.commands):
-            continue
-        key = (idx, stack)
-        cur = state.get(key)
-        if cur is not None:
-            merged = {v: cur[v] | st[v] for v in TRACKED}
-            if merged == cur:
-                continue
-            st = merged
-        state[key] = st
-        prev = out.get(idx)
-        out[idx] = st if prev is None else {v: prev[v] | st[v] for v in TRACKED}
-        c = sf.commands[idx]
-        nst = dict(st)
-        for p in c.prims:
-            ops = [o.text for o in p.operands]
-            if not ops:
-                continue
-            if p.op == "SCRCMD_SETVARFROMVALUE" and ops[0] in TRACKED:
-                nst[ops[0]] = frozenset({ops[1]})
-            elif p.op == "SCRCMD_SETVARFROMVAR" and ops[0] in TRACKED:
-                nst[ops[0]] = svl.get(ops[1], frozenset({"?"}))
-            elif p.op == "SCRCMD_GETRANDOM" and ops[0] in TRACKED:
-                nst[ops[0]] = frozenset({f"#rand:{ops[1]}"})
-            elif p.op == "SCRCMD_ADDVAR" and ops[0] in TRACKED:
-                vals = nst[ops[0]]
-                n = [parse_int(v.split(":")[1]) for v in vals if v.startswith("#rand:")]
-                if len(n) == len(vals) == 1 and n[0] and ops[1] in names:
-                    first = names.index(ops[1])
-                    nst[ops[0]] = frozenset(names[first:first + n[0]])
-                else:
-                    nst[ops[0]] = frozenset({"?"})
-            elif p.op == "SCRCMD_SUBVAR" and ops[0] in TRACKED:
-                nst[ops[0]] = frozenset({"?"})
-            elif p.op == "SCRCMD_GETAMITYSQUAREBERRYORACCESSORYIDFROMMAN" and len(ops) > 1 and ops[1] in TRACKED:
-                nst[ops[1]] = frozenset(amity_man_items())
-        if ends_procedure(c) == "return":
-            if stack:
-                work.append((stack[-1], nst, stack[:-1]))
-            continue
-        for s in successors(sf, idx, sf.stem):
-            if s.file != sf.stem:
-                continue
-            if s.kind == "call" and len(stack) < MAX_CALL_DEPTH:
-                work.append((s.index, nst, stack + (idx + 1,)))
-            elif s.kind != "call":
-                work.append((s.index, nst, stack))
-    return out
-
-
-@cache
-def _party_species_condition(stem: str) -> tuple[str, ...]:
-    """SPECIES_* of the first CheckPartyHasSpecies chain in a script file (not a *_NationalDex
-    variant): the party condition for every give in that file (Amity Square entry, scripts_amity_square.s)."""
-    text = (DECOMP_ROOT / "res" / "field" / "scripts" / f"{stem}.s").read_text()
-    for m in re.finditer(r"^(\w+):\n((?:[ \t].*\n|\n)*)", text, re.M):
-        if "NationalDex" in m.group(1):
-            continue
-        sp = re.findall(r"CheckPartyHasSpecies \w+, (SPECIES_\w+)", m.group(2))
-        if sp:
-            return tuple(sp)
-    return ()
-
-
-def _daily_random_level(sf, idx: int) -> str | None:
-    """Ref of a GetDailyRandomLevel on some path to this give (Route 221 house: the gift needs a party
-    member at the day's random level, system_vars.c:267-271)."""
-    from platsim.decomp.scripts import walk
-
-    for i in range(len(sf.entries)):
-        cmds = walk(sf, sf.command_for_entry(i))
-        if not any(c.file == sf.stem and c.index == idx for c in cmds):
-            continue
-        for c in cmds:
-            if any(p.op == "SCRCMD_GETDAILYRANDOMLEVEL" for p in c.prims):
-                return str(c.ref)
-    return None
-
-
 def npc_gift_entries() -> list[Entry]:
     """Common_GiveItemQuantity* (VAR_0x8004 item, VAR_0x8005 count) and AddItem with literals."""
     targets = _give_common_nodes()
@@ -1086,7 +954,7 @@ def npc_gift_entries() -> list[Entry]:
         if not owners:
             continue
         sf = load_script_file(stem)
-        flow = old = None
+        flow = None
         for c in sf.commands:
             for p in c.prims:
                 items: list[tuple[str, int | None]] = []
@@ -1096,60 +964,30 @@ def npc_gift_entries() -> list[Entry]:
                     if (f, load_script_file(f).command_for_entry(e)) not in targets:
                         continue
                     if flow is None:
-                        flow, old = _const_dataflow(sf), _const_dataflow_literal(sf)
+                        flow = _const_dataflow(sf)
                     st = flow.get(c.index)
                     if st is None:
                         continue
                     qs = [parse_int(q) for q in st["VAR_0x8005"] if q != "?"]
                     q = min((x for x in qs if x is not None), default=None)
                     items = [(i, q) for i in sorted(st["VAR_0x8004"]) if i.startswith("ITEM_")]
-                    st0 = old.get(c.index) or {"VAR_0x8004": frozenset()}
-                    new_site = {i for i, _ in items} != {i for i in st0["VAR_0x8004"] if i.startswith("ITEM_")}
                 elif p.op == "SCRCMD_ADDITEM":
                     o = [x.text for x in p.operands]
-                    new_site = False
                     if o[0].startswith("ITEM_"):
                         items = [(o[0], parse_int(o[1]))]
-                    elif o[0] in TRACKED:  # 007: AddItem VAR_0x8004, VAR_0x8005 (Amity Square Gift Man)
-                        if flow is None:
-                            flow, old = _const_dataflow(sf), _const_dataflow_literal(sf)
-                        st = flow.get(c.index) or {}
-                        qv = [parse_int(x) for x in st.get(o[1], ()) if x != "?"] if o[1] in TRACKED else [parse_int(o[1])]
-                        q = min((x for x in qv if x is not None), default=None)
-                        items = [(i, q) for i in sorted(st.get(o[0], ())) if i.startswith("ITEM_")]
-                        new_site = bool(items)
                 if not items:
                     continue
                 daily = _daily_guard(sf, c.index)
                 rf = None if daily else received_flag(stem, c.index)
-                drl = _daily_random_level(sf, c.index) if daily else None
-                party = _party_species_condition(stem) if new_site else ()
                 for h in owners:
                     gs = site_gates(h, stem, c.index)
                     for item, q in items:
-                        once, once_src = (rf[0], list(rf[1:])) if rf else (None, [])
-                        if drl:  # 007 (spec FR-018, user 2026-10-15): one copy of each item, the conservative reading
-                            qty: int | str = 1
-                            once, once_src = f"{daily.split()[0]}#{item}", [drl]
-                            det = (f"daily ({daily}), but only for a party Pokemon at the day's daily random level "
-                                   f"(GetDailyRandomLevel at {drl}; system_vars.c:267-271): counted as 1 copy of each item")
-                        elif daily:
-                            qty = UNLIMITED
-                            det = f"daily ({daily})" + (f"; {q} per gift" if q and q > 1 else "")
-                        elif new_site and rf is None:
-                            qty = UNLIMITED
-                            det = "repeatable: no once flag guards this give"
-                        else:
-                            qty = q if q is not None else 1
-                            det = "several possible items at this site; each counted once" if len(items) > 1 else ""
-                            if q is None:
-                                det = (det + "; " if det else "") + "quantity not literal, counted as 1"
-                        if new_site:
-                            det += " (007 dataflow: Return-aware calls / GetRandom+AddVar / save-var literals / C table)"
-                        if party:
-                            det += f"; needs one of {len(party)} species in the party (CheckPartyHasSpecies)"
-                        out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [],
-                                         list(party), None, det, once_flag=once, once_flag_src=once_src))
+                        qty: int | str = UNLIMITED if daily else (q if q is not None else 1)
+                        det = f"daily ({daily})" if daily else ("several possible items at this site; each counted once" if len(items) > 1 else "")
+                        if q is None and not daily:
+                            det = (det + "; " if det else "") + "quantity not literal, counted as 1"
+                        out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [], [], None, det,
+                                         once_flag=rf[0] if rf else None, once_flag_src=list(rf[1:]) if rf else []))
     return out
 
 

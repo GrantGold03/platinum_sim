@@ -519,13 +519,11 @@ def test_wild_held_item_counts(led):
     # Before wild held items (validation-log T023-T026): 42 unlimited, 46 finite, 70 unavailable.
     n = led.derived["counts"]
     # 003: Munchlax's wild held Leftovers count (FR-008): Leftovers moves from unavailable to unlimited.
-    # 007 (FR-018): the Pastoria SW house adds 8 unlimited berries (66 -> 74); the Route 221 house adds
-    # Black Belt, Expert Belt and Focus Sash at 1 copy each (37 -> 40 finite); unavailable 55 -> 44.
-    assert len(n["held_items_unlimited"]) == 74
+    assert len(n["held_items_unlimited"]) == 66
     # 2026-10-08: Focus Band's only finite source (unused Jubilife condominium 4F gift) is behind a
     # warp on a collision tile (mapgraph warp_on_collision): 38 -> 37 finite, 55 -> 56 unavailable.
-    assert len(n["held_items_finite"]) == 40
-    assert n["held_items_unavailable_count"] == 44
+    assert len(n["held_items_finite"]) == 37
+    assert n["held_items_unavailable_count"] == 55
     assert led.item_copies("ITEM_FOCUS_BAND") == 0
     assert led.item_copies("ITEM_LEFTOVERS") == S.UNLIMITED
     # no wild held item entry is pre-Champion unless its encounter is
@@ -667,64 +665,3 @@ def test_every_wild_entry_has_a_rate(led):
     assert gab and gab[0].entry.rate_percent == 5  # slots 9 + 11 (4% + 1%)
     mun = [c for c in wild if c.entry.subject == "SPECIES_MUNCHLAX"]
     assert mun and {c.entry.rate_percent for c in mun} == {1}
-
-
-# ---------------------------------------------------------------------------------------------
-# 007 FR-018 / US5: item sources the ledger did not model (research R7, contracts/ledger-sources.md)
-
-R221 = "scripts_route_221_house"
-PASTORIA = "scripts_pastoria_city_southwest_house"
-AMITY = "scripts_amity_square"
-
-
-def test_route_221_house_one_copy_each(led):
-    _line(f"{SCRIPTS}/{R221}.s", 39, "Common_GiveItemQuantity")
-    _line(f"{SCRIPTS}/{R221}.s", 15, "GetDailyRandomLevel")
-    got = {}
-    for c in _entries(led, kind="npc_item_gift"):
-        if f"{R221}.s:39" in " ".join(c.entry.src):
-            got[c.entry.subject] = c
-    assert set(got) == {"ITEM_BLACK_BELT", "ITEM_EXPERT_BELT", "ITEM_FOCUS_SASH"}
-    for item, c in got.items():
-        assert c.entry.quantity == 1 and c.phase == PRE
-        assert "FLAG_DAILY_RECEIVED_ROUTE_221_HOUSE_REWARD" in c.entry.detail and "daily random level" in c.entry.detail
-        assert led.item_copies(item) == 1, item
-    # negative control: the News Press daily Poke Ball (no level check) stays unlimited
-    news = [c for c in _entries(led, kind="npc_item_gift") if "pokemon_news_press" in " ".join(c.entry.src)]
-    assert news and all(c.entry.quantity == S.UNLIMITED for c in news)
-
-
-def test_pastoria_random_berry_range(led):
-    _line(f"{SCRIPTS}/{PASTORIA}.s", 15, "GetRandom VAR_0x8004, 17")
-    _line(f"{SCRIPTS}/{PASTORIA}.s", 16, "AddVar VAR_0x8004, ITEM_OCCA_BERRY")
-    names = (DECOMP_ROOT / "generated" / "items.txt").read_text().split()
-    first = names.index("ITEM_OCCA_BERRY")
-    want = set(names[first:first + 17])
-    got = {c.entry.subject for c in _entries(led, kind="npc_item_gift") if f"{PASTORIA}.s:20" in " ".join(c.entry.src)}
-    assert got == want and "ITEM_CHILAN_BERRY" in got
-    assert led.item_copies("ITEM_OCCA_BERRY") == S.UNLIMITED
-    assert names[first + 17] == "ITEM_LIECHI_BERRY" and led.item_copies("ITEM_LIECHI_BERRY") == 0  # negative control
-
-
-def test_amity_square_pickup_and_gift_man(led):
-    c_table = (DECOMP_ROOT / "src" / "scrcmd_amity_square.c").read_text()
-    body = c_table[c_table.index("sBerryAndAccessoryManOptions[] = {"):]
-    body = body[:body.index("};")]
-    man = set(re.findall(r"\bITEM_\w+", body))
-    assert len(man) == 9 and "ACCESSORY_STUMP" in body
-    pickup = {c.entry.subject for c in _entries(led, kind="npc_item_gift") if f"{AMITY}.s:375" in " ".join(c.entry.src)}
-    gift = [c for c in _entries(led, kind="npc_item_gift") if f"{AMITY}.s:940" in " ".join(c.entry.src)]
-    assert pickup == man  # the script's literal pickup table equals the C table's items
-    assert {c.entry.subject for c in gift} == man
-    assert all(not s.startswith("ACCESSORY_") for s in pickup)
-    assert all("5" in c.entry.detail for c in gift)
-
-
-def test_dataflow_sentinel_only_expected_give_sites_change(led):
-    """007: the dataflow changes only these give sites (Return-aware calls, GetRandom + AddVar, save-var
-    literals, the Amity C table). A change anywhere else fails here."""
-    expected = {R221, PASTORIA, AMITY, "scripts_solaceon_town_pokemon_news_press", "scripts_flower_shop", "scripts_route_208_house"}
-    new = {c.entry.src[0].split(":")[0].split("/")[-1].removesuffix(".s") for c in _entries(led, kind="npc_item_gift")
-           if "007" in c.entry.detail}
-    assert new <= expected, sorted(new - expected)
-    assert {R221, PASTORIA, AMITY} <= new

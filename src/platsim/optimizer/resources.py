@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from functools import cache
 
 from platsim.decomp.items import load_items
@@ -58,22 +58,15 @@ class MemberSpec:
     item: str | None = None  # item key (data/generated items.json), e.g. "sitrus_berry"
     ability: str | None = None  # ABILITY_*; None until the ability screen (slot-1 placeholder)
     ability_reason: str | None = None
-    # 007 FR-014: moves a paired test adopted (or is testing). Required-HM placement replaces them only
-    # after every other move (_slot_cost). Written to JSON only when non-empty, so specs without it
-    # (every spec before 007, and every spec with nothing adopted) serialise exactly as before.
-    adopted: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
-        d = {"species": self.species, "variant": self.variant, "moves": list(self.moves), "item": self.item,
-             "ability": self.ability, "ability_reason": self.ability_reason}
-        if self.adopted:
-            d["adopted"] = list(self.adopted)
-        return d
+        return {"species": self.species, "variant": self.variant, "moves": list(self.moves), "item": self.item,
+                "ability": self.ability, "ability_reason": self.ability_reason}
 
     @classmethod
     def from_dict(cls, d: dict) -> MemberSpec:
         return cls(d["species"], d["variant"], tuple(d["moves"]), d.get("item"), d.get("ability"),
-                   d.get("ability_reason"), tuple(d.get("adopted", ())))
+                   d.get("ability_reason"))
 
     def label(self) -> str:
         mv = load_moves()
@@ -205,21 +198,13 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter,
     return choices, local, MS.move_cost(picks, led)
 
 
-def _slot_cost(species: str, move: str, adopted: tuple[str, ...] = ()) -> tuple:
-    """How much a member loses when `move` gives way to a required HM (007 FR-014). Tiers, the
-    lowest is replaced first:
-      0 a status move no test adopted;
-      1 an attack, by its League coverage value (candidates.move_value);
-      2 a modelled self-boost no test adopted;
-      3 a move a paired test adopted, or is testing (MemberSpec.adopted)."""
+def _slot_cost(species: str, move: str) -> tuple:
+    """How much a member loses when `move` gives way to a required HM: a modelled self-boost (a
+    setup moveset the optimizer kept on purpose) only as a last resort, then the move's League
+    coverage value (candidates.move_value; 0 for other status moves)."""
     mv = load_moves()[move]
-    if move in adopted:
-        return (3, 0.0)
-    if C.is_attack(mv):
-        return (1, sum(C.move_value(species, move)))
-    if C.boost_score(species, move):
-        return (2, 0.0)
-    return (0, 0.0)
+    boost = 1 if C.boost_score(species, move) else 0
+    return (boost, sum(C.move_value(species, move)) if C.is_attack(mv) else 0.0)
 
 
 def place_required_hms(specs: TeamSpec, levels, led, required) -> tuple[TeamSpec | None, str | None]:
@@ -247,8 +232,8 @@ def place_required_hms(specs: TeamSpec, levels, led, required) -> tuple[TeamSpec
                 slots = [(j, m) for j, m in enumerate(s.moves) if m not in req_moves]
                 if not slots:
                     continue
-                j, m = min(slots, key=lambda jm: (_slot_cost(s.species, jm[1], s.adopted), jm[0]))
-                cand = (_slot_cost(s.species, m, s.adopted), i, j)
+                j, m = min(slots, key=lambda jm: (_slot_cost(s.species, jm[1]), jm[0]))
+                cand = (_slot_cost(s.species, m), i, j)
             if best is None or cand < best:
                 best = cand
         if best is None:
@@ -344,7 +329,7 @@ def repair(specs: TeamSpec, levels, led, ranked: list[list[tuple[str, ...]]], *,
         replacement = None
         for moves in [cur.moves] + [m for m in ranked[s] if m != cur.moves]:
             for item in dict.fromkeys([cur.item, *C.held_item_candidates(cur.species, moves, led, team), None]):
-                cand = replace(cur, moves=moves, item=item, adopted=tuple(m for m in cur.adopted if m in moves))
+                cand = MemberSpec(cur.species, cur.variant, moves, item, cur.ability, cur.ability_reason)
                 # partial team: copies only (006: required HMs are placed on whole teams)
                 if not isinstance(realize(tuple(fixed + [cand]), fixed_levels, led), Refusal):
                     replacement = cand

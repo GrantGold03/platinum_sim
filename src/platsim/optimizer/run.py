@@ -56,7 +56,6 @@ import os
 import random
 import sys
 import time
-from dataclasses import replace
 from pathlib import Path
 
 from platsim import pins, version
@@ -188,9 +187,9 @@ def _apply_abilities(specs, abilities: dict) -> tuple:
     for slot, s in enumerate(specs):
         a = abilities.get(f"{slot}|{s.variant}")
         if a:
-            s = replace(s, ability=a["ability"], ability_reason=a["reason"])
+            s = R.MemberSpec(s.species, s.variant, s.moves, s.item, a["ability"], a["reason"])
         else:
-            s = replace(s, ability=None, ability_reason=None)
+            s = R.MemberSpec(s.species, s.variant, s.moves, s.item, None, None)
         out.append(s)
     return tuple(out)
 
@@ -495,7 +494,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             if mc is None or not mc.setup_moveset or s.moves == mc.setup_moveset:
                 continue
             alt = list(winner)
-            alt[slot] = replace(s, moves=mc.setup_moveset)
+            alt[slot] = R.MemberSpec(s.species, s.variant, mc.setup_moveset, s.item, s.ability, s.ability_reason)
             alt = tuple(alt)
             alt_team = wteam(alt, levels)
             entry = {"slot": slot + 1, "moves": list(mc.setup_moveset), "levels": levels}

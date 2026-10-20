@@ -332,6 +332,23 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **Branch.** `009-move-item-classes` from `main` `de102fa`. Brings 007 commit `9e1f065` (src/tests only, byte-identical): `move_classes.py`, `item_classes.py`, their tests, `MemberSpec.adopted` and HM-placement tiers, small refactors. Groundwork; no behaviour change.
 - **Done.** Spec, plan, tasks. T001-T009: 114 classification tests + 13 HM tests pass; B1-B5 candidates identical (93 entries); HM placement identical (7,440 cases, 2,301 replacing a move); same-seed quick B2 identical except the code hash. Evidence `specs/009-move-item-classes/validation-log.md`, `runs/009-evidence/`.
-- **Running / next.** T010 full suite (`runs/009-evidence/t010-*.log`); then commit, push, user test, merge. Then slice 3 (variable-power attacks), which carries the known B2 regression: find and fix the cause before it lands.
+- **Merged 2026-10-19** (`main` = `27d51b0`, fast-forward). Full suite 627 passed, node 314.
 - **Note.** The first version of `move_classes.py` reads the player's MODELLED table, which `main` does not have yet; it returns `{}` and nothing calls it until the player slice.
+
+## 010 variable-power attacks without regression — re-slice 3 of 007 (started 2026-10-19)
+
+- **Branch.** `010-variable-power` from `main` `27d51b0`; code commit `a0e90a9` (pushed).
+- **Cause of the 007 B2 regression (research R3-R4, paired 2,000 runs):** Return and Grass Knot are fine in battle; Infernape losing Close Combat costs ~10 points. 007 produced a Close-Combat-less candidate set and the greedy screen (scores variable-power moves as 0) picked it.
+- **Fix (user: A + B):** greedy-v2 screen (variable power at real power; greedy-v1 byte-identical) and an additive pool. Offered: Return, Grass Knot, Low Kick, Gyro Ball. Not offered: Hidden Power (user: IVs are a uniform 15), Magnitude / Wring Out / Crush Grip / Punishment (no player computes their power; 007 offered them anyway).
+- **Ran (2026-10-19 9:34 PM - 2026-10-20 7:28 AM EDT), finished.** `runs/010-evidence/accept_chain.sh`: standard B4, B5, B3, B1, B2 (seed bench-007, same commands as the baseline) into `runs/bench-010/<B>`, then `accept_pair.py` (each final team vs `runs/bench-007-baseline/<B>`, 2,000 paired, expectimax2-v2). Progress: `runs/010-evidence/accept_chain.log`. About 10-12 h.
+- **Outcome.** All five qualified within 1.10x baseline time at equal or lower average final level; at equal levels B1, B3, B5 better, B4 equal, **B2 worse** (−7 points). Diagnosis: candidate-list displacement (each member keeps 3 sets; variable-power sets pushed out sets `main` offered). A fix C (additive candidate lists) was drafted outside Spec Kit, then reverted (memory `speckit-for-every-change`). Stopped by the user 2026-10-20. Details: `specs/010-variable-power/validation-log.md`.
+- **Note.** The known-bad Infernape set (Focus Blast instead of Close Combat) is still a candidate (diversity rule); the quick smoke run's screen ranked it second. The acceptance decides.
+
+## Revert to pre-007 (user, 2026-10-20)
+
+- **What.** One commit on `main` sets every tracked file to the tree of `2fa6059` (the last 007 commit before the first `/speckit-implement`, `70e3471`): code identical to `f88cdd0` (pre-007), plus the 007 spec, plan, tasks, research, contracts, quickstart and constitution v1.4.0. Kept on top (user): `FUTURE-FEATURES.md`, this file's 007-010 history, and `specs/008-*`, `specs/009-*`, `specs/010-*`. No force-push; history intact.
+- **Undone on `main`:** slices 1 (008 ledger item sources) and 2 (009 move and item classification). Slice 3 (010) was never merged.
+- **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`, `010-variable-power` kept locally and on GitHub. Evidence in `runs/007-evidence/`, `runs/008-evidence/`, `runs/009-evidence/`, `runs/010-evidence/`, `runs/bench-010/` (git-ignored). Fix C draft: session scratchpad `fixC-draft.patch` (temporary).
+- **After the revert.** `data/generated/` must be rebuilt (`uv run platsim extract`): the ledger code went back to pre-008. The 007 tasks in `specs/007-status-moves-items/tasks.md` are all unchecked again (as at `2fa6059`).
+- **Next.** The user decides. Lessons on record: keep features small (memory `feature-size-limits`); every change, including a fix found during acceptance, goes through Spec Kit, and tasks run via `/speckit-implement` (memory `speckit-for-every-change`); the acceptance rule must compare teams at equal levels (010 spec, Session 2026-10-20).
 

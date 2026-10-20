@@ -510,17 +510,3 @@ def test_required_hm_missing(led):
     # positive control: Gyarados (slot 2 of legal_team.json) carries Waterfall
     assert validate(_legal(), led, required_hms=("waterfall",)) == []
     assert validate(_legal(), led) == []  # default call unchanged
-
-
-def test_route_221_focus_sash_accepted_once(led):
-    """007 FR-018: Focus Sash now has 1 pre-Champion copy (Route 221 house); the validator agrees with
-    the ledger: one holder is fine, two are refused; Choice Band (0 copies) is still refused."""
-    assert led.item_copies("ITEM_FOCUS_SASH") == 1  # ledger value
-    d = _legal()
-    d["builds"][0]["held_item"] = "focus_sash"
-    assert _codes(d, led) == []
-    d["builds"][1]["held_item"] = "focus_sash"
-    assert _codes(d, led) == ["ITEM_COPIES"]
-    d = _legal()
-    d["builds"][0]["held_item"] = "choice_band"
-    assert _codes(d, led) == ["ITEM_UNAVAILABLE"]

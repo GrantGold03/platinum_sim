@@ -4,7 +4,13 @@ Planned work, not yet specified. Each item becomes its own small Spec Kit featur
 after the user's hands-on testing (keep features small: about 3 stories / 30 tasks at most, one major
 layer, short acceptance runs). Ordered roughly by priority; the order is a proposal, not a decision.
 
-## 1. Re-slice 007 onto main (user decision 2026-10-19; in progress)
+## 1. Re-slice 007 onto main (user decision 2026-10-19; **stopped and reverted 2026-10-20**)
+
+> **Reverted 2026-10-20 (user):** `main` was set back to the state before 007 was first implemented
+> (code = `f88cdd0`, 007 spec/plan/tasks as of `2fa6059`). Slices 1-2 (features 008, 009, merged) are
+> undone on `main`; slice 3 (010) was never merged. All branches (`007-status-moves-items`,
+> `008-ledger-item-sources`, `009-move-item-classes`, `010-variable-power`) are kept on GitHub as an archive,
+> and their specs and findings are kept under `specs/`. The text below is the record as it stood.
 
 007 (`007-status-moves-items`) is not merged as one piece. Proposal: land it as small slices, each
 benchmarked against main, so a regression points at one change. Triggered by the 2026-10-19 B2 run
@@ -12,7 +18,7 @@ benchmarked against main, so a regression points at one change. Triggered by the
 
 1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, merged 2026-10-19.**
 2. Move and item classification (no optimizer behaviour change). **Feature 009, implemented 2026-10-19 from `9e1f065`; awaiting the user's test.** Item pairings move to slice 5 (only the alternatives stage uses them).
-3. Variable-power attacks (Return, Grass Knot, Hidden Power, ...): paired runs on B1-B5. **Known regression
+3. Variable-power attacks (Return, Grass Knot, Low Kick, ...; **not Hidden Power**, user 2026-10-19: IVs are a uniform 15 by assumption): feature 010, paired runs on B1-B5. **Known regression
    (2026-10-19):** on B2 the 007 team clears 8-10 points less than the Oct 8 team under the same player and
    levels; 4 of 6 moveset changes add a variable-power move and drop coverage (Ice Beam, Close Combat). Find
    and fix the cause (candidate ranking and/or the greedy-v1 screen) before this slice lands.
@@ -65,6 +71,9 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   match apart from changed strings.
 
 ## 5. Smaller follow-ups
+
+- Magnitude, Wring Out, Crush Grip, Punishment: offer them once the strong player computes their power
+  (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5).
 
 - Pickup ability as an item source (Leftovers, King's Rock), proposed after 007; after-battle Pickup/Honey
   Gather items are an accepted divergence.
