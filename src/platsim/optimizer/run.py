@@ -14,15 +14,15 @@ code fingerprint matches - see _State; `--force-new` starts over)
    pruning, coverage-ranked movesets, held items; team-wide TM/item/source copy limits (a candidate
    that breaks one is never generated: resources.repair falls back to the member's next-best set).
    Pass A uses move legality at Lv 100 to build a calibration baseline.
-2. calibrate (greedy-v1): the lowest uniform level U_g at which the baseline clears >= 50% with
+2. calibrate (screen player, greedy-v2 since 010): the lowest uniform level U_g at which the baseline clears >= 50% with
    greedy-v1 (bisection; `rounds[0]` runs per point; seeds derive_seed(f"{seed}|calibrate", i, 0)),
    so the screen is run where candidates differ. Pass B then rebuilds the candidates with move legality
    at ref = U_g - 5 (heuristic: expectimax2-v2 needs fewer levels than greedy-v1, R7, and the level
    search will go below U_g; moves are kept legal there). Screening vector: max(U_g, member minimum).
-3. ability_screen (abilities.choose_ability, T060, greedy-v1, FR-008c) on the pass-B baseline, per
+3. ability_screen (abilities.choose_ability, T060, screen player, FR-008c) on the pass-B baseline, per
    member; the result applies to every candidate with that member's source variant. A finalist member
    whose variant was not tested is screened again on the finalist team.
-4. screen (screen.py, greedy-v1): successive halving over up to N_CANDIDATES teams = the baseline,
+4. screen (screen.py, greedy-v2 since 010): successive halving over up to N_CANDIDATES teams = the baseline,
    every single-member variation (moveset x item x source variant), then seeded random combinations;
    rounds and the top-third rule from the budget preset; finalists = best two.
 5. level_search (levels.py, expectimax2-v2): bisection on the uniform level, then the setup check,
@@ -70,13 +70,13 @@ from platsim.optimizer.screen import ScreenResult, successive_halving
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import mcnemar_exact, wilson_ci
 
-STATE_VERSION = 3  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2 (a v1 state is not resumed)
+STATE_VERSION = 4  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2 (a v1 state is not resumed); 4: 010 greedy-v2 screen + variable-power candidates
 CALIBRATION_TARGET = 0.5
 REF_MARGIN = 5
 N_CANDIDATES = 81
 MAX_CONFIRM_BUMPS = 2
 POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
-SCREEN_POLICY = "greedy-v1"
+SCREEN_POLICY = "greedy-v2"  # 010 (research R4): was greedy-v1, which scores variable-power attacks as 0
 OPPONENT = "decomp-ai"
 
 
@@ -334,7 +334,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             team = wteam(base_a, levels)
             res = _paired(pool, team, f"{seed}|calibrate", n_cal, SCREEN_POLICY)
             points[str(u)] = {"levels": levels, "runs": n_cal, "cleared": sum(res)}
-            prog("calibrate", runs_done=len(points) * n_cal, detail=f"greedy-v1 at U={u}: {sum(res)}/{n_cal} cleared")
+            prog("calibrate", runs_done=len(points) * n_cal, detail=f"{SCREEN_POLICY} at U={u}: {sum(res)}/{n_cal} cleared")
             return sum(res) / n_cal
 
         lo, hi = lo_u - 1, 100  # invariant: rate(hi) >= target or hi == 100

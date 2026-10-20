@@ -27,7 +27,7 @@ import { createHash } from 'node:crypto';
 import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
-import { greedy } from './policy/greedy.mjs';
+import { greedy, greedyV2 } from './policy/greedy.mjs';
 import { expectimax2, expectimax2v2 } from './policy/expectimax2.mjs';
 import { decompAI } from './ai/opponent.mjs';
 
@@ -38,6 +38,7 @@ export const OPPONENT_POLICIES = new Map([[PLACEHOLDER, placeholder]]);
 export const registerPlayerPolicy = (p) => PLAYER_POLICIES.set(p.name, p);
 export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
+registerPlayerPolicy(greedyV2); // `greedy-v2` (feature 010: variable-power attacks at real power)
 registerPlayerPolicy(expectimax2); // `expectimax2-v1` (T050, sim/policy/expectimax2.mjs, research R7)
 registerPlayerPolicy(expectimax2v2); // `expectimax2-v2` (sim/policy/expectimax2.mjs VERSIONS / HORIZON)
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)

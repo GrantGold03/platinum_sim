@@ -27,9 +27,11 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
 1. Legal pool: every move any stage of any option of the variant could know (level-up, TM/HM, tutor,
    egg, Draco Meteor), kept only if `movesources.sources` gives a legal source at the reference level
    `ref_level` under some option of the variant.
-2. Damaging moves only enter the coverage search. Excluded as attacks (heuristic): power 0 (status) and
-   power 1 (variable power / fixed damage: the screening policy greedy-v1 scores them 0, greedy.mjs),
-   and conditional attacks listed in EXCLUDED_ATTACK_EFFECTS (one-hit KO, Explosion/Self-Destruct,
+2. Damaging moves only enter the coverage search. Excluded as attacks (heuristic): power 0 (status),
+   fixed damage, and (010) the variable-power attacks in NOT_OFFERED_VARIABLE (Hidden Power: user; Magnitude,
+   Wring Out, Crush Grip, Punishment: no battle player computes their power). Return, Grass Knot, Low Kick
+   and Gyro Ball are scored at their decomp power (variable_power) and join the pool on top of the top-POOL
+   fixed-power attacks; the screen player greedy-v2 values them the same way. Also excluded: conditional attacks listed in EXCLUDED_ATTACK_EFFECTS (one-hit KO, Explosion/Self-Destruct,
    Future Sight, Fake Out, Snore, Dream Eater, Last Resort, Focus Punch, False Swipe, Struggle).
 3. R8 dominance pruning: move B is dropped when another legal move A has the same type, category,
    accuracy and priority, strictly higher power, B's effect is the plain BATTLE_EFFECT_HIT, and A's
@@ -42,7 +44,7 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
    (FR-017: the Champion dominates failures). These weights are policy/search tuning, not game facts.
 5. A moveset's coverage score = sum over opponent mons of weight x max over its moves of v(m, o). The
    top `POOL` moves by individual score are combined 4 at a time; the best `K_MOVESETS` sets that differ
-   pairwise in at least 2 moves become the member's moveset candidates. The best `RANKED` combos are
+   pairwise in at least 2 moves become the member's moveset candidates. All combos (`RANKED` without variable power) are
    kept in order: when a team cannot be built because an earlier member took the last copy of a TM or
    item, `resources.repair` falls back to that member's next-best combo that can be built.
 6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v2
@@ -66,6 +68,7 @@ from __future__ import annotations
 
 import difflib
 import itertools
+import math
 import json
 import re
 from dataclasses import dataclass, field
@@ -88,7 +91,7 @@ GAUNTLET_KEYS = ("elite_four_aaron", "elite_four_bertha", "elite_four_flint", "e
 CHAMPION_WEIGHT = 2.0  # FR-017 emphasis (search tuning)
 POOL = 10  # damaging moves combined per member
 K_MOVESETS = 3
-RANKED = 210  # combos kept for resource-conflict repair (resources.repair); C(POOL, 4) = all of them
+RANKED = 210  # combos kept for resource-conflict repair (resources.repair); C(POOL, 4) = all of them without variable-power attacks
 STAB_WEIGHT = 1.5  # heuristic weight (search tuning)
 PLAIN = "BATTLE_EFFECT_HIT"
 EXCLUDED_ATTACK_EFFECTS = MC.EXCLUDED_ATTACK_EFFECTS  # moved to move_classes (007)
@@ -329,7 +332,134 @@ def legal_moves(variant: Variant, level: int, led) -> list[str]:
 
 
 def is_attack(mv) -> bool:
-    return mv.power > 1 and mv.category != "CLASS_STATUS" and mv.effect not in EXCLUDED_ATTACK_EFFECTS
+    """An attack the coverage search scores: fixed power > 1 (as before 007), or since 007 (US4, spec
+    FR-012) a variable-power attack whose power `variable_power` computes. Fixed damage, conditional
+    and reactive attacks stay out (move_classes, spec FR-003)."""
+    return (MC.move_class(mv.const).category in (MC.ATTACK, MC.VARIABLE_ATTACK)
+            and mv.effect not in NOT_OFFERED_VARIABLE)
+
+
+# Variable-power attacks never offered, with the reason (010 FR-002, user 2026-10-19).
+NOT_OFFERED_VARIABLE = {
+    "BATTLE_EFFECT_RANDOM_POWER_BASED_ON_IVS": "Hidden Power: its type and power come from the IVs, which the "
+    "simulator sets to a uniform 15 to stand for average stats, so they are not meaningful (user 2026-10-19)",
+    # 010 FR-011 (research R5): the strong player (expectimax2 variablePower) does not compute these powers, so
+    # in its model they deal no damage; offer them once a player models them.
+    "BATTLE_EFFECT_PSYWAVE": "Magnitude: the battle player does not compute its power",
+    "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_HP": "Wring Out / Crush Grip: the battle player does not compute their power",
+    "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_STAT_UP": "Punishment: the battle player does not compute its power",
+}
+
+
+# ---- 007 US4: variable power, per member and League foe (research R3) -------------------------------
+FRIENDSHIP = 255  # spec FR-012 (user 2026-10-14): every member at maximum friendship
+
+
+@cache
+def _weight_overrides() -> frozenset[str]:
+    """Species whose imperial weight gets -0.1 lb before conversion (speciesproc.c
+    species_weight_rounding_override)."""
+    text = (PP / "tools" / "dataproc" / "src" / "speciesproc.c").read_text()
+    body = text[text.index("species_weight_rounding_override"):]
+    body = body[:body.index("default:")]
+    return frozenset(re.findall(r"case (SPECIES_\w+):", body))
+
+
+@cache
+def weight_hg(species_const: str) -> int:
+    """Weight in hectograms as speciesproc.c get_weight_hectograms computes it."""
+    d = json.loads((PP / "res" / "pokemon" / species_const.removeprefix("SPECIES_").lower() / "data.json").read_text())["pokedex_data"]
+    if "weight_kilograms" in d:
+        kg = float(d["weight_kilograms"])
+    else:
+        kg = (float(d["weight_pounds"]) - (0.1 if species_const in _weight_overrides() else 0.0)) * 0.45359237
+    return int(math.floor(kg * 10 + 0.5))  # C round(): half away from zero (kg >= 0)
+
+
+@cache
+def _weight_to_power() -> tuple[tuple[int, int], ...]:
+    text = (PP / "include" / "data" / "battle" / "weight_to_power.h").read_text()
+    return tuple((int(a, 0), int(b, 0)) for a, b in re.findall(r"\{\s*(\w+),\s*(\w+)\s*\}", text))
+
+
+@cache
+def _magnitude_expected_power() -> float:
+    """Expected Magnitude power from BtlCmd_CalcMagnitudePower's thresholds (battle_script.c)."""
+    text = (PP / "src" / "battle" / "battle_script.c").read_text()
+    body = text[text.index("static BOOL BtlCmd_CalcMagnitudePower(BattleSystem *battleSys, BattleContext *battleCtx)\n{"):]
+    body = body[:body.index("msgTemp")]
+    thr = [int(x) for x in re.findall(r"magnitude < (\d+)", body)] + [100]
+    pw = [int(x) for x in re.findall(r"movePower = (\d+)", body)]
+    lo, exp = 0, 0.0
+    for t, p in zip(thr, pw):
+        exp += (t - lo) / 100 * p
+        lo = t
+    return exp
+
+
+@cache
+def _type_order() -> tuple[str, ...]:
+    return tuple((PP / "generated" / "pokemon_types.txt").read_text().split())
+
+
+def hidden_power(ivs: dict) -> tuple[str, int]:
+    """(type, power) of Hidden Power for these IVs (BtlCmd_CalcHiddenPowerParams, battle_script.c)."""
+    order = ("hp", "atk", "def", "spe", "spa", "spd")
+    power = sum(((ivs[k] & 2) >> 1) << i for i, k in enumerate(order)) * 40 // 63 + 30
+    t = sum((ivs[k] & 1) << i for i, k in enumerate(order)) * 15 // 63 + 1
+    types = _type_order()
+    if t >= types.index("TYPE_MYSTERY"):
+        t += 1
+    return types[t], power
+
+
+@cache
+def league_foe_details() -> tuple[tuple[int, dict, int], ...]:
+    """(level, stats, weight_hg) for every League mon, aligned with league_opponents()."""
+    from platsim.decomp.stats import calc_stats
+
+    data = {t["key"]: t for t in json.loads(TRAINERS_JSON.read_text())["trainers"]}
+    out = []
+    for k in GAUNTLET_KEYS:
+        for mon in data[k]["party"]:
+            sp = MS.by_constant()[mon["species"]]
+            iv = {s: int(mon["iv"]) for s in ("hp", "atk", "def", "spa", "spd", "spe")}
+            ev = {s: 0 for s in iv}
+            st = calc_stats(sp.base_stats, iv, ev, int(mon["level"]), mon["nature"], mon["species"])
+            out.append((int(mon["level"]), st, weight_hg(mon["species"])))
+    return tuple(out)
+
+
+def variable_power(const_member: str, move_const: str, foe: int, *, level: int = 50, ivs: dict | None = None) -> tuple[str, float]:
+    """(type, power) of a variable-power attack for this member against League foe `foe` (research R3)."""
+    from platsim.decomp.stats import calc_stats
+    from platsim.legality.models import default_evs, default_ivs
+
+    m = load_moves()[move_const]
+    e = m.effect
+    ivs = ivs or default_ivs()
+    if e == "BATTLE_EFFECT_POWER_BASED_ON_FRIENDSHIP":
+        return m.type, FRIENDSHIP * 10 // 25  # effect_script_0121.s; trainer_ai.c:3019
+    if e == "BATTLE_EFFECT_RANDOM_POWER_BASED_ON_IVS":
+        return hidden_power(ivs)
+    _, fstats, fweight = league_foe_details()[foe]
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_WEIGHT":
+        for limit, power in _weight_to_power():
+            if limit == 0xFFFF:
+                return m.type, 120
+            if limit >= fweight:
+                return m.type, power
+    if e == "BATTLE_EFFECT_POWER_BASED_ON_LOW_SPEED":
+        sp = MS.by_constant()[const_member]
+        mine = calc_stats(sp.base_stats, ivs, default_evs(), level, "NATURE_HARDY", const_member)
+        return m.type, min(150, 1 + 25 * fstats["spe"] // max(1, mine["spe"]))
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_HP":
+        return m.type, 121  # 1 + 120 * curHP / maxHP against a foe at full HP (BtlCmd_CalcWringOutPower)
+    if e == "BATTLE_EFFECT_PSYWAVE":  # Magnitude (the effect name is the decomp's)
+        return m.type, _magnitude_expected_power()
+    if e == "BATTLE_EFFECT_INCREASE_POWER_WITH_MORE_STAT_UP":
+        return m.type, 60  # Punishment base, foe without boosts
+    raise ValueError(f"{move_const}: no variable-power rule for {e}")
 
 
 def dominates(a, b) -> bool:
@@ -354,14 +484,23 @@ def prune(move_consts: list[str]) -> tuple[list[str], dict[str, str]]:
     return kept, dropped
 
 
-def move_value(const_member: str, move_const: str) -> list[float]:
-    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order."""
+def move_value(const_member: str, move_const: str, *, level: int = 50, ivs: dict | None = None) -> list[float]:
+    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order.
+    A variable-power attack uses its computed type and power per foe (007 US4)."""
     m = load_moves()[move_const]
     sp = MS.by_constant()[const_member]
     acc = 1.0 if m.accuracy == 0 else m.accuracy / 100
-    stab = STAB_WEIGHT if m.type in sp.types else 1.0
     stat = sp.base_stats["atk"] if m.category == "CLASS_PHYSICAL" else sp.base_stats["spa"]
-    base = m.power * acc * stab * stat * EFFECT_WEIGHT.get(m.effect, 1.0)
+    w_eff = EFFECT_WEIGHT.get(m.effect, 1.0)
+    if MC.move_class(move_const).category == MC.VARIABLE_ATTACK:
+        out = []
+        for i, (_, types, w) in enumerate(league_opponents()):
+            t, power = variable_power(const_member, move_const, i, level=level, ivs=ivs)
+            stab = STAB_WEIGHT if t in sp.types else 1.0
+            out.append(w * power * acc * stab * stat * w_eff * type_mult(t, types))
+        return out
+    stab = STAB_WEIGHT if m.type in sp.types else 1.0
+    base = m.power * acc * stab * stat * w_eff
     return [w * base * type_mult(m.type, types) for _, types, w in league_opponents()]
 
 
@@ -443,14 +582,31 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
     return out or [None]
 
 
+def _variant_ivs(variant: Variant, led) -> dict:
+    """The IVs this variant battles with: an NPC trade's fixed IVs, else the default (FR-008)."""
+    from platsim.legality.models import default_ivs
+
+    ivs = default_ivs()
+    for o in variant.options(led):
+        if o.fixed_mon and o.fixed_mon.get("ivs"):
+            ivs.update({k: x for k, x in o.fixed_mon["ivs"].items() if x is not None})
+    return ivs
+
+
 def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS,
                       team: tuple[str, ...] | None = None) -> MemberCandidates:
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
     legal = legal_moves(variant, level, led)
     attacks, dropped = prune(legal)
-    scores = {m: sum(move_value(const, m)) for m in attacks}
-    pool = sorted(attacks, key=lambda m: (-scores[m], m))[:POOL]
-    vals = {m: move_value(const, m) for m in pool}
+    ivs = _variant_ivs(variant, led)
+    scores = {m: sum(move_value(const, m, level=level, ivs=ivs)) for m in attacks}
+    # 010 FR-010 (research R2, R4): variable-power attacks join the pool on top of the top-POOL fixed-power
+    # attacks, so they can add movesets but never push out a move the pool held before them.
+    fixed = [m for m in attacks if MC.move_class(m).category == MC.ATTACK]
+    variable = [m for m in attacks if MC.move_class(m).category == MC.VARIABLE_ATTACK]
+    pool = sorted(fixed, key=lambda m: (-scores[m], m))[:POOL] + sorted(variable, key=lambda m: (-scores[m], m))
+    pool = sorted(pool, key=lambda m: (-scores[m], m))
+    vals = {m: move_value(const, m, level=level, ivs=ivs) for m in pool}
     size = min(4, len(pool))
     combos = []
     for combo in itertools.combinations(sorted(pool), size):
@@ -479,7 +635,7 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
-    ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
+    ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos]  # all (010: C(POOL,4) = RANKED without variable power)
     items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen + ([setup] if setup else [])}
     return MemberCandidates(const, variant, level, chosen, setup, items, ranked, pool, dropped,
                             {m: scores[m] for m in pool})

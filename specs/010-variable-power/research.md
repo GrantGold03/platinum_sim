@@ -68,3 +68,16 @@ So Magnitude (PSYWAVE effect), Wring Out / Crush Grip (INCREASE_POWER_WITH_MORE_
 (INCREASE_POWER_WITH_MORE_STAT_UP) were offered by 007 but never usable by its players: the same kind of
 blind spot as the greedy screen. Decision (FR-004, FR-011): offer only Return, Grass Knot, Low Kick and
 Gyro Ball; the other four wait for a player that models them (`FUTURE-FEATURES.md`).
+
+## R6. After fix B (additive pool), 2026-10-19
+
+- With every variable-power effect switched off, the new code's B1-B5 candidates (movesets and items, 93
+  entries) are byte-identical to `main`'s (`cmp runs/009-evidence/candidates-branch.json
+  runs/010-evidence/candidates-novp.json`): the adaptation and the pool change alter nothing except through
+  the variable-power moves.
+- With them on: 63 of 93 entries change (67 before fix B). Garchomp is back to `main`'s sets. No excluded
+  or unmodelled move is offered.
+- **Still present:** Infernape's third B2 set is FB/Focus Blast/Stone Edge/Grass Knot, the set R3 measured
+  at −10 points. It comes from the diversity rule (sets differ pairwise in ≥ 2 moves), not from the pool.
+  Fix B does not remove it; whether the screen picks it depends on fix A (greedy-v2 sees Grass Knot) and is
+  checked by the B2 smoke run (T009) and the acceptance (T011-T012).

@@ -1,5 +1,6 @@
 """Successive-halving screen over candidate teams (T063; research.md R8 "Search" step 2 and
-"Policy per stage": screening uses `greedy-v1`).
+"Policy per stage": screening uses `greedy-v1`; since feature 010 `greedy-v2`, which also scores the
+offered variable-power attacks at their real power).
 
 - All candidates play at the SAME start-level vector and on the SAME seeds (paired, FR-019).
 - Round r adds `rounds[r]` new gauntlets per surviving candidate (preset: standard 100 -> 200 -> 400,
@@ -25,7 +26,7 @@ from dataclasses import dataclass, field
 
 from platsim.sim.seeds import derive_seed
 
-SCREEN_POLICY = "greedy-v1"
+SCREEN_POLICY = "greedy-v2"  # 010: greedy-v1 + variable-power attacks at real power (research R4)
 OPPONENT_POLICY = "decomp-ai"
 
 

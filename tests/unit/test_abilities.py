@@ -158,7 +158,7 @@ def test_both_effect_needs_pool():
 class _StubPool:
     """Clears every run when the screened member has `winner`; the other ability clears none."""
 
-    hello = {"policies": ["greedy-v1"], "opponent_policies": ["decomp-ai"], "decomp_commit": "x", "showdown_commit": "y"}
+    hello = {"policies": ["greedy-v1", "greedy-v2"], "opponent_policies": ["decomp-ai"], "decomp_commit": "x", "showdown_commit": "y"}
 
     def __init__(self, slot, winner):
         self.slot, self.winner, self.requests = slot, winner, []
@@ -177,4 +177,4 @@ def test_tested_better_branch_with_stub_pool(winner):
     assert c.stats["n_paired"] == 100 and len(p.requests) == 200  # quick preset: 100 per ability
     seeds = [r["seed"] for r in p.requests]
     assert seeds[:100] == seeds[100:]  # paired
-    assert all(r["player_policy"] == "greedy-v1" and r["opponent_policy"] == "decomp-ai" for r in p.requests)
+    assert all(r["player_policy"] == AB.SCREEN_PLAYER_POLICY == "greedy-v2" and r["opponent_policy"] == "decomp-ai" for r in p.requests)

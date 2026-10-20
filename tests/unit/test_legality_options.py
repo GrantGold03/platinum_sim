@@ -40,7 +40,7 @@ NEW_RULES = ("allow_post_game_pokemon", "allow_post_game_items", "allow_unobtain
 T001_FINGERPRINT = {"species": ["SPECIES_INFERNAPE", "SPECIES_STARAPTOR", "SPECIES_LUXRAY", "SPECIES_GARCHOMP",
                                 "SPECIES_GYARADOS", "SPECIES_GARDEVOIR"], "min_clear": 0.75, "seed": "t058",
                     "budget": "quick", "legality_options": {"allow_egg_moves": False, "allow_trade_evolutions": False},
-                    "state_version": 3}
+                    "state_version": 4}
 TRADE_TAIL = "(trade evolution; needs a second cartridge for the trade)"
 
 

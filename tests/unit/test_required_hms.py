@@ -139,7 +139,7 @@ def test_unplaceable_hm_is_a_refusal(ledger, specs):
 T001_FINGERPRINT = {"species": ["SPECIES_INFERNAPE", "SPECIES_GARCHOMP", "SPECIES_GYARADOS", "SPECIES_LUCARIO",
                                 "SPECIES_CHATOT", "SPECIES_STARAPTOR"], "min_clear": 0.75, "seed": "default",
                     "budget": "standard", "legality_options": {"allow_egg_moves": False, "allow_trade_evolutions": False},
-                    "state_version": 3}
+                    "state_version": 4}
 
 
 def test_fingerprint_default_unchanged_and_hms_included(ledger):

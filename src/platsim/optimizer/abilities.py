@@ -1,5 +1,5 @@
 """Ability choice per member (T060; spec FR-008c; research.md R8 "Policy per stage": ability screening
-uses `greedy-v1` against the decomp trainer AI; run count = the budget preset's `ability_screen`).
+uses the screen player (`greedy-v2` since feature 010) against the decomp trainer AI; run count = the budget preset's `ability_screen`).
 
 1. Battle-effect classification (generated data: data/generated/abilities_battle.json, `platsim extract`)
 --------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ In order (reason codes = data-model Build.ability_reason):
   - one ability has no battle effect                            -> the other one, other_no_battle_effect
     (neither has one: slot 1, other_no_battle_effect)           (no runs)
   - else: N = preset.ability_screen paired gauntlets per ability (same seeds i = 0..N-1 for both),
-    player `greedy-v1`, opponent `decomp-ai`, stop_on_loss; McNemar exact (stats.mcnemar_exact, alpha
+    player `greedy-v2` (010), opponent `decomp-ai`, stop_on_loss; McNemar exact (stats.mcnemar_exact, alpha
     0.05) on "cleared". Significant -> the winner, tested_better; otherwise slot 1, tie_default.
 Seeds: run i of the screen for member `slot` uses derive_seed(f"{seed}|ability-screen|slot{slot}", i, 0);
 the worker derives battle b's seed from it. Same inputs -> same seeds -> same result.
@@ -55,7 +55,7 @@ from typing import Any, NamedTuple
 
 from platsim.pins import DECOMP_COMMIT, DECOMP_ROOT
 
-SCREEN_PLAYER_POLICY = "greedy-v1"  # research.md R8 "Policy per stage"
+SCREEN_PLAYER_POLICY = "greedy-v2"  # research.md R8 "Policy per stage"; greedy-v2 since feature 010
 OPPONENT_POLICY = "decomp-ai"  # FR-010
 ALPHA = 0.05
 

@@ -16,19 +16,19 @@
 
 ## Phase 2: User Story 1 - real power, safe pool (P1)
 
-- [ ] T004 [US1] `candidates.py`: add the three unmodelled effects to `NOT_OFFERED_VARIABLE` with reasons; make the pool additive (main's top-`POOL` fixed-power attacks + offered variable-power attacks); keep all combos for repair
-- [ ] T005 [US1] Tests: Magnitude/Wring Out/Crush Grip/Punishment not offered (with positive controls that the member learns them); for B1-B5 members every attack in `main`'s pool (`runs/009-evidence/candidates-branch.json` method, store pools) is in the new pool
+- [X] T004 [US1] `candidates.py`: add the three unmodelled effects to `NOT_OFFERED_VARIABLE` with reasons; make the pool additive (main's top-`POOL` fixed-power attacks + offered variable-power attacks); keep all combos for repair
+- [X] T005 [US1] Tests: Magnitude/Wring Out/Crush Grip/Punishment not offered (with positive controls that the member learns them); for B1-B5 members every attack in `main`'s pool (`runs/009-evidence/candidates-branch.json` method, store pools) is in the new pool
 
 ## Phase 3: User Story 2 - the screen sees real teams (P1)
 
-- [ ] T006 [US2] `sim/policy/greedy.mjs`: `greedy-v2` with variable power for Return, Grass Knot, Low Kick, Gyro Ball; greedy-v1 unchanged; register in `sim/gauntlet.mjs`
-- [ ] T007 [US2] `sim/test/greedy_v2.test.mjs`: greedy-v2 gauntlet logs byte-identical to greedy-v1 for the policy benchmark team (no variable-power moves); positive control: a team with Return gives a different log; golden v1/v2 test still passes
-- [ ] T008 [US2] `SCREEN_POLICY = "greedy-v2"` in `run.py`, `screen.py`, `abilities.py` (docstrings too); `STATE_VERSION` 3 → 4; update pinned fingerprint tests
-- [ ] T009 Unit + node tests; quick B2 run as a smoke test (validator passes; Infernape keeps Close Combat or the screen's choice is recorded)
+- [X] T006 [US2] `sim/policy/greedy.mjs`: `greedy-v2` with variable power for Return, Grass Knot, Low Kick, Gyro Ball; greedy-v1 unchanged; register in `sim/gauntlet.mjs`
+- [X] T007 [US2] `sim/test/greedy_v2.test.mjs`: greedy-v2 gauntlet logs byte-identical to greedy-v1 for the policy benchmark team (no variable-power moves); positive control: a team with Return gives a different log; golden v1/v2 test still passes
+- [X] T008 [US2] `SCREEN_POLICY = "greedy-v2"` in `run.py`, `screen.py`, `abilities.py` (docstrings too); `STATE_VERSION` 3 → 4; update pinned fingerprint tests
+- [X] T009 Unit + node tests; quick B2 run as a smoke test (validator passes; Infernape keeps Close Combat or the screen's choice is recorded)
 
 ## Phase 4: User Story 3 / acceptance (P1)
 
-- [ ] T010 Commit and push the code (acceptance runs on a committed hash)
+- [X] T010 Commit and push the code (acceptance runs on a committed hash)
 - [ ] T011 Standard optimizations B1-B5, seed `bench-007`, out `runs/bench-010/<B>`; wall time per team vs baseline (SC-003)
 - [ ] T012 Each final team vs its baseline final team (`runs/bench-007-baseline/<B>`): 2,000 paired runs, expectimax2-v2, each at its own start levels; McNemar; plus the average-final-level rule; table in the validation log (SC-002, FR-005)
 - [ ] T013 If any team is worse: stop, record, explain, and ask the user before changing anything
