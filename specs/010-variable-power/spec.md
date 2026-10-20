@@ -94,6 +94,7 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 - **FR-007**: Results for a team with no variable-power learner MUST be identical except fingerprints.
 - **FR-009**: The team screen MUST value variable-power attacks at their real power (new screen player `greedy-v2`; `greedy-v1` unchanged and still selectable), and for a team without variable-power attacks it MUST choose exactly as `greedy-v1` does.
 - **FR-010**: A member's move pool MUST contain every attack `main` would put in it; variable-power attacks are added on top.
+- **FR-011**: Only variable-power attacks that the strong battle player computes MAY be offered: Return (friendship), Grass Knot and Low Kick (weight), Gyro Ball (speed). Magnitude, Wring Out, Crush Grip and Punishment MUST NOT be offered until a player models them (found 2026-10-19: neither `main`'s expectimax2-v2 nor 007's v3 computes their power, so they would deal no damage in the player's model; research R5).
 - **FR-008**: The 007 implementation (commit `d3d53e7` and the parts of the battle player it relies on) MUST be reused where it applies; adaptations are recorded.
 
 ### Key Entities
@@ -105,7 +106,7 @@ Before the fix, the cause is established by experiment, not assumed, and recorde
 
 ### Measurable Outcomes
 
-- **SC-001**: The hand-checked powers (Return 102, Low Kick 120/40, Gyro Ball cap 150, Magnitude expected value) all match, and Hidden Power is offered to 0 members.
+- **SC-001**: The hand-checked powers (Return 102, Low Kick 120/40, Gyro Ball cap 150) all match; Hidden Power, Magnitude, Wring Out, Crush Grip and Punishment are offered to 0 members.
 - **SC-002**: 0 of the 5 benchmark teams is significantly worse than its baseline; the table with clear rates, average final levels, p-values and run times is recorded.
 - **SC-003**: Each team's standard run takes at most 2.0x its baseline time.
 - **SC-004**: The regression's cause is recorded with paired evidence (p-value and run counts).

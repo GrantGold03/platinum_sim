@@ -56,3 +56,15 @@ Oct 8 B2 team at its Oct 8 levels (53,53,53,54,51,54), expectimax2-v2, 2,000 pai
 **Cause (FR-003):** adding variable-power moves lets candidate generation produce sets that drop a key
 STAB attack (pool truncation and the diversity rule), and the greedy screen, blind to the new moves, picks
 among them on the wrong information; no later stage compares a member's moveset on its own.
+
+## R5. Which variable-power attacks the strong player can use
+
+`main`'s expectimax2-v2 `variablePower` (`sim/policy/expectimax2.mjs:437-460`) handles
+POWER_BASED_ON_FRIENDSHIP (Return), POWER_BASED_ON_LOW_FRIENDSHIP (Frustration), INCREASE_POWER_WITH_WEIGHT
+(Grass Knot, Low Kick), RANDOM_POWER_BASED_ON_IVS (Hidden Power) and POWER_BASED_ON_LOW_SPEED (Gyro Ball);
+anything else returns `undefined` and the damage table entry is `null`, i.e. the move does nothing in the
+player's model. 007's v3 has the same cases (`007-status-moves-items:sim/policy/expectimax2.mjs:632-660`).
+So Magnitude (PSYWAVE effect), Wring Out / Crush Grip (INCREASE_POWER_WITH_MORE_HP) and Punishment
+(INCREASE_POWER_WITH_MORE_STAT_UP) were offered by 007 but never usable by its players: the same kind of
+blind spot as the greedy screen. Decision (FR-004, FR-011): offer only Return, Grass Knot, Low Kick and
+Gyro Ball; the other four wait for a player that models them (`FUTURE-FEATURES.md`).

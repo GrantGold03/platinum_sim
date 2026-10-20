@@ -66,6 +66,9 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 
 ## 5. Smaller follow-ups
 
+- Magnitude, Wring Out, Crush Grip, Punishment: offer them once the strong player computes their power
+  (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5).
+
 - Pickup ability as an item source (Leftovers, King's Rock), proposed after 007; after-battle Pickup/Honey
   Gather items are an accepted divergence.
 - Payoffs past the 2-ply horizon (weather, Wish, Taunt, Substitute, Damp Rock): no helps-position at the
