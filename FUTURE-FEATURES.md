@@ -16,8 +16,8 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 benchmarked against main, so a regression points at one change. Triggered by the 2026-10-19 B2 run
 (average final level 55.27 vs 53.49 on Oct 8; cause: the team's movesets, not the player; see the 007 validation-log).
 
-1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, merged 2026-10-19.**
-2. Move and item classification (no optimizer behaviour change). **Feature 009, implemented 2026-10-19 from `9e1f065`; awaiting the user's test.** Item pairings move to slice 5 (only the alternatives stage uses them).
+1. Ledger item sources (Route 221, Pastoria, Amity Square). **Feature 008, merged 2026-10-19; reverted on `main` 2026-10-20 (branch kept).**
+2. Move and item classification (no optimizer behaviour change). **Feature 009, merged 2026-10-19; reverted on `main` 2026-10-20 (branch kept).** Item pairings move to slice 5 (only the alternatives stage uses them).
 3. Variable-power attacks (Return, Grass Knot, Low Kick, ...; **not Hidden Power**, user 2026-10-19: IVs are a uniform 15 by assumption): feature 010, paired runs on B1-B5. **Known regression
    (2026-10-19):** on B2 the 007 team clears 8-10 points less than the Oct 8 team under the same player and
    levels; 4 of 6 moveset changes add a variable-power move and drop coverage (Ice Beam, Close Combat). Find
@@ -53,14 +53,15 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   3. Player policies (greedy-v1, expectimax2-*) decide switch or stay with their existing matchup scoring;
      golden v1/v2 logs stay byte-identical under Set.
   4. Acceptance: paired Shift vs Set runs on a few benchmark teams, then the user decides the default.
-- **Order.** After re-slice items 3 and 4, so a level change is attributable to Shift alone. It changes
+- **Order.** Independent of the 007 work (reverted 2026-10-20); it can land on `main` as is. Land it alone, so a level change is attributable to Shift alone. It changes
   every result, so it lands on its own.
 
 ## 4. Plain-language user-facing output (added 2026-10-19)
 
 - **Gap.** User-facing text carries internal labels and developer jargon. Found in user testing of slice 1:
-  `platsim explain item:<x>` source lines end with "(007 dataflow: Return-aware calls / GetRandom+AddVar /
-  save-var literals / C table)". Other outputs likely have similar text (unverified; not yet searched).
+  `platsim explain item:<x>` source lines ended with "(007 dataflow: Return-aware calls / GetRandom+AddVar /
+  save-var literals / C table)". That label came with the slice 1 code, now reverted on `main`; whether `main`'s
+  outputs carry similar jargon is unverified (not yet searched).
 - **Scope.**
   1. Inventory every user-facing text surface: CLI output (`explain`, `validate`, `evaluate`, `optimize`
      progress), report files (xlsx, csv, `team.txt`, result.json `warnings`), and the web UI.

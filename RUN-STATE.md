@@ -1,3 +1,20 @@
+# START HERE (updated 2026-10-20, before a reboot)
+
+- **State.** `main` = `b07ed2d` (pushed): code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+  `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
+  end of this file. Nothing is running; the web server is stopped.
+- **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
+  `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
+  `runs/*-evidence/` (git-ignored).
+- **Open decisions for the user.** What to do with 007 (redo in small features? which first?); the
+  backlog is in `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
+- **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
+  feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
+  must be rebuilt (`uv run platsim extract`) after switching branches.
+- **Uncommitted on purpose:** the user's deletion of `.claude/scheduled_tasks.lock`, and untracked Spec Kit
+  extension files (`.claude/skills/speckit-assess-*`, `.specify/extensions*`, `.specify/assessments/`) and
+  `held_items.md`, which are the user's.
+
 # RUN-STATE: Champion Team Optimizer
 
 ## Goal
@@ -348,7 +365,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **What.** One commit on `main` sets every tracked file to the tree of `2fa6059` (the last 007 commit before the first `/speckit-implement`, `70e3471`): code identical to `f88cdd0` (pre-007), plus the 007 spec, plan, tasks, research, contracts, quickstart and constitution v1.4.0. Kept on top (user): `FUTURE-FEATURES.md`, this file's 007-010 history, and `specs/008-*`, `specs/009-*`, `specs/010-*`. No force-push; history intact.
 - **Undone on `main`:** slices 1 (008 ledger item sources) and 2 (009 move and item classification). Slice 3 (010) was never merged.
-- **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`, `010-variable-power` kept locally and on GitHub. Evidence in `runs/007-evidence/`, `runs/008-evidence/`, `runs/009-evidence/`, `runs/010-evidence/`, `runs/bench-010/` (git-ignored). Fix C draft: session scratchpad `fixC-draft.patch` (temporary).
+- **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`, `010-variable-power` kept locally and on GitHub. Evidence in `runs/007-evidence/`, `runs/008-evidence/`, `runs/009-evidence/`, `runs/010-evidence/`, `runs/bench-010/` (git-ignored). Fix C draft and analysis scripts: `runs/010-evidence/scripts/` (README.txt inside).
 - **After the revert.** `data/generated/` must be rebuilt (`uv run platsim extract`): the ledger code went back to pre-008. The 007 tasks in `specs/007-status-moves-items/tasks.md` are all unchecked again (as at `2fa6059`).
 - **Next.** The user decides. Lessons on record: keep features small (memory `feature-size-limits`); every change, including a fix found during acceptance, goes through Spec Kit, and tasks run via `/speckit-implement` (memory `speckit-for-every-change`); the acceptance rule must compare teams at equal levels (010 spec, Session 2026-10-20).
 
