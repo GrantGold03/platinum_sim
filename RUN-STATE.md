@@ -1,6 +1,6 @@
 # START HERE (updated 2026-10-20, before a reboot)
 
-- **State.** `main` = `b07ed2d` (pushed): code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **State.** `main` (pushed; revert commit `b07ed2d`, docs after it): code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
