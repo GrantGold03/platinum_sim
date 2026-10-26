@@ -9,9 +9,9 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 Built from the decomp and `main`, not from the 007-010 archive.
 
 - **H1 Held-item sources** (feature 011, branch `011-held-item-sources`): the ledger's gift reader finds the
-  Route 221 house, the Pastoria City SW house and Amity Square. Built; waits for the user's test.
+  Route 221 house, the Pastoria City SW house and Amity Square. Merged to `main` 2026-10-26 after the user's test.
 - **H2** Offer the held items the battle player already models (Focus Sash; Life Orb if obtainable before the
-  Champion). Not specified.
+  Champion). Not specified; next.
 - **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work.

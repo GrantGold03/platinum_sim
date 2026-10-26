@@ -1,12 +1,12 @@
 # START HERE (updated 2026-10-26)
 
-- **State.** `main` (pushed; revert commit `b07ed2d`, docs after it): code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Current work (2026-10-26).** Held items redone as small features; first is `011-held-item-sources` (H1). See the 011 section at the end.
+- **Current work (2026-10-26).** Held items redone as small features; H1 (`011-held-item-sources`) merged; next is H2. See the 011 section at the end.
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
@@ -374,4 +374,4 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **Plan (user, 2026-10-26).** Redo the held-item work in small, separately testable features, held items first. Proposed slices: H1 ledger sources (this); H2 offer items the player already models (Focus Sash, Life Orb if obtainable); H3+ one item group per feature with the player learning it. Items tied to status moves (Light Clay, weather rocks, Chesto) wait for the status-move work.
 - **Branch.** `011-held-item-sources` from `main` `73af068`, main checkout. Spec: `specs/011-held-item-sources/spec.md` (3 stories, 9 FRs). Prior art: `a8b529b` / `specs/008-ledger-item-sources/`; this time the explain output must carry no internal labels (FR-007).
-- **Implementing (2026-10-26).** T001-T025 done; code `0fb05fc`, `6d56b01`, `c81bb5b` pushed. Held-item counts 66/37/55 -> 74/40/44; B1-B5 candidates and same-seed B2 identical apart from provenance. Amity partner note dropped (user). Full suite: 517 passed, 4 xfailed, node 314/314; the 1 failure (web process determinism) came from a commit made mid-run, passes alone. **Waiting for the user's hands-on test (T026); do not merge before it.** Trap: never commit while the full suite runs (repo_commit is cached per process). Evidence `runs/011-evidence/`, log `specs/011-held-item-sources/validation-log.md`.
+- **Merged (2026-10-26).** T001-T025 done; code `0fb05fc`, `6d56b01`, `c81bb5b` pushed. Held-item counts 66/37/55 -> 74/40/44; B1-B5 candidates and same-seed B2 identical apart from provenance. Amity partner note dropped (user). Full suite: 517 passed, 4 xfailed, node 314/314; the 1 failure (web process determinism) came from a commit made mid-run, passes alone. **User tested (explain focus_sash, occa_berry, belue_berry) and merged to `main` 2026-10-26 (fast-forward to `116008a`).** Next: H2, starting with `/speckit-specify` on a new branch from `main`. Trap: never commit while the full suite runs (repo_commit is cached per process). Evidence `runs/011-evidence/`, log `specs/011-held-item-sources/validation-log.md`.
