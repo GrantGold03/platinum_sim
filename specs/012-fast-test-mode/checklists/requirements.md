@@ -34,5 +34,6 @@
 - The feature is test infrastructure, so its users are the developers and its subject is the test suite. Names of
   the test runner, the Node worker and test files appear because they are what the feature is about, not how it is
   built; the mechanism (marker name, how detection works) is left to the plan.
-- No clarification markers: the one judgment call (the divergence check's Node script is not a battle test) and the
-  15-minute target are recorded as assumptions for `/speckit-clarify` to revisit if wanted.
+- No clarification markers. Decided by the user in clarify (2026-10-26): the run-time target (30 minutes), unmarked
+  worker starts fail in every run, and only the battle worker (not the divergence check's Node script) makes a battle
+  test.
