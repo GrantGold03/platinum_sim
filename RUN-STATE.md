@@ -6,7 +6,7 @@
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Open decisions for the user.** What to do with 007 (redo in small features? which first?); the
+- **Current work (2026-10-26).** Held items redone as small features; first is `011-held-item-sources` (H1). See the 011 section at the end.
   backlog is in `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
@@ -369,3 +369,9 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **After the revert.** `data/generated/` must be rebuilt (`uv run platsim extract`): the ledger code went back to pre-008. The 007 tasks in `specs/007-status-moves-items/tasks.md` are all unchecked again (as at `2fa6059`).
 - **Next.** The user decides. Lessons on record: keep features small (memory `feature-size-limits`); every change, including a fix found during acceptance, goes through Spec Kit, and tasks run via `/speckit-implement` (memory `speckit-for-every-change`); the acceptance rule must compare teams at equal levels (010 spec, Session 2026-10-20).
 
+
+## 011 held-item sources — held items slice H1 (started 2026-10-26)
+
+- **Plan (user, 2026-10-26).** Redo the held-item work in small, separately testable features, held items first. Proposed slices: H1 ledger sources (this); H2 offer items the player already models (Focus Sash, Life Orb if obtainable); H3+ one item group per feature with the player learning it. Items tied to status moves (Light Clay, weather rocks, Chesto) wait for the status-move work.
+- **Branch.** `011-held-item-sources` from `main` `73af068`, main checkout. Spec: `specs/011-held-item-sources/spec.md` (3 stories, 9 FRs). Prior art: `a8b529b` / `specs/008-ledger-item-sources/`; this time the explain output must carry no internal labels (FR-007).
+- **Next.** `/speckit-plan`, then `/speckit-tasks`, `/speckit-implement`. Rebuild `data/generated/` (`uv run platsim extract`) before any before/after comparison.
