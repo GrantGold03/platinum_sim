@@ -15,8 +15,12 @@ over from 008.
 ## R2. Item counts before and after (carried over from 008, re-measured in implementation)
 
 - On this code, 008 measured (2026-10-19) **66 unlimited / 37 finite / 55 unavailable** before and
-  **74 / 40 / 44** after (158 held items). 11 items leave "unavailable": 8 berries become unlimited
-  (Pastoria and Amity), 3 items become 1 copy (Black Belt, Expert Belt, Focus Sash).
+  **74 / 40 / 44** after (158 held items). 11 items leave "unavailable" (008 validation-log, T003-T007):
+  - 1 copy each, Route 221 house: `black_belt`, `expert_belt`, `focus_sash`;
+  - unlimited, Pastoria City berry house: `charti_berry`, `chilan_berry`, `coba_berry`, `kebia_berry`,
+    `occa_berry`, `passho_berry`, `payapa_berry`, `tanga_berry`.
+  The 9 Amity Square berries (Belue, Cornn, Durin, Magost, Nomel, Pamtre, Rabuta, Spelon, Watmel) become
+  pre-Champion too, but none is a counted held item, so they do not move the 74/40/44 counts.
 - `main`'s tests pin 66 and 55 (`test_availability_controls.py`), a built-in positive control: they must
   fail after step 2 until the pins are updated by the archived test changes.
 - The same script reading adds 81 entries in all, including Route 208 house, Solaceon News Press, Flower
