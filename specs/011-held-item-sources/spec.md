@@ -32,6 +32,7 @@ A version of this change was built once before, as feature 008 (branch `008-ledg
 - Q: Should this feature reuse 008's implementation and documentation (commit `a8b529b`, `specs/008-ledger-item-sources/`)? → A: No. "Don't rely too much on 008's documentation or implementation. It was a bit of a mess... When in doubt, create from scratch instead of referencing 008" (user). No archived code is applied; counts, item lists and wording are derived in this feature's own research from the decomp and `main`.
 - Q: Should the ledger learn these sources by reading game scripts more completely in general, or by rules aimed at just these three places? → A: General (option A). Script reading is improved for all scripts; other sites may gain entries, but none may change a held item's availability without being reported.
 - Q: May 008's archived results be used as a comparison once this version is built? → A: Only after the build, as a comparison (option B). Differences are listed and checked against the decomp; 008 is never the target and nothing is changed to match it.
+- Q: The Amity Square partner condition is checked when the map loads, which the ledger does not model; how is it handled? → A: Leave it out of the source text (user, during implementation). It never changes availability: the 16 accepted partner species include every stage of the three starters (`scripts_amity_square.s:646-677`).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -47,7 +48,7 @@ A player looks up Focus Sash, Expert Belt, Black Belt, a Pastoria City berry or 
 
 1. **Given** default options, **When** Focus Sash, Expert Belt or Black Belt is explained, **Then** the Route 221 house is shown as a source, 1 copy, with the day's-random-level condition given as the reason for the count.
 2. **Given** default options, **When** a Pastoria City berry (Occa through Chilan) is explained, **Then** the Pastoria City berry house is shown as a source, with its copy rule and the reason.
-3. **Given** default options, **When** an Amity Square berry is explained, **Then** Amity Square is shown as a source (pickup while walking with a partner Pokémon, or the Gift Man), with the partner-Pokémon condition stated.
+3. **Given** default options, **When** an Amity Square berry is explained, **Then** Amity Square is shown as a source (pickup while walking with a partner Pokémon, or the Gift Man).
 4. **Given** an item none of these sources gives (Liechi Berry, Choice Band), **When** it is explained, **Then** its availability is unchanged from `main`.
 5. **Given** any explained item, **When** its source lines are read, **Then** they contain no feature number, task id, or internal implementation term (for example "dataflow", "GetRandom+AddVar", "save-var").
 
@@ -85,7 +86,7 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 ### Edge Cases
 
 - **Item already available elsewhere.** An item a new source gives that was already obtainable keeps its best copy count (an unlimited source is not reduced by a 1-copy source).
-- **Conditions the player may not meet.** The Amity Square partner condition and the Route 221 level condition are recorded with the source, not silently assumed.
+- **Conditions the player may not meet.** The Route 221 level condition is recorded with the source, not silently assumed. The Amity Square partner condition is always met (every starter qualifies) and is recorded in the research, not in the source text (Clarifications, Session 2026-10-26).
 - **Post-Champion sources.** If any part of a source is only reachable after the Champion, it is reported as such and does not count under default options.
 - **Other gift sites picked up by the same script reading.** Reading these scripts correctly may also record gifts at other sites. These are allowed only if they change no held item's availability; any that would is reported, not silently accepted.
 - **Regenerated data.** Generated data is rebuilt from the decomp on each branch before any before/after comparison; a stale copy from another branch is never used.
@@ -96,7 +97,7 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 
 - **FR-001**: The availability ledger MUST model the Route 221 house as a source of Black Belt, Expert Belt and Focus Sash, 1 copy each, with the reason (the day's-random-level condition) recorded. The rule MUST be detected from the game script's content, not from the map name.
 - **FR-002**: The ledger MUST model the Pastoria City berry house as a source of every berry its script can give, with its copy rule and reason.
-- **FR-003**: The ledger MUST model Amity Square as a source of the berries found while walking with a partner Pokémon and of the Gift Man's items, with the partner-Pokémon condition recorded.
+- **FR-003**: The ledger MUST model Amity Square as a source of the berries found while walking with a partner Pokémon and of the Gift Man's items.
 - **FR-004**: Every new source MUST carry its decomp file and line and a before/after-Champion verdict with its reason (Constitution I). Items, copy counts and gates MUST come from the decomp, not be hand-typed.
 - **FR-005**: The validator MUST accept a team that holds these items within their copy counts and reject one that exceeds them (Constitution III).
 - **FR-006**: Held items not given by these sources MUST keep their current availability; Liechi Berry stays unobtainable and Choice Band stays unavailable under default options.

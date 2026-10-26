@@ -4,6 +4,21 @@ Planned work, not yet specified. Each item becomes its own small Spec Kit featur
 after the user's hands-on testing (keep features small: about 3 stories / 30 tasks at most, one major
 layer, short acceptance runs). Ordered roughly by priority; the order is a proposal, not a decision.
 
+## 0. Held items, redone in small slices (user, 2026-10-26)
+
+Built from the decomp and `main`, not from the 007-010 archive.
+
+- **H1 Held-item sources** (feature 011, branch `011-held-item-sources`): the ledger's gift reader finds the
+  Route 221 house, the Pastoria City SW house and Amity Square. Built; waits for the user's test.
+- **H2** Offer the held items the battle player already models (Focus Sash; Life Orb if obtainable before the
+  Champion). Not specified.
+- **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
+  Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
+  rocks, Chesto Berry) wait for the status-move work.
+- Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
+  walking partner) are treated as always visible; the partner condition is therefore not stated with the
+  Amity sources. It never changes availability today (every starter qualifies).
+
 ## 1. Re-slice 007 onto main (user decision 2026-10-19; **stopped and reverted 2026-10-20**)
 
 > **Reverted 2026-10-20 (user):** `main` was set back to the state before 007 was first implemented

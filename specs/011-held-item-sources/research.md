@@ -44,7 +44,8 @@ decomp:
   so they are not counted in the held-item totals. Expected held-item changes: Black Belt, Expert Belt, Focus Sash
   (0 → 1) and every Pastoria berry that is unavailable on `main` (→ unlimited). The exact list comes from the
   per-item diff against the baseline (T002 evidence), not from this table.
-- Amity Square partner condition: entry with a walking partner needs one of 16 species in the party, which include
+- Amity Square partner condition (left out of the source text, user 2026-10-26: it is checked when the map loads, which the
+  ledger does not model): entry with a walking partner needs one of 16 species in the party, which include
   every stage of the three starters (`scripts_amity_square.s:646-677`). Every player has a starter, so the condition
   is always met. It is recorded in the reason text, not as a gate.
 

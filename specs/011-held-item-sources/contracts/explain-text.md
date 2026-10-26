@@ -20,9 +20,12 @@ as they are (research R4).
 |---|---|
 | Route 221 house | `main`'s daily phrase, then: only if a party Pokémon is at that day's random level (`GetDailyRandomLevel` at file:line); the items rotate Black Belt, Expert Belt, Focus Sash; counted as 1 copy of each |
 | Pastoria City SW house | `main`'s daily phrase, then: one of 17 berries at random |
-| Amity Square partner pickup | found while walking with a partner Pokémon (any starter can be the partner); repeats |
+| Amity Square partner pickup | `main`'s phrase for a several-item gift (the partner condition is not stated; spec Clarifications 2026-10-26) |
 | Amity Square Gift Man | `main`'s daily phrase, then: one of the man's 9 berries or 7 accessories at random |
 | Any other newly read site | `main`'s phrase for its kind of gift, plus "one of N possible items" when several are possible |
+
+A daily gift with several possible items gains "; one of N possible items" after `main`'s phrase wherever it is, so the
+4 Great Marsh 6 daily-shard lines that `main` already had gain that clause too (measured in T016; wording only).
 
 ## Check
 

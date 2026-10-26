@@ -69,6 +69,11 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     Focus Band unavailable.
   - **One-time gifts are counted once.** Copies that share the same one-time flag (item ball,
     hidden item or NPC received-flag) count as one acquisition, so TM65, TM28 and TM86 each have 1 copy.
+  - **Daily gifts are unlimited, with one exception** (011). The Route 221 house gives Black Belt,
+    Expert Belt and Focus Sash in rotation, but only when a party Pokémon is at that day's random
+    level, so each counts as **1 copy** (user decision). The Pastoria City house gives one of 17
+    resist berries a day, and Amity Square's walking partner and Gift Man give 9 berries. NPC gifts
+    whose item is set in a called routine, picked at random, or read from a table are all counted.
   - **Munchlax and Snorlax are allowed** (003; this reverses 001's exclusion). Munchlax comes from
     honey trees at levels 5–15 (only some trees, depending on Trainer ID) and always holds
     **Leftovers**. So Leftovers may be held by any number of members **only when Munchlax or
