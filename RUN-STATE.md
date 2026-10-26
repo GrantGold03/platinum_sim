@@ -1,4 +1,4 @@
-# START HERE (updated 2026-10-20, before a reboot)
+# START HERE (updated 2026-10-26)
 
 - **State.** `main` (pushed; revert commit `b07ed2d`, docs after it): code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
@@ -7,7 +7,7 @@
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
 - **Current work (2026-10-26).** Held items redone as small features; first is `011-held-item-sources` (H1). See the 011 section at the end.
-  backlog is in `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
+  Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
   must be rebuilt (`uv run platsim extract`) after switching branches.
