@@ -39,6 +39,7 @@ from platsim.decomp.constants import Ref, load_enum, rel
 from platsim.decomp.scripts import (
     OP_CALL_COMMON,
     all_script_stems,
+    ends_procedure,
     load_script_file,
     parse_int,
     resolve_script_id,
@@ -911,34 +912,143 @@ def _give_common_nodes() -> frozenset[tuple[str, int]]:
     return frozenset(out)
 
 
+CALL_DEPTH = 8  # nested Calls followed with a return point; deeper ones are entered without one
+# GetRandom / GetRandom2 VAR, n: LCRNG_Next() % n, so 0..n-1 (src/scrcmd.c:4947, :4958)
+RANDOM_OPS = frozenset({"SCRCMD_GETRANDOM", "SCRCMD_GETRANDOM2"})
+OFFSET = "#"  # a value 0..n-1 from GetRandom, kept as "#k" until an item constant is added to it
+
+
+@cache
+def _item_ids() -> tuple[dict[str, int], dict[int, str]]:
+    from platsim.decomp.items import load_items
+
+    items = load_items().values()
+    return {it.const: it.id for it in items}, {it.id: it.const for it in items}
+
+
+COMPARE_OPS = frozenset({"SCRCMD_COMPAREVARTOVALUE", "SCRCMD_COMPAREVARTOVAR"})
+
+
+def _is_saved_var(name: str) -> bool:
+    """A save-file variable: not a script temp (VAR_0x8000-), not map-local, not VAR_RESULT."""
+    return name.startswith("VAR_") and not name.startswith(("VAR_0x", "VAR_MAP_LOCAL")) and name != "VAR_RESULT"
+
+
+@cache
+def _saved_var_values() -> dict[str, frozenset]:
+    """Every literal a saved variable is set to by `SetVar` in any script. A variable that any other
+    script command writes (its first operand, other than a comparison) or that C code names
+    (src/**/*.c) may hold other values and maps to {'?'}. E.g. VAR_FOLLOWER_MON_PICKUP_ITEM_ID is set
+    only to the 9 berries at scripts_amity_square.s:312-344."""
+    in_c = set()
+    for path in (PP / "src").rglob("*.c"):
+        in_c.update(re.findall(r"\bVAR_[A-Z0-9_]+\b", path.read_text(errors="replace")))
+    vals: dict[str, set[str]] = {}
+    for stem in all_script_stems():
+        for c in load_script_file(stem).commands:
+            for p in c.prims:
+                ops = [o.text for o in p.operands]
+                if not ops or not _is_saved_var(ops[0]) or p.op in COMPARE_OPS:
+                    continue
+                vals.setdefault(ops[0], set()).add(ops[1] if p.op == "SCRCMD_SETVARFROMVALUE" else "?")
+    return {v: frozenset({"?"}) if "?" in s or v in in_c else frozenset(s) for v, s in vals.items()}
+
+
+SCRCMD_TABLE_H = PP / "include" / "data" / "scripts" / "scrcmd.h"
+_SCRIPT_ARG_RE = re.compile(r"ScriptContext_(GetVarPointer|GetVar|ReadHalfWord|ReadWord|ReadByte)\(")
+
+
+@cache
+def _table_commands() -> dict[str, tuple[int, frozenset]]:
+    """Script commands whose C handler stores one entry of a static array in a variable, read from
+    the command table (include/data/scripts/scrcmd.h) and the handler's source: op -> (operand index
+    of the destination variable, the array's values). The handler must take exactly one variable
+    pointer and assign `*dest = <array>[...]` with `<array>` a `static const` array in the same file,
+    e.g. ScrCmd_GetAmitySquareBerryOrAccessoryIDFromMan (src/scrcmd_amity_square.c:175-181). Other
+    handlers are not read (their result stays '?')."""
+    handlers = dict(re.findall(r"ScriptCommand\((SCRCMD_\w+),\s*(\w+)\)", SCRCMD_TABLE_H.read_text()))
+    sources = {p: p.read_text(errors="replace") for p in (PP / "src").glob("scrcmd*.c")}
+    out: dict[str, tuple[int, frozenset]] = {}
+    for op, fn in handlers.items():
+        for text in sources.values():
+            m = re.search(rf"^BOOL {fn}\(ScriptContext \*ctx\)\n\{{\n(.*?)\n\}}\n", text, re.S | re.M)
+            if not m:
+                continue
+            body = m.group(1)
+            args = _SCRIPT_ARG_RE.findall(body)
+            if args.count("GetVarPointer") != 1:
+                break
+            a = re.search(r"\*(\w+) = (\w+)\[[^\]]*\];", body)
+            arr = a and re.search(rf"static const \w+ {a.group(2)}\[\] = \{{(.*?)\}};", text, re.S)
+            if arr:
+                vals = [v.strip() for v in arr.group(1).split(",") if v.strip()]
+                out[op] = (args.index("GetVarPointer"), frozenset(vals))
+            break
+    return out
+
+
+def _add_item_offsets(vals: frozenset, operand: str) -> frozenset:
+    """AddVar VAR, ITEM_X on random offsets {#k}: the items at id(ITEM_X) + k (e.g.
+    scripts_pastoria_city_southwest_house.s:15-16). Anything else is not a literal any more ('?')."""
+    by_const, by_id = _item_ids()
+    if operand not in by_const or not vals or not all(v.startswith(OFFSET) for v in vals):
+        return frozenset({"?"})
+    out = {by_id.get(by_const[operand] + int(v[len(OFFSET):])) for v in vals}
+    return frozenset({"?"}) if None in out else frozenset(out)
+
+
 def _const_dataflow(sf) -> dict[int, dict[str, frozenset]]:
-    """Possible literal values of VAR_0x8004 / VAR_0x8005 before each command (intra-file, calls
-    followed, union at joins; '?' = written non-literally)."""
+    """Possible literal values of VAR_0x8004 / VAR_0x8005 before each command (intra-file, union at
+    joins; '?' = written non-literally). A Call enters the routine with a return point, so its Return
+    continues after the call with the routine's values (e.g. scripts_route_221_house.s:28-30 set the
+    item in routines at :50-60); the call's fall-through also keeps the caller's values."""
     tracked = ("VAR_0x8004", "VAR_0x8005")
-    state: dict[int, dict[str, frozenset]] = {}
-    work = [(sf.command_for_entry(i), {v: frozenset({"?"}) for v in tracked}) for i in range(len(sf.entries))]
+    seen: dict[tuple[int, tuple[int, ...]], dict[str, frozenset]] = {}
+    start = {v: frozenset({"?"}) for v in tracked}
+    work = [(sf.command_for_entry(i), (), start) for i in range(len(sf.entries))]
     while work:
-        idx, st = work.pop()
+        idx, stack, st = work.pop()
         if idx >= len(sf.commands):
             continue
-        cur = state.get(idx)
+        cur = seen.get((idx, stack))
         if cur is not None:
             merged = {v: cur[v] | st[v] for v in tracked}
             if merged == cur:
                 continue
             st = merged
-        state[idx] = st
+        seen[(idx, stack)] = st
         c = sf.commands[idx]
         nst = dict(st)
         for p in c.prims:
             ops = [o.text for o in p.operands]
             if p.op == "SCRCMD_SETVARFROMVALUE" and ops[0] in tracked:
                 nst[ops[0]] = frozenset({ops[1]})
-            elif p.op in ("SCRCMD_SETVARFROMVAR", "SCRCMD_ADDVAR", "SCRCMD_SUBVAR") and ops[0] in tracked:
+            elif p.op in RANDOM_OPS and ops[0] in tracked:
+                n = parse_int(ops[1])
+                nst[ops[0]] = frozenset(f"{OFFSET}{k}" for k in range(n)) if n else frozenset({"?"})
+            elif p.op == "SCRCMD_ADDVAR" and ops[0] in tracked:
+                nst[ops[0]] = _add_item_offsets(nst[ops[0]], ops[1])
+            elif p.op in _table_commands() and ops[_table_commands()[p.op][0]] in tracked:
+                nst[ops[_table_commands()[p.op][0]]] = _table_commands()[p.op][1]
+            elif p.op == "SCRCMD_SETVARFROMVAR" and ops[0] in tracked:
+                nst[ops[0]] = _saved_var_values().get(ops[1], frozenset({"?"})) if _is_saved_var(ops[1]) else frozenset({"?"})
+            elif p.op == "SCRCMD_SUBVAR" and ops[0] in tracked:
                 nst[ops[0]] = frozenset({"?"})
+        if ends_procedure(c) == "return":
+            if stack:
+                work.append((stack[-1], stack[:-1], nst))
+            continue
         for s in successors(sf, idx, sf.stem):
-            if s.file == sf.stem:
-                work.append((s.index, nst))
+            if s.file != sf.stem:
+                continue
+            if s.kind == "call" and len(stack) < CALL_DEPTH:
+                work.append((s.index, stack + (idx + 1,), nst))
+            else:
+                work.append((s.index, stack, nst))
+    state: dict[int, dict[str, frozenset]] = {}
+    for (idx, _), st in seen.items():
+        cur = state.get(idx)
+        state[idx] = st if cur is None else {v: cur[v] | st[v] for v in tracked}
     return state
 
 
@@ -975,10 +1085,20 @@ def npc_gift_entries() -> list[Entry]:
                     o = [x.text for x in p.operands]
                     if o[0].startswith("ITEM_"):
                         items = [(o[0], parse_int(o[1]))]
+                    elif o[0] in ("VAR_0x8004", "VAR_0x8005"):  # AddItem VAR, VAR (scripts_amity_square.s:940)
+                        if flow is None:
+                            flow = _const_dataflow(sf)
+                        st = flow.get(c.index)
+                        if st is None:
+                            continue
+                        qs = [parse_int(x) for x in st[o[1]] if x != "?"] if o[1] in st else [parse_int(o[1])]
+                        q = min((x for x in qs if x is not None), default=None)
+                        items = [(i, q) for i in sorted(st[o[0]]) if i.startswith("ITEM_")]
                 if not items:
                     continue
                 daily = _daily_guard(sf, c.index)
                 rf = None if daily else received_flag(stem, c.index)
+                level = _daily_random_level(sf, c.index) if daily else None
                 for h in owners:
                     gs = site_gates(h, stem, c.index)
                     for item, q in items:
@@ -986,8 +1106,11 @@ def npc_gift_entries() -> list[Entry]:
                         det = f"daily ({daily})" if daily else ("several possible items at this site; each counted once" if len(items) > 1 else "")
                         if q is None and not daily:
                             det = (det + "; " if det else "") + "quantity not literal, counted as 1"
+                        once, once_src = (rf[0], list(rf[1:])) if rf else (None, [])
+                        if level:  # the day's random level must match a party Pokemon: 1 copy each (user, 2026-10-14)
+                            qty, once, once_src = 1, f"{daily.split()[0]}:{item}", [level]
                         out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [], [], None, det,
-                                         once_flag=rf[0] if rf else None, once_flag_src=list(rf[1:]) if rf else []))
+                                         once_flag=once, once_flag_src=once_src))
     return out
 
 
@@ -1036,6 +1159,21 @@ def received_flag(stem: str, idx: int) -> tuple[str, str, str] | None:
                     return f, str(c.ref), checked[f]
             nxt += [s.index for s in successors(sf, i, stem) if s.file == stem and s.kind != "call_common"]
         frontier = nxt
+    return None
+
+
+def _daily_random_level(sf, idx: int) -> str | None:
+    """Where a path to this gift reads the day's random level (GetDailyRandomLevel): the gift is given
+    only when a party Pokemon is at that level (scripts_route_221_house.s:15-25)."""
+    from platsim.decomp.scripts import walk
+
+    for i in range(len(sf.entries)):
+        cmds = walk(sf, sf.command_for_entry(i))
+        if not any(c.file == sf.stem and c.index == idx for c in cmds):
+            continue
+        for c in cmds:
+            if any(p.op == "SCRCMD_GETDAILYRANDOMLEVEL" for p in c.prims):
+                return str(c.ref)
     return None
 
 
