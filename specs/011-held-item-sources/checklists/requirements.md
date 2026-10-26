@@ -31,8 +31,7 @@
 
 ## Notes
 
-- `platsim explain`, decomp file:line references and commit `a8b529b` are named on purpose: the command is the
-  user's test surface, file:line citations are required by Constitution I, and the commit is the prior art the user
-  asked to reuse (FR-009). No code structure is prescribed.
-- Size: 3 stories, 9 FRs; within the feature-size limit.
+- `platsim explain` and decomp file:line references are named on purpose: the command is the user's test surface,
+  and file:line citations are required by Constitution I. Commit `a8b529b` is named only to forbid reusing it (FR-009).
+- Size: 3 stories, 10 FRs; within the feature-size limit.
 - Validated in one pass, 2026-10-26.
