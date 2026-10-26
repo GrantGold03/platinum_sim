@@ -116,14 +116,14 @@ def test_every_baseline_gift_still_produced(gifts):
     assert not missing, missing
 
 
-def test_daily_random_level_gift_counts_one_copy_each(gifts):
+def test_daily_random_level_gift_counts_one_copy_each(gifts, led):
     """Route 221 house: a daily gift that needs a party Pokemon at the day's random level
-    (GetDailyRandomLevel, :15) counts 1 copy of each item, not unlimited (user, 2026-10-14)."""
+    (GetDailyRandomLevel, :15) counts 1 copy of each item, not unlimited (user, 2026-10-14). No made-up
+    flag is attached (a once flag is shown to the user as a decomp flag)."""
     _line(R221, 15, "GetDailyRandomLevel VAR_0x8000")
     es = [e for e in gifts if e.src == [f"{R221}:39"]]
-    assert es and {e.quantity for e in es} == {1}
-    assert len({e.once_flag for e in es}) == len({e.subject for e in es})  # one acquisition per item
-    assert all(e.once_flag_src == [f"{R221}:15"] for e in es)
+    assert es and {e.quantity for e in es} == {1} and {e.once_flag for e in es} == {None}
+    assert {e.subject: led.item_copies(e.subject) for e in es} == {e.subject: 1 for e in es}
 
 
 def test_plain_daily_gift_stays_unlimited(gifts):

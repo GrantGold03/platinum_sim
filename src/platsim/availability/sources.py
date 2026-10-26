@@ -1134,7 +1134,7 @@ def npc_gift_entries() -> list[Entry]:
                             det = (det + "; " if det else "") + "quantity not literal, counted as 1"
                         once, once_src = (rf[0], list(rf[1:])) if rf else (None, [])
                         if level:  # the day's random level must match a party Pokemon: 1 copy each (user, 2026-10-14)
-                            qty, once, once_src = 1, f"{daily.split()[0]}:{item}", [level]
+                            qty = 1
                         out.append(Entry("npc_item_gift", item, h, qty, gs, [str(c.ref)], None, None, [], [], None, det,
                                          once_flag=once, once_flag_src=once_src))
     return out
