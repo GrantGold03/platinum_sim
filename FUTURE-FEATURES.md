@@ -86,7 +86,28 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 - **Size.** Text-only; no behaviour change. Result files differ only in wording, so same-seed runs must
   match apart from changed strings.
 
-## 5. Smaller follow-ups
+## 5. Fast test mode without the battle simulations (added 2026-10-26)
+
+- **Gap.** The full suite takes about 2.5 h, almost all of it in roughly 45 integration tests that run real Node /
+  Showdown battles. The ~650 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min
+  (measured: `tests/unit` 474 tests in 109 s, 010 log; unit + ledger/web/explain/extract 400 tests in 10 min, 003
+  log). There is no single command that runs only those. Per-test timings have never been recorded; the split
+  below is from file contents and earlier logs (estimates marked).
+- **Battle-simulation files** (the slow set): `test_optimize_small.py` (two quick optimizations, est. 50-70 min),
+  `test_policy_strength.py` (2,000 paired runs × 3 policies, est. 30-40 min), `test_evaluate.py` (2,000-run
+  evaluations twice, est. 25-30 min), `test_final_levels.py`, `test_champion_topup.py`, `test_pool.py`,
+  `test_ability_screen.py`, `test_worker.py` (est. 15-25 min together).
+- **Scope.**
+  1. A pytest marker (e.g. `battle_sim`) on every test that starts `sim/worker.mjs` or the optimizer, and one
+     documented command for the fast mode (e.g. `uv run pytest -m "not battle_sim"`). The full suite stays the
+     acceptance gate for merges.
+  2. A guard test so a new battle-simulation test cannot be left unmarked (positive control: one known
+     battle test must carry the marker; negative: the fast set starts no Node worker).
+  3. Record per-test times once with `--durations=0` on a full run, to confirm the split and the fast mode's
+     run time.
+- **Size.** Test infrastructure only; no behaviour change. Small (one story).
+
+## 6. Smaller follow-ups
 
 - Magnitude, Wring Out, Crush Grip, Punishment: offer them once the strong player computes their power
   (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5).
