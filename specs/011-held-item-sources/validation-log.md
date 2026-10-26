@@ -222,3 +222,17 @@ Source: `specs/008-ledger-item-sources/validation-log.md` (T003-T007 section). N
   their sources are identical (SC-006).
 - After the T018 fix (`c81bb5b`, pushed): rebuilt; Focus Sash `explain` has no "one-time flag" line, copies 1;
   counts still 74/40/44 with Black Belt, Expert Belt, Focus Sash at 1 each.
+
+### T022 Full suite (2026-10-26)
+
+- Branch at `6646b5a` when started; 2:18:37 to 4:50:31 PM EDT. Logs `runs/011-evidence/t022-pytest.log`,
+  `t022-node.log`, `t022.time`.
+- pytest: `1 failed, 517 passed, 4 xfailed, 1 warning in 8840.19s (2:27:20)` (522 collected). This branch adds 14
+  tests (13 in `test_gift_reader.py`, 1 in `test_validator.py`); no other count change.
+- node: `# tests 314`, `# pass 314`, `# fail 0` (same 314 as before).
+- **The one failure is a test-run artefact, not a defect:** `test_web_process_determinism.py::test_child_process_matches_in_process`
+  found the two `result.json` files differing at byte 11250 (`b'4' != b'6'`), which is the first character of
+  `repo_commit`. I committed `472fef6` (docs only) at 2:40 PM, during the run. `version.local_fingerprint()` is cached
+  once per process (`src/platsim/version.py:121`), so the long-running pytest process still held `6646b5a`, while the
+  child process the test spawns read the new HEAD `472fef6`. Rerun alone with no commit in between:
+  `1 passed in 166.44s`, exit 0. Lesson: no commits while the full suite runs.

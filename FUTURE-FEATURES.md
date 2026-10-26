@@ -89,7 +89,7 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 ## 5. Fast test mode without the battle simulations (added 2026-10-26)
 
 - **Gap.** The full suite takes about 2.5 h, almost all of it in roughly 45 integration tests that run real Node /
-  Showdown battles. The ~650 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min
+  Showdown battles. The ~477 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min
   (measured: `tests/unit` 474 tests in 109 s, 010 log; unit + ledger/web/explain/extract 400 tests in 10 min, 003
   log). There is no single command that runs only those. Per-test timings have never been recorded; the split
   below is from file contents and earlier logs (estimates marked).
