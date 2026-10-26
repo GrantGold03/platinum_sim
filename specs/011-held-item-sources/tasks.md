@@ -20,11 +20,11 @@ spec (FR-007): the explain-text check, written to fail first on the archived tex
 
 Must finish before any code change: these capture the "before" on `main`'s code.
 
-- [ ] T001 Create `specs/011-held-item-sources/validation-log.md`: branch, base `73af068`, `git diff --stat f88cdd0 HEAD -- src tests sim` (must be empty) and the R1 `git apply --check` output
-- [ ] T002 Rebuild with `uv run platsim extract` (record wall time); save per-item availability for every held item to `runs/011-evidence/availability-main.json` and record the counts (expected 66/37/55, research R2)
-- [ ] T003 [P] Save `uv run platsim explain item:<key>` to `runs/011-evidence/explain-main.txt` for the 11 items of research R2 (`black_belt`, `expert_belt`, `focus_sash`, `charti_berry`, `chilan_berry`, `coba_berry`, `kebia_berry`, `occa_berry`, `passho_berry`, `payapa_berry`, `tanga_berry`), the Amity berry `belue_berry`, and the negative controls `liechi_berry` and `choice_band`
-- [ ] T004 [P] For every member of B1-B5, compute `held_item_candidates` with a scratchpad script and save to `runs/011-evidence/candidates-main.json`
-- [ ] T005 Quick optimization of B2 (garchomp, infernape, staraptor, rotom, floatzel, weavile), seed `011-sc006`, out `runs/011-evidence/sc006-main`; record wall time and the `result.json` sha256 (about 23 min). Must finish before T006: worker processes may re-import code or re-read generated data mid-run
+- [X] T001 Create `specs/011-held-item-sources/validation-log.md`: branch, base `73af068`, `git diff --stat f88cdd0 HEAD -- src tests sim` (must be empty) and the R1 `git apply --check` output
+- [X] T002 Rebuild with `uv run platsim extract` (record wall time); save per-item availability for every held item to `runs/011-evidence/availability-main.json` and record the counts (expected 66/37/55, research R2)
+- [X] T003 [P] Save `uv run platsim explain item:<key>` to `runs/011-evidence/explain-main.txt` for the 11 items of research R2 (`black_belt`, `expert_belt`, `focus_sash`, `charti_berry`, `chilan_berry`, `coba_berry`, `kebia_berry`, `occa_berry`, `passho_berry`, `payapa_berry`, `tanga_berry`), the Amity berry `belue_berry`, and the negative controls `liechi_berry` and `choice_band`
+- [X] T004 [P] For every member of B1-B5, compute `held_item_candidates` with a scratchpad script and save to `runs/011-evidence/candidates-main.json`
+- [X] T005 Quick optimization of B2 (garchomp, infernape, staraptor, rotom, floatzel, weavile), seed `011-sc006`, out `runs/011-evidence/sc006-main`; record wall time and the `result.json` sha256 (about 23 min). Must finish before T006: worker processes may re-import code or re-read generated data mid-run
 
 ## Phase 2: Foundational (bring over the archived code)
 
