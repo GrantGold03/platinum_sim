@@ -8,6 +8,8 @@
 
 **Input**: User description: "Held items, slice H1: model the missing pre-Champion held-item sources in the availability ledger. The ledger today has no entry for three in-game sources found in held_items.md: the Route 221 house (daily rotating gift of Black Belt, Expert Belt, Focus Sash; gift needs a party Pokémon at the day's random level, so count 1 copy of each, the conservative reading), the Pastoria City southwest house (daily random berry, GetRandom 17 + ITEM_OCCA_BERRY, i.e. Occa through Chilan), and Amity Square (partner Pokémon pickup of Magost/Cornn/Rabuta/Nomel/Spelon/Pamtre/Watmel/Durin/Belue berries, plus the Gift Man). Every item, copy count, and gate comes from the decomp. The validator accepts these items exactly when the ledger does. `platsim explain item:<x>` shows the new source with its decomp file:line and a plain-language reason, with no internal labels (no feature numbers, task ids, or words like "dataflow"). Scope is the ledger, validator, and explain output only. The optimizer's held-item candidate rule (Sitrus Berry, one type-boost item, Leftovers) does not change, so a same-seed optimizer run must match main apart from provenance hashes. Prior art: the archived branch 008-ledger-item-sources (commit a8b529b) and specs/008-ledger-item-sources; reuse it where it fits, minus the jargon in explain output. Keep it small: at most about 3 stories and 30 tasks."
 
+**Superseded in part (2026-10-26):** the "reuse it where it fits" part of the input is withdrawn; see Clarifications, Session 2026-10-26.
+
 ## Context
 
 `main` was reset to the state before feature 007 on 2026-10-20 (user decision), because 007 grew too large to test piece by piece. The held-item work is now redone as a sequence of small features, each tested by the user before the next starts:
@@ -15,7 +17,7 @@
 - **H1 (this feature).** The availability ledger learns three missing item sources. No optimizer or battle change.
 - H2 and later (not specified yet). Offer more held items to the optimizer, one item group at a time, with the battle player learning each group as needed.
 
-The same change was built once before, as feature 008 (branch `008-ledger-item-sources`, code commit `a8b529b`). It passed the user's hands-on test and was merged on 2026-10-19, then undone by the revert. One defect was found in that test: `platsim explain item:<x>` printed internal labels such as "(007 dataflow: Return-aware calls / GetRandom+AddVar / save-var literals / C table)". This feature fixes that.
+A version of this change was built once before, as feature 008 (branch `008-ledger-item-sources`). The user judged that work a mess, so this feature is built from scratch from the decomp and `main` (Clarifications, Session 2026-10-26). One lesson from 008's hands-on test stands: `platsim explain item:<x>` printed internal labels such as "(007 dataflow: ...)". This feature must not.
 
 ## Clarifications
 
@@ -24,6 +26,12 @@ The same change was built once before, as feature 008 (branch `008-ledger-item-s
 - Q: Are the missing item sources in scope? → A: Yes (2026-10-14).
 - Q: How many copies does the Route 221 house give? → A: One of each: Black Belt, Expert Belt and Focus Sash. The gift needs a party Pokémon at that day's random level, so the ledger's usual "daily gift = unlimited" rule is not applied. This is the conservative reading (2026-10-14).
 - Q: Should user-facing text carry internal labels? → A: No (user testing of 008, 2026-10-19; `FUTURE-FEATURES.md` item 4).
+
+### Session 2026-10-26
+
+- Q: Should this feature reuse 008's implementation and documentation (commit `a8b529b`, `specs/008-ledger-item-sources/`)? → A: No. "Don't rely too much on 008's documentation or implementation. It was a bit of a mess... When in doubt, create from scratch instead of referencing 008" (user). No archived code is applied; counts, item lists and wording are derived in this feature's own research from the decomp and `main`.
+- Q: Should the ledger learn these sources by reading game scripts more completely in general, or by rules aimed at just these three places? → A: General (option A). Script reading is improved for all scripts; other sites may gain entries, but none may change a held item's availability without being reported.
+- Q: May 008's archived results be used as a comparison once this version is built? → A: Only after the build, as a comparison (option B). Differences are listed and checked against the decomp; 008 is never the target and nothing is changed to match it.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -79,7 +87,7 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 - **Item already available elsewhere.** An item a new source gives that was already obtainable keeps its best copy count (an unlimited source is not reduced by a 1-copy source).
 - **Conditions the player may not meet.** The Amity Square partner condition and the Route 221 level condition are recorded with the source, not silently assumed.
 - **Post-Champion sources.** If any part of a source is only reachable after the Champion, it is reported as such and does not count under default options.
-- **Other gift sites picked up by the same script reading.** Reading these scripts correctly also records gifts at other sites (in 008: Route 208 house, Solaceon News Press, Flower Shop, Amity non-held berries). These are allowed only if they change no held item's availability; any that would is reported, not silently accepted.
+- **Other gift sites picked up by the same script reading.** Reading these scripts correctly may also record gifts at other sites. These are allowed only if they change no held item's availability; any that would is reported, not silently accepted.
 - **Regenerated data.** Generated data is rebuilt from the decomp on each branch before any before/after comparison; a stale copy from another branch is never used.
 
 ## Requirements *(mandatory)*
@@ -94,7 +102,8 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 - **FR-006**: Held items not given by these sources MUST keep their current availability; Liechi Berry stays unobtainable and Choice Band stays unavailable under default options.
 - **FR-007**: `platsim explain item:<x>` MUST show each new source in plain language. User-facing source text MUST NOT contain feature numbers, task ids, or internal implementation terms; decomp file:line references stay. A test MUST fail if such labels appear in the explain output for the new sources.
 - **FR-008**: The optimizer, battle player and held-item candidate rule MUST NOT change in this feature.
-- **FR-009**: The work SHOULD reuse the archived implementation (commit `a8b529b`, as verified in `specs/008-ledger-item-sources/`) rather than re-derive it. Every adaptation to it is recorded.
+- **FR-009**: The work MUST be built from the decomp and `main`'s code, not by applying or copying the archived 008 implementation (commit `a8b529b`). Its items, copy counts, gates and wording are derived in this feature's own research. 008's archived results MAY be compared only after the build; each difference is checked against the decomp and reported, never resolved by matching 008.
+- **FR-010**: The three sources MUST be found by a general improvement in how the ledger reads game scripts, not by rules keyed to these maps or scripts. Every site that gains an entry from the improvement MUST be listed in the research with its items; any that changes a held item's availability beyond the three sources MUST be reported to the user before the feature is accepted.
 
 ### Key Entities
 
@@ -106,7 +115,7 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 ### Measurable Outcomes
 
 - **SC-001**: Under default options, all 3 Route 221 items, every Pastoria berry and every Amity Square item show the new source with a script reference and a verdict with its reason (100% coverage).
-- **SC-002**: Under default options, the held-item counts match the values measured in 008 (74 unlimited, 40 finite, 44 unavailable), and every held item whose availability changed from `main` is one given by these sources.
+- **SC-002**: Under default options, every held item whose availability changed from `main` (66 unlimited, 37 finite, 55 unavailable; measured 2026-10-26) is one given by these sources, and each change matches the copy count this feature's research derives from the decomp.
 - **SC-003**: The validator results match the ledger for 100% of the test teams (one Focus Sash holder passes; two fail on copies; Choice Band fails as unavailable).
 - **SC-004**: 0 internal labels (feature numbers, task ids, implementation terms) in the explain output for every item these sources give.
 - **SC-005**: The full test suite passes, with every changed test count explained.
@@ -114,8 +123,7 @@ Optimizer and battle results stay the same. The optimizer, the battle player and
 
 ## Assumptions
 
-- The archived implementation of these sources is correct as verified in 007 and 008 (63 ledger tests, 2026-10-15; re-verified on `main` 2026-10-19). This feature re-verifies it, it does not re-derive it.
-- "Unlimited" for the Pastoria berry house and Amity Square follows the ledger's existing rules for repeatable, flagless gifts, as in 008.
+- Copy counts for the Pastoria berry house and Amity Square follow the ledger's existing rules on `main` for daily and repeatable gifts and for berries (replanting), unless research finds a reason not to.
 - Whether each source is truly before the Champion is decided by the decomp scripts; no cartridge check is made.
 - Fixing internal labels elsewhere in user-facing output (beyond the explain lines for these sources) is out of scope; that is `FUTURE-FEATURES.md` item 4.
 - The new items are not offered to the optimizer: Focus Sash and Expert Belt are not in the current candidate rule, and the type-boost choice prefers Plates (unlimited) over Black Belt (1 copy). Offering them is slice H2.
