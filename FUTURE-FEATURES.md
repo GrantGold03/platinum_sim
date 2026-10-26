@@ -75,8 +75,12 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 
 - **Gap.** User-facing text carries internal labels and developer jargon. Found in user testing of slice 1:
   `platsim explain item:<x>` source lines ended with "(007 dataflow: Return-aware calls / GetRandom+AddVar /
-  save-var literals / C table)". That label came with the slice 1 code, now reverted on `main`; whether `main`'s
-  outputs carry similar jargon is unverified (not yet searched).
+  save-var literals / C table)". That label came with the slice 1 code, now reverted on `main`.
+  Confirmed on `main` (user test of 011, 2026-10-26): `platsim explain item:occa_berry` shows five Iron Island
+  Mawile lines, each with "needs a GBA ruby cartridge in slot 2 (FR-005) and the National Dex" twice (gate and
+  reason) and a reason prefix "other_cartridge @src/overlay006/dual_slot_encounters.c:13:". "(FR-005)" is a spec
+  requirement id and "other_cartridge" an internal gate name; the file:line citation stays. Other surfaces are
+  not yet searched.
 - **Scope.**
   1. Inventory every user-facing text surface: CLI output (`explain`, `validate`, `evaluate`, `optimize`
      progress), report files (xlsx, csv, `team.txt`, result.json `warnings`), and the web UI.
