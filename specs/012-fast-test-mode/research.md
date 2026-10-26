@@ -37,6 +37,9 @@ All findings from reading `main` at `e14f5e0` (2026-10-26). Searches named with 
 - **Checked 2026-10-26** (scratchpad script, Python 3.14 via uv): with a stand-in `node` first on `PATH`,
   `subprocess.run(["node", ...], env=dict(os.environ))` printed `SHIM x` and a `spawn` child's `node` call printed
   `SHIM y`; positive control, the same call with the stand-in removed from `PATH` printed `v22.22.1`.
+- **The stand-in must `exec` the real `node`** (replace itself, same pid), not start it as a child:
+  `test_web_shutdown.py:66` checks child processes with `pgrep -P`, and an extra process level would change what it
+  sees.
 - **Rationale**: no change to `src/` or `sim/` (FR-008); one mechanism for in-process, direct and child-process
   starts (FR-003); the real worker still runs, so results are unchanged (SC-005).
 - **Known limit**: a launch of the worker by an absolute path to `node` would bypass `PATH`. None exists today (R1

@@ -24,8 +24,16 @@ The README lists all three with the merge rule (FR-002, FR-007).
   @pytest.mark.battle_sim, or stop it from starting the worker.`
 - Unmarked test reusing a fixture that started the worker (session end, any run):
   `<test id> uses fixture <name>, which starts the battle worker, but is not marked battle_sim.`
+- Started outside any test (session end, any run):
+  `the battle worker was started outside any test (fixture <fixture or none>).`
 - Over-marked (session end, any run):
   `<test id> is marked battle_sim but never reached the battle worker in this run. Remove the mark.`
+
+## How a failure shows
+
+The unmarked-start failure is raised at the test's teardown, so pytest prints it as `ERROR <test id>` (not `FAILED`).
+That meets FR-003: the run's exit code is non-zero and the test is named. The session-end failures print in the
+terminal summary and set a non-zero exit code.
 
 ## What does not change
 

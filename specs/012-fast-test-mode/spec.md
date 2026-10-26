@@ -62,6 +62,11 @@ worker, and the fast and battle sets together are exactly the full collection.
   set; the fast mode excludes battles, not slowness. Its time shows in the recorded timings.
 - **Browser tests** (system Chrome) stay in the fast set.
 - **Expected failures**: the 4 tests marked as expected failures keep that status in whichever set they fall.
+- **A marked test that fails, is skipped or is an expected failure** may stop before reaching the worker, so the
+  over-marking check (FR-005) judges only marked tests that ran and passed.
+- **Two fixtures with the same name** (e.g. `pool` in two battle files): the split tells fixtures apart by where they
+  are defined, never by name alone.
+- **A worker started outside any test** (e.g. while tests are being collected) fails the run.
 - **The Node test suite** (`node --test sim/test/*.test.mjs`, about 4.5 min, 314 tests) is not part of either pytest
   set; it is unchanged and still part of the merge gate.
 

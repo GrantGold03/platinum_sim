@@ -21,8 +21,7 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
   `specs/012-fast-test-mode/validation-log.md` with headings per task; record the start commit (`git rev-parse HEAD`)
 - [ ] T002 Baseline, recorded in `specs/012-fast-test-mode/validation-log.md`: `uv run pytest --collect-only -q`
   count (expect 522), and `uv run python -c "from platsim import version; print(version.platsim_code_hash(),
-  version.sim_code_hash())"` (or the module's equivalent names; read `src/platsim/version.py` first) for the FR-008
-  comparison at T016
+  version.sim_code_hash())"` (`src/platsim/version.py:81,85`) for the FR-008 comparison at T016
 
 ## Phase 2: Foundational (the detection; blocks US1)
 
@@ -31,8 +30,10 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
 - [ ] T004 Write the stand-in `tests/node_shim/node` (POSIX `sh`, executable bit committed: `git update-index
   --chmod=+x`): for each argument, if it resolves (`realpath -m`, relative to `$PWD`) to `$PLATSIM_WORKER_SCRIPT`,
   append one tab-separated line `test, marked, fixture, pid` (data-model.md) from `$PLATSIM_TEST_ID`,
-  `$PLATSIM_TEST_MARKED`, `$PLATSIM_FIXTURE`, `$$` to `$PLATSIM_WORKER_LOG` (skip logging if the variable is unset);
-  then always `exec "$PLATSIM_REAL_NODE" "$@"`. Fail loudly (exit 127 with a message) if `$PLATSIM_REAL_NODE` is unset
+  `$PLATSIM_TEST_MARKED`, `$PLATSIM_FIXTURE`, `$$` to `$PLATSIM_WORKER_LOG` (skip logging only if
+  `$PLATSIM_WORKER_LOG` is unset; an empty `$PLATSIM_TEST_ID` is still logged, see T007); then always
+  `exec "$PLATSIM_REAL_NODE" "$@"` (exec, not a child: `test_web_shutdown.py` counts child processes with
+  `pgrep -P`, so no extra process may appear). Fail loudly (exit 127 with a message) if `$PLATSIM_REAL_NODE` is unset
 - [ ] T005 Write the plugin `tests/_battle_split.py` (loaded by `tests/conftest.py` via `pytest_plugins`), part 1,
   setup (research R2):
   - `pytest_configure`: real node = `$PLATSIM_REAL_NODE` if already set (nested pytest under the stand-in), else
@@ -41,18 +42,26 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
     prepend `tests/node_shim` to `os.environ["PATH"]`;
   - hookwrappers `pytest_runtest_setup`/`call`/`teardown`: set `PLATSIM_TEST_ID` = `item.nodeid`,
     `PLATSIM_TEST_MARKED` = `1`/`0` from `item.get_closest_marker("battle_sim")`, clear `PLATSIM_FIXTURE`;
-  - hookwrapper `pytest_fixture_setup`: set `PLATSIM_FIXTURE` = `fixturedef.argname` around the setup, restore after
+  - hookwrapper `pytest_fixture_setup`: set `PLATSIM_FIXTURE` = `<fixturedef.baseid>::<fixturedef.argname>` (the
+    fixture's defining location plus its name, so the two fixtures named `pool` in `test_champion_topup.py:49` and
+    `test_ability_screen.py:23` stay distinct) around the setup, restore after;
+  - `pytest_configure` also registers `battle_sim` itself (`config.addinivalue_line("markers", ...)`), so the plugin
+    works without `pyproject.toml` (inner runs in T008)
 - [ ] T006 `tests/_battle_split.py` part 2, per-test check (research R3): at the end of each test's teardown read the
   log lines for `item.nodeid`; if any has `marked = 0`, fail the test with the contract's "Unmarked start" message
   (report as failed at teardown, so the run's exit code is non-zero)
 - [ ] T007 `tests/_battle_split.py` part 3, session check (research R4, R5): at `pytest_sessionfinish`, from the log
   and each collected item's `fixturenames` and outcome:
-  - starter fixtures = fixture names in any record;
+  - starter fixtures = the `<baseid>::<name>` values in any record; a test uses one when the fixture that pytest
+    resolved for it (`item._fixtureinfo.name2fixturedefs[name][-1]`, matched on `baseid` and `argname`) is that
+    fixture, never by name alone;
   - under-marked via a shared fixture: unmarked tests that ran and use a starter fixture → contract message;
+  - started outside any test: records with an empty test id (e.g. at collection) → contract message "the battle
+    worker was started outside any test (fixture <f>)";
   - over-marked: marked tests that passed and have neither their own record nor a starter fixture → contract message;
   - print a "battle split" summary in `pytest_terminal_summary` (counts; the route per marked test: own start, or
     fixture name) and, if `$PLATSIM_SPLIT_REPORT` is set, write it there as JSON; set the session exit status to
-    failed when either list is non-empty
+    failed when any of the three lists is non-empty
 
 **Checkpoint**: run `uv run pytest -q tests/unit/test_constants.py` (no Node): passes, summary shows 0 starts.
 
@@ -66,8 +75,10 @@ passes; fast + battle = full collection.
 ### Tests for User Story 1
 
 - [ ] T008 [US1] Guard test `tests/unit/test_battle_split.py`. Each case writes throwaway test files into `tmp_path`
-  and runs an inner `sys.executable -m pytest -p _battle_split -q <files>` with `PYTHONPATH` = `tests/` and
-  `cwd` = `REPO_ROOT`; cases (expected outcome in brackets):
+  and runs an inner `sys.executable -m pytest -p _battle_split -p no:cacheprovider -q
+  --basetemp=<tmp_path>/inner --rootdir=<tmp_path> <files>` with `PYTHONPATH` = `tests/` and `cwd` = `REPO_ROOT`
+  (the repo's `conftest.py` does not load for files outside `tests/`, so without `--basetemp` pytest would use its
+  default under `/tmp`); cases (expected outcome in brackets):
   1. unmarked test running `subprocess.run(["node", "sim/worker.mjs"], input="")` [fails, message names it];
   2. the same test marked `battle_sim` [passes];
   3. unmarked test whose worker start happens in a `multiprocessing` `spawn` child [fails];
@@ -75,7 +86,11 @@ passes; fast + battle = full collection.
   5. module-scoped fixture starting the worker, used by a marked test and then an unmarked one [session fails:
      the unmarked one named, via the fixture];
   6. unmarked test running a non-worker Node program (`node -e "1"`) [passes; not logged];
-  7. positive control for the instrument: case 1 run with `-p no:_battle_split` and `PATH` without the stand-in
+  7. two modules each defining a module fixture named `pool`; only one starts the worker and is used by a marked
+     test; an unmarked test in the other module uses its own `pool` [passes: no false match by name];
+  8. a worker started at import time of an inner test module (collection, outside any test) [session fails:
+     started outside any test];
+  9. positive control for the instrument: case 1 run with `-p no:_battle_split` and `PATH` without the stand-in
      [passes], proving the failure in case 1 comes from the detection.
   In the outer session also assert: `tests/integration/test_worker.py`'s test carries `battle_sim` (collected
   marker), and `platsim.sim.pool.WorkerPool`'s default command starts with the bare `"node"` (read the default
