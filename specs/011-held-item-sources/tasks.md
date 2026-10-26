@@ -77,7 +77,7 @@ sources through four general improvements (research R1).
 - [X] T023 [P] Check that no archived code was used: `git diff 73af068 -- src tests` contains none of the strings `_const_dataflow_literal`, `007 dataflow`, `new_site`; record (FR-009)
 - [X] T024 After the build only (FR-009, Clarifications Q2): compare T013's held-item changes and site list with `specs/008-ledger-item-sources/validation-log.md`; check each difference against the decomp and record it; change nothing to match 008
 - [X] T025 Update `README.md` where it lists item sources or held-item counts, `FUTURE-FEATURES.md` (held-items slices: H1 done pending the user's test, H2 next) and `RUN-STATE.md`; commit docs (not the lock deletion)
-- [ ] T026 Hand over for the user's hands-on test (quickstart 4) with the T013 site list and any T024 differences. Do not merge
+- [X] T026 Hand over for the user's hands-on test (quickstart 4) with the T013 site list and any T024 differences. Do not merge
 
 ## Dependencies
 

@@ -11,7 +11,8 @@ Built from the decomp and `main`, not from the 007-010 archive.
 - **H1 Held-item sources** (feature 011, branch `011-held-item-sources`): the ledger's gift reader finds the
   Route 221 house, the Pastoria City SW house and Amity Square. Merged to `main` 2026-10-26 after the user's test.
 - **H2** Offer the held items the battle player already models (Focus Sash; Life Orb if obtainable before the
-  Champion). Not specified; next.
+  Champion). Not specified; next after feature 012 (fast test mode, item 5), which the user put first on
+  2026-10-26.
 - **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work.
@@ -91,6 +92,9 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   match apart from changed strings.
 
 ## 5. Fast test mode without the battle simulations (added 2026-10-26)
+
+> **In progress as feature 012** (branch `012-fast-test-mode`, 2026-10-26): spec, clarify, plan, tasks and analyze
+> fixes done; `/speckit-implement` next. The spec (`specs/012-fast-test-mode/`) supersedes the scope below.
 
 - **Gap.** The full suite takes about 2.5 h, almost all of it in roughly 45 integration tests that run real Node /
   Showdown battles. The ~477 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min

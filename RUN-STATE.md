@@ -6,7 +6,9 @@
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Current work (2026-10-26).** Held items redone as small features; H1 (`011-held-item-sources`) merged; next is H2. See the 011 section at the end.
+- **Current work (2026-10-26).** Feature 012, fast test mode (`012-fast-test-mode`, pushed): spec through analyze
+  done, **next: the user runs `/speckit-implement` in a new session**. See the 012 section at the end. After 012:
+  held items H2 (H1 = 011, merged).
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
@@ -374,4 +376,22 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **Plan (user, 2026-10-26).** Redo the held-item work in small, separately testable features, held items first. Proposed slices: H1 ledger sources (this); H2 offer items the player already models (Focus Sash, Life Orb if obtainable); H3+ one item group per feature with the player learning it. Items tied to status moves (Light Clay, weather rocks, Chesto) wait for the status-move work.
 - **Branch.** `011-held-item-sources` from `main` `73af068`, main checkout. Spec: `specs/011-held-item-sources/spec.md` (3 stories, 9 FRs). Prior art: `a8b529b` / `specs/008-ledger-item-sources/`; this time the explain output must carry no internal labels (FR-007).
-- **Merged (2026-10-26).** T001-T025 done; code `0fb05fc`, `6d56b01`, `c81bb5b` pushed. Held-item counts 66/37/55 -> 74/40/44; B1-B5 candidates and same-seed B2 identical apart from provenance. Amity partner note dropped (user). Full suite: 517 passed, 4 xfailed, node 314/314; the 1 failure (web process determinism) came from a commit made mid-run, passes alone. **User tested (explain focus_sash, occa_berry, belue_berry) and merged to `main` 2026-10-26 (fast-forward to `116008a`).** Next: H2, starting with `/speckit-specify` on a new branch from `main`. Trap: never commit while the full suite runs (repo_commit is cached per process). Evidence `runs/011-evidence/`, log `specs/011-held-item-sources/validation-log.md`.
+- **Merged (2026-10-26).** T001-T025 done; code `0fb05fc`, `6d56b01`, `c81bb5b` pushed. Held-item counts 66/37/55 -> 74/40/44; B1-B5 candidates and same-seed B2 identical apart from provenance. Amity partner note dropped (user). Full suite: 517 passed, 4 xfailed, node 314/314; the 1 failure (web process determinism) came from a commit made mid-run, passes alone. **User tested (explain focus_sash, occa_berry, belue_berry) and merged to `main` 2026-10-26 (fast-forward to `116008a`).** Next after it: 012 (fast test mode, user's choice), then H2. Trap: never commit while the full suite runs (repo_commit is cached per process). Evidence `runs/011-evidence/`, log `specs/011-held-item-sources/validation-log.md`.
+
+## 012 fast test mode without the battle simulations (started 2026-10-26)
+
+- **Goal.** `uv run pytest -m "not battle_sim"` runs every test that does not start the battle worker
+  (`node sim/worker.mjs`), in at most 30 min (user); the full suite + Node suite stay the merge gate. User: take extra
+  care that the split is correct.
+- **Branch.** `012-fast-test-mode` from `main` (main checkout). Docs: `specs/012-fast-test-mode/` (spec with
+  Clarifications, plan, research R1-R8, data-model, contracts/test-modes.md, quickstart, tasks T001-T018).
+- **State (2026-10-26).** Specify, clarify (30-min target; an unmarked worker start fails in every run; the
+  divergence check's `sim/dump_dex.mjs` is not a battle test), plan, tasks, analyze (7 findings, all fixed) done. No
+  code written yet. **Next: `/speckit-implement`, run by the user in a new session.**
+- **Method (plan).** A stand-in `node` (`tests/node_shim/node`) first on `PATH` logs every start of `sim/worker.mjs`
+  with the current test and fixture (`<baseid>::<name>`), then `exec`s the real node; plugin `tests/_battle_split.py`
+  fails unmarked starts (teardown `ERROR`), shared-fixture misses, starts outside a test, and over-marked tests
+  (session end). Checked 2026-10-26: the `PATH` stand-in catches `Popen(env=...)` and `spawn`-child starts.
+- **Traps.** Two module fixtures are both named `pool` (`test_champion_topup.py:49`, `test_ability_screen.py:23`):
+  match fixtures by location + name. The guard test's inner pytest runs need `--basetemp` (else `/tmp`). Never
+  commit while a full run is going.

@@ -503,15 +503,16 @@ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7" 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-10-11 (feature 003, T059): `uv run pytest -q -m
-  "not browser"` gave 448 passed, 1 failed, 4 xfailed in 8,541 s (2 h 22 min). The failure was an
-  outdated assertion in `test_evaluate.py::test_determinism_fast`: the report now records five
-  rule options, not two. After fixing it, that test passed on its own (`1 passed in 189.82s`). The
-  4 xfails are strict, documented story-rank controls. `uv run pytest -q -m browser tests/browser/`
-  gave 4 passed. See `specs/003-webui-refinements/validation-log.md`.
+- **Full pytest:** the last full run was on 2026-10-26 (feature 011, T022, browser tests included):
+  `uv run pytest -q` gave 517 passed, 1 failed, 4 xfailed in 8,840 s (2 h 27 min), 522 collected. The
+  failure (`test_web_process_determinism.py`) came from a commit made while the suite ran (each process
+  caches `repo_commit`); it passed on its own (`1 passed in 166.44s`). Do not commit during a full run.
+  The 4 xfails are strict, documented story-rank controls. See
+  `specs/011-held-item-sources/validation-log.md`. A fast mode without the battle simulations is being
+  built as feature 012 (`012-fast-test-mode`).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on current code it gave **314 pass, 0 fail, exit 0 in 285 s**.
+- **Node suite:** on 2026-10-26 it gave **314 pass, 0 fail, exit 0 in 270 s**.
 
 These environment variables shrink or redirect the long tests:
 
