@@ -374,4 +374,4 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 - **Plan (user, 2026-10-26).** Redo the held-item work in small, separately testable features, held items first. Proposed slices: H1 ledger sources (this); H2 offer items the player already models (Focus Sash, Life Orb if obtainable); H3+ one item group per feature with the player learning it. Items tied to status moves (Light Clay, weather rocks, Chesto) wait for the status-move work.
 - **Branch.** `011-held-item-sources` from `main` `73af068`, main checkout. Spec: `specs/011-held-item-sources/spec.md` (3 stories, 9 FRs). Prior art: `a8b529b` / `specs/008-ledger-item-sources/`; this time the explain output must carry no internal labels (FR-007).
-- **Next.** `/speckit-plan`, then `/speckit-tasks`, `/speckit-implement`. Rebuild `data/generated/` (`uv run platsim extract`) before any before/after comparison.
+- **Plan done (2026-10-26).** plan, research (R1-R5), `contracts/explain-text.md`, quickstart. Next: user runs `/speckit-tasks`. Rebuild `data/generated/` (`uv run platsim extract`) before any before/after comparison.
