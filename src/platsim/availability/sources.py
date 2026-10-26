@@ -1052,6 +1052,24 @@ def _const_dataflow(sf) -> dict[int, dict[str, frozenset]]:
     return state
 
 
+def _non_items(vals) -> list[str]:
+    return sorted(v for v in vals if v != "?" and not v.startswith(("ITEM_", OFFSET)))
+
+
+def _rotation(sf, items: list[str]) -> str:
+    """Item names in the order the script first sets them (scripts_route_221_house.s:50-60)."""
+    from platsim.decomp.items import load_items
+
+    first: dict[str, int] = {}
+    for c in sf.commands:
+        for p in c.prims:
+            ops = [o.text for o in p.operands]
+            if p.op == "SCRCMD_SETVARFROMVALUE" and ops[0] == "VAR_0x8004":
+                first.setdefault(ops[1], c.ref.line)
+    names = {it.const: it.name for it in load_items().values()}
+    return ", ".join(names.get(i, i) for i in sorted(items, key=lambda i: (first.get(i, 1 << 30), i)))
+
+
 def npc_gift_entries() -> list[Entry]:
     """Common_GiveItemQuantity* (VAR_0x8004 item, VAR_0x8005 count) and AddItem with literals."""
     targets = _give_common_nodes()
@@ -1068,6 +1086,7 @@ def npc_gift_entries() -> list[Entry]:
         for c in sf.commands:
             for p in c.prims:
                 items: list[tuple[str, int | None]] = []
+                others: list[str] = []  # non-item values the item variable can hold here (e.g. accessories)
                 if p.op == OP_CALL_COMMON:
                     sid = parse_int(p.operands[0].text)
                     f, e = resolve_script_id(sid, stem)
@@ -1081,6 +1100,7 @@ def npc_gift_entries() -> list[Entry]:
                     qs = [parse_int(q) for q in st["VAR_0x8005"] if q != "?"]
                     q = min((x for x in qs if x is not None), default=None)
                     items = [(i, q) for i in sorted(st["VAR_0x8004"]) if i.startswith("ITEM_")]
+                    others = _non_items(st["VAR_0x8004"])
                 elif p.op == "SCRCMD_ADDITEM":
                     o = [x.text for x in p.operands]
                     if o[0].startswith("ITEM_"):
@@ -1094,6 +1114,7 @@ def npc_gift_entries() -> list[Entry]:
                         qs = [parse_int(x) for x in st[o[1]] if x != "?"] if o[1] in st else [parse_int(o[1])]
                         q = min((x for x in qs if x is not None), default=None)
                         items = [(i, q) for i in sorted(st[o[0]]) if i.startswith("ITEM_")]
+                        others = _non_items(st[o[0]])
                 if not items:
                     continue
                 daily = _daily_guard(sf, c.index)
@@ -1104,6 +1125,11 @@ def npc_gift_entries() -> list[Entry]:
                     for item, q in items:
                         qty: int | str = UNLIMITED if daily else (q if q is not None else 1)
                         det = f"daily ({daily})" if daily else ("several possible items at this site; each counted once" if len(items) > 1 else "")
+                        if level:
+                            det += (f"; given only if a party Pokemon is at that day's random level (GetDailyRandomLevel at {level}); "
+                                    f"the items rotate {_rotation(sf, [i for i, _ in items])}; counted as 1 copy of each")
+                        elif daily and len(items) > 1:
+                            det += f"; one of {len(items)} possible items" + (f" or {len(others)} other prizes" if others else "")
                         if q is None and not daily:
                             det = (det + "; " if det else "") + "quantity not literal, counted as 1"
                         once, once_src = (rf[0], list(rf[1:])) if rf else (None, [])

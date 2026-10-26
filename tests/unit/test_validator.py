@@ -233,6 +233,16 @@ def test_single_copy_item_on_two_members(led):
     assert _codes(d, led) == ["ITEM_COPIES"]
 
 
+def test_focus_sash_one_copy(led):
+    """011: the Route 221 house gives Focus Sash, 1 copy (scripts_route_221_house.s:39); the validator agrees."""
+    d = _legal()
+    assert led.item_copies("ITEM_FOCUS_SASH") == 1  # ledger value
+    d["builds"][0]["held_item"] = "focus_sash"
+    assert _codes(d, led) == []
+    d["builds"][1]["held_item"] = "focus_sash"
+    assert _codes(d, led) == ["ITEM_COPIES"]
+
+
 def test_unavailable_item_and_team_size(led):
     d = _legal()
     assert led.item_copies("ITEM_CHOICE_BAND") == 0  # ledger value

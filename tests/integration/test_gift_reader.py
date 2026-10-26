@@ -131,3 +131,36 @@ def test_plain_daily_gift_stays_unlimited(gifts):
     _line(PASTORIA, 19, "SetFlag FLAG_DAILY_RECEIVED_PASTORIA_CITY_SOUTHWEST_HOUSE_RANDOM_BERRY")
     es = [e for e in gifts if e.src == [f"{PASTORIA}:20"]]
     assert es and {e.quantity for e in es} == {S.UNLIMITED}
+
+
+# Reason text (contracts/explain-text.md): plain English, no project labels; decomp citations allowed.
+FORBIDDEN = [r"\b0\d\d\b", r"\bT\d{3}\b", r"\bFR-\d+", r"\bSC-\d+", r"\bR\d\b", r"dataflow", r"call stack",
+             r"Return-aware", r"AddVar", r"save-var", r"saved variable", r"C table", r"sentinel", r"once flag",
+             r"guards this give"]
+NEW_SITES = ("Route 221 House", "Pastoria City Southwest House", "Amity Square")
+
+
+def _label_problems(line: str) -> list[str]:
+    reason = line.split("  [")[0]  # the bracketed refs are citations
+    bad = [p for p in FORBIDDEN if re.search(p, reason, re.I)]
+    if not re.search(r"\[[^\]]*res/field/scripts/\w+\.s:\d+", line):
+        bad.append("no decomp file:line")
+    return bad
+
+
+def test_label_check_rejects_project_labels():
+    """Positive control for the check below: a made-up line with a task id and an implementation word."""
+    line = "- [pre_champion] npc_item_gift at Route 221 House, quantity 1: daily (T053 dataflow)  [res/field/scripts/x.s:1]"
+    assert set(_label_problems(line)) >= {r"\bT\d{3}\b", "dataflow"}
+
+
+@pytest.mark.parametrize("item", ["focus_sash", "occa_berry", "belue_berry"])
+def test_new_source_reasons_are_plain(item):
+    from platsim.explain import explain
+
+    lines = [ln for ln in explain(f"item:{item}").lines if "npc_item_gift" in ln and any(s in ln for s in NEW_SITES)]
+    assert lines, f"{item}: no source line at the new sites"
+    for ln in lines:
+        assert not _label_problems(ln), (ln, _label_problems(ln))
+    if item == "focus_sash":
+        assert any("random level" in ln and "1 copy" in ln for ln in lines), lines

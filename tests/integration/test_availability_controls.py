@@ -519,11 +519,14 @@ def test_wild_held_item_counts(led):
     # Before wild held items (validation-log T023-T026): 42 unlimited, 46 finite, 70 unavailable.
     n = led.derived["counts"]
     # 003: Munchlax's wild held Leftovers count (FR-008): Leftovers moves from unavailable to unlimited.
-    assert len(n["held_items_unlimited"]) == 66
+    # 2026-10-26 (011): the gift reader finds the Pastoria City SW house (Charti, Chilan, Coba, Kebia, Occa,
+    # Passho, Payapa, Tanga Berry: unavailable -> unlimited) and the Route 221 house (Black Belt, Expert Belt,
+    # Focus Sash: unavailable -> 1 copy each): 66/37/55 -> 74/40/44.
+    assert len(n["held_items_unlimited"]) == 74
     # 2026-10-08: Focus Band's only finite source (unused Jubilife condominium 4F gift) is behind a
     # warp on a collision tile (mapgraph warp_on_collision): 38 -> 37 finite, 55 -> 56 unavailable.
-    assert len(n["held_items_finite"]) == 37
-    assert n["held_items_unavailable_count"] == 55
+    assert len(n["held_items_finite"]) == 40
+    assert n["held_items_unavailable_count"] == 44
     assert led.item_copies("ITEM_FOCUS_BAND") == 0
     assert led.item_copies("ITEM_LEFTOVERS") == S.UNLIMITED
     # no wild held item entry is pre-Champion unless its encounter is
