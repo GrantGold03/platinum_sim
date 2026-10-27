@@ -25,7 +25,7 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
 
 ## Phase 2: Foundational (the detection; blocks US1)
 
-- [X] T003 Register `battle_sim` in `pyproject.toml` `[tool.pytest.ini_options] markers`, next to `browser`, with the
+- [X] T003 (amended at T016: the `pyproject.toml` entry was removed, the plugin registration in T005 alone is kept, because `platsim_code_hash` covers `pyproject.toml`) Register `battle_sim` in `pyproject.toml` `[tool.pytest.ini_options] markers`, next to `browser`, with the
   description from `contracts/test-modes.md`
 - [X] T004 Write the stand-in `tests/node_shim/node` (POSIX `sh`, executable bit committed: `git update-index
   --chmod=+x`): for each argument, if it resolves (`realpath -m`, relative to `$PWD`) to `$PLATSIM_WORKER_SCRIPT`,
@@ -114,7 +114,7 @@ passes; fast + battle = full collection.
   `runs/012-evidence/fast.log`; record the summary line, wall time (SC-001 ≤ 30 min), the battle-split summary, and
   `--collect-only` counts for `-m battle_sim` and `-m "not battle_sim"` (sum = full collection, SC-002). Any split
   failure: fix the mark (T010/T011), note it, rerun the affected file
-- [ ] T013 [US1] Commit and push the test changes (`pyproject.toml`, `tests/conftest.py`, `tests/_battle_split.py`,
+- [X] T013 [US1] Commit and push the test changes (`pyproject.toml`, `tests/conftest.py`, `tests/_battle_split.py`,
   `tests/node_shim/node`, `tests/unit/test_battle_split.py`, marked files)
 - [X] T014 [P] [US1] README: next to the full-suite command, add the fast-mode and battle-set commands and the merge
   rule (full pytest suite + Node suite before every merge; fast mode never sufficient), per contracts/test-modes.md

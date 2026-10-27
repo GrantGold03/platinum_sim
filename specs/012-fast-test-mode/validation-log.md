@@ -87,3 +87,15 @@ Collection: `-m battle_sim` -> `26/534 tests collected (508 deselected)`; `-m "n
 ## T015 Full suite
 
 ## T016 No behaviour change
+
+- First check, during the first T015 attempt (2026-10-27): `git diff --stat main -- src sim` empty;
+  `sim_code_hash` unchanged, but `platsim_code_hash` = `sha256:c935b27e...` != T002. Cause:
+  `platsim_code_files` (`src/platsim/version.py:71-78`) includes `pyproject.toml`, and T003 had added the
+  marker line there. Effect: results and optimizer checkpoints would carry another hash (a checkpoint with
+  another `platsim_code_hash` is refused, `test_optimizer_resume.py:84-86`). The plan missed this.
+- Fix: the `pyproject.toml` line removed (`git diff main -- pyproject.toml` empty); the plugin's
+  `addinivalue_line` registration (T005) keeps the marker: `pytest --markers` lists `battle_sim`; guard with
+  `--strict-markers` `12 passed in 6.85s`; `-m battle_sim` still `26/534`. The first T015 run was stopped
+  a few minutes in and restarted on this commit.
+- After the fix: `platsim_code_hash` = `sha256:8738fac8...d7c6`, `sim_code_hash` = `sha256:4fbd7471...f566`,
+  both identical to T002.

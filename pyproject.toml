@@ -32,5 +32,4 @@ testpaths = ["tests"]
 addopts = "-p no:cacheprovider"
 markers = [
     "browser: real-browser tests (system Chrome via Playwright)",
-    "battle_sim: starts the battle worker (node sim/worker.mjs), directly, via a fixture, or in a child process; excluded by the fast mode",
 ]

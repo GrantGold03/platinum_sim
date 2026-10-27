@@ -12,7 +12,7 @@ The README lists all three with the merge rule (FR-002, FR-007).
 
 ## Marker
 
-- Name: `battle_sim`; description in `pyproject.toml`: "starts the battle worker (node sim/worker.mjs), directly, via
+- Name: `battle_sim`; registered by `tests/_battle_split.py` (not `pyproject.toml`, which `platsim_code_hash` covers; see validation-log T016), description: "starts the battle worker (node sim/worker.mjs), directly, via
   a fixture, or in a child process; excluded by the fast mode".
 - On a test when, and only when, it reaches the worker (data-model.md). Module-level `pytestmark` only in files where
   every test reaches it.

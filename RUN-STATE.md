@@ -385,7 +385,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   care that the split is correct.
 - **Branch.** `012-fast-test-mode` from `main` (main checkout). Docs: `specs/012-fast-test-mode/` (spec with
   Clarifications, plan, research R1-R8, data-model, contracts/test-modes.md, quickstart, tasks T001-T018).
-- **State (2026-10-27, implementing).** T001-T014 done and committed: marker, stand-in `tests/node_shim/node`,
+- **State (2026-10-27, implementing).** T001-T014 done and committed; pyproject marker line removed (it changed platsim_code_hash), T016 hashes match: marker, stand-in `tests/node_shim/node`,
   plugin `tests/_battle_split.py`, guard `tests/unit/test_battle_split.py` (12 passed), 26 tests marked (R7 was
   wrong for `test_ability_screen.py` and `test_evaluate.py`: per-test marks there), README. Fast mode: 504 passed,
   4 xfailed, 26 deselected in 600 s, 0 split failures. Next: T015 full suite (~2.5 h, no commits during it),

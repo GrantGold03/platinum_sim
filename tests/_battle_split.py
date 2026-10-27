@@ -10,6 +10,8 @@ Checks, in every run (contracts/test-modes.md):
   test, and a marked test that passed without reaching the worker each fail the session.
 
 Loaded by tests/conftest.py (`pytest_plugins`), or with `-p _battle_split` and tests/ on PYTHONPATH.
+The marker is registered here, not in pyproject.toml: platsim_code_hash covers pyproject.toml, and
+this test-only feature must not change it.
 """
 
 import json
