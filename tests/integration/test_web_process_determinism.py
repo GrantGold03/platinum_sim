@@ -12,8 +12,12 @@ import threading
 import time
 
 import _fake_runners
+import pytest
+
 from platsim.optimizer.api import OptimizeRequest
 from platsim.web import job_process
+
+pytestmark = pytest.mark.battle_sim  # 012: every test here starts the battle worker
 
 
 def test_child_process_matches_in_process(tmp_path):

@@ -495,6 +495,8 @@ pokeplatinum/ pokemon-showdown/   vendored at pinned commits, not edited, git-ig
 
 ```bash
 uv run pytest -q                                           # Python suites (includes the browser tests)
+uv run pytest -q -m "not battle_sim"                       # fast mode: every test that does not start the battle worker
+uv run pytest -q -m battle_sim                             # only the tests that start the battle worker
 uv run pytest -q -m browser tests/browser/                 # web page in the system Chrome (about 1 min)
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
 (cd sim && node --test test/*.test.mjs)                    # Node suites (314 tests)
@@ -508,8 +510,17 @@ gauntlets) and two `quick` optimizes.
   failure (`test_web_process_determinism.py`) came from a commit made while the suite ran (each process
   caches `repo_commit`); it passed on its own (`1 passed in 166.44s`). Do not commit during a full run.
   The 4 xfails are strict, documented story-rank controls. See
-  `specs/011-held-item-sources/validation-log.md`. A fast mode without the battle simulations is being
-  built as feature 012 (`012-fast-test-mode`).
+  `specs/011-held-item-sources/validation-log.md`.
+- **Merge rule:** the full pytest suite (`uv run pytest -q`) and the Node suite both pass before every merge.
+  The fast mode and the battle set are for iterating only; neither is enough for a merge.
+- **Fast mode** (feature 012): `battle_sim` marks every test that starts the battle worker
+  (`node sim/worker.mjs`), directly, through a fixture, or in a child process. The split is checked in every
+  run: a stand-in `node` (`tests/node_shim/node`, put first on `PATH` by `tests/_battle_split.py`) logs each
+  worker start, an unmarked test that starts the worker fails at its teardown, and an unmarked test using a
+  fixture that started it, a start outside any test, or a marked test that never reached the worker fail the
+  session. The "battle split" section at the end of each run lists the counts and each marked test's route.
+  On 2026-10-27 the fast mode gave 504 passed, 26 deselected, 4 xfailed in 600 s (10 min); its slowest test
+  is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
 - **Node suite:** on 2026-10-26 it gave **314 pass, 0 fail, exit 0 in 270 s**.

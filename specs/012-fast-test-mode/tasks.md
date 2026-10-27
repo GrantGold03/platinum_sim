@@ -17,24 +17,24 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `runs/012-evidence/` (confirm `git check-ignore runs/012-evidence` prints it) and
+- [X] T001 Create `runs/012-evidence/` (confirm `git check-ignore runs/012-evidence` prints it) and
   `specs/012-fast-test-mode/validation-log.md` with headings per task; record the start commit (`git rev-parse HEAD`)
-- [ ] T002 Baseline, recorded in `specs/012-fast-test-mode/validation-log.md`: `uv run pytest --collect-only -q`
+- [X] T002 Baseline, recorded in `specs/012-fast-test-mode/validation-log.md`: `uv run pytest --collect-only -q`
   count (expect 522), and `uv run python -c "from platsim import version; print(version.platsim_code_hash(),
   version.sim_code_hash())"` (`src/platsim/version.py:81,85`) for the FR-008 comparison at T016
 
 ## Phase 2: Foundational (the detection; blocks US1)
 
-- [ ] T003 Register `battle_sim` in `pyproject.toml` `[tool.pytest.ini_options] markers`, next to `browser`, with the
+- [X] T003 Register `battle_sim` in `pyproject.toml` `[tool.pytest.ini_options] markers`, next to `browser`, with the
   description from `contracts/test-modes.md`
-- [ ] T004 Write the stand-in `tests/node_shim/node` (POSIX `sh`, executable bit committed: `git update-index
+- [X] T004 Write the stand-in `tests/node_shim/node` (POSIX `sh`, executable bit committed: `git update-index
   --chmod=+x`): for each argument, if it resolves (`realpath -m`, relative to `$PWD`) to `$PLATSIM_WORKER_SCRIPT`,
   append one tab-separated line `test, marked, fixture, pid` (data-model.md) from `$PLATSIM_TEST_ID`,
   `$PLATSIM_TEST_MARKED`, `$PLATSIM_FIXTURE`, `$$` to `$PLATSIM_WORKER_LOG` (skip logging only if
   `$PLATSIM_WORKER_LOG` is unset; an empty `$PLATSIM_TEST_ID` is still logged, see T007); then always
   `exec "$PLATSIM_REAL_NODE" "$@"` (exec, not a child: `test_web_shutdown.py` counts child processes with
   `pgrep -P`, so no extra process may appear). Fail loudly (exit 127 with a message) if `$PLATSIM_REAL_NODE` is unset
-- [ ] T005 Write the plugin `tests/_battle_split.py` (loaded by `tests/conftest.py` via `pytest_plugins`), part 1,
+- [X] T005 Write the plugin `tests/_battle_split.py` (loaded by `tests/conftest.py` via `pytest_plugins`), part 1,
   setup (research R2):
   - `pytest_configure`: real node = `$PLATSIM_REAL_NODE` if already set (nested pytest under the stand-in), else
     `shutil.which("node")` before changing `PATH`; set `PLATSIM_REAL_NODE`, `PLATSIM_WORKER_SCRIPT`
@@ -47,10 +47,10 @@ session scratchpad. Never commit while a full run is going (011 lesson: `repo_co
     `test_ability_screen.py:23` stay distinct) around the setup, restore after;
   - `pytest_configure` also registers `battle_sim` itself (`config.addinivalue_line("markers", ...)`), so the plugin
     works without `pyproject.toml` (inner runs in T008)
-- [ ] T006 `tests/_battle_split.py` part 2, per-test check (research R3): at the end of each test's teardown read the
+- [X] T006 `tests/_battle_split.py` part 2, per-test check (research R3): at the end of each test's teardown read the
   log lines for `item.nodeid`; if any has `marked = 0`, fail the test with the contract's "Unmarked start" message
   (report as failed at teardown, so the run's exit code is non-zero)
-- [ ] T007 `tests/_battle_split.py` part 3, session check (research R4, R5): at `pytest_sessionfinish`, from the log
+- [X] T007 `tests/_battle_split.py` part 3, session check (research R4, R5): at `pytest_sessionfinish`, from the log
   and each collected item's `fixturenames` and outcome:
   - starter fixtures = the `<baseid>::<name>` values in any record; a test uses one when the fixture that pytest
     resolved for it (`item._fixtureinfo.name2fixturedefs[name][-1]`, matched on `baseid` and `argname`) is that
@@ -74,7 +74,7 @@ passes; fast + battle = full collection.
 
 ### Tests for User Story 1
 
-- [ ] T008 [US1] Guard test `tests/unit/test_battle_split.py`. Each case writes throwaway test files into `tmp_path`
+- [X] T008 [US1] Guard test `tests/unit/test_battle_split.py`. Each case writes throwaway test files into `tmp_path`
   and runs an inner `sys.executable -m pytest -p _battle_split -p no:cacheprovider -q
   --basetemp=<tmp_path>/inner --rootdir=<tmp_path> <files>` with `PYTHONPATH` = `tests/` and `cwd` = `REPO_ROOT`
   (the repo's `conftest.py` does not load for files outside `tests/`, so without `--basetemp` pytest would use its
@@ -97,26 +97,26 @@ passes; fast + battle = full collection.
   without starting workers: inspect `pool.py`'s `WORKER_SCRIPT` and the `__init__` default, e.g. construct the list
   the same way the class does or check the source line; do not start a pool). This file must not be marked
   (it must start no worker in the outer session)
-- [ ] T009 [US1] Run `uv run pytest -q tests/unit/test_battle_split.py` and record the output in validation-log.md;
+- [X] T009 [US1] Run `uv run pytest -q tests/unit/test_battle_split.py` and record the output in validation-log.md;
   every case behaves as bracketed
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Mark whole battle files with module-level `pytestmark = pytest.mark.battle_sim` (research R7):
+- [X] T010 [P] [US1] Mark whole battle files with module-level `pytestmark = pytest.mark.battle_sim` (research R7):
   `tests/integration/test_ability_screen.py`, `test_champion_topup.py`, `test_evaluate.py`,
   `test_optimize_small.py`, `test_worker.py`, `test_web_process_determinism.py`
-- [ ] T011 [US1] Mark per test in mixed files, after reading each test (research R7):
+- [X] T011 [US1] Mark per test in mixed files, after reading each test (research R7):
   `tests/integration/test_final_levels.py` (tests using fixture `runs` or a `WorkerPool`), `test_policy_strength.py`
   (the 2 `WorkerPool` tests), `test_pool.py` (tests that use a real `WorkerPool(n)`, not only `fake_cmd()`),
   `test_divergences.py` (the test at :130 that runs `sim/worker.mjs`). List each marked test with its route in
   validation-log.md (FR-009)
-- [ ] T012 [US1] Run the fast mode `uv run pytest -q -m "not battle_sim" --durations=25` (background), output to
+- [X] T012 [US1] Run the fast mode `uv run pytest -q -m "not battle_sim" --durations=25` (background), output to
   `runs/012-evidence/fast.log`; record the summary line, wall time (SC-001 ≤ 30 min), the battle-split summary, and
   `--collect-only` counts for `-m battle_sim` and `-m "not battle_sim"` (sum = full collection, SC-002). Any split
   failure: fix the mark (T010/T011), note it, rerun the affected file
 - [ ] T013 [US1] Commit and push the test changes (`pyproject.toml`, `tests/conftest.py`, `tests/_battle_split.py`,
   `tests/node_shim/node`, `tests/unit/test_battle_split.py`, marked files)
-- [ ] T014 [P] [US1] README: next to the full-suite command, add the fast-mode and battle-set commands and the merge
+- [X] T014 [P] [US1] README: next to the full-suite command, add the fast-mode and battle-set commands and the merge
   rule (full pytest suite + Node suite before every merge; fast mode never sufficient), per contracts/test-modes.md
 
 ## Phase 4: Polish & verification

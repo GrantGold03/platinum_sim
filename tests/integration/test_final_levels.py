@@ -366,6 +366,7 @@ def _compare(team, res, rcs, label):
     return lv_match, exp_match, w_mean, py_mean, n_awards, bad
 
 
+@pytest.mark.battle_sim
 def test_final_levels_match_worker(runs):
     team, res, rcs = runs
     lv_match, _, w_mean, py_mean, n_awards, bad = _compare(team, res, rcs, FIXTURE.name)
@@ -374,6 +375,7 @@ def test_final_levels_match_worker(runs):
     assert abs(w_mean - py_mean) <= 1.0  # SC-006
 
 
+@pytest.mark.battle_sim
 def test_final_exp_match_worker(runs):
     """Stricter than levels: total exp must agree too (a wrong award can stay below a level-up)."""
     team, res, rcs = runs
@@ -381,6 +383,7 @@ def test_final_exp_match_worker(runs):
     assert exp_match == len(res), bad[:3]
 
 
+@pytest.mark.battle_sim
 def test_positive_control_trainer_factor(runs):
     """Drop the trainer x1.5 (battle_script.c:9753-9755): the same check must fail."""
     team, res, _ = runs
@@ -389,6 +392,7 @@ def test_positive_control_trainer_factor(runs):
     assert match < len(res)
 
 
+@pytest.mark.battle_sim
 def test_positive_control_payout_ordering(runs):
     """Pay at the enemy's faint (Showdown's event order, the pre-fix rule) instead of at MOVE_END:
     the recoil / Life Orb KOs in these runs must make it disagree with the worker."""
@@ -403,6 +407,7 @@ def test_positive_control_payout_ordering(runs):
     assert exp_match < len(res) and changed > 0
 
 
+@pytest.mark.battle_sim
 def test_exp_items_variant():
     """The reference team has no exp items and greedy-v1 almost never switches voluntarily, so a
     50-run variant (not a legal team; only the exp rules matter here) exercises Lucky Egg, Exp. Share,

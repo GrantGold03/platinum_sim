@@ -125,6 +125,7 @@ def test_endure_patch_in_live_battle(tmp_path):
     assert patched["order"] == ["p2", "p1"]  # both +3 -> the faster Jolteon moves first
 
 
+@pytest.mark.battle_sim
 def test_worker_hello_reports_ledger_version():
     ledger = json.loads(LEDGER.read_text())
     proc = subprocess.run(["node", str(REPO_ROOT / "sim" / "worker.mjs")], input='{"id":1,"op":"hello"}\n',

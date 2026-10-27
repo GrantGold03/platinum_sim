@@ -385,9 +385,11 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   care that the split is correct.
 - **Branch.** `012-fast-test-mode` from `main` (main checkout). Docs: `specs/012-fast-test-mode/` (spec with
   Clarifications, plan, research R1-R8, data-model, contracts/test-modes.md, quickstart, tasks T001-T018).
-- **State (2026-10-26).** Specify, clarify (30-min target; an unmarked worker start fails in every run; the
-  divergence check's `sim/dump_dex.mjs` is not a battle test), plan, tasks, analyze (7 findings, all fixed) done. No
-  code written yet. **Next: `/speckit-implement`, run by the user in a new session.**
+- **State (2026-10-27, implementing).** T001-T014 done and committed: marker, stand-in `tests/node_shim/node`,
+  plugin `tests/_battle_split.py`, guard `tests/unit/test_battle_split.py` (12 passed), 26 tests marked (R7 was
+  wrong for `test_ability_screen.py` and `test_evaluate.py`: per-test marks there), README. Fast mode: 504 passed,
+  4 xfailed, 26 deselected in 600 s, 0 split failures. Next: T015 full suite (~2.5 h, no commits during it),
+  T016-T018. Log: `specs/012-fast-test-mode/validation-log.md`.
 - **Method (plan).** A stand-in `node` (`tests/node_shim/node`) first on `PATH` logs every start of `sim/worker.mjs`
   with the current test and fixture (`<baseid>::<name>`), then `exec`s the real node; plugin `tests/_battle_split.py`
   fails unmarked starts (teardown `ERROR`), shared-fixture misses, starts outside a test, and over-marked tests

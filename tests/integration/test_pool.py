@@ -23,6 +23,7 @@ def gauntlet(i, master="pool"):
             "stop_on_loss": False, "log": "summary"}
 
 
+@pytest.mark.battle_sim
 def test_64_gauntlets_on_4_workers_match_single_worker():
     reqs = [gauntlet(i) | {"id": f"r{i}"} for i in range(64)]
     t0 = time.perf_counter()
@@ -44,6 +45,7 @@ def test_64_gauntlets_on_4_workers_match_single_worker():
     assert [r["battles"][0]["log_hash"] for r in other] != [r["battles"][0]["log_hash"] for r in multi[:4]]
 
 
+@pytest.mark.battle_sim
 def test_killed_worker_is_restarted_and_its_request_completes():
     req = gauntlet(7)
     (expected,) = pool_mod.run_single([req])
@@ -65,12 +67,14 @@ def test_killed_worker_is_restarted_and_its_request_completes():
         assert p.map([gauntlet(8)])[0]["ok"]
 
 
+@pytest.mark.battle_sim
 def test_hello_mismatch_raises(monkeypatch):
     monkeypatch.setattr(pins, "SHOWDOWN_COMMIT", "0" * 40)
     with pytest.raises(PinMismatch, match="showdown_commit"):
         WorkerPool(2)
 
 
+@pytest.mark.battle_sim
 def test_hello_mismatch_decomp_raises(monkeypatch):
     monkeypatch.setattr(pins, "DECOMP_COMMIT", "f" * 40)
     with pytest.raises(PinMismatch, match="decomp_commit"):
@@ -121,6 +125,7 @@ def test_request_that_crashes_twice_fails_with_workercrashed():
         assert p.map([{"op": "x", "n": 9}])[0]["echo"] == 9  # the slot still works
 
 
+@pytest.mark.battle_sim
 def test_real_pool_exposes_sim_code_hash():
     from platsim import version
 

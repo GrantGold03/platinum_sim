@@ -20,9 +20,13 @@ import subprocess
 import sys
 import time
 
+import pytest
+
 from platsim.legality.models import import_team
 from platsim.legality.validator import _showdown_key, validate
 from platsim.report.json_report import QUICK_WARNING
+
+pytestmark = pytest.mark.battle_sim  # 012: every test here starts the battle worker
 
 SPECIES = ["infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"]
 PROVENANCE = ("n_runs", "clear_rate", "clear_ci95", "per_battle", "champion_rate", "champion_ci95", "champion_battles",

@@ -23,6 +23,8 @@ import json
 import os
 import time
 
+import pytest
+
 from platsim import pins
 from platsim.sim.pool import WorkerPool
 from platsim.sim.seeds import derive_seed
@@ -103,6 +105,7 @@ def _report(title, n, master, workers, hello, outcomes, timing, pairs):
     return "\n".join(lines), cmps
 
 
+@pytest.mark.battle_sim
 def test_expectimax2_beats_greedy_paired():
     n = int(os.environ.get("PLATSIM_STRENGTH_N", "2000"))
     workers = int(os.environ.get("PLATSIM_STRENGTH_WORKERS", str(os.cpu_count() or 1)))
@@ -114,6 +117,7 @@ def test_expectimax2_beats_greedy_paired():
         assert cmps[pair].verdict == "A" and cmps[pair].p_value < 0.05, text
 
 
+@pytest.mark.battle_sim
 def test_expectimax2_v2_not_worse_than_greedy_on_reversal_team():
     n = int(os.environ.get("PLATSIM_REVERSAL_N", "400"))
     workers = int(os.environ.get("PLATSIM_STRENGTH_WORKERS", str(os.cpu_count() or 1)))

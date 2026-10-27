@@ -1,0 +1,21 @@
+#!/bin/sh
+# Stand-in for `node`, first on PATH during pytest (tests/_battle_split.py, 012). Logs each start of
+# the battle worker (sim/worker.mjs) with the current test and fixture, then execs the real node
+# (exec, not a child: test_web_shutdown.py counts child processes).
+if [ -z "$PLATSIM_REAL_NODE" ]; then
+    echo "tests/node_shim/node: PLATSIM_REAL_NODE is not set" >&2
+    exit 127
+fi
+if [ -n "$PLATSIM_WORKER_LOG" ] && [ -n "$PLATSIM_WORKER_SCRIPT" ]; then
+    for arg in "$@"; do
+        case "$arg" in
+            -*) continue ;;
+        esac
+        if [ "$(realpath -m -- "$arg" 2>/dev/null)" = "$PLATSIM_WORKER_SCRIPT" ]; then
+            printf '%s\t%s\t%s\t%s\n' "$PLATSIM_TEST_ID" "$PLATSIM_TEST_MARKED" "$PLATSIM_FIXTURE" "$$" \
+                >> "$PLATSIM_WORKER_LOG"
+            break
+        fi
+    done
+fi
+exec "$PLATSIM_REAL_NODE" "$@"

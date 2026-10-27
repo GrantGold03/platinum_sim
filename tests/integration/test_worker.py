@@ -8,8 +8,12 @@ can never pass for a real evaluation. Run with `-s` to see the gauntlet result.
 import json
 import subprocess
 
+import pytest
+
 from platsim.pins import DECOMP_COMMIT, REPO_ROOT, SHOWDOWN_COMMIT
 from platsim.sim.seeds import derive_seed
+
+pytestmark = pytest.mark.battle_sim  # 012: every test here starts the battle worker
 
 STATS = ("hp", "atk", "def", "spa", "spd", "spe")
 

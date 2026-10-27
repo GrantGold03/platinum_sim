@@ -25,6 +25,7 @@ def pool():
         yield p
 
 
+@pytest.mark.battle_sim
 def test_real_screen_quick_preset(pool):
     assert TEAM[LUXRAY]["species"] == "luxray"
     t0 = time.perf_counter()
@@ -43,6 +44,7 @@ def test_real_screen_quick_preset(pool):
         assert s["p_value"] < s["alpha"] and c.ability == s["verdict"]
 
 
+@pytest.mark.battle_sim
 def test_screen_is_deterministic(pool):
     a = choose_ability(pool, TEAM, LUXRAY, seed="t060-det", runs=24)
     b = choose_ability(pool, TEAM, LUXRAY, seed="t060-det", runs=24)

@@ -17,6 +17,8 @@ import subprocess
 import sys
 import time
 
+import pytest
+
 from platsim import pins
 from platsim.legality.validator import validate
 
@@ -58,6 +60,7 @@ def _same_json(a, b) -> None:
     assert ja == jb, f"result.json differs between {a} and {b}"
 
 
+@pytest.mark.battle_sim
 def test_determinism_fast(tmp_path):
     n = os.environ.get("PLATSIM_EVALUATE_FAST_N", "40")
     common = [str(REFERENCE), "--runs", n, "--seed", "t071-fast", "--budget", "quick"]
@@ -92,6 +95,7 @@ def test_determinism_fast(tmp_path):
     assert validate(str(tmp_path / "a" / "team.txt")) == []
 
 
+@pytest.mark.battle_sim
 def test_v7_reference_team_2000_runs(tmp_path):
     n = int(os.environ.get("PLATSIM_EVALUATE_N", "2000"))
     w1 = os.environ.get("PLATSIM_EVALUATE_WORKERS", str(os.cpu_count() or 1))

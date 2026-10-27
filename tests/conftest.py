@@ -64,3 +64,7 @@ def pytest_unconfigure(config):
     path = getattr(config, "_platsim_basetemp", None)
     if path:
         shutil.rmtree(path, ignore_errors=True)
+
+
+# Battle-test split (012): a `node` stand-in logs every start of sim/worker.mjs; see the module.
+pytest_plugins = ["_battle_split"]

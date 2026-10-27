@@ -22,6 +22,8 @@ from platsim.sim.seeds import derive_seed
 
 from test_worker import TEAM
 
+pytestmark = pytest.mark.battle_sim  # 012: every test here starts the battle worker
+
 FULL_RUNS = 200
 MASTER = "t057"
 
