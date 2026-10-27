@@ -121,17 +121,17 @@ passes; fast + battle = full collection.
 
 ## Phase 4: Polish & verification
 
-- [ ] T015 Full suite in the background, no commits while it runs: `uv run pytest -q --durations=0 -rA` with
+- [X] T015 Full suite in the background, no commits while it runs: `uv run pytest -q --durations=0 -rA` with
   `PLATSIM_SPLIT_REPORT=runs/012-evidence/split.json`, output `runs/012-evidence/full-pytest.log`, then
   `node --test sim/test/*.test.mjs` to `runs/012-evidence/full-node.log`; record in validation-log.md: summary lines
   vs 2026-10-26 (517 passed + the mid-run-commit test now passing, 4 xfailed, plus the new guard tests; Node 314),
   0 under-marked and 0 over-marked (FR-005, SC-003), the per-test times of the slowest tests in each set, and every
   difference from the R7 table
-- [ ] T016 Confirm no behaviour change: `git diff --stat main -- src sim` is empty, and the T002 hashes are unchanged
+- [X] T016 Confirm no behaviour change: `git diff --stat main -- src sim` is empty, and the T002 hashes are unchanged
   (FR-008)
-- [ ] T017 Update `FUTURE-FEATURES.md` item 5 (built; waits for the user's test), `RUN-STATE.md` (012 section and
+- [X] T017 Update `FUTURE-FEATURES.md` item 5 (built; waits for the user's test), `RUN-STATE.md` (012 section and
   start-here), mark tasks; commit docs and push
-- [ ] T018 Hand over for the user's hands-on test (quickstart 4) with the measured fast-mode time and the battle-set
+- [X] T018 Hand over for the user's hands-on test (quickstart 4) with the measured fast-mode time and the battle-set
   list. Do not merge
 
 ## Dependencies & Execution Order

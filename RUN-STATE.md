@@ -1,4 +1,4 @@
-# START HERE (updated 2026-10-26)
+# START HERE (updated 2026-10-27)
 
 - **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
@@ -6,8 +6,8 @@
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Current work (2026-10-26).** Feature 012, fast test mode (`012-fast-test-mode`, pushed): spec through analyze
-  done, **next: the user runs `/speckit-implement` in a new session**. See the 012 section at the end. After 012:
+- **Current work (2026-10-27).** Feature 012, fast test mode (`012-fast-test-mode`, pushed): **implemented, all 18
+  tasks done; waiting for the user's hands-on test, then merge.** See the 012 section at the end. After 012:
   held items H2 (H1 = 011, merged).
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
@@ -385,15 +385,15 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   care that the split is correct.
 - **Branch.** `012-fast-test-mode` from `main` (main checkout). Docs: `specs/012-fast-test-mode/` (spec with
   Clarifications, plan, research R1-R8, data-model, contracts/test-modes.md, quickstart, tasks T001-T018).
-- **State (2026-10-27, implementing).** T001-T014 done and committed; pyproject marker line removed (it changed platsim_code_hash), T016 hashes match: marker, stand-in `tests/node_shim/node`,
-  plugin `tests/_battle_split.py`, guard `tests/unit/test_battle_split.py` (12 passed), 26 tests marked (R7 was
-  wrong for `test_ability_screen.py` and `test_evaluate.py`: per-test marks there), README. Fast mode: 504 passed,
-  4 xfailed, 26 deselected in 600 s, 0 split failures. Next: T015 full suite (~2.5 h, no commits during it),
-  T016-T018. Log: `specs/012-fast-test-mode/validation-log.md`.
+- **State (2026-10-27, built).** All tasks T001-T018 done, pushed. Fast mode: 504 passed, 4 xfailed, 26 deselected
+  in 600 s. Full gate on `39fb40e`: pytest `530 passed, 4 xfailed` in 8,886 s; Node 314/314; split: 177 worker starts,
+  26 marked reached it, 0 under / 0 outside / 0 over. Code hashes identical to main (the `pyproject.toml` marker
+  line was removed because `platsim_code_hash` covers `pyproject.toml`; the plugin registers the marker).
+  **Next: user's hands-on test (quickstart 4), then merge to main.** Not merged.
 - **Method (plan).** A stand-in `node` (`tests/node_shim/node`) first on `PATH` logs every start of `sim/worker.mjs`
   with the current test and fixture (`<baseid>::<name>`), then `exec`s the real node; plugin `tests/_battle_split.py`
   fails unmarked starts (teardown `ERROR`), shared-fixture misses, starts outside a test, and over-marked tests
   (session end). Checked 2026-10-26: the `PATH` stand-in catches `Popen(env=...)` and `spawn`-child starts.
-- **Traps.** Two module fixtures are both named `pool` (`test_champion_topup.py:49`, `test_ability_screen.py:23`):
+- **Traps.** Any edit to `pyproject.toml` changes `platsim_code_hash`. Two module fixtures are both named `pool` (`test_champion_topup.py:49`, `test_ability_screen.py:23`):
   match fixtures by location + name. The guard test's inner pytest runs need `--basetemp` (else `/tmp`). Never
   commit while a full run is going.

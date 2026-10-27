@@ -86,6 +86,26 @@ Collection: `-m battle_sim` -> `26/534 tests collected (508 deselected)`; `-m "n
 
 ## T015 Full suite
 
+Run on `39fb40e` (2026-10-27), no commits during it. `runs/012-evidence/full-pytest.log`, `full-node.log`,
+`split.json`.
+- `PLATSIM_SPLIT_REPORT=... uv run pytest -q --durations=0 -rA`: exit 0, wall 8,889 s:
+  `530 passed, 4 xfailed, 1 warning in 8886.14s (2:28:06)`. Versus 2026-10-26 (`517 passed, 1 failed, 4
+  xfailed`, 522 collected): the mid-run-commit failure (`test_web_process_determinism.py`) now passes, so
+  518 + 4 = the old 522, plus the 12 new guard tests = 530 + 4 = 534 (SC-005). `test_web_shutdown.py`
+  (`pgrep -P` child count, both params) passed with the stand-in on PATH.
+- Node `node --test sim/test/*.test.mjs`: exit 0, `# tests 314`, `# pass 314`, `# fail 0` (276 s).
+- Battle split (the detection's own list, FR-005/FR-009/SC-003): `177 battle worker starts; 26 marked tests
+  reached it; under-marked 0, started outside a test 0, over-marked 0`. Starter fixtures:
+  `test_ability_screen.py::pool`, `test_champion_topup.py::pool`, `test_final_levels.py::runs`. Routes:
+  own start for the first user of each module fixture (it set the fixture up) and for every direct start;
+  `fixture ...` for the other users. Matches the T010/T011 table: no differences beyond the R7 ones recorded
+  there (`test_champion_topup.py::test_deterministic_for_fixed_seed` shows "own start": its `WorkerPool(3/5)`).
+- Slowest battle tests: `test_optimize_small` 4,093 s; `test_expectimax2_beats_greedy_paired` 2,000 s;
+  `test_v7_reference_team_2000_runs` 1,676 s; reversal-team strength 172 s; `test_determinism_fast` 162 s;
+  `test_web_process_determinism` 129 s. Slowest fast tests: `test_extract.py` 218 / 87 / 43 s;
+  `test_validator_does_not_import_optimizer` 39 s; the two `test_evaluate.py` exit-2 tests 39 s each;
+  browser walkthrough setup 39 s.
+
 ## T016 No behaviour change
 
 - First check, during the first T015 attempt (2026-10-27): `git diff --stat main -- src sim` empty;
