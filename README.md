@@ -135,11 +135,11 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 |---|---|---|
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
-| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules) |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags |
+| `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules), `--require-hm` |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm` |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
 - **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
@@ -277,7 +277,7 @@ The page has two columns.
     - a short summary: the verdict, and the clear rate. Hover over or focus the clear rate for its
       95% interval and run count;
     - "58.23 (level gap of 4)"-style final levels, the threshold, budget, legality options,
-      warnings and platsim version (0.2.0 since feature 003; older runs show the version they recorded);
+      warnings and platsim version (0.3.0 since feature 004; older runs show the version they recorded);
     - six cards with decomp sprites. Move names are coloured by type; hover over or focus a move
       for its type and source;
     - a per-trainer clear-rate chart, with intervals. Hover over, focus or tap a trainer for their
@@ -505,12 +505,11 @@ uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7" 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-10-26 (feature 011, T022, browser tests included):
-  `uv run pytest -q` gave 517 passed, 1 failed, 4 xfailed in 8,840 s (2 h 27 min), 522 collected. The
-  failure (`test_web_process_determinism.py`) came from a commit made while the suite ran (each process
-  caches `repo_commit`); it passed on its own (`1 passed in 166.44s`). Do not commit during a full run.
-  The 4 xfails are strict, documented story-rank controls. See
-  `specs/011-held-item-sources/validation-log.md`.
+- **Full pytest:** the last full run was on 2026-10-27 (feature 012, T015, browser tests included):
+  `uv run pytest -q` gave 530 passed, 4 xfailed in 8,886 s (2 h 28 min), 534 collected. Do not commit
+  during a full run: each process caches `repo_commit`, so a commit mid-run fails
+  `test_web_process_determinism.py` (seen on 2026-10-26). The 4 xfails are strict, documented story-rank
+  controls. See `specs/012-fast-test-mode/validation-log.md`.
 - **Merge rule:** the full pytest suite (`uv run pytest -q`) and the Node suite both pass before every merge.
   The fast mode and the battle set are for iterating only; neither is enough for a merge.
 - **Fast mode** (feature 012): `battle_sim` marks every test that starts the battle worker
@@ -523,13 +522,14 @@ gauntlets) and two `quick` optimizes.
   is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on 2026-10-26 it gave **314 pass, 0 fail, exit 0 in 270 s**.
+- **Node suite:** on 2026-10-27 it gave **314 pass, 0 fail, exit 0 in 276 s**.
 
 These environment variables shrink or redirect the long tests:
 
 | Variable | Default | Used by |
 |---|---|---|
 | `PLATSIM_STRENGTH_N`, `PLATSIM_STRENGTH_WORKERS` | 2000, CPU count | `test_policy_strength.py` (T056) |
+| `PLATSIM_REVERSAL_N` | 400 | `test_policy_strength.py` (reversal team) |
 | `PLATSIM_EVALUATE_N`, `PLATSIM_EVALUATE_WORKERS` | 2000, CPU count | `test_evaluate.py` V7 |
 | `PLATSIM_EVALUATE_FAST_N` | 40 | `test_evaluate.py` fast check |
 | `PLATSIM_T072_N`, `PLATSIM_T072_FIXTURE`, `PLATSIM_T072_WORKERS` | 200, `reference_team.json`, CPU count | `test_final_levels.py` |

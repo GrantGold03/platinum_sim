@@ -1,5 +1,6 @@
 // Player policy `greedy-v1` (T049). A deliberately simple baseline for the T056 benchmark; it is
-// NOT the strong player (that is expectimax2-v1, T050, research R7).
+// NOT the strong player (that is expectimax2-v2, the default; expectimax2-v1, T050, is kept for
+// reproducing recorded results).
 //
 // Rule:
 //   - Move request: score every move in the Showdown request's `active[0].moves` (the list

@@ -5,14 +5,14 @@
 // trainerfullrestore pseudo-move are installed in prepareDex() BEFORE the first Dex lookup.
 // loadGameData() does both and is a per-process singleton.
 //
-// Divergence patches. data/divergences.json does not exist until T053. Its entries follow
+// Divergence patches from data/divergences.json (written by `platsim divergences`, T053). Its entries follow
 // data-model.md DivergenceEntry; an entry is applied here only when resolution === "corrected"
 // and it carries a `patch` object:
 //   {"table": "Pokedex" | "Moves" | "Items" | "Abilities" | "Learnsets",
 //    "id": "<showdown id>", "path": ["baseStats", "hp"], "value": <json>}
 // (`path` is the key path inside Dex.mod('gen4').data[table][id]). Corrected entries without a
 // `patch` are mechanics corrected by the game layer (exp, Full Restore, ...) and are skipped.
-// T053: emit `patch` in this shape (and optionally a top-level "version").
+// The ledger may also carry a top-level "version".
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

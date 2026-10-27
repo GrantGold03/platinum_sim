@@ -1,4 +1,4 @@
-// T051: determinism of the gauntlet for both player policies (Constitution IV) and FR-011.
+// T051: determinism of the gauntlet for every player policy (Constitution IV) and FR-011.
 //
 //  1. The same gauntlet request run twice gives byte-identical output (JSON of the full result,
 //     including the full Showdown logs), for `greedy-v1`, `expectimax2-v1` and `expectimax2-v2`; a different

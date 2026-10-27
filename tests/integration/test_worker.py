@@ -1,8 +1,8 @@
 """T032/T035 end-to-end: Python drives `node sim/worker.mjs` over NDJSON (contracts/worker-protocol.md).
 
-Runs `hello` and one full 5-trainer gauntlet. Both sides use `placeholder-default` (Showdown's
-`default` choice) until T045-T050; the test asserts that name is reported, so a placeholder result
-can never pass for a real evaluation. Run with `-s` to see the gauntlet result.
+Runs `hello` and one full 5-trainer gauntlet. The test asks for `placeholder-default` (Showdown's
+`default` choice) on both sides on purpose, to check the protocol rather than the AI; it asserts that
+name is reported, so a placeholder result can never pass for a real evaluation. Run with `-s` to see the gauntlet result.
 """
 
 import json

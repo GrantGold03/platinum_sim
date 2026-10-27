@@ -30,9 +30,9 @@ export const handlers = { IfRandomLessThan(ctx, ins) { ... }, ... };
 | `ctx.next` | the next instruction index, which defaults to `ins.index + 1`. A handler that jumps or returns sets it. |
 | `ctx.end()` | stop the current section (`End` / end of script for this move) |
 | `ctx.battler(value)` | `AIScript_Battler`: AI_BATTLER_ATTACKER (1) → `ai.attacker`, anything else → `ai.defender` |
-| `ctx.damage` | (provided by T045) wrapper over `sim/damage.mjs` implementing `TrainerAI_CalcDamage` (trap 7 in OPCODES.md) |
+| `ctx.damage` | `sim/ai/calcdamage.mjs` (passed in by `choose.mjs` via `makeCtx({extra})`), a wrapper over `sim/damage.mjs` implementing `TrainerAI_CalcDamage` (trap 7 in OPCODES.md) |
 
-Handlers may add helpers to `ctx` only through `makeCtx({extra})` in T045; don't mutate `interp.mjs`.
+Handlers may add helpers to `ctx` only through `makeCtx({extra})` (as `choose.mjs` does); don't mutate `interp.mjs`.
 
 ## Tests
 

@@ -1,6 +1,6 @@
 # Trainer-AI opcodes reachable from the League sections
 
-Work order for T040–T044. Generated from `node sim/ai/parse.mjs`, then annotated by reading every
+The work order used for T040–T044 (done). Generated from `node sim/ai/parse.mjs`, then annotated by reading every
 handler in `pokeplatinum/src/battle/trainer_ai/trainer_ai.c` (TAI below).
 
 - **League flags**: BASIC, EVAL_ATTACK, EXPERT for Aaron, Bertha, Flint and Cynthia
@@ -104,7 +104,7 @@ handler in `pokeplatinum/src/battle/trainer_ai/trainer_ai.c` (TAI below).
 | 100 | SumPositiveStatStages | :2243 | 1 | 5926 | Σ over BATTLE_STAT_HP..EVASION of `max(0, statBoosts − 6)` | statBoost | battler |
 | 101 | DiffStatStages | :2259 | 14 | 1395 | `statBoosts[b][stat] − statBoosts[attacker][stat]` | statBoost | battler |
 
-Unreachable from League sections (32 opcodes; T044 makes each throw `ai_unimplemented`): 1, 2, 3,
+Unreachable from League sections (32 opcodes; each throws `ai_unimplemented`, T044): 1, 2, 3,
 16, 24, 27, 31, 35, 37, 39, 42, 45, 48, 54, 60, 61 Escape, 62 Dummy3E, 63 Dummy3F, 71,
 75 PushAndGoTo, 79, 82, 84, 93, 95, 102–108.
 

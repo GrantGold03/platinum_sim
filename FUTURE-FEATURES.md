@@ -1,6 +1,6 @@
 # Future features
 
-Planned work, not yet specified. Each item becomes its own small Spec Kit feature and branch, merged
+Planned work, plus a record of items already built (marked **Done**). Each item becomes its own small Spec Kit feature and branch, merged
 after the user's hands-on testing (keep features small: about 3 stories / 30 tasks at most, one major
 layer, short acceptance runs). Ordered roughly by priority; the order is a proposal, not a decision.
 
@@ -11,11 +11,10 @@ Built from the decomp and `main`, not from the 007-010 archive.
 - **H1 Held-item sources** (feature 011, branch `011-held-item-sources`): the ledger's gift reader finds the
   Route 221 house, the Pastoria City SW house and Amity Square. Merged to `main` 2026-10-26 after the user's test.
 - **H2** Offer the held items the battle player already models (Focus Sash; Life Orb if obtainable before the
-  Champion). Not specified; next after feature 012 (fast test mode, item 5), which the user put first on
-  2026-10-26.
+  Champion). Not specified; **next** (feature 012, item 5, merged 2026-10-27).
 - **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
-  rocks, Chesto Berry) wait for the status-move work.
+  rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
 - Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
   walking partner) are treated as always visible; the partner condition is therefore not stated with the
   Amity sources. It never changes availability today (every starter qualifies).
@@ -43,6 +42,9 @@ benchmarked against main, so a regression points at one change. Triggered by the
 5. Alternatives stage, off by default, with the item pairings.
 
 ## 2. Alternatives acceptance (moved out of 007 on 2026-10-16; was called "008", renumbered when the re-slice took 008)
+
+> **Blocked (2026-10-27):** depends on 007's alternatives stage and expectimax2-v3, which were reverted on
+> 2026-10-20 and are not on `main`. The budget below is the 007-era record.
 
 Split into three, per the size rule:
 - **(a) Reference benchmark.** Reference runs on B4, B5, B3 (about 31 h); checks of the structured-set and
@@ -118,18 +120,16 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 ## 6. Smaller follow-ups
 
 - Magnitude, Wring Out, Crush Grip, Punishment: offer them once the strong player computes their power
-  (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5).
+  (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5). On `main` no variable-power
+  move is offered at all (`optimizer/candidates.py`: power 1 excluded; 010 was reverted).
 
 - Pickup ability as an item source (Leftovers, King's Rock), proposed after 007; after-battle Pickup/Honey
   Gather items are an accepted divergence.
 - Payoffs past the 2-ply horizon (weather, Wish, Taunt, Substitute, Damp Rock): no helps-position at the
-  2-ply reference (007 SC-008 partly met); needs a deeper reference.
+  2-ply reference (007 SC-008 partly met, on the reverted 007 branch); needs a deeper reference.
 - Carried over from 001 (2026-10-08, not rechecked since):
-  - two stale comments in `sim/` (`sim/policy/greedy.mjs:2`, `sim/gauntlet.mjs:41`); fix with the next
-    real sim change, because any `sim/` edit changes `sim_code_hash`;
   - with `--allow-trade-evolutions`, NPC-trade pre-evolutions (e.g. Gaspar's Haunter) as sources for the
     trade evolution;
-  - `sim/` code hash in provenance;
   - the "? (unlimited)" item-source text;
   - an optimize resume test;
   - a cartridge or emulator comparison.

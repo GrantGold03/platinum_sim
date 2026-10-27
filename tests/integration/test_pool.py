@@ -1,7 +1,7 @@
 """T052: src/platsim/sim/pool.py over real `node sim/worker.mjs` processes.
 
-Opponents are `placeholder-default` (the decomp trainer AI, T045-T047, is not wired in yet); the
-player uses `greedy-v1` (T049). Run with `-s` to see timings.
+Opponents use the worker's default, the decomp trainer AI (`decomp-ai`); the player uses
+`greedy-v1` (T049). Run with `-s` to see timings.
 """
 
 import json

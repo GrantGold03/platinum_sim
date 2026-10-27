@@ -228,7 +228,7 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=run)
 
 
-# Later tasks append (e.g. validate T031, divergences T053, optimize, serve).
+# serve, explain and report are appended below, each after its _add_* function.
 _SUBCOMMANDS: list[Callable[[argparse._SubParsersAction], None]] = [_add_extract, _add_divergences, _add_validate,
                                                                  _add_evaluate, _add_optimize]
 

@@ -1,8 +1,8 @@
 """T057: Cynthia top-up (src/platsim/sim/champion.py) over real `node sim/worker.mjs` workers.
 
-Player policy `greedy-v1` (T049). The opponent policy is whatever the worker reports (at the time
-of writing `placeholder-default`, Showdown's `default` choice, not the decomp trainer AI); the test
-prints it and the champion result records it, so these numbers are not a real evaluation.
+Player policy `greedy-v1` (T049). The opponent policy is the worker's default (the decomp trainer
+AI, `decomp-ai`); the test prints it and the champion result records it. With the weak greedy player
+and the overridden levels below, these numbers are not a real evaluation.
 
 The team is tests/integration/test_worker.py TEAM with every start_level overridden: 55 so that
 every run reaches Cynthia and she wins only part of the time (so the CI rule, not just the count

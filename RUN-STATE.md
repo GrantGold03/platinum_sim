@@ -8,6 +8,11 @@
   `runs/*-evidence/` (git-ignored).
 - **Current work (2026-10-27).** Feature 012 merged to `main` (fast-forward to `321cd02`, user's go). Fast mode:
   `uv run pytest -q -m "not battle_sim"` (~10 min). Next: held items H2 (H1 = 011, merged).
+- **Stale-docs pass (2026-10-27, on `main`, user's choice "everything now").** README, RUN-STATE history,
+  FUTURE-FEATURES, test docstrings, and comment-only edits in `src/` and `sim/` (both code hashes changed:
+  `platsim_code_hash` `sha256:16a8d875...`, `sim_code_hash` `sha256:77802319...`; pre-pass checkpoints won't resume).
+  Checked: `cli.py` AST identical; `.mjs` diffs comment-only; fast mode 504 passed, 4 xfailed (592 s); Node 314/314.
+  The battle set was not rerun (comment and docstring changes only).
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
@@ -46,11 +51,10 @@ resources only. Spec: `specs/001-champion-team-optimizer/spec.md`.
   average final level **58.23** (start 58/57/57/58/58/59, clear 0.8645). Output in `runs/final-defaults/`. The earlier
   56.10 used egg moves and the old TM counts and is superseded.
 - **Optional follow-ups** (see validation-log T077; now tracked in `FUTURE-FEATURES.md`):
-  - two stale comments in `sim/` (`sim/policy/greedy.mjs:2` calls v1 the strong player; `sim/gauntlet.mjs:41` names only
-    v1). Deliberately left alone: any `sim/` edit changes `sim_code_hash`, so fix them with the next real sim change;
+  - ~~two stale comments in `sim/`~~ fixed 2026-10-27 in the stale-docs pass (user chose to change the hashes);
   - with `--allow-trade-evolutions`, an NPC-trade pre-evolution (e.g. Gaspar's Haunter) is not offered as a source for
     the trade evolution (Gengar). Allowing it would need the Everstone removed and the NPC OT kept, so the traded-exp boost still applies;
-  - `sim/` code hash in provenance;
+  - ~~`sim/` code hash in provenance~~ done 2026-10-08 (`d52b24d`);
   - fix the "? (unlimited)" item-source text;
   - optimize resume test;
   - cartridge or emulator comparison.
@@ -102,8 +106,8 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 ## 002 handoff (written 2026-10-10; resolved 2026-10-11: tested, then merged into main with 003)
 - **State:** all 41 tasks (T001–T041) are done and committed on branch `002-webui-redesign`.
   - `c872971` is the redesign; `25b41b1` has the converge fixes; a later docs commit refreshes stale docs.
-  - `main` is still at `f55e5d8`, so the branch is a fast-forward of main. There is no git
-    remote, so nothing has been pushed.
+  - `main` is still at `f55e5d8`, so the branch is a fast-forward of main. There was no git
+    remote then (origin on GitHub was added later).
 - (Historical.) The user tested and gave the go-ahead; main was fast-forwarded on 2026-10-11 (see the 003 section).
 - **To test:**
   - `git switch 002-webui-redesign`, then `uv run platsim serve`, then open http://127.0.0.1:8000.
@@ -143,19 +147,19 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 
 ## Traps
 - Any edit under `src/platsim/web/*.py` changes `platsim_code_hash`. An unfinished `state.json`
-  written before such an edit refuses to resume without `--force-new` (research R8). All five
-  existing `runs/*/state.json` files have finished, so none is affected today.
+  written before such an edit refuses to resume without `--force-new` (research R8). (As of 2026-10-10 all
+  five `runs/*/state.json` files had finished; there are 9 on 2026-10-27, not rechecked.)
 - A web job runs in its own session (`setsid`), so Ctrl-C on the server no longer reaches it.
   The shutdown hook and the parent-death guard (T026/T027) must be in place, or the job keeps
   running after the server stops (analysis U1).
-- Bump `pyproject.toml` with each feature, or the page's version label doesn't change between runs (R5). It is 0.2.0 since 003.
+- Bump `pyproject.toml` with each feature, or the page's version label doesn't change between runs (R5). It was 0.2.0 at 003 and is 0.3.0 since 004; 005-012 did not bump it.
 - `/proc/<pid>/task/<pid>/children` doesn't exist on this kernel; use `pgrep -P` to find child processes.
 - The id `results` is already used by the species list (`index.html`), so the new right column
   is `#results-col`.
 
 # 003 Web UI refinements (started 2026-10-11)
 - Source: `webui_changes.md`, removed after the merge; see `git show 24df0df:webui_changes.md` (the user's notes from testing 002). Spec: `specs/003-webui-refinements/spec.md`,
-  with both clarifications answered. `.specify/feature.json` now points at 003.
+  with both clarifications answered. `.specify/feature.json` pointed at 003 then.
 - No separate branch was made: 003 was built on `002-webui-redesign` (the user's choice) and merged with it.
 - It reverses 001's Munchlax exclusion (`ledger.EXCLUDED_SPECIES`). Leftovers is allowed only when Munchlax or
   Snorlax is on the team.
@@ -319,7 +323,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 ## 007 status moves and held items (started 2026-10-14)
 
 - **Goal.** Offer status moves, variable-power attacks and every useful held item. Judge them with expectimax2-v3. Add the Route 221, Pastoria and Amity Square item sources. Constitution v1.4.0 Principle VI applies: build an expensive reference first, then accept cheaper versions against it.
-- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed (latest code commit `4dccb8d`). The web server is stopped. Not merged: waits for the user's hands-on testing.
+- **Branch.** `007-status-moves-items`, worked in the main checkout and pushed (latest code commit `4dccb8d`). Never merged; archive only since the revert of 2026-10-20.
 - **Split (user, 2026-10-16).** 007 ships what is built, with the alternatives stage **off by default** (`--candidates off|reference`). **Feature 008** (not yet specified; renumbered 2026-10-19, now `FUTURE-FEATURES.md` item 2) takes: the reference benchmark (T066, T066b, T067), the prefilter (T068, T069), FR-017 step 2, SC-002, SC-006 and the FR-019 checks. Recorded in spec Clarifications "Session 2026-10-16" and the contract.
 - **Hours.** One-time budget raised to about 110 h (user 2026-10-16), carried over to 008. Used: 32.2 h (validation-log hours table, including the 6.7 h stopped B4 reference run). Smoke tests are outside the budget.
 - **Done:** T001-T065 (except those moved to 008), T070-T071, T075-T080. Evidence in `specs/007-status-moves-items/validation-log.md`.
@@ -327,7 +331,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Done 2026-10-16:** T072 (full suite; one stale web test fixed), T073 (SC-005, both modes), T074 (summary in the validation log). Every 007 task is done except the five moved to 008.
 - **Saved for the reboot (2026-10-17).** Scratchpad evidence copied to `runs/007-evidence/` (git-ignored; README.txt inside): T063 per-seed player comparison JSON, T067 log, T073 pair, scripts (t063.py, t067.py, positions.mjs, speed.py, ...), suite logs. The stopped T067 run state is in `runs/bench-007-reference/B4` (old design, not resumable). Baselines: `runs/bench-007-baseline/`.
 - **Hands-on testing found a regression (2026-10-19).** The user's B2 run: 86.5 min (time OK), but avg final level 55.27 vs 53.49 before 007. Paired check: the player is not the cause (v3 >= v2); the 007 team's movesets are worse (4 of 6 changes add Return/Grass Knot/Hidden Power, dropping coverage). Evidence in the validation log and `runs/007-evidence/b2cmp/`. 007 is not merged as is; the user is considering re-slicing it onto main (`FUTURE-FEATURES.md` item 1).
-- **Next.** The user's hands-on testing (restart `uv run platsim serve` from this branch on request). Not measured yet: a standard-budget off-mode run time against the T005 baseline (the user's 2.0× cap); the user's standard test run measures it. Merge only after the user's testing. Then propose `/speckit-specify` for 008, split small (memory `feature-size-limits`).
+- **(Historical; superseded by the revert of 2026-10-20, see "Revert to pre-007".)** **Next** at the time: the user's hands-on testing (restart `uv run platsim serve` from this branch on request). Not measured yet: a standard-budget off-mode run time against the T005 baseline (the user's 2.0× cap); the user's standard test run measures it. Merge only after the user's testing. Then propose `/speckit-specify` for 008, split small (memory `feature-size-limits`).
 - **Traps:**
   - Don't `git commit -a`: the user's uncommitted deletion of `.claude/scheduled_tasks.lock` must stay out of commits.
   - Any `sim/*.mjs` edit changes the code hash, so old checkpoints won't resume.
@@ -343,14 +347,14 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Branch.** `008-ledger-item-sources` from `main` `f88cdd0`, main checkout. The web server is stopped.
 - **Done (2026-10-19).** Spec, plan, tasks; constitution v1.4.0 brought over (`7deb5d9`). T001-T009: `a8b529b` applied byte-identically (src/tests only); counts 66/37/55 → 74/40/44 (11 items, all from Route 221 / Pastoria); 114 focused tests pass; held-item candidates for B1-B5 identical; same-seed quick B2 run identical except the two provenance hashes. Evidence: `specs/008-ledger-item-sources/validation-log.md`, `runs/008-evidence/`.
 - **Finding.** The same script reading also adds Amity (9 non-held berries), Route 208 house, News Press and Flower Shop entries; none changes a held item's availability.
-- **Merged 2026-10-19** after the user's test (`explain` of Focus Sash, Occa, Belue): `main` = `de102fa` (fast-forward). Full suite 509 passed, node 314.
+- **Merged 2026-10-19, reverted on `main` 2026-10-20** (redone from scratch as 011). Merged after the user's test (`explain` of Focus Sash, Occa, Belue): `main` = `de102fa` (fast-forward). Full suite 509 passed, node 314.
 - **Traps.** `data/generated/` is shared between branches: rebuild with `uv run platsim extract` after every checkout. `pkill -f "platsim serve"` from a shell whose command line contains that text kills the shell itself (exit 144); stop the server by PID.
 
 ## 009 move and item classification — re-slice 2 of 007 (started 2026-10-19)
 
 - **Branch.** `009-move-item-classes` from `main` `de102fa`. Brings 007 commit `9e1f065` (src/tests only, byte-identical): `move_classes.py`, `item_classes.py`, their tests, `MemberSpec.adopted` and HM-placement tiers, small refactors. Groundwork; no behaviour change.
 - **Done.** Spec, plan, tasks. T001-T009: 114 classification tests + 13 HM tests pass; B1-B5 candidates identical (93 entries); HM placement identical (7,440 cases, 2,301 replacing a move); same-seed quick B2 identical except the code hash. Evidence `specs/009-move-item-classes/validation-log.md`, `runs/009-evidence/`.
-- **Merged 2026-10-19** (`main` = `27d51b0`, fast-forward). Full suite 627 passed, node 314.
+- **Merged 2026-10-19, reverted on `main` 2026-10-20** (`main` was `27d51b0`, fast-forward). Full suite 627 passed, node 314.
 - **Note.** The first version of `move_classes.py` reads the player's MODELLED table, which `main` does not have yet; it returns `{}` and nothing calls it until the player slice.
 
 ## 010 variable-power attacks without regression — re-slice 3 of 007 (started 2026-10-19)
@@ -368,7 +372,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
 - **Undone on `main`:** slices 1 (008 ledger item sources) and 2 (009 move and item classification). Slice 3 (010) was never merged.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`, `010-variable-power` kept locally and on GitHub. Evidence in `runs/007-evidence/`, `runs/008-evidence/`, `runs/009-evidence/`, `runs/010-evidence/`, `runs/bench-010/` (git-ignored). Fix C draft and analysis scripts: `runs/010-evidence/scripts/` (README.txt inside).
 - **After the revert.** `data/generated/` must be rebuilt (`uv run platsim extract`): the ledger code went back to pre-008. The 007 tasks in `specs/007-status-moves-items/tasks.md` are all unchecked again (as at `2fa6059`).
-- **Next.** The user decides. Lessons on record: keep features small (memory `feature-size-limits`); every change, including a fix found during acceptance, goes through Spec Kit, and tasks run via `/speckit-implement` (memory `speckit-for-every-change`); the acceptance rule must compare teams at equal levels (010 spec, Session 2026-10-20).
+- **Then (2026-10-20).** The user decided: held items redone in small slices (011 = H1, merged), then 012; see START HERE. Lessons on record: keep features small (memory `feature-size-limits`); every change, including a fix found during acceptance, goes through Spec Kit, and tasks run via `/speckit-implement` (memory `speckit-for-every-change`); the acceptance rule must compare teams at equal levels (010 spec, Session 2026-10-20).
 
 
 ## 011 held-item sources — held items slice H1 (started 2026-10-26)
