@@ -93,8 +93,7 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 
 ## 5. Fast test mode without the battle simulations (added 2026-10-26)
 
-> **Built as feature 012** (branch `012-fast-test-mode`, 2026-10-27); waits for the user's hands-on test before
-> merging. Fast mode `uv run pytest -q -m "not battle_sim"`: 504 passed, 4 xfailed in 10 min; 26 battle tests;
+> **Done: feature 012, merged to `main` 2026-10-27.** Fast mode `uv run pytest -q -m "not battle_sim"`: 504 passed, 4 xfailed in 10 min; 26 battle tests;
 > the split is checked in every run. See `specs/012-fast-test-mode/validation-log.md`. The scope below is history.
 
 - **Gap.** The full suite takes about 2.5 h, almost all of it in roughly 45 integration tests that run real Node /

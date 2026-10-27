@@ -1,14 +1,13 @@
 # START HERE (updated 2026-10-27)
 
-- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`) and feature 012 (fast test mode, merged 2026-10-27, `321cd02`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Current work (2026-10-27).** Feature 012, fast test mode (`012-fast-test-mode`, pushed): **implemented, all 18
-  tasks done; waiting for the user's hands-on test, then merge.** See the 012 section at the end. After 012:
-  held items H2 (H1 = 011, merged).
+- **Current work (2026-10-27).** Feature 012 merged to `main` (fast-forward to `321cd02`, user's go). Fast mode:
+  `uv run pytest -q -m "not battle_sim"` (~10 min). Next: held items H2 (H1 = 011, merged).
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
@@ -389,7 +388,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   in 600 s. Full gate on `39fb40e`: pytest `530 passed, 4 xfailed` in 8,886 s; Node 314/314; split: 177 worker starts,
   26 marked reached it, 0 under / 0 outside / 0 over. Code hashes identical to main (the `pyproject.toml` marker
   line was removed because `platsim_code_hash` covers `pyproject.toml`; the plugin registers the marker).
-  Hands-on checks run 2026-10-27 at the user's request (fast mode 623 s; unmarked start caught). **Next: user's merge decision.** Not merged.
+  Hands-on checks run 2026-10-27 at the user's request (fast mode 623 s; unmarked start caught). **User approved; merged to `main` 2026-10-27 (fast-forward to `321cd02`).**
 - **Method (plan).** A stand-in `node` (`tests/node_shim/node`) first on `PATH` logs every start of `sim/worker.mjs`
   with the current test and fixture (`<baseid>::<name>`), then `exec`s the real node; plugin `tests/_battle_split.py`
   fails unmarked starts (teardown `ERROR`), shared-fixture misses, starts outside a test, and over-marked tests
