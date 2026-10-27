@@ -389,7 +389,7 @@ decomp PNGs, with transparency added when they are served. The constitution was 
   in 600 s. Full gate on `39fb40e`: pytest `530 passed, 4 xfailed` in 8,886 s; Node 314/314; split: 177 worker starts,
   26 marked reached it, 0 under / 0 outside / 0 over. Code hashes identical to main (the `pyproject.toml` marker
   line was removed because `platsim_code_hash` covers `pyproject.toml`; the plugin registers the marker).
-  **Next: user's hands-on test (quickstart 4), then merge to main.** Not merged.
+  Hands-on checks run 2026-10-27 at the user's request (fast mode 623 s; unmarked start caught). **Next: user's merge decision.** Not merged.
 - **Method (plan).** A stand-in `node` (`tests/node_shim/node`) first on `PATH` logs every start of `sim/worker.mjs`
   with the current test and fixture (`<baseid>::<name>`), then `exec`s the real node; plugin `tests/_battle_split.py`
   fails unmarked starts (teardown `ERROR`), shared-fixture misses, starts outside a test, and over-marked tests

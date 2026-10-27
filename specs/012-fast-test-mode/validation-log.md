@@ -119,3 +119,11 @@ Run on `39fb40e` (2026-10-27), no commits during it. `runs/012-evidence/full-pyt
   a few minutes in and restarted on this commit.
 - After the fix: `platsim_code_hash` = `sha256:8738fac8...d7c6`, `sim_code_hash` = `sha256:4fbd7471...f566`,
   both identical to T002.
+
+## Hands-on test, run at the user's request (2026-10-27)
+
+- Throwaway unmarked test in the session scratchpad running `subprocess.run(["node", "sim/worker.mjs"], input="")`,
+  run with `-p _battle_split` (outside `tests/`, so the plugin was loaded explicitly): `1 passed, 1 error in
+  0.66s`, exit 1; `ERROR at teardown of test_throwaway_unmarked` with the contract message naming the test.
+- Fast mode, 3:36-3:47 PM EDT: `uv run pytest -q -m "not battle_sim"` exit 0, wall 623 s:
+  `504 passed, 26 deselected, 4 xfailed, 1 warning in 619.36s (0:10:19)`; battle split 0 starts, 0/0/0.
