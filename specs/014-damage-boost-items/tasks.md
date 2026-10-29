@@ -23,10 +23,10 @@ fail before the code.
 
 ## Phase 1: Setup (baseline, code = `main` `3078dad`)
 
-- [ ] T001 Create `specs/014-damage-boost-items/validation-log.md` (branch, base, `git diff --stat main HEAD -- src tests sim` expected empty)
-- [ ] T002 `git switch main`, `uv run platsim extract`; run the 013 scratchpad `candidates_snapshot.py` (recreate it from `specs/013-no-single-use-items/tasks.md` T002 if the scratchpad copy is gone) → `runs/014-evidence/main-candidates.json`. **Positive control:** equal to `runs/013-evidence/branch-candidates.json` (93 keys, 0 differ)
-- [ ] T003 On `main`, in the background: `/usr/bin/time -f "wall %e s" uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 014-b2 --out runs/014-evidence/b2-main`; record start/end (Eastern), wall time, exit code, `result.json` sha256, clear rate, average final level, each member's item, `repo_commit`
-- [ ] T004 After T003: `git switch 014-damage-boost-items`, `uv run platsim extract`
+- [X] T001 Create `specs/014-damage-boost-items/validation-log.md` (branch, base, `git diff --stat main HEAD -- src tests sim` expected empty)
+- [X] T002 `git switch main`, `uv run platsim extract`; run the 013 scratchpad `candidates_snapshot.py` (recreate it from `specs/013-no-single-use-items/tasks.md` T002 if the scratchpad copy is gone) → `runs/014-evidence/main-candidates.json`. **Positive control:** equal to `runs/013-evidence/branch-candidates.json` (93 keys, 0 differ)
+- [X] T003 On `main`, in the background: `/usr/bin/time -f "wall %e s" uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 014-b2 --out runs/014-evidence/b2-main`; record start/end (Eastern), wall time, exit code, `result.json` sha256, clear rate, average final level, each member's item, `repo_commit`
+- [X] T004 After T003: `git switch 014-damage-boost-items`, `uv run platsim extract`
 
 ## Phase 2: Foundational
 
@@ -39,8 +39,8 @@ None: the change is one function plus tests. The copy accounting and report sour
 **Independent Test**: The contract cases pass; Muscle Band appears only when a copy is stubbed in; two Expert Belt
 holders are refused.
 
-- [ ] T005 [US1] On the branch, before any code change, print the real current output of `C.held_item_candidates` for the contract cases (Empoleon `(MOVE_SURF,)`; Garchomp `(MOVE_EARTHQUAKE,)`; Snorlax `(MOVE_BODY_SLAM,)` with team `("SPECIES_SNORLAX", "SPECIES_GARCHOMP")`; and a status-only moveset, e.g. Garchomp `(MOVE_SWORDS_DANCE,)`) with a scratchpad script. Record them in the log. The expected post-change lists are these plus the boosters per `contracts/held-item-candidates.md`. Fix any wrong example in the contract file before writing tests
-- [ ] T006 [US1] Add tests to `tests/unit/test_optimizer_candidates.py` (section comment "Feature 014: damage boosters"):
+- [X] T005 [US1] On the branch, before any code change, print the real current output of `C.held_item_candidates` for the contract cases (Empoleon `(MOVE_SURF,)`; Garchomp `(MOVE_EARTHQUAKE,)`; Snorlax `(MOVE_BODY_SLAM,)` with team `("SPECIES_SNORLAX", "SPECIES_GARCHOMP")`; and a status-only moveset, e.g. Garchomp `(MOVE_SWORDS_DANCE,)`) with a scratchpad script. Record them in the log. The expected post-change lists are these plus the boosters per `contracts/held-item-candidates.md`. Fix any wrong example in the contract file before writing tests
+- [X] T006 [US1] Add tests to `tests/unit/test_optimizer_candidates.py` (section comment "Feature 014: damage boosters"):
   - special: Empoleon/Surf → existing items unchanged as a prefix, then `expert_belt`, `wise_glasses`;
   - physical: Garchomp/Earthquake → existing prefix, then `expert_belt` only (no `wise_glasses`, no `muscle_band`);
   - no attack: the status-only moveset → no `expert_belt` / `wise_glasses` / `muscle_band`;
@@ -48,9 +48,9 @@ holders are refused.
   - group from data: the set of items whose `hold_effect` is one of the three `HOLD_EFFECT_POWER_UP_*` (read from `load_items()`) equals `{expert_belt, muscle_band, wise_glasses}` (check value, research R1);
   - H2 still holds: no candidate in these cases has `is_excluded_single_use` True.
   Run `uv run pytest -q tests/unit/test_optimizer_candidates.py -k "booster or damage"` and record the expected failures
-- [ ] T007 [US1] Add the Expert Belt copy test to `tests/unit/test_optimizer_candidates.py`, modelled on `test_single_copy_tm_is_never_given_twice`: assert `led.item_copies("ITEM_EXPERT_BELT") == 1`. Realize `(a,)` with `a` = Garchomp `("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW")`, item `expert_belt`, at Lv 55 → not a Refusal, `uses` includes the Expert Belt resource. Realize `(a, b)` with `b` = Empoleon `("MOVE_SURF",)`, item `expert_belt` → Refusal at slot 1. Also run the validator on a hand-built two-holder team and assert a copy violation (positive control). This test may pass before T008 (existing accounting); record that
-- [ ] T008 [US1] Implement in `src/platsim/optimizer/candidates.py` `held_item_candidates`: module-level hold-effect names `POWER_UP_SE = "HOLD_EFFECT_POWER_UP_SE"`, `POWER_UP_BY_CLASS = {"CLASS_PHYSICAL": "HOLD_EFFECT_POWER_UP_PHYS", "CLASS_SPECIAL": "HOLD_EFFECT_POWER_UP_SPEC"}` (comment citing `sim/damage.mjs:381-382,639` and research R1). After the existing items and before the H2 filter, when `attacks` is non-empty: append every item with `hold_effect == POWER_UP_SE` and `_item_copies(led, const) != 0` (sorted by key), then every item with the hold effect for `load_moves()[best].category` that has a copy (sorted by key). Skip items already in `out`. Update the docstring (item order; 014)
-- [ ] T009 [US1] Run `uv run pytest -q tests/unit/test_optimizer_candidates.py tests/unit/test_item_use.py`; record all passing (SC-002, SC-003)
+- [X] T007 [US1] Add the Expert Belt copy test to `tests/unit/test_optimizer_candidates.py`, modelled on `test_single_copy_tm_is_never_given_twice`: assert `led.item_copies("ITEM_EXPERT_BELT") == 1`. Realize `(a,)` with `a` = Garchomp `("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW")`, item `expert_belt`, at Lv 55 → not a Refusal, `uses` includes the Expert Belt resource. Realize `(a, b)` with `b` = Empoleon `("MOVE_SURF",)`, item `expert_belt` → Refusal at slot 1. Also run the validator on a hand-built two-holder team and assert a copy violation (positive control). This test may pass before T008 (existing accounting); record that
+- [X] T008 [US1] Implement in `src/platsim/optimizer/candidates.py` `held_item_candidates`: module-level hold-effect names `POWER_UP_SE = "HOLD_EFFECT_POWER_UP_SE"`, `POWER_UP_BY_CLASS = {"CLASS_PHYSICAL": "HOLD_EFFECT_POWER_UP_PHYS", "CLASS_SPECIAL": "HOLD_EFFECT_POWER_UP_SPEC"}` (comment citing `sim/damage.mjs:381-382,639` and research R1). After the existing items and before the H2 filter, when `attacks` is non-empty: append every item with `hold_effect == POWER_UP_SE` and `_item_copies(led, const) != 0` (sorted by key), then every item with the hold effect for `load_moves()[best].category` that has a copy (sorted by key). Skip items already in `out`. Update the docstring (item order; 014)
+- [X] T009 [US1] Run `uv run pytest -q tests/unit/test_optimizer_candidates.py tests/unit/test_item_use.py`; record all passing (SC-002, SC-003)
 
 **Checkpoint**: US1 complete.
 
@@ -59,9 +59,9 @@ holders are refused.
 **Goal**: The report and `explain` show where the new items come from (FR-008). Placed before US2 because US2's long
 runs need the code committed first.
 
-- [ ] T010 [P] [US3] Add a test to `tests/unit/test_optimizer_candidates.py`: realize Empoleon `("MOVE_SURF",)` with `wise_glasses` at Lv 55, call `platsim.report.sources.team_sources(real.team, led)`, and assert the held-item source text names Celestic Town (`MAP_HEADER_CELESTIC_TOWN_NORTHWEST_HOUSE` or its display name) and its refs include `scripts_celestic_town_northwest_house.s`. Do the same for `expert_belt` (Route 221 house). Run it; record
-- [ ] T011 [P] [US3] `uv run platsim explain item:expert_belt` and `item:wise_glasses` → `runs/014-evidence/explain-branch.txt`; record the source lines in the log
-- [ ] T012 [US1] Commit `src/platsim/optimizer/candidates.py` and `tests/unit/test_optimizer_candidates.py` as "feat(014): offer damage-boosting held items by hold effect"; push
+- [X] T010 [P] [US3] Add a test to `tests/unit/test_optimizer_candidates.py`: realize Empoleon `("MOVE_SURF",)` with `wise_glasses` at Lv 55, call `platsim.report.sources.team_sources(real.team, led)`, and assert the held-item source text names Celestic Town (`MAP_HEADER_CELESTIC_TOWN_NORTHWEST_HOUSE` or its display name) and its refs include `scripts_celestic_town_northwest_house.s`. Do the same for `expert_belt` (Route 221 house). Run it; record
+- [X] T011 [P] [US3] `uv run platsim explain item:expert_belt` and `item:wise_glasses` → `runs/014-evidence/explain-branch.txt`; record the source lines in the log
+- [X] T012 [US1] Commit `src/platsim/optimizer/candidates.py` and `tests/unit/test_optimizer_candidates.py` as "feat(014): offer damage-boosting held items by hold effect"; push
 
 ## Phase 5: User Story 2 - Teams do not get worse (P1)
 

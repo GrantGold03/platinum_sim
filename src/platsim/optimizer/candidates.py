@@ -113,6 +113,9 @@ EFFECT_WEIGHT = {
 }
 EXP_HOLD_EFFECTS = frozenset({"HOLD_EFFECT_EXP_UP", "HOLD_EFFECT_EXP_SHARE", "HOLD_EFFECT_LVLUP_SPEED_DOWN"})
 HP_BERRY_EFFECT = "HOLD_EFFECT_HP_PCT_RESTORE"
+# 014: plain damage boosters, applied by the battle player's damage model (sim/damage.mjs:381-382, :639)
+POWER_UP_SE = "HOLD_EFFECT_POWER_UP_SE"  # Expert Belt: super-effective hits
+POWER_UP_BY_CLASS = {"CLASS_PHYSICAL": "HOLD_EFFECT_POWER_UP_PHYS", "CLASS_SPECIAL": "HOLD_EFFECT_POWER_UP_SPEC"}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -425,6 +428,8 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
     """Held items worth trying: the best HP berry, a boost for the strongest attack, and (003 FR-009)
     Leftovers when this team may hold it: a wild holder (Munchlax / Snorlax) is on the team, or a
     non-holder copy exists (post-game items rule). `team` is the six SPECIES_* of the job.
+    Then (014), for a moveset with an attack, the damage boosters with a copy: Expert Belt, and the
+    physical / special booster matching the strongest attack's category; existing items keep their places.
     An item used up when it triggers is never offered unless it is a berry (013; the decomp reader
     platsim.decomp.item_use decides), whichever branch above proposed it."""
     from platsim.availability.ledger import TEAM_GATED_ITEMS, team_item_copies
@@ -449,6 +454,12 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
         for const in TEAM_GATED_ITEMS:
             if team_item_copies(led, const, team) != 0:
                 out.append(items[const].key)
+    if attacks:
+        for eff in (POWER_UP_SE, POWER_UP_BY_CLASS.get(load_moves()[best].category)):
+            for it in sorted((it for it in items.values() if it.hold_effect == eff
+                              and _item_copies(led, it.const) != 0), key=lambda it: it.key):
+                if it.key not in out:
+                    out.append(it.key)
     out = [it for it in out if not is_excluded_single_use(it)]
     return out or [None]
 

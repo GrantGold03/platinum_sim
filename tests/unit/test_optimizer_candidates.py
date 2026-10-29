@@ -143,3 +143,92 @@ def test_no_single_use_candidates_sweep(led):
         assert not any(is_excluded_single_use(it) for it in out), (const, out)
         seen.update(out)
     assert "sitrus_berry" in seen and "leftovers" in seen  # berries and non-consumed items are still offered
+
+
+# --- Feature 014: damage boosters (Expert Belt, Wise Glasses, Muscle Band; chosen by hold effect) ---
+# Pre-Champion copies come from the ledger: Expert Belt 1 (scripts_route_221_house.s:39), Wise Glasses 1
+# (scripts_celestic_town_northwest_house.s:69), Muscle Band 0 (Battle Frontier only).
+BOOSTERS = {"expert_belt", "wise_glasses", "muscle_band"}
+
+
+def test_damage_booster_group_from_item_data():
+    from platsim.decomp.items import load_items
+
+    effects = {"HOLD_EFFECT_POWER_UP_SE", "HOLD_EFFECT_POWER_UP_PHYS", "HOLD_EFFECT_POWER_UP_SPEC"}
+    assert {it.key for it in load_items().values() if it.hold_effect in effects} == BOOSTERS
+
+
+def test_damage_boosters_special(led):
+    out = C.held_item_candidates("SPECIES_EMPOLEON", ("MOVE_SURF",), led)
+    assert out == ["sitrus_berry", "splash_plate", "expert_belt", "wise_glasses"]
+
+
+def test_damage_boosters_physical(led):
+    out = C.held_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",), led)
+    assert out == ["sitrus_berry", "earth_plate", "expert_belt"]  # Muscle Band: no pre-Champion copy
+
+
+def test_damage_boosters_after_existing_items(led):
+    out = C.held_item_candidates("SPECIES_SNORLAX", ("MOVE_BODY_SLAM",), led, ("SPECIES_SNORLAX", "SPECIES_GARCHOMP"))
+    assert out == ["sitrus_berry", "silk_scarf", "leftovers", "expert_belt"]
+
+
+def test_no_damage_booster_without_an_attack(led):
+    out = C.held_item_candidates("SPECIES_GARCHOMP", ("MOVE_SWORDS_DANCE",), led)
+    assert not BOOSTERS & set(out)
+
+
+def test_muscle_band_offered_when_it_has_a_copy(led, monkeypatch):
+    # Positive control for the copy check: give Muscle Band one copy and it is offered for a physical moveset.
+    assert led.item_copies("ITEM_MUSCLE_BAND") == 0
+
+    class OneMuscleBand:
+        def __getattr__(self, name):
+            return getattr(led, name)
+
+        def item_copies(self, const):
+            return 1 if const == "ITEM_MUSCLE_BAND" else led.item_copies(const)
+
+    monkeypatch.setattr(C, "_ITEM_COPIES", {})
+    stub = OneMuscleBand()
+    assert "muscle_band" in C.held_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",), stub)
+    assert "muscle_band" not in C.held_item_candidates("SPECIES_EMPOLEON", ("MOVE_SURF",), stub)  # special: Wise Glasses
+
+
+def test_damage_boosters_keep_h2_rule(led):
+    from platsim.decomp.item_use import is_excluded_single_use
+
+    for const, moves in (("SPECIES_EMPOLEON", ("MOVE_SURF",)), ("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",))):
+        assert not any(is_excluded_single_use(it) for it in C.held_item_candidates(const, moves, led))
+
+
+def test_single_expert_belt_is_never_given_twice(led):
+    from dataclasses import replace
+
+    from platsim.legality.models import TeamCandidate
+    from platsim.legality.validator import validate
+
+    assert led.item_copies("ITEM_EXPERT_BELT") == 1
+    a = R.MemberSpec("SPECIES_GARCHOMP", "own", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), "expert_belt")
+    b = R.MemberSpec("SPECIES_EMPOLEON", "own", ("MOVE_SURF",), "expert_belt")
+    one = R.realize((a,), [55], led)
+    assert not isinstance(one, R.Refusal) and one.uses.get("ITEM_EXPERT_BELT") == 1
+    both = R.realize((a, b), [55, 55], led)
+    assert isinstance(both, R.Refusal) and both.slot == 1
+    # Positive control: the independent validator flags a hand-built team with two holders.
+    other = R.realize((replace(b, item="sitrus_berry"),), [55], led)
+    assert not isinstance(other, R.Refusal)
+    two = TeamCandidate([one.team.builds[0], replace(other.team.builds[0], held_item="expert_belt")])
+    assert any(v.code == "ITEM_COPIES" for v in validate(two, led))
+
+
+def test_damage_booster_sources_in_report(led):
+    from platsim.report.sources import team_sources
+
+    for item, place, script in (("wise_glasses", "Celestic Town", "scripts_celestic_town_northwest_house.s"),
+                                ("expert_belt", "Route 221", "scripts_route_221_house.s")):
+        real = R.realize((R.MemberSpec("SPECIES_EMPOLEON", "own", ("MOVE_SURF",), item),), [55], led)
+        assert not isinstance(real, R.Refusal), item
+        _, held, refs = team_sources(real.team, led)
+        assert held[0] and place.lower() in held[0].lower().replace("_", " "), (item, held[0])
+        assert any(script in r for r in refs[0]), (item, refs[0])
