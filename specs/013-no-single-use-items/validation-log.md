@@ -119,3 +119,8 @@ Times are US Eastern. Evidence under `runs/013-evidence/` (git-ignored).
 ## T020 Docs
 
 - `FUTURE-FEATURES.md` (H2 status, rule for H3+) and `RUN-STATE.md` updated.
+
+## Merge (2026-10-29)
+
+- The user said to merge. `main` fast-forwarded `cbb0580..dd7b8eb` and pushed. `uv run platsim extract` on `main`:
+  exit 0.
