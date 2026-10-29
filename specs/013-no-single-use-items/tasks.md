@@ -83,8 +83,8 @@ otherwise appear. No candidate list for the B1-B5 members or the extra test team
 
 ## Phase 5: Polish & cross-cutting
 
-- [ ] T019 Fast mode: `uv run pytest -q -m "not battle_sim"` (about 10 min) and `(cd sim && node --test test/*.test.mjs)`; logs to `runs/013-evidence/`; record the summary lines, exit codes and test counts against `main` (fast mode 504 passed, 4 xfailed; Node 314) (SC-006)
-- [ ] T020 [P] Update `FUTURE-FEATURES.md` (H2 done on the branch, the rule for H3+: candidates pass the single-use filter automatically) and `RUN-STATE.md` (state, evidence paths, next: user's hands-on test). Commit the docs and the validation log; push
+- [X] T019 Fast mode: `uv run pytest -q -m "not battle_sim"` (about 10 min) and `(cd sim && node --test test/*.test.mjs)`; logs to `runs/013-evidence/`; record the summary lines, exit codes and test counts against `main` (fast mode 504 passed, 4 xfailed; Node 314) (SC-006)
+- [X] T020 [P] Update `FUTURE-FEATURES.md` (H2 done on the branch, the rule for H3+: candidates pass the single-use filter automatically) and `RUN-STATE.md` (state, evidence paths, next: user's hands-on test). Commit the docs and the validation log; push
 
 ## Dependencies & execution order
 

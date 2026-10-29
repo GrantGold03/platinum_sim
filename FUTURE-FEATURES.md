@@ -13,7 +13,10 @@ Built from the decomp and `main`, not from the 007-010 archive.
 - **H2** (revised by the user 2026-10-29) The optimizer never offers single-use held items (consumed when they
   trigger: Focus Sash, herbs, ...); berries stay allowed. Today it already offers none (HP berry, unlimited
   type boosts, Leftovers), so H2 makes the rule explicit and tested. The earlier plan (offer Focus Sash; Life
-  Orb, which has 0 pre-Champion copies) is dropped. Not specified; **next**.
+  Orb, which has 0 pre-Champion copies) is dropped. Feature 013, branch `013-no-single-use-items`: built and checked
+  2026-10-29; waiting for the user's test. For H3+: every candidate passes through the filter in
+  `held_item_candidates` automatically (decomp reader `platsim.decomp.item_use`; excluded today: Focus Sash, White
+  Herb, Mental Herb, Power Herb, Berry Juice).
 - **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).

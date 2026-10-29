@@ -106,3 +106,16 @@ Times are US Eastern. Evidence under `runs/013-evidence/` (git-ignored).
   `/platsim_code_hash` (`sha256:16a8d875...` → `sha256:a0a422be...`) and `/repo_commit` (`cbb0580` → `18b48f8`)**.
   `/provenance/worker/decomp_data_hash`, team, clear rate 0.81, expected average final level 53.22 and held items are
   identical (FR-007, SC-005). The diff found these 2 fields, so it does detect differences.
+
+## T019 Gates (2026-10-29, code `be53f81` = `18b48f8` + docs)
+
+- 11:19:46 to 11:33:59 AM EDT; logs `runs/013-evidence/t019-pytest.log`, `t019-node.log`, `t019.time`.
+- `uv run pytest -q -m "not battle_sim"`: `516 passed, 26 deselected, 4 xfailed, 1 warning in 591.75s`, exit 0.
+  On `main`: 504 passed, 4 xfailed. +12 = 9 tests in `test_item_use.py` + 3 in `test_optimizer_candidates.py`.
+- `(cd sim && node --test test/*.test.mjs)`: `# tests 314`, `# pass 314`, `# fail 0`, exit 0 (same 314 as `main`).
+  SC-006.
+- No commit was made while the suites ran.
+
+## T020 Docs
+
+- `FUTURE-FEATURES.md` (H2 status, rule for H3+) and `RUN-STATE.md` updated.
