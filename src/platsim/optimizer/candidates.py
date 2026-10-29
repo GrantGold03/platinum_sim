@@ -71,6 +71,7 @@ import re
 from dataclasses import dataclass, field
 from functools import cache
 
+from platsim.decomp.item_use import is_excluded_single_use
 from platsim.decomp.items import load_items, tm_moves
 from platsim.decomp.moves import load_moves
 from platsim.legality import movesources as MS
@@ -423,7 +424,9 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
                          team: tuple[str, ...] | None = None) -> list[str | None]:
     """Held items worth trying: the best HP berry, a boost for the strongest attack, and (003 FR-009)
     Leftovers when this team may hold it: a wild holder (Munchlax / Snorlax) is on the team, or a
-    non-holder copy exists (post-game items rule). `team` is the six SPECIES_* of the job."""
+    non-holder copy exists (post-game items rule). `team` is the six SPECIES_* of the job.
+    An item used up when it triggers is never offered unless it is a berry (013; the decomp reader
+    platsim.decomp.item_use decides), whichever branch above proposed it."""
     from platsim.availability.ledger import TEAM_GATED_ITEMS, team_item_copies
 
     items = load_items()
@@ -446,6 +449,7 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
         for const in TEAM_GATED_ITEMS:
             if team_item_copies(led, const, team) != 0:
                 out.append(items[const].key)
+    out = [it for it in out if not is_excluded_single_use(it)]
     return out or [None]
 
 

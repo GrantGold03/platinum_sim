@@ -101,3 +101,45 @@ def test_member_candidates_and_full_team_validate(led):
         assert not isinstance(R.realize((s,), [f], led), R.Refusal)
         if f > 1:
             assert isinstance(R.realize((s,), [f - 1], led), R.Refusal)
+
+
+# --- Feature 013: no single-use non-berry held item is ever a candidate (FR-003, SC-001, SC-004) ---
+
+def _sash_as_type_boost(monkeypatch):
+    """Make every attack type's boost item a HOLD_EFFECT_ENDURE item, so the type-boost branch of
+    held_item_candidates proposes Focus Sash (1 pre-Champion copy, Route 221 house)."""
+    real = C.type_boost_items()
+    monkeypatch.setattr(C, "type_boost_items", lambda: {t: ["HOLD_EFFECT_ENDURE"] for t in real})
+
+
+def test_single_use_item_never_offered(led, monkeypatch):
+    assert led.item_copies("ITEM_FOCUS_SASH") != 0  # the injection can only work if a copy exists
+    _sash_as_type_boost(monkeypatch)
+    out = C.held_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",), led)
+    assert "focus_sash" not in out
+    assert "sitrus_berry" in out
+
+
+def test_single_use_guard_control(led, monkeypatch):
+    # Control: with the filter switched off the same injection does reach the output, so the test above can fail.
+    _sash_as_type_boost(monkeypatch)
+    monkeypatch.setattr(C, "is_excluded_single_use", lambda item: False)
+    assert "focus_sash" in C.held_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",), led)
+
+
+def test_no_single_use_candidates_sweep(led):
+    from platsim.decomp.item_use import is_excluded_single_use
+
+    snorlax_team = ("SPECIES_SNORLAX", "SPECIES_GARCHOMP", "SPECIES_EMPOLEON")
+    cases = [
+        ("SPECIES_SNORLAX", ("MOVE_BODY_SLAM", "MOVE_EARTHQUAKE"), snorlax_team),
+        ("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), snorlax_team),
+        ("SPECIES_EMPOLEON", ("MOVE_SURF", "MOVE_ICE_BEAM"), ("SPECIES_EMPOLEON", "SPECIES_GARCHOMP")),
+        ("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE",), None),
+    ]
+    seen = set()
+    for const, moves, team in cases:
+        out = C.held_item_candidates(const, moves, led, team)
+        assert not any(is_excluded_single_use(it) for it in out), (const, out)
+        seen.update(out)
+    assert "sitrus_berry" in seen and "leftovers" in seen  # berries and non-consumed items are still offered
