@@ -30,6 +30,7 @@ Unlike H2, this feature changes output: a team may now hold Expert Belt or Wise 
 
 - Q: Which item group is H3? → A: The plain damage boosters (Expert Belt, Wise Glasses, Muscle Band), chosen by hold effect. Choice items, Life Orb, Metronome, Wide Lens, King's Rock / Razor Fang, Shell Bell, Lum Berry and resist berries are later groups (user, description above).
 - Q: How many benchmark teams get the paired comparison? → A: One, B2. Same choice as H2 ("running on one team is sufficient"). Candidate sets are still compared on all of B1-B5.
+- Q: Which optimizer budget do the B2 runs use? → A: Quick (user, `/speckit-plan`, 2026-10-29: "use the quick budget for the B2 runs").
 
 ## Known divergences (accepted)
 
@@ -134,7 +135,7 @@ A player whose team holds Expert Belt or Wise Glasses can see where to get it, i
 ## Assumptions
 
 - The optimizer's objective is unchanged; this feature only adds held items for it to try.
-- The B2 optimizations use the same budget on both sides. The quick budget was used for 011 and 013; the plan fixes the budget and the seeds.
+- The B2 optimizations use the quick budget on both sides (user, Clarifications). The plan fixes the seeds.
 - The equal-levels comparison script is written fresh from `main` and `platsim.stats` (McNemar exact). The archived 010 scripts are not reused.
 - Run time is local compute only. The B2 optimizations take about 20 minutes each at the quick budget on `main`, and 2,000 paired runs per comparison side. The plan estimates the total.
 - More candidates may make the optimizer slower. A slowdown is reported, not a failure, unless the user decides otherwise after seeing the numbers.
