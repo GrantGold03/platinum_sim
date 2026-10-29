@@ -10,7 +10,7 @@
   `uv run pytest -q -m "not battle_sim"` (~10 min). Next: held items H2 (H1 = 011, merged).
   **H2 revised (user, 2026-10-29):** no single-use held items in the optimizer's options (berries allowed); not Focus Sash. See FUTURE-FEATURES.
   **H2 = feature 013** (branch `013-no-single-use-items`, spec written 2026-10-29; plan written 2026-10-29 with one same-seed team (B2), user's call; implemented 2026-10-29: T001-T020 done, code `18b48f8` pushed; B1-B5 candidates and same-seed B2 identical to `main` apart from code hash and commit; fast mode 516 passed, 4 xfailed; Node 314/314; evidence `runs/013-evidence/`, log `specs/013-no-single-use-items/validation-log.md`. **Merged to `main` 2026-10-29 on the user's go (fast-forward to `dd7b8eb`, pushed).** Next: H3+ (backlog in FUTURE-FEATURES)).
-  **H3 = feature 014** (branch `014-damage-boost-items`, spec written 2026-10-29: Expert Belt, Wise Glasses, Muscle Band by hold effect; B2 equal-levels comparison; plan written 2026-10-29, quick budget for B2 (user); next: user runs `/speckit-tasks`).
+  **H3 = feature 014** (branch `014-damage-boost-items`, spec written 2026-10-29: Expert Belt, Wise Glasses, Muscle Band by hold effect; B2 equal-levels comparison; plan written 2026-10-29, quick budget for B2 (user); tasks written 2026-10-29, 19 tasks; next: user runs `/speckit-implement`).
 - **Stale-docs pass (2026-10-27, on `main`, user's choice "everything now").** README, RUN-STATE history,
   FUTURE-FEATURES, test docstrings, and comment-only edits in `src/` and `sim/` (both code hashes changed:
   `platsim_code_hash` `sha256:16a8d875...`, `sim_code_hash` `sha256:77802319...`; pre-pass checkpoints won't resume).
