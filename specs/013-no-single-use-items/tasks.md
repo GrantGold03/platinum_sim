@@ -66,7 +66,7 @@ otherwise appear. No candidate list for the B1-B5 members or the extra test team
   Run them; record that the guard test fails before T013 and the filter-off control passes
 - [X] T013 [US1] In `src/platsim/optimizer/candidates.py` `held_item_candidates`: apply one final filter `[it for it in out if not is_excluded_single_use(it)]` before the `out or [None]` return. Update the docstring to state the rule (single-use non-berry items never offered; berries allowed; the decomp reader decides). Import from `platsim.decomp.item_use`
 - [X] T014 [US1] Run `uv run pytest -q tests/unit/test_optimizer_candidates.py tests/unit/test_item_use.py`; record that all pass (SC-001, SC-004)
-- [ ] T015 [US1] Commit `src/platsim/decomp/item_use.py`, `src/platsim/optimizer/candidates.py`, `tests/unit/test_item_use.py`, `tests/unit/test_optimizer_candidates.py` as "feat(013): never offer single-use non-berry held items"; push
+- [X] T015 [US1] Commit `src/platsim/decomp/item_use.py`, `src/platsim/optimizer/candidates.py`, `tests/unit/test_item_use.py`, `tests/unit/test_optimizer_candidates.py` as "feat(013): never offer single-use non-berry held items"; push
 
 **Checkpoint**: US1 is done and testable alone.
 
@@ -77,9 +77,9 @@ otherwise appear. No candidate list for the B1-B5 members or the extra test team
 
 **Independent Test**: diffs against the T002/T003 baselines.
 
-- [ ] T016 [P] [US2] On the branch (after T015, extract rebuilt): run `candidates_snapshot.py` to `runs/013-evidence/branch-candidates.json`; compare with `main-candidates.json`; record the same keys and 0 entries differing, or explain each difference
-- [ ] T017 [US2] After T015 is pushed and with no commit pending: the same command as T003 to `runs/013-evidence/sc005-branch`; diff `result.json` field by field against `sc005-main`; record that only `/platsim_code_hash` and `/repo_commit` differ (`/provenance/worker/decomp_data_hash` must match), or explain each difference
-- [ ] T018 [P] [US2] Show `git diff main -- sim src/platsim/web src/platsim/availability src/platsim/legality src/platsim/explain.py src/platsim/decomp/items.py` is empty (FR-008); record
+- [X] T016 [P] [US2] On the branch (after T015, extract rebuilt): run `candidates_snapshot.py` to `runs/013-evidence/branch-candidates.json`; compare with `main-candidates.json`; record the same keys and 0 entries differing, or explain each difference
+- [X] T017 [US2] After T015 is pushed and with no commit pending: the same command as T003 to `runs/013-evidence/sc005-branch`; diff `result.json` field by field against `sc005-main`; record that only `/platsim_code_hash` and `/repo_commit` differ (`/provenance/worker/decomp_data_hash` must match), or explain each difference
+- [X] T018 [P] [US2] Show `git diff main -- sim src/platsim/web src/platsim/availability src/platsim/legality src/platsim/explain.py src/platsim/decomp/items.py` is empty (FR-008); record
 
 ## Phase 5: Polish & cross-cutting
 

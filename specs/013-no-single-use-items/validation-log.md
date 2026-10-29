@@ -80,3 +80,29 @@ Times are US Eastern. Evidence under `runs/013-evidence/` (git-ignored).
 - Filter added as the last step of `held_item_candidates` (`src/platsim/optimizer/candidates.py`).
 - `uv run pytest -q tests/unit/test_optimizer_candidates.py tests/unit/test_item_use.py`: `17 passed in 44.14s`,
   exit 0 (SC-001, SC-003, SC-004).
+
+## T015 Commit
+
+- `18b48f8` "feat(013): never offer single-use non-berry held items" (`item_use.py`, `candidates.py`, both test
+  files, tasks, log); pushed to `origin/013-no-single-use-items`. `item_use.py` is 367 lines, above the plan's
+  estimate of 150-250. The path walk and the completeness gate account for the difference.
+
+## T016 B1-B5 candidates on the branch
+
+- `candidates_snapshot.py` → `runs/013-evidence/branch-candidates.json`: exit 0, 93 entries. Against
+  `main-candidates.json`: same 93 keys, **0 entries differ** (FR-007).
+
+## T018 Untouched paths
+
+- `git diff --stat main -- sim src/platsim/web src/platsim/availability src/platsim/legality src/platsim/explain.py
+  src/platsim/decomp/items.py`: empty, exit 0 (FR-008). Control: `git diff --stat main -- src tests sim` lists the 4
+  changed files (534 insertions, 1 deletion), so the command does show changes.
+
+## T017 Same-seed quick B2 on the branch
+
+- Code `18b48f8` (pushed). Same command as T003, out `runs/013-evidence/sc005-branch`: 11:00:43 to 11:19:26 AM EDT,
+  wall 1122.91 s, exit 0.
+- Field-by-field diff of `result.json` against `sc005-main` (recursive over dicts and lists): **2 fields differ,
+  `/platsim_code_hash` (`sha256:16a8d875...` → `sha256:a0a422be...`) and `/repo_commit` (`cbb0580` → `18b48f8`)**.
+  `/provenance/worker/decomp_data_hash`, team, clear rate 0.81, expected average final level 53.22 and held items are
+  identical (FR-007, SC-005). The diff found these 2 fields, so it does detect differences.
