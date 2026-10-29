@@ -22,6 +22,7 @@ Today's optimizer already offers no single-use non-berry item. It offers the bes
 
 - Q: Should the optimizer offer Focus Sash (the original H2 plan)? → A: No. "I want to completely remove single use items from the options that the optimizer picks. Berries are still okay, but items such as focus sash are not" (user).
 - Q: Does "single-use" mean "used up when it triggers in battle" or "only one copy in the game"? → A: Used up when it triggers. The berry exemption only makes sense under that reading, since berries are used up too. The user accepted this reading by running `/speckit-specify` with the description that states it. Under either reading no item offered today changes.
+- Q: Same-seed optimization on all five benchmark teams, or one? → A: One team is enough (user, `/speckit-plan`, 2026-10-29: "running on one team is sufficient. Running all 5 is not needed"). The held-item candidates are still compared on all of B1-B5.
 
 ## Decomp evidence: how a held item is used up
 
@@ -70,12 +71,12 @@ A player who runs the same request on this branch and on `main` gets the same ca
 
 **Why this priority**: The rule is meant to change no output today. A difference would mean a mistake in the rule or in the claim that today's candidates hold no single-use item.
 
-**Independent Test**: Compare the held-item candidates of benchmark teams B1-B5 with `main`, and run the same-seed optimization of B1-B5 on both.
+**Independent Test**: Compare the held-item candidates of benchmark teams B1-B5 with `main`, and run the same-seed optimization of one benchmark team (B2) on both.
 
 **Acceptance Scenarios**:
 
 1. **Given** benchmark teams B1-B5, **When** held-item candidates are produced on this branch and on `main`, **Then** they are identical.
-2. **Given** B1-B5 and the same seeds, **When** optimized on this branch and on `main`, **Then** results are identical apart from provenance hashes (code hash, repo commit).
+2. **Given** benchmark team B2 and the same seed, **When** optimized on this branch and on `main`, **Then** results are identical apart from provenance hashes (code hash, repo commit).
 
 ---
 
@@ -98,7 +99,7 @@ A player who runs the same request on this branch and on `main` gets the same ca
 - **FR-004**: Berries MUST stay eligible whether or not they are single-use.
 - **FR-005**: Each single-use classification MUST be traceable to decomp file and line (the trigger and the removal), in line with Principle I.
 - **FR-006**: The classifier MUST have positive controls. Focus Sash is single-use and not a berry. Sitrus Berry is single-use and a berry. Leftovers is not single-use. A run that finds no single-use item fails.
-- **FR-007**: For benchmark teams B1-B5, the held-item candidates and the same-seed optimization results MUST be identical to `main`'s, apart from provenance hashes.
+- **FR-007**: For benchmark teams B1-B5, the held-item candidates MUST be identical to `main`'s. For one benchmark team (B2), the same-seed optimization result MUST be identical to `main`'s apart from provenance hashes.
 - **FR-008**: The battle player, the availability ledger, the validator and `platsim explain` output MUST NOT change.
 
 ### Key Entities
@@ -114,7 +115,7 @@ A player who runs the same request on this branch and on `main` gets the same ca
 - **SC-002**: The classifier's single-use non-berry set includes Focus Sash, White Herb, Mental Herb, Power Herb and Berry Juice. Any further item it reports is checked against the decomp and listed in the validation log.
 - **SC-003**: The positive controls pass: Focus Sash single-use, not a berry; Sitrus Berry single-use, a berry; Leftovers, Focus Band, Quick Claw and Silk Scarf not single-use.
 - **SC-004**: A test that injects a single-use non-berry item into the candidate rule fails, which shows the guard works.
-- **SC-005**: B1-B5 held-item candidates and same-seed optimization results are identical to `main`'s apart from provenance hashes.
+- **SC-005**: B1-B5 held-item candidates are identical to `main`'s, and the same-seed optimization of B2 is identical to `main`'s apart from provenance hashes.
 - **SC-006**: The fast test mode and the Node test suite pass, with their output recorded.
 
 ## Assumptions
@@ -123,5 +124,5 @@ A player who runs the same request on this branch and on `main` gets the same ca
 - Removal by the holder's own effect is the only removal that makes an item single-use. Knock Off and similar moves do not count.
 - The optimizer's objective is unchanged: it is the one stated in the report files and in earlier feature specs. This feature only narrows which held items it may try, and today that narrowing removes nothing.
 - `platsim explain` does not gain a "never offered" note in this feature. That can be a follow-up if the user wants it.
-- Same-seed B1-B5 optimizer runs use local compute only. They are the longest step. Feature 011 compared one benchmark team rather than five, and the user may narrow this at plan time.
+- The same-seed optimizer run (one team, B2) uses local compute only and is the longest step (about 25 minutes per run in feature 011).
 - Out of scope: the battle player, the ledger, the validator, adding any new item group (H3+).
