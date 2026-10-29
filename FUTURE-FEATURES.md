@@ -10,8 +10,10 @@ Built from the decomp and `main`, not from the 007-010 archive.
 
 - **H1 Held-item sources** (feature 011, branch `011-held-item-sources`): the ledger's gift reader finds the
   Route 221 house, the Pastoria City SW house and Amity Square. Merged to `main` 2026-10-26 after the user's test.
-- **H2** Offer the held items the battle player already models (Focus Sash; Life Orb if obtainable before the
-  Champion). Not specified; **next** (feature 012, item 5, merged 2026-10-27).
+- **H2** (revised by the user 2026-10-29) The optimizer never offers single-use held items (consumed when they
+  trigger: Focus Sash, herbs, ...); berries stay allowed. Today it already offers none (HP berry, unlimited
+  type boosts, Leftovers), so H2 makes the rule explicit and tested. The earlier plan (offer Focus Sash; Life
+  Orb, which has 0 pre-Champion copies) is dropped. Not specified; **next**.
 - **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
