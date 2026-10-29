@@ -79,6 +79,12 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     **Leftovers**. So Leftovers may be held by any number of members **only when Munchlax or
     Snorlax is on the team**. With post-game items allowed, the Victory Road item ball adds one copy
     for any team.
+  - **Held items the optimizer offers** (per moveset; each limited copy goes to one member): the best
+    HP-restoring berry, the type-boost item for the strongest attack's type, Leftovers (when allowed),
+    Expert Belt, and Wise Glasses or Muscle Band to match the strongest attack's category (014; Expert Belt and
+    Wise Glasses have 1 copy each, Muscle Band none). Items are picked by hold effect from the decomp. A held
+    item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
+    White Herb, Mental Herb, Power Herb, Berry Juice).
   - **TMs are single-use.** Each TM has as many copies as the game gives before the Champion. Shop
     and Game Corner TMs are unlimited.
   - **No bag items in battle.** Only held items have an effect. Between battles the team is healed

@@ -23,7 +23,7 @@ commit, switch branches or run `extract` while an optimization, the comparison o
 
 - The same optimize command with `--out runs/014-evidence/b2-branch`, after the code is committed and pushed. Record
   both wall times and the ratio (SC-005), and which members hold which items.
-- `uv run python <scratchpad>/equal_levels.py runs/014-evidence/b2-main runs/014-evidence/b2-branch`: both final
+- `uv run python specs/014-damage-boost-items/scripts/equal_levels.py runs/014-evidence/b2-main runs/014-evidence/b2-branch 2000` (`--self` for the pairing control): both final
   teams at the branch team's start levels, 2,000 paired runs, McNemar exact, mean final levels (research R5). Pass:
   `main` not significantly better, and the branch's average final level not higher (SC-004).
 

@@ -20,8 +20,11 @@ Built from the decomp and `main`, not from the 007-010 archive.
 - **H3** (feature 014, branch `014-damage-boost-items`, built and checked 2026-10-29; **merged to `main` 2026-10-29**):
   the optimizer offers the damage boosters chosen by hold effect (Expert Belt, Wise Glasses; Muscle Band has no
   pre-Champion copy). B2 at equal levels: branch team clears 0.8195 vs 0.7650 (McNemar p 1.0e-5).
-- **H4+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
-  Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
+- **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
+  (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome, Wide
+  Lens, King's Rock / Razor Fang, Razor Claw, Shell Bell, then Lum Berry and the resist berries. Life Orb has no
+  pre-Champion copy. Reusable checks: `specs/014-damage-boost-items/scripts/` (B1-B5 candidate snapshot, B2
+  equal-levels comparison). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
 - Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
   walking partner) are treated as always visible; the partner condition is therefore not stated with the

@@ -1,12 +1,22 @@
-# START HERE (updated 2026-10-27)
+# START HERE (updated 2026-10-29)
 
-- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`) and feature 012 (fast test mode, merged 2026-10-27, `321cd02`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **Resume checklist (2026-10-29, end of session).** On `main` at `92187d8`+, everything committed and pushed;
+  `data/generated/` built from `main`. Nothing is running; web server stopped. Branches `013-no-single-use-items`
+  and `014-damage-boost-items` are merged (kept local + GitHub). Next feature: H4 (FUTURE-FEATURES §0), only when
+  the user asks; the user runs the `/speckit-*` stages. Reusable comparison scripts (B1-B5 candidate snapshot,
+  equal-levels McNemar) are committed under `specs/014-damage-boost-items/scripts/`; the session's other scratch
+  files are copied to `runs/014-evidence/scratchpad/` (git-ignored, local only).
+- **Open gap: merge rule.** README "Merge rule" says the full pytest suite (~2.5 h) and Node pass before every
+  merge. 013 and 014 were merged on fast mode + Node only (their specs and the user's plan asked for that); the
+  last full suite is still 2026-10-27 (012). The 26 `battle_sim` tests (incl. `test_optimize_small.py`) have not
+  run on 013/014 code. Ask the user whether to run the full suite on `main` before H4.
+- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`), feature 012 (fast test mode, merged 2026-10-27, `321cd02`), feature 013 (no single-use held items, merged 2026-10-29, `dd7b8eb`) and feature 014 (damage-boost held items, merged 2026-10-29, `b68b794`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
   `010-variable-power` (local + GitHub). Specs and findings for 008-010 are under `specs/`; evidence under
   `runs/*-evidence/` (git-ignored).
-- **Current work (2026-10-27).** Feature 012 merged to `main` (fast-forward to `321cd02`, user's go). Fast mode:
+- **History (2026-10-27 to 2026-10-29).** Feature 012 merged to `main` (fast-forward to `321cd02`, user's go). Fast mode:
   `uv run pytest -q -m "not battle_sim"` (~10 min). Next: held items H2 (H1 = 011, merged).
   **H2 revised (user, 2026-10-29):** no single-use held items in the optimizer's options (berries allowed); not Focus Sash. See FUTURE-FEATURES.
   **H2 = feature 013** (branch `013-no-single-use-items`, spec written 2026-10-29; plan written 2026-10-29 with one same-seed team (B2), user's call; implemented 2026-10-29: T001-T020 done, code `18b48f8` pushed; B1-B5 candidates and same-seed B2 identical to `main` apart from code hash and commit; fast mode 516 passed, 4 xfailed; Node 314/314; evidence `runs/013-evidence/`, log `specs/013-no-single-use-items/validation-log.md`. **Merged to `main` 2026-10-29 on the user's go (fast-forward to `dd7b8eb`, pushed).** Next: H3+ (backlog in FUTURE-FEATURES)).
@@ -22,7 +32,9 @@
   must be rebuilt (`uv run platsim extract`) after switching branches.
 - **Uncommitted on purpose:** the user's deletion of `.claude/scheduled_tasks.lock`, and untracked Spec Kit
   extension files (`.claude/skills/speckit-assess-*`, `.specify/extensions*`, `.specify/assessments/`) and
-  `held_items.md`, which are the user's.
+  `held_items.md`, which are the user's. `held_items.md` is a 2026-10-14 snapshot: its "Optimizer candidate"
+  column predates 013/014 (Expert Belt, Wise Glasses now offered; single-use items excluded) and its header
+  names `optimizer/item_classes.py`, which is not on `main` (007 reverted). Untracked, so not backed up by git.
 
 # RUN-STATE: Champion Team Optimizer
 
