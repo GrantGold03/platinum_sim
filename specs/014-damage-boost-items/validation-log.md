@@ -125,3 +125,8 @@ mean final level (cleared runs): A 53.34289200732154 vs B 53.39520697167756
 ## T019 Docs
 
 - `FUTURE-FEATURES.md` (H3 status; later groups renamed H4+) and `RUN-STATE.md` updated.
+
+## Merge (2026-10-29)
+
+- The user said to merge into `main`. `main` fast-forwarded `3078dad..b68b794` and pushed. `uv run platsim extract`
+  on `main`: exit 0.
