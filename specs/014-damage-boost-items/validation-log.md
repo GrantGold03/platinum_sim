@@ -113,3 +113,15 @@ mean final level (cleared runs): A 53.34289200732154 vs B 53.39520697167756
 - `git diff --stat main -- sim src/platsim/availability src/platsim/legality src/platsim/explain.py src/platsim/decomp`:
   empty, exit 0. Control: `git diff --stat main -- src tests` lists `candidates.py` (+11) and
   `test_optimizer_candidates.py` (+89).
+
+## T018 Gates (code `0938314` = `681daa9` + docs)
+
+- 2:00:59 to 2:15:44 PM EDT; logs `runs/014-evidence/t018-pytest.log`, `t018-node.log`, `t018.time`.
+- `uv run pytest -q -m "not battle_sim"`: `525 passed, 26 deselected, 4 xfailed, 1 warning in 608.05s`, exit 0.
+  On `main`: 516 passed. +9 = the new tests in `test_optimizer_candidates.py` (8 booster tests + 1 report-source test).
+- `(cd sim && node --test test/*.test.mjs)`: `# tests 314`, `# pass 314`, `# fail 0`, exit 0. SC-006.
+- No commit was made while the suites ran.
+
+## T019 Docs
+
+- `FUTURE-FEATURES.md` (H3 status; later groups renamed H4+) and `RUN-STATE.md` updated.

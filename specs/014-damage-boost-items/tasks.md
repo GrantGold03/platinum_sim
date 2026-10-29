@@ -76,8 +76,8 @@ runs need the code committed first.
 ## Phase 6: Polish & cross-cutting
 
 - [X] T017 `git diff --stat main -- sim src/platsim/availability src/platsim/legality src/platsim/explain.py src/platsim/decomp` is empty (FR-007). Control: `git diff --stat main -- src tests` lists the changed files. Record
-- [ ] T018 Fast mode `uv run pytest -q -m "not battle_sim"` and `(cd sim && node --test test/*.test.mjs)`, logs to `runs/014-evidence/`; record summary lines and counts against `main` (516 passed, 4 xfailed; Node 314) (SC-006)
-- [ ] T019 Update `FUTURE-FEATURES.md` (H3 status; next groups) and `RUN-STATE.md`; mark tasks; commit the docs and the validation log; push
+- [X] T018 Fast mode `uv run pytest -q -m "not battle_sim"` and `(cd sim && node --test test/*.test.mjs)`, logs to `runs/014-evidence/`; record summary lines and counts against `main` (516 passed, 4 xfailed; Node 314) (SC-006)
+- [X] T019 Update `FUTURE-FEATURES.md` (H3 status; next groups) and `RUN-STATE.md`; mark tasks; commit the docs and the validation log; push
 
 ## Dependencies & execution order
 

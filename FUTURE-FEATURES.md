@@ -17,7 +17,10 @@ Built from the decomp and `main`, not from the 007-010 archive.
   2026-10-29; **merged to `main` 2026-10-29** (user's go). For H3+: every candidate passes through the filter in
   `held_item_candidates` automatically (decomp reader `platsim.decomp.item_use`; excluded today: Focus Sash, White
   Herb, Mental Herb, Power Herb, Berry Juice).
-- **H3+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
+- **H3** (feature 014, branch `014-damage-boost-items`, built and checked 2026-10-29; waiting for the user's test):
+  the optimizer offers the damage boosters chosen by hold effect (Expert Belt, Wise Glasses; Muscle Band has no
+  pre-Champion copy). B2 at equal levels: branch team clears 0.8195 vs 0.7650 (McNemar p 1.0e-5).
+- **H4+** One item group per feature, with the player learning each group (Choice Specs / Expert Belt / Wise
   Glasses and similar, then resist berries / Lum Berry, ...). Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
 - Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
