@@ -27,8 +27,14 @@
   existing determinism + AI golden tests. Follow-ons (a3 second-level damage memo, a4 persist damageTable/
   matchupScore) and feature 016 (`expectimax2-v4`: K_PLY2 1, branch floor, beam 1) wait. `/speckit-specify` run 5:30 PM EDT: branch
   `015-exact-ai-speedups` (from `main` c751fb2, main checkout), `specs/015-exact-ai-speedups/spec.md` +
-  `checklists/requirements.md` (all items pass, no clarification markers). Next: the user runs `/speckit-plan`
-  (or `/speckit-clarify` first). No code change yet.
+  `checklists/requirements.md` (all items pass). `/speckit-clarify` 5:35 PM EDT: replay test runs the full 40-gauntlet
+  set in the default Node suite; the benchmark harness ships with the sim (`sim/bench.mjs` + `platsim bench`).
+  `/speckit-plan` 5:50 PM EDT: plan.md, research.md (R1-R7), data-model.md, contracts/{adapter-api,bench-tool}.md,
+  quickstart.md. Design: adapter `damageInput()` memo + `beginDecision()` at `decide()` and `makeContext()` (the
+  root view's adapter is the per-battle mirror's); `Constants.get` fast path + resolved effect Sets; proof chain
+  = fixture recorded at the instrumentation commit whose v2 digest must equal `main`'s db6d20cf... Open wording
+  point: FR-006 "lookups must not grow with samples" is met for the effect tables only (research R2), not for
+  every `K()` site. Next: the user runs `/speckit-tasks`. No code change yet.
 
 - **Resume checklist (2026-10-29, end of session).** On `main` at `92187d8`+, everything committed and pushed;
   `data/generated/` built from `main`. Nothing is running; web server stopped. Branches `013-no-single-use-items`
