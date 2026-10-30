@@ -45,6 +45,13 @@ that change decisions (fewer samples, pruning) are a separate feature with a new
   across decisions, and every decision-changing change are later features.
 - Q: Replace v2 in place or register a new policy? → A: In place. The results must be byte-identical, so the
   registered names `expectimax2-v1` and `expectimax2-v2` keep their meaning (Principle VI).
+- Q: Does the 40-gauntlet replay test run every time the Node suite runs, or a subset with the full set on
+  demand? → A: The full 40-gauntlet replay runs in the default Node suite, using worker threads as the
+  determinism test does (user, 2026-10-30, `/speckit-clarify`).
+- Q: Where does the measurement harness live (replays the fixed seed set, reports gauntlets/s and ms per
+  decision)? → A: It becomes a project tool that ships with the simulator (under `sim/` or `src/`, the plan
+  picks the place), not a spec-folder script or a local-only file, so the before/after comparison and feature
+  016's comparison against this baseline can be rerun by anyone (user, 2026-10-30, `/speckit-clarify`).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -154,7 +161,8 @@ time.
   `db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and every player choice MUST equal the
   recorded one.
 - **FR-002**: The fixture for FR-001 (digest and the sequence of player choices per gauntlet) MUST be recorded
-  from `main` before any behaviour change and committed with the test that checks it.
+  from `main` before any behaviour change and committed with the test that checks it. The test MUST run the
+  full 40-gauntlet set as part of the default Node suite (`node --test`), not a subset or an opt-in run.
 - **FR-003**: The live opponent AI (`decomp-ai`) MUST be unchanged in behaviour: the existing opponent-AI
   fixture and golden tests pass, and for every decision the number of AI random-number draws equals `main`'s.
 - **FR-004**: The facts the damage formula reads for a Pokemon (and for the field) MUST be derived at most once
@@ -170,6 +178,11 @@ time.
 - **FR-009**: Run time MUST be measured before and after on the same seeds and recorded in the validation log:
   gauntlets/s and ms per decision as a single process, and wall time with gauntlets/s through the 16-worker
   pool.
+- **FR-011**: The measurement MUST be produced by a committed project tool, part of the simulator's own code
+  (not a spec-folder script or a local file): given a player policy name, the fixed seed set and the team
+  fixtures, it runs the gauntlets and reports gauntlets/s, ms per decision and the result digest, as a single
+  process and through the worker pool. Its single-process digest on `main` MUST equal the FR-001 digest
+  (positive control that the tool measures the same runs the test checks).
 - **FR-010**: The Node test suite, fast mode (`not battle_sim`) and, before merge, the full pytest suite MUST
   pass, with their output recorded.
 
@@ -182,6 +195,8 @@ time.
   several times. Immutable once built.
 - **Decision**: one player or opponent choice; the unit after which remembered live-battle inputs are discarded.
 - **Replay fixture**: the recorded digest and player choices of the fixed seed set on `main`.
+- **Benchmark tool**: the project command that replays a seed set with a named policy and reports throughput,
+  ms per decision and the result digest; the source of every number in the validation log.
 
 ## Success Criteria *(mandatory)*
 
@@ -202,11 +217,14 @@ time.
 - Within one decision nothing changes the battle state the trainer AI reads; hypothetical states are built
   once and never modified afterwards. The plan verifies this by reading the code and the test checks the
   consequence (FR-001, FR-003).
-- The replay test runs in the Node suite using worker threads, as the determinism test does, so it adds on the
-  order of 15 to 30 s rather than the 100 s a single process needs. If it proves slower it stays in the suite
-  and the time is reported.
-- The 16-worker measurement uses the existing worker pool on the same 40 gauntlets; it is a report, not a
-  pass/fail gate, because pool contention is not part of this feature.
+- The replay test uses worker threads, as the determinism test does, so it adds on the order of 15 to 30 s to
+  the Node suite rather than the 100 s a single process needs. If it proves slower it stays in the suite and
+  the time is reported (user decision, Clarifications).
+- The 16-worker measurement uses the existing worker pool on the same 40 gauntlets, driven by the benchmark
+  tool (FR-011); it is a report, not a pass/fail gate, because pool contention is not part of this feature.
+- The benchmark tool is new code that ships with the simulator; placing it under `sim/` changes the sim code
+  hash exactly as the speedups do, so it adds no further cost there. Its placement (`sim/` vs `src/`) is a plan
+  decision.
 - Local compute only: the measurements take minutes; the full suite before merge takes about 2 h 10 min.
-- Feature size: two code items, one test fixture, one measurement; expected 2 to 3 stories and well under 30
-  tasks. If the plan grows past that, it is split.
+- Feature size: two code items, one test fixture, one benchmark tool with its measurement; expected 3 stories
+  and under 30 tasks. If the plan grows past that, it is split.
