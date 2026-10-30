@@ -1,4 +1,34 @@
-# START HERE (updated 2026-10-29)
+# START HERE (updated 2026-10-30)
+
+- **In progress (2026-10-30, session started 2:54 PM EDT): expectimax2-v2 speed work, measurement phase.**
+  Goal: make the player policy faster by algorithmic changes (not a port). User decisions: run the full
+  pytest suite on `main` first: **done, passed** (c751fb2; `uv run pytest -q` 551 passed, 4 xfailed, exit 0,
+  2:54-5:04 PM EDT, 7764 s; `node --test` 314/314, exit 0, 257 s; logs in the session scratchpad `suite/`);
+  this closes the "Open gap: merge rule" item below for 013/014. Exact speedups =
+  feature 015, approximations = feature 016 (H4 moves to 017+); any decision-changing policy is registered as
+  `expectimax2-v4` (never `-v3`, archived 007's name). Plan: `~/.claude/plans/pasted-content-id-245a-goal-make-eager-squid.md`.
+  Step 1 = profile (`node --cpu-prof`, fixed gauntlet set, a module load hook that patches the policy source in
+  memory for counters; repo untouched; harness in the scratchpad `prof/`: run_gauntlets.mjs, hooks.mjs,
+  register.mjs, analyze_profile.mjs). Smoke test (1 Aaron battle) passed: 16 hook patches each matched once,
+  hooked and plain runs give the same result digest. Profile set: N=20 gauntlets x 2 teams (benchmark fixture,
+  reference fixture), seed blocks `prof-a-*` and `prof-b-*`, all 5 trainers, stop_on_loss false: **done 5:15 PM EDT**
+  (report + logs + .cpuprofile copied to `runs/015-evidence/scratchpad/prof/` (summary `REPORT.md`, specify text
+  `specify_015.txt`) and the suite logs to `runs/015-evidence/scratchpad/suite/`; git-ignored, local only). Headline: v2 0.386 gauntlets/s single process, 34.2 ms/decision, 44.7 AI
+  calls/decision; greedy-v1 6.75 gauntlets/s on the same seeds. 72% of time is the opponent-AI prediction
+  (aiDecide); inside it 36% of ALL time is `fromShowdown`/`battlerFromShowdown` input conversion (redone per
+  move per sample, incl. live `Pokemon.getTypes` -> runEvent on the root view) and 11-15% is `constants.get`
+  string lookups (`effectIn` in sim/ai/calcdamage.mjs). Killed by measurement: cloning (0.7%), prediction-cache
+  keys (0.35% hit rate now, coarse-key bound <= 12% of ply-2 calls), end-state merge (collapses 0.5%).
+  Hook/plain digests identical (db6d20cf...). Step 2 ranked list presented 5:20 PM EDT. **User decision
+  (5:25 PM EDT): feature 015 = exact items (a1) memoise the AI damage-calc inputs per adapter/decision and
+  (a2) pre-resolve `constants.get` lookups (`effectIn`, hot `K()` sites) in sim/ai.** v2's decisions must stay
+  identical: acceptance = a Node test replaying the profile seed set (`prof-a-*`, 20 x 2 teams) against the digest
+  recorded on `main` (db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3) plus every p1 choice;
+  existing determinism + AI golden tests. Follow-ons (a3 second-level damage memo, a4 persist damageTable/
+  matchupScore) and feature 016 (`expectimax2-v4`: K_PLY2 1, branch floor, beam 1) wait. `/speckit-specify` run 5:30 PM EDT: branch
+  `015-exact-ai-speedups` (from `main` c751fb2, main checkout), `specs/015-exact-ai-speedups/spec.md` +
+  `checklists/requirements.md` (all items pass, no clarification markers). Next: the user runs `/speckit-plan`
+  (or `/speckit-clarify` first). No code change yet.
 
 - **Resume checklist (2026-10-29, end of session).** On `main` at `92187d8`+, everything committed and pushed;
   `data/generated/` built from `main`. Nothing is running; web server stopped. Branches `013-no-single-use-items`
@@ -6,7 +36,7 @@
   the user asks; the user runs the `/speckit-*` stages. Reusable comparison scripts (B1-B5 candidate snapshot,
   equal-levels McNemar) are committed under `specs/014-damage-boost-items/scripts/`; the session's other scratch
   files are copied to `runs/014-evidence/scratchpad/` (git-ignored, local only).
-- **Open gap: merge rule.** README "Merge rule" says the full pytest suite (~2.5 h) and Node pass before every
+- **Open gap: merge rule (closed 2026-10-30: full suite passed on `main` c751fb2, see above).** README "Merge rule" says the full pytest suite (~2.5 h) and Node pass before every
   merge. 013 and 014 were merged on fast mode + Node only (their specs and the user's plan asked for that); the
   last full suite is still 2026-10-27 (012). The 26 `battle_sim` tests (incl. `test_optimize_small.py`) have not
   run on 013/014 code. Ask the user whether to run the full suite on `main` before H4.
