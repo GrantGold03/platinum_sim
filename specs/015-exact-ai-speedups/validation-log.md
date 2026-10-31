@@ -102,3 +102,30 @@ taken with nothing else running on the machine (checked with `pgrep -a node; pgr
   0.2726), 21.796 ms/decision (42.336), ai_draws 1206240 (unchanged), `digest_full` `1273b694…` (= `main`),
   `digest_logs` `bd80333d…`. **SC-002: 0.7793 ≥ 0.579 (1.5 x 0.386); v2 single-process gain 2.02x, v1 1.92x.**
   `runs/015-evidence/bench-c3-v2.json`, `bench-c3-v1.json`.
+
+## T026-T031 Commit 4a: `platsim bench` (US3) (2026-10-31)
+
+- T026/T027 written, then T028/T029: `uv run pytest -q tests/unit/test_bench_cli.py tests/integration/test_bench.py -s`:
+  **5 passed, exit 0** (battle split: 3 worker starts, both integration tests marked and reached the worker,
+  0 under/over-marked). The digest-line vector is shared with `sim/test/bench.test.mjs`.
+- **T030**, machine idle: `uv run platsim bench --policy expectimax2-v2 --workers 16 --json` 4:28:45 to 4:29:51 PM EDT,
+  exit 0 (`runs/015-evidence/bench-c4-pool.json`): single process wall 51.095 s, **0.7829 gauntlets/s**, 16.503
+  ms/decision, ai_draws 849962, `digest_full` `db6d20cf…`; **pool (16 workers) wall 12.423 s, 3.2199 gauntlets/s**,
+  cleared 36/40, `pool_digest_logs` = `be27826f…` = single-process `digest_logs` = `main` pool (T003):
+  `digests_agree: true`. `sim_code_hash` single = pool = `sha256:719e63b0…`.
+
+### Before / after (same 40 gauntlets, seeds prof-a-*, both fixture teams, all five trainers)
+
+| Measure | `main` c751fb2 | branch (commits 1-3) | ratio |
+|---|---|---|---|
+| expectimax2-v2 single process, gauntlets/s | 0.3859 (T008; 0.3895 T002) | 0.7793 (T024; 0.7829 T030) | **2.02x** |
+| expectimax2-v2 single process, ms/decision | 34.197 | 16.573 | 0.48x |
+| expectimax2-v2 single process, wall | 103.644 s | 51.330 s | |
+| expectimax2-v1 single process, gauntlets/s | 0.2726 | 0.5233 | 1.92x |
+| expectimax2-v2 16-worker pool, wall | 20.917 s (T003) | 12.423 s (T030) | **1.68x** |
+| expectimax2-v2 16-worker pool, gauntlets/s | 1.9124 | 3.2199 | 1.68x |
+| US1 alone (commit 2), single process | | 0.6081 gauntlets/s, 21.535 ms/decision | 1.58x |
+
+Results unchanged throughout: `digest_full` v2 `db6d20cf…`, v1 `1273b694…`; `digest_logs` v2 `be27826f…`; AI draws
+849962 (v2) and 1206240 (v1). SC-002 met (0.7793 ≥ 0.579). SC-003: 1.68x on the pool (40 jobs on 16 workers is
+tail-bound; the per-job gain is the single-process 2.02x).

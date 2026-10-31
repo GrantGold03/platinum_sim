@@ -295,6 +295,31 @@ def _add_report(sub: argparse._SubParsersAction) -> None:
 _SUBCOMMANDS.append(_add_report)
 
 
+def _add_bench(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("bench", help="time the battle player on the fixed seed set, single process and worker pool "
+                                     "(feature 015; exit 1 if the two result digests differ)")
+    p.add_argument("--policy", default="expectimax2-v2", help="player policy name (default expectimax2-v2)")
+    p.add_argument("--n", type=int, default=20, help="gauntlets per team (default 20)")
+    p.add_argument("--block", default="a", help="seed block: seeds prof-<block>-<team>-<i> (default a)")
+    p.add_argument("--teams", type=lambda s: [t for t in s.split(",") if t], default=["bench", "ref"],
+                   help="comma list of fixture teams: bench (policy_benchmark_team) and/or ref (reference_team)")
+    p.add_argument("--trainers", type=lambda s: [t for t in s.split(",") if t], default=None,
+                   help="comma list of trainers (default: all five League trainers)")
+    p.add_argument("--workers", type=int, default=None, help="pool size (default: CPU count)")
+    p.add_argument("--no-single", action="store_true", help="skip the single-process run (pool timing only)")
+    p.add_argument("--json", action="store_true", help="print the merged JSON report instead of a table")
+
+    def run(args: argparse.Namespace) -> int:
+        from platsim.bench import run as bench_run
+
+        return bench_run(args)
+
+    p.set_defaults(func=run)
+
+
+_SUBCOMMANDS.append(_add_bench)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="platsim")
     sub = parser.add_subparsers(dest="command", required=True)
