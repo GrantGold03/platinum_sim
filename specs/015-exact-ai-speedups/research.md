@@ -89,8 +89,10 @@ covered by the same call at the top of `decide()`.
 `expectimax2-v1`, the 40 requests of the fixed set (`policy_benchmark_team.json` `.team` then
 `reference_team.json` `.builds`, seeds `prof-a-<bench|ref>-<i>`, i < 20, all five trainers, `stop_on_loss:
 false`, opponent `decomp-ai`), and per gauntlet: `cleared`, `final_levels`, battles `[trainer, end, turns,
-log_hash]`, the p1 choice strings in order, the policy's AI draws (`STATS.aiDraws` delta) and the live AI's
-draws per battle (`stateFor(battle).rng.draws` after the last opponent choice). Per policy: `digest_full` (the
+log_hash]`, the p1 choice strings in order, the policy's AI draws per player decision (`STATS.aiDraws` delta
+across each choice) and the live AI's draws per opponent decision (`stateFor(battle).rng.draws` delta across
+each opponent choice; user decision 2026-10-31 after `/speckit-analyze`: per decision, not per battle, so
+FR-003/SC-005 are checked as written). Per policy: `digest_full` (the
 harness digest: sha256 over `JSON.stringify(result)` of each gauntlet in order) and `digest_logs`
 (cross-language digest, see R5).
 
@@ -107,8 +109,8 @@ harness digest: sha256 over `JSON.stringify(result)` of each gauntlet in order) 
 
 **Recording p1 choices and draws** without touching the policies: `runRecorded(gd, req)` in `sim/bench.mjs`
 registers wrapped copies of the player and opponent policies (as `determinism.test.mjs` `instrument()` does),
-records each p1 choice and, after each opponent choice, `stateFor(battle).rng.draws`; `STATS.aiDraws` is read
-before and after. The wrappers do not change the choices (they call through), and the digest proves it.
+records each p1 choice with the `STATS.aiDraws` delta across it, and for each opponent choice the
+`stateFor(battle).rng.draws` delta across it. The wrappers do not change the choices (they call through), and the digest proves it.
 
 **Test shape** (`replay.test.mjs`): like `determinism.test.mjs`, the file re-imports itself as a worker. W =
 min(16, cpus) workers each run a slice of the 80 requests through `runRecorded` and return the per-gauntlet

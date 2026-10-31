@@ -42,8 +42,11 @@ policy into an existing file is done by running again with the other `--policy` 
 key replaced, the file rewritten).
 
 **`runRecorded(gd, req)`** (exported): runs one request with wrapped policies and returns `{ result, json,
-choices, policy_ai_draws, live_ai_draws }`. The wrappers call through and record only; `result` is byte-identical
-to an unwrapped run (checked by `digest_full`).
+choices, policy_ai_draws, live_ai_draws }`: `choices[i]` the player's i-th choice string, `policy_ai_draws[i]`
+the `STATS.aiDraws` delta across that choice (0 for a policy without AI prediction), `live_ai_draws[j]` the
+`stateFor(battle).rng.draws` delta across the opponent's j-th choice of the gauntlet (battles concatenated; the
+live AI state is created on its first choice, so the first delta of each battle counts from 0). The wrappers
+call through and record only; `result` is byte-identical to an unwrapped run (checked by `digest_full`).
 
 ## `platsim bench`
 
@@ -68,5 +71,6 @@ invalid option. Row for `specs/001-*/contracts/cli.md` and the README command ta
 
 For each policy in the fixture: runs the fixture's set with `runRecorded` across `min(16, cpus)` worker threads,
 reassembles in request order and asserts: `digest_full` and `digest_logs` equal the fixture's; per gauntlet,
-`choices`, `policy_ai_draws` and `live_ai_draws` equal. Diagnostic line: gauntlets, decisions, seconds. Positive
-control test: a copy of the fixture with one choice altered fails the comparison.
+`choices`, `policy_ai_draws` and `live_ai_draws` deep-equal (per decision). Diagnostic line: gauntlets,
+decisions, seconds. Positive control test: a copy of the fixture with one choice altered fails the comparison,
+and so does one with a single draw count changed.

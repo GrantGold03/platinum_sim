@@ -41,13 +41,17 @@ Rule: `effectIn(ai, table, x)` ≡ `x ∈ resolved(table, ai.constants)` ≡ `ta
         { "seed": "prof-a-bench-0", "team": "bench", "cleared": true, "final_levels": [..],
           "battles": [["aaron", "win", 23, "sha256:…"], ...],
           "choices": ["move 2", "switch 3", ...],
-          "policy_ai_draws": 12345, "live_ai_draws": [410, 388, ...] }
+          "policy_ai_draws": [96, 112, 0, ...], "live_ai_draws": [7, 9, 4, ...] }
       ]
     },
     "expectimax2-v1": { ... }
   }
 }
 ```
+
+`policy_ai_draws[i]` is the trainer-AI draw count (`STATS.aiDraws` delta) inside the player's i-th decision;
+`live_ai_draws[j]` is the live opponent AI's draw count (`stateFor(battle).rng.draws` delta) inside its j-th
+decision of the gauntlet (battles concatenated). Both are per decision (FR-003, SC-005; user decision 2026-10-31).
 
 Identity: `(policy, seed)`. The team fixtures are referenced by name (`bench` = `tests/fixtures/policy_benchmark_team.json`
 `.team`; `ref` = `tests/fixtures/reference_team.json` `.builds`), not copied; a change to those files changes the
