@@ -169,7 +169,7 @@ export const V1_OPTS = Object.freeze({ koStop: false });
 export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
-export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0 };
+export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0 };
 
 // Search parameters (policy tuning).
 export const PARAMS = {
@@ -917,8 +917,10 @@ function predictOpponent(X, S, depthTag, K) {
     for (let k = 0; k < K; k++) {
       const seed = (X.seedBase ^ Math.imul(h, 0x9e3779b1) ^ Math.imul(k + 1, 0x85ebca6b)) >>> 0;
       const ta = performance.now();
-      const act = aiDecide(X, S, view, new AIRng(seed));
+      const rng = new AIRng(seed);
+      const act = aiDecide(X, S, view, rng);
       STATS.aiMs += performance.now() - ta;
+      STATS.aiDraws += rng.draws; // every trainer-AI draw of this sample (015 replay test, FR-003)
       const ak = act.kind === 'move' ? `m${act.slot}` : act.kind === 'switch' ? `s${act.idx}` : act.kind;
       const c = counts.get(ak);
       if (c) c.n++; else counts.set(ak, { n: 1, act });
@@ -1159,6 +1161,8 @@ export function makeContext({ gd, battle, side, trainer }, opts = V1_OPTS, name 
   if (side.id !== 'p1') throw new Error('expectimax2: the policy plays p1');
   const ms = mirrorFor(battle, trainer, name);
   const mirror = ms.mirror;
+  // The mirror's adapter lives for the whole battle; a new decision starts here (015, adapter-api.md).
+  mirror.ai.beginDecision?.();
   // Catch the private mirror's AI memory up with the public log (same mapping as the real AI).
   processLog(mirror);
   const real = stateFor(battle);
