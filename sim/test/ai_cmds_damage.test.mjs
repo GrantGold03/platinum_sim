@@ -369,3 +369,35 @@ test('015 cacheStats: builds per decision do not grow with the number of samples
   assert.ok(hitsAfter[1] > hitsAfter[0] && hitsAfter[2] > hitsAfter[1], `hits grow with K: ${hitsAfter}`);
   assert.equal(s.draws.length, 0);
 });
+
+// Feature 015 (FR-006): effect tables resolved once per constants instance into Sets; membership equals the
+// name-by-name scan for every effect value (and every move number for the battle_lib move lists).
+test('015 effectSet: equals names.some(K(n) === v) for every value; one hit and one miss per table; resolved once', async () => {
+  const { MOVES_AFFECTED_BY_GRAVITY, MOVES_AFFECTED_BY_HEAL_BLOCK } = await import('../ai/choose.mjs');
+  const { Constants } = await import('../ai/constants.mjs');
+  const s = setup();
+  const ai = s.ai;
+  const scan = (table, v) => table.names.some((n) => ai.constants.get(n) === v);
+  const effects = new Set([0, -1, ...ai.tables.moves.filter(Boolean).map((m) => m.effect)]);
+  const moveNums = Array.from({ length: ai.tables.moves.length + 1 }, (_, i) => i);
+  for (const [table, values] of [[cd.NO_DAMAGE_CALC_EFFECTS, effects], [cd.ALT_POWER_EFFECTS, effects],
+    [MOVES_AFFECTED_BY_GRAVITY, moveNums], [MOVES_AFFECTED_BY_HEAL_BLOCK, moveNums]]) {
+    const set = cd.effectSet(ai, table);
+    assert.ok(set instanceof Set && set.size === new Set(table.names.map((n) => ai.constants.get(n))).size);
+    let hits = 0, misses = 0;
+    for (const v of values) {
+      assert.equal(set.has(v), scan(table, v), `${table.names[0]}.. value ${v}`);
+      if (set.has(v)) hits++; else misses++;
+    }
+    assert.ok(hits > 0 && misses > 0, `positive control for ${table.names[0]}..: hits ${hits}, misses ${misses}`);
+    assert.equal(cd.effectSet(ai, table), set, 'resolved once per (table, constants): same Set object');
+  }
+  // A second constants instance (same definitions, cold memo) gets its own Set with equal contents.
+  const C2 = new Constants(ai.constants.root);
+  C2.defs = ai.constants.defs; C2.lists = ai.constants.lists;
+  const ai2 = { constants: C2 };
+  const a = cd.effectSet(ai, cd.ALT_POWER_EFFECTS), b = cd.effectSet(ai2, cd.ALT_POWER_EFFECTS);
+  assert.notEqual(a, b);
+  assert.deepEqual([...a].sort(), [...b].sort());
+  assert.equal(s.draws.length, 0);
+});

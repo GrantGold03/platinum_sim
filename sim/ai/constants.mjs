@@ -184,10 +184,14 @@ export class Constants {
 
   has(name) { return this.defs.has(name); }
 
-  get(name, stack = []) {
-    if (this.values.has(name)) return this.values.get(name);
+  get(name, stack) {
+    // Memo fast path (015): one Map read, no allocation. `values` only ever holds numbers, so
+    // `undefined` means "not resolved yet". Result and error behaviour are unchanged.
+    const memo = this.values.get(name);
+    if (memo !== undefined) return memo;
     const d = this.defs.get(name);
     if (!d) throw new Error(`constants: unknown symbol ${name}`);
+    stack ??= [];
     if (stack.includes(name)) throw new Error(`constants: recursive definition ${[...stack, name].join(' -> ')}`);
     const v = d.value !== undefined ? d.value : evalExpr(d.expr, (id) => this.get(id, [...stack, name]), d.src);
     this.values.set(name, v);

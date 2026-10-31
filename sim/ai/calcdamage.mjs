@@ -134,7 +134,18 @@ export function speciesWeightHg(speciesConst) {
 // ---------- helpers over the adapter ----------
 
 const K = (ai, n) => ai.constants.get(n);
-const effectIn = (ai, table, effect) => table.names.some((n) => K(ai, n) === effect);
+// 015 (FR-006): a parsed name table resolved once per constants instance into the Set of its values, so a
+// table check is one Set.has instead of resolving every name per call. `effectSet(ai, T).has(x)` is
+// exactly `T.names.some((n) => K(ai, n) === x)`: membership of x among the resolved values.
+const RESOLVED = new WeakMap(); // table -> WeakMap<Constants, Set<number>>
+export function effectSet(ai, table) {
+  let per = RESOLVED.get(table);
+  if (!per) { per = new WeakMap(); RESOLVED.set(table, per); }
+  let set = per.get(ai.constants);
+  if (!set) { set = new Set(table.names.map((n) => ai.constants.get(n))); per.set(ai.constants, set); }
+  return set;
+}
+const effectIn = (ai, table, effect) => effectSet(ai, table).has(effect);
 const typeName = (t) => (t === 0 ? undefined : (ENUMS.types[t] ?? `TYPE_INVALID_${t}`));
 
 // BattleSystem_GetItemData(item, ITEM_PARAM_*) for the params used here.

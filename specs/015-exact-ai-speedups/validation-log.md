@@ -78,3 +78,27 @@ taken with nothing else running on the machine (checked with `pgrep -a node; pgr
   **wall 65.773 s, 0.6081 gauntlets/s, 21.535 ms/decision** (commit 1: 103.644 s, 0.3859, 34.197), 44.69 AI
   calls/decision, ai_draws 849962 (= commit 1), `digest_full` `db6d20cf…`, `digest_logs` `be27826f…`,
   `sim_code_hash` `sha256:ab6b3149…`. US1 alone: **1.58x** single-process. `runs/015-evidence/bench-c2-v2.json`.
+
+## T020-T025 Commit 3: constants resolved once (US2) (2026-10-31)
+
+- T020/T021 appended, then T022/T023 implemented, then both files run: 27/27, exit 0. (Process note: the pre-
+  implementation failing run was not taken for this story; T020 could only have failed on the missing `effectSet`
+  export, and T021 is an equivalence test that passes on both sides by design.) `effectSet` equals the
+  name-by-name scan for every move effect value (+0, -1) on the two effect tables and every move number on the
+  two battle_lib move lists, with hits and misses on each; same Set object on repeat; a cold `Constants` with the
+  same definitions gets an equal Set. Cold vs warmed `Constants.get` agree on every one of >1000 symbols (same
+  values, same thrown messages); the memo holds numbers only; unknown-symbol and recursive-definition errors
+  unchanged.
+- T022: `Constants.get` memo fast path (one `Map.get`, `stack` allocated only on the slow path). T023: `effectSet`
+  (WeakMap per table per constants instance) exported from `calcdamage.mjs`; `effectIn` and the gravity /
+  heal-block checks in `choose.mjs` use it.
+- **T024 gates**: `(cd sim && node --test test/*.test.mjs)` 4:20:54 to 4:23:44 PM EDT: **326/326, exit 0** (replay
+  33.8 s). `runs/015-evidence/node-suite-c3.log`. `PLATSIM_AI_FREEZE=1 … replay + ai_*`: **154/154, exit 0**
+  (`node-freeze-c3.log`). Attribution, machine idle: `node sim/bench.mjs --policy expectimax2-v2 --json` 4:24:38
+  to 4:25:30 PM EDT, exit 0: **wall 51.330 s, 0.7793 gauntlets/s, 16.573 ms/decision** (commit 2: 65.773 s,
+  0.6081, 21.535; commit 1: 103.644 s, 0.3859, 34.197), 44.69 AI calls/decision, ai_draws 849962 (unchanged),
+  `digest_full` `db6d20cf…`, `digest_logs` `be27826f…`, `sim_code_hash` `sha256:719e63b0…`.
+  `--policy expectimax2-v1 --json` 4:25:30 to 4:26:47 PM EDT, exit 0: wall 76.437 s, **0.5233 gauntlets/s** (commit 1:
+  0.2726), 21.796 ms/decision (42.336), ai_draws 1206240 (unchanged), `digest_full` `1273b694…` (= `main`),
+  `digest_logs` `bd80333d…`. **SC-002: 0.7793 ≥ 0.579 (1.5 x 0.386); v2 single-process gain 2.02x, v1 1.92x.**
+  `runs/015-evidence/bench-c3-v2.json`, `bench-c3-v1.json`.

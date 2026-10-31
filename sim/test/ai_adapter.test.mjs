@@ -258,3 +258,29 @@ test('015 freeze guard: with PLATSIM_AI_FREEZE=1 a write to a cached struct thro
   assert.equal(off.status, 0, off.stderr);
   assert.equal(off.stdout.trim(), 'no throw,no throw,no throw');
 });
+
+test('015 Constants.get fast path: a cold instance and a warmed one agree on every symbol; errors unchanged', async () => {
+  const { Constants } = await import('../ai/constants.mjs');
+  const warm = loadConstants();
+  const cold = new Constants(warm.root);
+  cold.defs = warm.defs; cold.lists = warm.lists; // same definitions, empty memo
+  let n = 0, same = 0, throws = 0;
+  for (const name of warm.defs.keys()) {
+    n++;
+    let w, c, we, ce;
+    try { w = warm.get(name); w = warm.get(name); } catch (e) { we = e.message; }
+    try { c = cold.get(name); } catch (e) { ce = e.message; }
+    if (we || ce) { assert.equal(we, ce, name); throws++; continue; }
+    assert.equal(c, w, name);
+    assert.equal(typeof w, 'number', `${name} is a number (the memo never holds undefined)`);
+    same++;
+  }
+  assert.ok(n > 1000 && same > 1000, `${n} symbols, ${same} equal, ${throws} throw on both`);
+  for (const v of warm.values.values()) assert.notEqual(v, undefined);
+  assert.throws(() => warm.get('NO_SUCH_SYMBOL_015'), /unknown symbol NO_SUCH_SYMBOL_015/);
+  assert.throws(() => cold.get('NO_SUCH_SYMBOL_015'), /unknown symbol NO_SUCH_SYMBOL_015/);
+  const cyc = new Constants(warm.root);
+  cyc.define('X015_A', { expr: 'X015_B', src: 'test' });
+  cyc.define('X015_B', { expr: 'X015_A', src: 'test' });
+  assert.throws(() => cyc.get('X015_A'), /recursive definition X015_A -> X015_B -> X015_A/);
+});

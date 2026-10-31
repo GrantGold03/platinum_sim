@@ -152,8 +152,8 @@ export function checkInvalidMoves(ai, battler, invalidMoves = 0, opMask = ~0) {
     if (moves[i] === prev && (opMask & C('CHECK_INVALID_TORMENTED')) && tormented) invalidMoves |= bit;
     if (med.tauntedTurns && (opMask & C('CHECK_INVALID_TAUNTED')) && ai.moveData(moves[i]).power === 0) invalidMoves |= bit;
     if (moveImprisoned(ai, battler, moves[i]) && (opMask & C('CHECK_INVALID_IMPRISONED'))) invalidMoves |= bit;
-    if (gravity && MOVES_AFFECTED_BY_GRAVITY.names.some((n) => C(n) === moves[i]) && (opMask & C('CHECK_INVALID_GRAVITY'))) invalidMoves |= bit;
-    if (healBlocked && MOVES_AFFECTED_BY_HEAL_BLOCK.names.some((n) => C(n) === moves[i]) && (opMask & C('CHECK_INVALID_HEAL_BLOCK'))) invalidMoves |= bit;
+    if (gravity && calcdamage.effectSet(ai, MOVES_AFFECTED_BY_GRAVITY).has(moves[i]) && (opMask & C('CHECK_INVALID_GRAVITY'))) invalidMoves |= bit; // 015: table resolved once
+    if (healBlocked && calcdamage.effectSet(ai, MOVES_AFFECTED_BY_HEAL_BLOCK).has(moves[i]) && (opMask & C('CHECK_INVALID_HEAL_BLOCK'))) invalidMoves |= bit;
     // BL:2296-2299: Encore has no opMask test.
     if (med.encoredMove && med.encoredMove !== moves[i]) invalidMoves |= bit;
     if (choice && (opMask & C('CHECK_INVALID_CHOICE_ITEM'))) {
