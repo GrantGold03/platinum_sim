@@ -188,6 +188,6 @@ Task: "T014 builds-per-decision independent of K in sim/test/ai_cmds_damage.test
   stated bound (22 to 26 code-ish tasks + records); still one branch, no split proposed.
 - The four measurement runs (T003, T008, T018, T024, T030) are about 2 min each single-process plus about 1 min
   each on the pool; the full suite (T035) is the only long run.
-- Open spec wording (research R2): FR-006 is met for the effect-table checks (one `Set.has` per check) and every
-  other constant use becomes one memo hit; the ~250 `K()` sites are not hoisted. The user's answer to that
-  point is recorded in spec Clarifications before T022 if it changes scope.
+- FR-006 scope (user decision 2026-10-31, spec Clarifications): the effect-table checks resolve no names per
+  call and every other constant use is one memo read; hoisting the ~250 `K()` sites is a future plan. T032's
+  FUTURE-FEATURES section lists it (research R7).

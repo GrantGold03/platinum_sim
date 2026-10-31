@@ -53,6 +53,16 @@ that change decisions (fewer samples, pruning) are a separate feature with a new
   picks the place), not a spec-folder script or a local-only file, so the before/after comparison and feature
   016's comparison against this baseline can be rerun by anyone (user, 2026-10-30, `/speckit-clarify`).
 
+### Session 2026-10-31
+
+- Q: Does FR-006 require every constant use in the AI port to stop resolving names per call (about 250 sites),
+  or only the effect-table checks the profile named? → A: Only the effect-table checks; the other uses become
+  one memo read each. Hoisting the remaining sites is a future plan (user, 2026-10-31, `/speckit-analyze`).
+- Q: Is the replay fixture recorded on `main` itself? → A: It is recorded at the branch's instrumentation
+  commit (the fixture needs the AI draw counter, which `main` lacks); that commit's result digest must equal
+  the digest recorded on `main` (`db6d20cf…`), which ties the fixture to `main` (plan, 2026-10-30; recorded
+  here 2026-10-31).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The damage-formula inputs are built once per state (Priority: P1)
@@ -97,15 +107,16 @@ re-resolving the constant names on every call.
 same numbers the name lookups return.
 
 **Independent Test**: Replay the fixed seed set with only this change applied; the digest and every player
-choice match the `main` fixture. Count name-based constant lookups during one decision before and after; after,
-the count is bounded by a constant that does not grow with the number of samples or moves evaluated.
+choice match the `main` fixture. Each effect-table check resolves no constant names (the table was resolved once
+per AI set-up), and every other constant use on the hot path is a single memo read.
 
 **Acceptance Scenarios**:
 
 1. **Given** the `main` fixture, **When** the 40 gauntlets run with this change, **Then** the digest and every
    choice match.
-2. **Given** the trainer AI set up for a battle, **When** the number of name-based constant lookups during one
-   decision is counted, **Then** it does not grow with the number of samples or moves evaluated.
+2. **Given** the trainer AI set up for a battle, **When** an effect-table check runs, **Then** it resolves no
+   constant names (membership in a table resolved once per AI set-up), and every other constant use on the hot
+   path is a single memo read that allocates nothing.
 3. **Given** the existing opponent-AI tests (the decomp-trace fixtures and golden decisions), **When** run,
    **Then** they pass unchanged.
 
@@ -161,7 +172,8 @@ time.
   `db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and every player choice MUST equal the
   recorded one.
 - **FR-002**: The fixture for FR-001 (digest and the sequence of player choices per gauntlet) MUST be recorded
-  from `main` before any behaviour change and committed with the test that checks it. The test MUST run the
+  before any behaviour change, at a commit whose result digest equals `main`'s, and committed with the test that
+  checks it. The test MUST run the
   full 40-gauntlet set as part of the default Node suite (`node --test`), not a subset or an opt-in run.
 - **FR-003**: The live opponent AI (`decomp-ai`) MUST be unchanged in behaviour: the existing opponent-AI
   fixture and golden tests pass, and for every decision the number of AI random-number draws equals `main`'s.
@@ -169,9 +181,10 @@ time.
   per Pokemon per battle state per decision, and reused by every move, damage check and sample on that state.
 - **FR-005**: Anything remembered for the live opponent AI MUST be discarded at the end of each decision, so
   the next decision reads the current battle.
-- **FR-006**: Constant tables used by the trainer AI's move checks, and the other constant lookups on its hot
-  path, MUST be resolved to values once per AI set-up; the number of name-based lookups during one decision
-  MUST NOT grow with the number of samples or moves evaluated.
+- **FR-006**: The effect tables used by the trainer AI's move checks MUST be resolved to values once per AI
+  set-up, so a table check performs no per-call name resolution; every other constant use on the hot path MUST
+  be a single memo read that allocates nothing. Hoisting the remaining name-based uses (about 250 sites in the
+  AI port) to pre-resolved fields is a later feature (FUTURE-FEATURES), not part of this one.
 - **FR-007**: The player's search MUST be unchanged: same sample counts, same beam, same evaluation, same
   registered policy names; no new policy is added.
 - **FR-008**: The vendored Showdown tree MUST NOT be edited.

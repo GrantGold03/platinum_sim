@@ -32,9 +32,13 @@
   `/speckit-plan` 5:50 PM EDT: plan.md, research.md (R1-R7), data-model.md, contracts/{adapter-api,bench-tool}.md,
   quickstart.md. Design: adapter `damageInput()` memo + `beginDecision()` at `decide()` and `makeContext()` (the
   root view's adapter is the per-battle mirror's); `Constants.get` fast path + resolved effect Sets; proof chain
-  = fixture recorded at the instrumentation commit whose v2 digest must equal `main`'s db6d20cf... Open wording
-  point: FR-006 "lookups must not grow with samples" is met for the effect tables only (research R2), not for
-  every `K()` site. Next: the user runs `/speckit-tasks`. No code change yet.
+  = fixture recorded at the instrumentation commit whose v2 digest must equal `main`'s db6d20cf...
+  `/speckit-tasks` 2026-10-31: tasks.md, 35 tasks (11 gates/measurements/commits), commit order 1 instrumentation
+  + fixture, 2 US1 memo, 3 US2 constants, 4 `platsim bench` + docs. `/speckit-analyze` 2026-10-31: 0 critical;
+  user decided FR-006 covers the effect-table checks only, hoisting the ~250 `K()` sites is a future plan (spec
+  Clarifications 2026-10-31; FUTURE-FEATURES via T032). Open (user's call): FR-003/SC-005 say draw counts match
+  "per decision" but the fixture records per battle / per gauntlet totals (analyze I2). Next: the user runs
+  `/speckit-implement`. No code change yet.
 
 - **Resume checklist (2026-10-29, end of session).** On `main` at `92187d8`+, everything committed and pushed;
   `data/generated/` built from `main`. Nothing is running; web server stopped. Branches `013-no-single-use-items`
