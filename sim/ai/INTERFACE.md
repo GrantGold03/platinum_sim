@@ -59,3 +59,18 @@ Handlers may add helpers to `ctx` only through `makeCtx({extra})` (as `choose.mj
   move request (pre-move phase, battle_controller_player.c:853-856).
 - **ctx.damage** is `calcdamage.mjs`; `mem.monSpeedValues` is pre-filled per decision by `speedValuesNow()`.
 - **Divergence counters**: `AGGREGATE` / `st.stats` (`invalidChoice`, `trappedSwitch`, `lockMismatch`).
+
+## Decision cache (feature 015, `specs/015-exact-ai-speedups/contracts/adapter-api.md`)
+
+- **`ai.damageInput(attackerPoke, defenderPoke, move, { power, type, powerMul })`** returns the same structs as
+  `damage.mjs` `fromShowdown(battle, …)` (`{ attacker, defender, move, field, crit: false }`), with the battler
+  structs cached per Pokemon object and the field struct per defender side for the current decision. Used by
+  `calcdamage.mjs` `portInput` and the post-KO switch scorer in `switch.mjs`. The structs are **shared and
+  read-only**: never write to them (the policy's own damage table, which mutates its inputs, uses `fromShowdown`).
+- **`ai.beginDecision()`** drops the cache. Called at the start of `opponent.mjs` `decide()` and in
+  `policy/expectimax2.mjs` `makeContext()` (the root view's adapter is the per-battle mirror's). Shadow-view
+  adapters are built per state and need no call.
+- **`ai.cacheStats`** `{ builds, hits, decisions }`: diagnostics for the tests (one build per Pokemon per decision
+  however many samples run).
+- **`PLATSIM_AI_FREEZE=1`** (read once at import, like `PLATSIM_AI_DEBUG`) deep-freezes every cached struct, so a
+  write anywhere downstream throws `TypeError`. The Node suite is run once with it set when the AI port changes.

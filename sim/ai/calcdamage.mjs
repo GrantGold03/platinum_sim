@@ -28,7 +28,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT, readList } from './constants.mjs';
-import { fromShowdown, calcBaseDamage, applyTypeChart as dmgApplyTypeChart, battleDivide, MOVE_STATUS, ENUMS } from '../damage.mjs';
+import { calcBaseDamage, applyTypeChart as dmgApplyTypeChart, battleDivide, MOVE_STATUS, ENUMS } from '../damage.mjs';
 
 const TAI_PATH = 'src/battle/trainer_ai/trainer_ai.c';
 const taiLines = readFileSync(join(DECOMP_ROOT, TAI_PATH), 'utf8').split('\n');
@@ -165,7 +165,7 @@ function portInput(ai, attacker, defender, move, power, type) {
   const att = ai.pokemon(attacker);
   const def = ai.pokemon(defender);
   if (!att || !def) throw new Error(`calcdamage: battler ${att ? defender : attacker} is empty`);
-  return fromShowdown(ai.battle, att, def, move, { power: power & 0xffff, type: typeName(type), powerMul: 10 });
+  return ai.damageInput(att, def, move, { power: power & 0xffff, type: typeName(type), powerMul: 10 }); // 015: cached per decision; structs are shared, never written
 }
 
 // Eligibility used by FlagMoveDamageScore (TAI:1023-1036) and IfCurrentMoveKills (TAI:1538-1553):

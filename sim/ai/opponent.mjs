@@ -205,6 +205,7 @@ function injectFullRestore(battle, mon) {
  * opts.trace: forwarded to trainerAIMain.
  */
 export function decide(st, side, opts = {}) {
+  st.ai.beginDecision(); // 015: the adapter lives for the whole battle; drop last decision's cached damage inputs
   const { ai } = st;
   processLog(st);
   bump(st, 'decisions');

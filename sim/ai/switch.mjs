@@ -30,7 +30,7 @@
 // post-KO replacement; the caller passes [6, 6, 6, 6].
 import { DECOMP_ROOT } from './constants.mjs';
 import * as calcdamage from './calcdamage.mjs';
-import { TYPE_CHART, ENUMS, fromShowdown, calcBaseDamage, MOVE_STATUS } from '../damage.mjs';
+import { TYPE_CHART, ENUMS, calcBaseDamage, MOVE_STATUS } from '../damage.mjs';
 import { battlerHeldItemEffect } from './choose.mjs';
 
 void DECOMP_ROOT;
@@ -496,7 +496,7 @@ export function postKOSwitchIn(st, battler = 1, trace = null) {
       if (move && ai.moveData(move).power !== 1) {
         // BattleSystem_CalcMoveDamage(move, sideConditions[defender side], fieldConditions,
         // power 0, type 0, battler, defender, critMul 1); powerMul taken as 10 (its reset value).
-        const input = fromShowdown(ai.battle, att, def, move, { power: 0, type: undefined, powerMul: 10 });
+        const input = ai.damageInput(att, def, move, { power: 0, type: undefined, powerMul: 10 }); // 015: cached per decision
         score = calcBaseDamage({ ...input, critMul: 1 }) & 0xff;
         const r = calcdamage.applyTypeChart(env(st), { move, type: moveType, attacker: battler, defender, damage: score });
         score = r.damage & 0xff;

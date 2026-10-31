@@ -1162,7 +1162,7 @@ export function makeContext({ gd, battle, side, trainer }, opts = V1_OPTS, name 
   const ms = mirrorFor(battle, trainer, name);
   const mirror = ms.mirror;
   // The mirror's adapter lives for the whole battle; a new decision starts here (015, adapter-api.md).
-  mirror.ai.beginDecision?.();
+  mirror.ai.beginDecision();
   // Catch the private mirror's AI memory up with the public log (same mapping as the real AI).
   processLog(mirror);
   const real = stateFor(battle);

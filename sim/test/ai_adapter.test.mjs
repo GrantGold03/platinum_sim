@@ -182,3 +182,79 @@ test('Showdown status and volatiles map to condition.h bits', () => {
   assert.ok(ai.fieldConditionsMask() & K('FIELD_CONDITION_TRICK_ROOM'));
   assert.equal(ai.fieldConditionsMask() & K('FIELD_CONDITION_GRAVITY'), 0);
 });
+
+// ---------------------------------------------------------------------------------------------
+// Feature 015: per-decision cache of the damage-formula inputs (contracts/adapter-api.md).
+
+test('015 damageInput: deep-equals fromShowdown for every pair and move; cached within a decision; fresh after beginDecision', async () => {
+  const { fromShowdown } = await import('../damage.mjs');
+  const battle = makeBattle();
+  const ai = createAdapter(battle);
+  const mons = [...battle.p1.pokemon, ...battle.p2.pokemon];
+  const MOVES = [['earthquake', { power: 100, type: 'TYPE_GROUND', powerMul: 10 }], ['toxic', { power: 0, type: 'TYPE_POISON', powerMul: 10 }],
+    ['hiddenpower', { power: 70, type: 'TYPE_ICE', powerMul: 10 }], [89, { power: 0, type: undefined, powerMul: 10 }]];
+  let pairs = 0;
+  for (const a of mons) for (const d of mons) for (const [mv, o] of MOVES) {
+    assert.deepEqual(ai.damageInput(a, d, mv, o), fromShowdown(battle, a, d, mv, o));
+    pairs++;
+  }
+  assert.equal(pairs, 4 * 4 * MOVES.length);
+  // (b) cached: the same struct object comes back; builds do not grow, hits do
+  const [a, d] = [battle.p1.active[0], battle.p2.active[0]];
+  const s0 = { ...ai.cacheStats };
+  const i1 = ai.damageInput(a, d, 'earthquake', MOVES[0][1]);
+  const i2 = ai.damageInput(a, d, 'earthquake', MOVES[0][1]);
+  assert.equal(i1.attacker, i2.attacker);
+  assert.equal(i1.defender, i2.defender);
+  assert.equal(ai.cacheStats.builds, s0.builds, 'no new build for a repeated pair');
+  assert.equal(ai.cacheStats.hits, s0.hits + 4, "two calls, attacker and defender each");
+  assert.equal(ai.cacheStats.builds, mons.length, 'one build per Pokemon in the decision, regardless of calls');
+  // (c) control: a change to the battle without beginDecision is NOT seen (the cache really caches) ...
+  a.boosts.atk = 2;
+  const stale = ai.damageInput(a, d, 'earthquake', MOVES[0][1]);
+  assert.equal(stale.attacker.stages.atk, 0);
+  assert.equal(fromShowdown(battle, a, d, 'earthquake', MOVES[0][1]).attacker.stages.atk, 2);
+  // ... and is seen after beginDecision
+  const dec0 = ai.cacheStats.decisions;
+  ai.beginDecision();
+  assert.equal(ai.cacheStats.decisions, dec0 + 1);
+  const fresh = ai.damageInput(a, d, 'earthquake', MOVES[0][1]);
+  assert.equal(fresh.attacker.stages.atk, 2);
+  assert.deepEqual(fresh, fromShowdown(battle, a, d, 'earthquake', MOVES[0][1]));
+  assert.equal(ai.cacheStats.builds, mons.length + 2, 'the two structs were rebuilt after beginDecision');
+  a.boosts.atk = 0;
+  // (d) non-singles throws like fromShowdown
+  const gt = battle.gameType;
+  battle.gameType = 'doubles';
+  assert.throws(() => ai.damageInput(a, d, 'earthquake', MOVES[0][1]), /only singles/);
+  assert.throws(() => fromShowdown(battle, a, d, 'earthquake', MOVES[0][1]), /only singles/);
+  battle.gameType = gt;
+  assert.throws(() => ai.damageInput(a, d, 99999, MOVES[0][1]), /no decomp move/);
+});
+
+test('015 freeze guard: with PLATSIM_AI_FREEZE=1 a write to a cached struct throws TypeError; without it, it does not (control)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const script = `
+    import { Battle } from ${JSON.stringify(new URL('../showdown.mjs', import.meta.url).href)};
+    import { createAdapter } from ${JSON.stringify(new URL('../ai/adapter.mjs', import.meta.url).href)};
+    const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 }, evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    const mon = (species, moves, extra = {}) => ({ species, moves, level: 50, nature: 'Serious', ivs, evs, item: '', ...extra });
+    const battle = new Battle({ formatid: 'gen4customgame', seed: [1, 2, 3, 4],
+      p1: { name: 'P', team: [mon('garchomp', ['earthquake'], { ability: 'Sand Veil' })] },
+      p2: { name: 'AI', team: [mon('blissey', ['toxic'], { ability: 'Natural Cure' })] } });
+    const ai = createAdapter(battle);
+    const inp = ai.damageInput(battle.p1.active[0], battle.p2.active[0], 'earthquake', { power: 100, type: 'TYPE_GROUND', powerMul: 10 });
+    const results = [];
+    for (const f of [() => { inp.attacker.hp = 1; }, () => { inp.field.defenderSide.reflect = true; }, () => { inp.field.abilitiesOnField.push('x'); }]) {
+      try { f(); results.push('no throw'); } catch (e) { results.push(e.constructor.name); }
+    }
+    console.log(results.join(','));
+  `;
+  const run = (env) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, ...env }, encoding: 'utf8' });
+  const on = run({ PLATSIM_AI_FREEZE: '1' });
+  assert.equal(on.status, 0, on.stderr);
+  assert.equal(on.stdout.trim(), 'TypeError,TypeError,TypeError');
+  const off = run({ PLATSIM_AI_FREEZE: '' });
+  assert.equal(off.status, 0, off.stderr);
+  assert.equal(off.stdout.trim(), 'no throw,no throw,no throw');
+});

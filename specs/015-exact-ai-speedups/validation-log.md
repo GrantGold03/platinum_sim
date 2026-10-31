@@ -58,3 +58,23 @@ taken with nothing else running on the machine (checked with `pgrep -a node; pgr
   The positive-control test alters one choice, one policy draw count and one live draw count and sees each.
 - T011: `(cd sim && node --test test/*.test.mjs)` 4:05:31 to 4:10:23 PM EDT: **321 tests, 321 pass, 0 fail, exit 0**
   (314 + 4 bench + 3 replay). `runs/015-evidence/node-suite-c1.log`.
+
+## T012-T019 Commit 2: memoised damage-formula inputs (US1) (2026-10-31)
+
+- T012-T014 written first: with the methods missing, 3 of 25 tests in `ai_adapter.test.mjs` + `ai_cmds_damage.test.mjs`
+  failed (`ai.damageInput is not a function`, `s.ai.beginDecision is not a function`), 22 passed. After T015-T017:
+  25/25, exit 0. `damageInput` deep-equals `fromShowdown` for all 16 Pokemon pairs x 4 moves (64 cases); the
+  stale-without-`beginDecision` control shows the cache caches (stage 0 cached vs 2 fresh) and `beginDecision`
+  refreshes; the freeze child process reports `TypeError,TypeError,TypeError` with `PLATSIM_AI_FREEZE=1` and
+  `no throw,no throw,no throw` without; builds per decision equal for K = 1, 2, 4 samples while hits grow.
+- T015-T017: `sim/ai/adapter.mjs` (`beginDecision`, `damageInput`, `cacheStats`, freeze guard), `calcdamage.mjs`
+  `portInput` and `switch.mjs:499` → `ai.damageInput`, `opponent.mjs` `decide()` first statement
+  `st.ai.beginDecision()`, `expectimax2.mjs` `makeContext` call made unconditional, `sim/ai/INTERFACE.md` section.
+- **T018 gates**: `(cd sim && node --test test/*.test.mjs)` 4:13:45 to 4:17:00 PM EDT: **324/324, exit 0** (replay
+  38.0 s). `runs/015-evidence/node-suite-c2.log`. `PLATSIM_AI_FREEZE=1 node --test test/replay.test.mjs
+  test/ai_*.test.mjs` 4:17:07 to 4:17:58 PM EDT: **152/152, exit 0** (no consumer writes through the cache; the
+  replay reproduces the fixture with every struct frozen). `runs/015-evidence/node-freeze-c2.log`.
+  Attribution, machine idle: `node sim/bench.mjs --policy expectimax2-v2 --json` 4:18:07 to 4:19:14 PM EDT, exit 0:
+  **wall 65.773 s, 0.6081 gauntlets/s, 21.535 ms/decision** (commit 1: 103.644 s, 0.3859, 34.197), 44.69 AI
+  calls/decision, ai_draws 849962 (= commit 1), `digest_full` `db6d20cf…`, `digest_logs` `be27826f…`,
+  `sim_code_hash` `sha256:ab6b3149…`. US1 alone: **1.58x** single-process. `runs/015-evidence/bench-c2-v2.json`.

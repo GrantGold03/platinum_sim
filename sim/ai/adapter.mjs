@@ -12,6 +12,15 @@
 // Nothing here mutates the Battle. Nothing here imports Showdown directly (sim/showdown.mjs is the
 // only importer); the caller passes in the Battle object.
 //
+// Feature 015 (specs/015-exact-ai-speedups/contracts/adapter-api.md): `damageInput()` builds the
+// damage-formula inputs that sim/damage.mjs `fromShowdown` builds, but caches the per-Pokemon battler
+// struct and the per-side field struct for the current decision, so the K trainer-AI samples on one
+// state (and every move and damage check inside each) share them. `beginDecision()` drops the cache;
+// an owner that keeps an adapter across battle changes (the live AI in opponent.mjs, the policy's
+// per-battle mirror in policy/expectimax2.mjs) calls it at the start of every decision. The returned
+// structs are SHARED and read-only: callers must not write to them. With PLATSIM_AI_FREEZE=1 in the
+// environment they are deep-frozen when built, so any write throws (test guard).
+//
 // Battler ids follow the game: battler & 1 is the side (BattleSystem_GetBattlerSide,
 // battle_system.c:360-363). BATTLER_PLAYER_1 = 0, BATTLER_ENEMY_1 = 1, BATTLER_PLAYER_2 = 2
 // (constants/battle.h:95-97). In singles only 0 and 1 exist; 2 and 3 return an empty BattleMon
@@ -25,6 +34,17 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT, loadConstants } from './constants.mjs';
+import { ENUMS, battlerFromShowdown } from '../damage.mjs';
+
+const FREEZE = process.env.PLATSIM_AI_FREEZE === '1';
+function deepFreeze(o) {
+  if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const k of Object.keys(o)) deepFreeze(o[k]);
+  }
+  return o;
+}
+const WEATHER = { sunnyday: 'sun', raindance: 'rain', sandstorm: 'sand', hail: 'hail' }; // = damage.mjs WEATHER
 
 const toID = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -183,6 +203,11 @@ export function createAdapter(battle, opts = {}) {
   const vol = (p, id) => (p ? p.volatiles[id] : undefined);
   // Remaining turns of a Showdown effect, clamped to a game bit-field width.
   const turns = (state, max) => Math.max(1, Math.min(max, state && state.duration ? state.duration : 1));
+
+  // 015 decision cache (see damageInput below); declared before `api`, which exposes cacheStats.
+  const battlers = new Map(); // Showdown Pokemon -> battlerFromShowdown(p)
+  const fields = new Map(); // defender Side -> field members that do not depend on the pair
+  const cacheStats = { builds: 0, hits: 0, decisions: 0 };
 
   const api = {
     battle,
@@ -545,7 +570,69 @@ export function createAdapter(battle, opts = {}) {
       const base = p.side.id === aiSide ? 1 : 0;
       return base + 2 * p.position;
     },
+
+    // ---------- 015: per-decision cache of damage-formula inputs (contracts/adapter-api.md) ----------
+    cacheStats,
+    beginDecision() {
+      battlers.clear();
+      fields.clear();
+      cacheStats.decisions++;
+    },
+    damageInput,
   };
+
+  // Damage-formula inputs, identical to damage.mjs fromShowdown(battle, att, def, move, opts) for the
+  // current battle state, with the battler structs cached per Pokemon object and the field struct per
+  // defender side until beginDecision(). Reads only battle state, like fromShowdown.
+  function battler(p) {
+    let b = battlers.get(p);
+    if (b) { cacheStats.hits++; return b; }
+    b = battlerFromShowdown(p);
+    if (FREEZE) deepFreeze(b);
+    battlers.set(p, b);
+    cacheStats.builds++;
+    return b;
+  }
+  const abilityOf = (b) => (b.abilitySuppressed ? 'ABILITY_NONE' : b.ability);
+  function fieldFor(defenderPoke) {
+    let f = fields.get(defenderPoke.side);
+    if (f) return f;
+    const active = battle.getAllActive();
+    const ds = defenderPoke.side.sideConditions;
+    const anyVol = (id) => active.some((p) => p.volatiles[id]) || !!battle.field.pseudoWeather[id];
+    f = {
+      weather: WEATHER[battle.field.weather] ?? '',
+      abilitiesOnField: active.filter((p) => p.hp > 0).map((p) => abilityOf(battler(p))),
+      defenderSide: { reflect: !!ds.reflect, lightScreen: !!ds.lightscreen, luckyChant: !!ds.luckychant },
+      gravity: !!battle.field.pseudoWeather.gravity,
+      mudSport: anyVol('mudsport'),
+      waterSport: anyVol('watersport'),
+    };
+    if (FREEZE) deepFreeze(f);
+    fields.set(defenderPoke.side, f);
+    return f;
+  }
+  function damageInput(attackerPoke, defenderPoke, moveIdOrNum, { power, type, powerMul } = {}) {
+    if (battle.gameType !== 'singles') throw new Error('damage.mjs adapter: only singles is covered');
+    const num = typeof moveIdOrNum === 'number' ? moveIdOrNum : battle.dex.moves.get(moveIdOrNum).num;
+    const moveConst = ENUMS.moves[num];
+    if (!moveConst) throw new Error(`damage.mjs adapter: no decomp move for num ${num}`);
+    const attacker = battler(attackerPoke);
+    const defender = battler(defenderPoke);
+    const base = fieldFor(defenderPoke);
+    const field = {
+      weather: base.weather,
+      abilitiesOnField: base.abilitiesOnField,
+      attackerSideAbilities: [abilityOf(attacker)],
+      defenderSideAbilities: [abilityOf(defender)],
+      defenderSide: base.defenderSide,
+      gravity: base.gravity,
+      mudSport: base.mudSport,
+      waterSport: base.waterSport,
+    };
+    const input = { attacker, defender, move: { id: moveConst, power, type, powerMul }, field, crit: false };
+    return FREEZE ? deepFreeze(input) : input;
+  }
 
   function statusMask(p) {
     if (!p) return 0;

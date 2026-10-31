@@ -348,3 +348,24 @@ test('IfBattlerDealsMoreDamage (TAI:2187-2241), script.s:5528: defender = AI_CON
 });
 
 function ctxArg(ins, name) { return ins.args.find((a) => a.name === name).value; }
+
+// ---------------------------------------------------------------------------------------------
+// Feature 015 (FR-004): the damage-formula inputs are built once per Pokemon per decision, however
+// many samples (calcAllDamage calls) run on the same adapter without beginDecision in between.
+
+test('015 cacheStats: builds per decision do not grow with the number of samples; hits do (positive control)', () => {
+  const s = setup();
+  const args = { attacker: 1, moves: s.ai.moves(1), heldItem: 0, ivs: s.ai.ivs(1), ability: s.ai.battlerAbility(1), embargoTurns: 0, varyDamage: 0 };
+  const buildsAfter = [], hitsAfter = [];
+  for (const K of [1, 2, 4]) {
+    s.ai.beginDecision();
+    const b0 = s.ai.cacheStats.builds, h0 = s.ai.cacheStats.hits;
+    for (let k = 0; k < K; k++) cd.calcAllDamage(s.ctx, args);
+    buildsAfter.push(s.ai.cacheStats.builds - b0);
+    hitsAfter.push(s.ai.cacheStats.hits - h0);
+  }
+  assert.ok(buildsAfter[0] >= 2 && buildsAfter[0] <= 12, `builds for one sample: ${buildsAfter[0]} (the two active Pokemon at least, the parties at most)`);
+  assert.deepEqual(buildsAfter, [buildsAfter[0], buildsAfter[0], buildsAfter[0]], 'builds independent of K');
+  assert.ok(hitsAfter[1] > hitsAfter[0] && hitsAfter[2] > hitsAfter[1], `hits grow with K: ${hitsAfter}`);
+  assert.equal(s.draws.length, 0);
+});
