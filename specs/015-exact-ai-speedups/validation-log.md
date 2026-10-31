@@ -129,3 +129,19 @@ taken with nothing else running on the machine (checked with `pgrep -a node; pgr
 Results unchanged throughout: `digest_full` v2 `db6d20cf…`, v1 `1273b694…`; `digest_logs` v2 `be27826f…`; AI draws
 849962 (v2) and 1206240 (v1). SC-002 met (0.7793 ≥ 0.579). SC-003: 1.68x on the pool (40 jobs on 16 workers is
 tail-bound; the per-job gain is the single-process 2.02x).
+
+## T032-T034 Docs and gates (2026-10-31)
+
+- T032: `specs/001-champion-team-optimizer/contracts/cli.md` bench row; `README.md` command table row, 015 speed
+  table and the `sim_code_hash` / checkpoint note; `FUTURE-FEATURES.md` section 7 (follow-ons, killed hypotheses,
+  feature 016). T033: `RUN-STATE.md` START HERE.
+- **T034 gates**: `git diff --stat main HEAD -- pokemon-showdown`: empty, exit 0 (FR-008; `git status` of the tree
+  also clean). `(cd sim && node --test test/*.test.mjs)`: first run 4:31:19 to 4:34:09 PM EDT **325/326**: the one
+  failure was `seeds.test.mjs` "Showdown accepts a derived seed and replays identically", which compares two raw
+  logs including their `|t:|` timestamp lines and straddled a second boundary (…681 vs …682); it is a pre-existing
+  flake unrelated to 015 (passed in the commit 1-3 suite runs, passed 3/3 alone right after; a `stripTimestamps`
+  in that test would remove it, left for a later test-only change). Clean rerun 4:44:14 to 4:47:04 PM EDT:
+  **326 tests, 326 pass, 0 fail, exit 0** (replay 34.5 s). `runs/015-evidence/node-suite.log`.
+  `uv run pytest -q -m "not battle_sim"` 4:34:09 to 4:44:04 PM EDT: **528 passed, 28 deselected, 4 xfailed, exit 0**
+  (591.94 s; battle split: 0 worker starts). `runs/015-evidence/fast.log`.
+- T035 (full `uv run pytest -q`, about 2 h 10 min) waits for the user's go, after their hands-on testing.

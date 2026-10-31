@@ -144,3 +144,24 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   - the "? (unlimited)" item-source text;
   - an optimize resume test;
   - a cartridge or emulator comparison.
+
+## 7. expectimax2 speedups after 015 (added 2026-10-31)
+
+Feature 015 (exact: memoised damage-formula inputs, constants resolved once) gave 2.02x single process on the
+fixed set with byte-identical decisions. Evidence: `runs/015-evidence/scratchpad/prof/REPORT.md` (profile on
+`main` c751fb2), `specs/015-exact-ai-speedups/validation-log.md`, research R2 and R7. Every item below must keep the
+replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name if not.
+
+- **Exact, next in line.** Second-level memo: pre-variance damage per (view, attacker, defender, move, power,
+  type) inside one decision; `speedValuesNow` per view (2.4% in the profile); `party()` snapshots (1.9%).
+- **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (7.3% inclusive, 77% hit rate
+  within a decision), `matchupScore` (3.9%). Need a cache key that proves the inputs are unchanged.
+- **Exact, mechanical.** Hoist the remaining ~250 `K()` / `C.get` name lookups in `sim/ai` to pre-resolved fields
+  (user decision 2026-10-31: out of 015, which made each a single memo read). Zero per-call name resolution; the
+  gain is bounded by what `Constants.get` still costs after 015 (re-profile first).
+- **Killed by the 015 profile (do not retry without new evidence).** Cloning / copy-on-write (0.7% of time);
+  better prediction-cache keys (0.35% hit rate; coarse-key bound 11.6% of ply-2 calls); the end-state merge
+  (collapses 0.5% of branches).
+- **Feature 016, approximations as `expectimax2-v4`** (never `-v3`, archived 007's name): K_PLY2 2 → 1 (about 30%
+  bound), a branch probability floor, switch beam 1 (10-15%). Reference-first (Principle VI): paired runs vs v2
+  on B1-B5 with McNemar exact; adopt only if not worse; gauntlets/s and wall recorded. v1 and v2 stay unchanged.

@@ -146,6 +146,7 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
 | `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
+| `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture) | `--policy` (default `expectimax2-v2`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
 - **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
@@ -405,6 +406,18 @@ runs on 2026-10-08:
 | `expectimax2-v1` | 1.79 gauntlets/s (T056 benchmark team, 16 workers) |
 | `greedy-v1` | 55.8 gauntlets/s (T056 benchmark team, 16 workers) |
 | Bare engine | 59 gauntlets/s ceiling (T008 spike, no AI or policy) |
+
+Feature 015 (2026-10-31, `uv run platsim bench`, the fixed set of 40 gauntlets: 20 x benchmark team + 20 x
+reference team, seeds `prof-a-*`, all five trainers, decisions byte-identical before and after):
+
+| Setup | `main` c751fb2 | after 015 | ratio |
+|---|---|---|---|
+| `expectimax2-v2`, single process | 0.386 gauntlets/s, 34.2 ms/decision | 0.779 gauntlets/s, 16.6 ms/decision | 2.02x |
+| `expectimax2-v2`, 16 workers (40 jobs, tail-bound) | 1.91 gauntlets/s (20.9 s) | 3.22 gauntlets/s (12.4 s) | 1.68x |
+| `expectimax2-v1`, single process | 0.273 gauntlets/s | 0.523 gauntlets/s | 1.92x |
+
+Feature 015 changed `sim/`, so `sim_code_hash` changed: optimizer checkpoints (`state.json`) written before it do
+not resume; rerun with `--force-new` or a new `--out`. Details: `specs/015-exact-ai-speedups/validation-log.md`.
 
 Measured run times:
 

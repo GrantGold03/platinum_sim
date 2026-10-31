@@ -1,4 +1,4 @@
-# START HERE (updated 2026-10-30)
+# START HERE (updated 2026-10-31)
 
 - **In progress (2026-10-30, session started 2:54 PM EDT): expectimax2-v2 speed work, measurement phase.**
   Goal: make the player policy faster by algorithmic changes (not a port). User decisions: run the full
@@ -36,9 +36,22 @@
   `/speckit-tasks` 2026-10-31: tasks.md, 35 tasks (11 gates/measurements/commits), commit order 1 instrumentation
   + fixture, 2 US1 memo, 3 US2 constants, 4 `platsim bench` + docs. `/speckit-analyze` 2026-10-31: 0 critical;
   user decided FR-006 covers the effect-table checks only, hoisting the ~250 `K()` sites is a future plan (spec
-  Clarifications 2026-10-31; FUTURE-FEATURES via T032). Open (user's call): FR-003/SC-005 say draw counts match
-  "per decision" but the fixture records per battle / per gauntlet totals (analyze I2). Next: the user runs
-  `/speckit-implement`. No code change yet.
+  Clarifications 2026-10-31; FUTURE-FEATURES section 7); draw counts recorded per decision (analyze I2, user).
+  **`/speckit-implement` 2026-10-31, 3:47-4:30 PM EDT: T001-T031 done**, log `specs/015-exact-ai-speedups/validation-log.md`,
+  evidence `runs/015-evidence/`. Commits (all pushed): `dcf620c` bench tool + `STATS.aiDraws` + fixture
+  `sim/test/replay_prof_a.json` + replay test (v2 digest = `main`'s db6d20cf..., v1 = 1273b694...); `fb4634a` US1
+  memo (`ai.damageInput`/`beginDecision`); `6bfe692` US2 constants (`Constants.get` fast path, `effectSet`);
+  `61341b6` `platsim bench`. Results byte-identical throughout (digests, every p1 choice, AI draws per decision).
+  **Speed on the fixed set: v2 0.386 → 0.779 gauntlets/s single process (2.02x, 34.2 → 16.6 ms/decision);
+  16 workers 1.91 → 3.22 gauntlets/s (1.68x); v1 0.273 → 0.523.** Node suite 326/326 (replay adds ~35-45 s);
+  frozen run (`PLATSIM_AI_FREEZE=1`) 154/154. T032-T034 done 4:47 PM EDT: docs, Node 326/326, fast mode 528 passed /
+  4 xfailed (`runs/015-evidence/node-suite.log`, `fast.log`). Known flake (not 015): `sim/test/seeds.test.mjs` compares
+  raw logs with `|t:|` timestamps and fails when two battles straddle a second (seen once, 325/326; rerun clean).
+  Remaining: the user's hands-on testing, then T035 full suite (`uv run pytest -q`, ~2 h 10 min, nothing else
+  running), then merge on the user's go.
+  Traps: `sim_code_hash` changed (checkpoints before 015 will not resume); `uv run platsim extract` after every
+  branch switch; never commit or switch while a run is going; the replay fixture is re-recorded only for an
+  intended decision change (`node sim/bench.mjs --policy <name> --record sim/test/replay_prof_a.json`).
 
 - **Resume checklist (2026-10-29, end of session).** On `main` at `92187d8`+, everything committed and pushed;
   `data/generated/` built from `main`. Nothing is running; web server stopped. Branches `013-no-single-use-items`
