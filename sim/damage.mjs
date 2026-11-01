@@ -12,8 +12,9 @@
 //   PP/src/battle/battle_lib.c:7097-7146  sCriticalStageRates / BattleSystem_CalcCriticalMulti -> critMultiplier(), critChance()
 //   PP/src/battle/battle_lib.c:2399-2517  sTypeMatchupMultipliers (type chart, parsed from the C at load time)
 //   PP/src/battle/battle_lib.c:2529-2558  BasicTypeMulApplies
-//   PP/src/battle/battle_lib.c:2560-2679  BattleSystem_ApplyTypeChart       -> applyTypeChart()
-//   PP/src/battle/battle_lib.c:7542-7581  ApplyTypeMultiplier
+//   PP/src/battle/battle_lib.c:2560-2679  BattleSystem_ApplyTypeChart       -> applyTypeChartDirect() (reference),
+//                                                                              typeChartPlan() + replayTypeChart() = applyTypeChart() (feature 016)
+//   PP/src/battle/battle_lib.c:7542-7581  ApplyTypeMultiplier               -> applyTypeMultiplier() (direct), planMultiplier() (plan)
 //   PP/src/battle/battle_lib.c:3599-3618  BattleSystem_Divide
 //   PP/src/battle/battle_script.c:1323-1365 BattleScript_CalcMoveDamage (crit x, Life Orb, Metronome item, Me First)
 //   PP/src/battle/battle_script.c:1380-1389 BtlCmd_CalcDamage (then variance)
@@ -96,6 +97,10 @@ export function battleDivide(dividend, divisor) {
   if (q === 0) q = signedFloor;
   return q;
 }
+
+// Feature 016 diagnostics (never reset here; tests read deltas): type-chart plans built, plan replays, and
+// calls of the per-roll reference `applyTypeChartDirect`.
+export const DAMAGE_STATS = { plans: 0, replays: 0, direct: 0 };
 
 // ---------------------------------------------------------------------------------------------
 // Decomp data loading (read once at module load).
@@ -300,8 +305,12 @@ function prepare({ attacker, defender, move, field = {} }) {
 
 // ---------------------------------------------------------------------------------------------
 // BattleSystem_CalcMoveDamage — PP/src/battle/battle_lib.c:6601-7079. Returns damage + 2.
-export function calcBaseDamage({ attacker, defender, move, field = {}, critMul = 1 }) {
-  const { f, md, attAbility, defAbility, attItem, defItem } = prepare({ attacker, defender, move, field });
+export function calcBaseDamage(input) {
+  return calcBaseDamageP(prepare(input), input);
+}
+// 016: `prep` = prepare(input), so calcDamage() prepares once per call instead of once per step.
+function calcBaseDamageP(prep, { attacker, defender, move, critMul = 1 }) {
+  const { f, md, attAbility, defAbility, attItem, defItem } = prep;
   if (!(critMul === 1 || critMul > 1)) throw new Error('critMul must be >= 1'); // :6633 GF_ASSERT
 
   // :6635-6643 stats (u16) and stages (s8, relative to DEFAULT_STAT_STAGE)
@@ -516,8 +525,10 @@ export function calcBaseDamage({ attacker, defender, move, field = {}, critMul =
 }
 
 // BattleScript_CalcMoveDamage post-multipliers — PP/src/battle/battle_script.c:1323-1365
-export function applyScriptMultipliers({ attacker, defender, move, field = {} }, base, critMul) {
-  const { attItem } = prepare({ attacker, defender, move, field });
+export function applyScriptMultipliers(input, base, critMul) {
+  return applyScriptMultipliersP(prepare(input), input, base, critMul);
+}
+function applyScriptMultipliersP({ attItem }, { attacker }, base, critMul) {
   let damage = s32(base * critMul); // :1344
   if (attItem.holdEffect === 'HOLD_EFFECT_HP_DRAIN_ON_ATK') { // Life Orb :1346-1348
     damage = idiv(damage * (100 + attItem.effectParam), 100);
@@ -576,7 +587,12 @@ function applyTypeMultiplier(mul, damage, update, st, ignoreChecks) {
 // BattleSystem_ApplyTypeChart — PP/src/battle/battle_lib.c:2560-2679.
 // `ignoreTypeChecks` mirrors SYSCTL_IGNORE_TYPE_CHECKS (set by the AI for fixed-damage moves,
 // trainer_ai.c:3093). Returns { damage, moveStatusMask, totalMul }.
-export function applyTypeChart({ attacker, defender, move, field = {} }, damage, { ignoreTypeChecks = false, moveStatusMask = 0 } = {}) {
+//
+// `applyTypeChartDirect` is the per-roll port as of main 19519ed, kept verbatim as the REFERENCE (Constitution VI):
+// product code calls `applyTypeChart` below (plan + replay, feature 016), and sim/test/damage_typechart.test.mjs
+// checks the two agree on every generated input and roll.
+export function applyTypeChartDirect({ attacker, defender, move, field = {} }, damage, { ignoreTypeChecks = false, moveStatusMask = 0 } = {}) {
+  DAMAGE_STATS.direct++;
   const { f, md, attAbility, defAbility, attItem, defItem } = prepare({ attacker, defender, move, field });
   const st = { mask: moveStatusMask };
   let totalMul = 1;
@@ -648,19 +664,156 @@ export function applyTypeChart({ attacker, defender, move, field = {} }, damage,
   return { damage, moveStatusMask: st.mask, totalMul };
 }
 
+// ---------------------------------------------------------------------------------------------
+// Feature 016 (specs/016-exact-damage-speedups/contracts/damage-api.md): BattleSystem_ApplyTypeChart split into a
+// PLAN and a REPLAY. In battle_lib.c:2560-2679 every branch reads the attacker, defender, move and field (and the
+// running status mask), never the damage value; the only damage-dependent operation is ApplyTypeMultiplier's
+// `if (damage)` guard (:7543), which the replay keeps per roll. So the chart walk, the mask and the ordered list of
+// multiplier steps can be computed once per matchup and applied to each of the 16 damage rolls. Steps:
+//   { op: 'stab15' }            damage = damage * 15 / 10            (:2595)
+//   { op: 'x2' }                damage = (s32) damage * 2            (:2593 Adaptability STAB; :2675 Tinted Lens)
+//   { op: 'mul', mul }          if (damage) damage = BattleSystem_Divide(damage * mul, 10)   (:7543-7544)
+//   { op: 'div34' }             damage = BattleSystem_Divide(damage * 3, 4)                  (:2659-2663 Filter / Solid Rock)
+//   { op: 'pct', pct }          damage = damage * pct / 100           (:2665-2667 Expert Belt, pct = 100 + param)
+// `mask` is the final MOVE_STATUS value for the given incoming `moveStatusMask`; `totalMul` as in the direct port.
+
+// ApplyTypeMultiplier — PP/src/battle/battle_lib.c:7542-7581, plan form: the damage step is recorded (only when type
+// checks are not ignored, :7543), the status-mask update happens now with the same rules as applyTypeMultiplier().
+function planMultiplier(mul, update, st, ignoreChecks, steps) {
+  if (!ignoreChecks) steps.push({ op: 'mul', mul });
+  if (mul === TYPE_MULTI.TYPE_MULTI_IMMUNE) {
+    st.mask |= MOVE_STATUS.INEFFECTIVE;
+    st.mask &= ~MOVE_STATUS.NOT_VERY_EFFECTIVE;
+    st.mask &= ~MOVE_STATUS.SUPER_EFFECTIVE;
+  } else if (mul === TYPE_MULTI.TYPE_MULTI_NOT_VERY_EFF) {
+    if (update) {
+      if (st.mask & MOVE_STATUS.SUPER_EFFECTIVE) st.mask &= ~MOVE_STATUS.SUPER_EFFECTIVE;
+      else st.mask |= MOVE_STATUS.NOT_VERY_EFFECTIVE;
+    }
+  } else if (mul === TYPE_MULTI.TYPE_MULTI_SUPER_EFF) {
+    if (update) {
+      if (st.mask & MOVE_STATUS.NOT_VERY_EFFECTIVE) st.mask &= ~MOVE_STATUS.NOT_VERY_EFFECTIVE;
+      else st.mask |= MOVE_STATUS.SUPER_EFFECTIVE;
+    }
+  }
+}
+
+// The plan for one (attacker, defender, move, field) and the two options. Pure; same throws as prepare().
+export function typeChartPlan({ attacker, defender, move, field = {} }, opts = {}) {
+  return typeChartPlanP(prepare({ attacker, defender, move, field }), { attacker, defender, move }, opts);
+}
+function typeChartPlanP(prep, { attacker, defender, move }, { ignoreTypeChecks = false, moveStatusMask = 0 } = {}) {
+  DAMAGE_STATS.plans++;
+  const { f, md, attAbility, defAbility, attItem, defItem } = prep;
+  const st = { mask: moveStatusMask };
+  const steps = [];
+  let totalMul = 1;
+  if (move.id === 'MOVE_STRUGGLE') return { struggle: true, steps, mask: st.mask, totalMul }; // :2571-2573
+
+  // :2580-2586 type: Normalize, inType (non-zero), move data
+  let moveType;
+  if (attAbility === 'ABILITY_NORMALIZE') moveType = 'TYPE_NORMAL';
+  else if (move.type && move.type !== 'TYPE_NORMAL') moveType = move.type;
+  else moveType = md.type;
+  const movePower = md.power; // :2588 (MOVE_DATA power, not inPower)
+
+  // :2590-2596 STAB / Adaptability
+  if (!ignoreTypeChecks && attacker.types.includes(moveType)) {
+    steps.push(attAbility === 'ABILITY_ADAPTABILITY' ? { op: 'x2' } : { op: 'stab15' });
+  }
+
+  const [defType1, defType2] = defender.types;
+  const defItemEffect = defItem.holdEffect;
+  if (ignorable(attAbility, defAbility, 'ABILITY_LEVITATE') && moveType === 'TYPE_GROUND'
+      && defItemEffect !== 'HOLD_EFFECT_SPEED_DOWN_GROUNDED') {
+    st.mask |= MOVE_STATUS.LEVITATED; // :2598-2601
+  } else if (defender.magnetRise && !defender.ingrain && moveType === 'TYPE_GROUND'
+      && defItemEffect !== 'HOLD_EFFECT_SPEED_DOWN_GROUNDED') {
+    st.mask |= MOVE_STATUS.MAGNET_RISE; // :2602-2606
+  } else {
+    // :2607-2646 walk the chart in table order
+    for (const entry of TYPE_CHART.entries) {
+      if (entry.atk === '0xFF') break;
+      if (entry.atk === '0xFE') {
+        // :2613-2621 Foresight / Scrappy stop before the ghost immunities
+        if (defender.foresight || attAbility === 'ABILITY_SCRAPPY') break;
+        continue;
+      }
+      if (entry.atk === moveType) {
+        if (entry.def === defType1 && basicTypeMulApplies(entry, defender, defItemEffect, f)) {
+          planMultiplier(entry.mul, movePower, st, ignoreTypeChecks, steps);
+          if (entry.mul === TYPE_MULTI.TYPE_MULTI_SUPER_EFF) totalMul *= 2;
+        }
+        if (entry.def === defType2 && defType1 !== defType2 && basicTypeMulApplies(entry, defender, defItemEffect, f)) {
+          planMultiplier(entry.mul, movePower, st, ignoreTypeChecks, steps);
+          if (entry.mul === TYPE_MULTI.TYPE_MULTI_SUPER_EFF) totalMul *= 2;
+        }
+      }
+    }
+  }
+
+  // :2649-2677 Wonder Guard / Filter / Solid Rock / Expert Belt / Tinted Lens
+  if (ignorable(attAbility, defAbility, 'ABILITY_WONDER_GUARD')
+      && (!(st.mask & MOVE_STATUS.SUPER_EFFECTIVE)
+        || (st.mask & MOVE_STATUS.BASIC_EFFECTIVENESS) === MOVE_STATUS.BASIC_EFFECTIVENESS)
+      && movePower) {
+    st.mask |= MOVE_STATUS.WONDER_GUARD;
+  } else if (!ignoreTypeChecks) {
+    if ((st.mask & MOVE_STATUS.SUPER_EFFECTIVE) && movePower) {
+      if (ignorable(attAbility, defAbility, 'ABILITY_FILTER') || ignorable(attAbility, defAbility, 'ABILITY_SOLID_ROCK')) {
+        steps.push({ op: 'div34' });
+      }
+      if (attItem.holdEffect === 'HOLD_EFFECT_POWER_UP_SE') steps.push({ op: 'pct', pct: 100 + attItem.effectParam });
+    }
+    if ((st.mask & MOVE_STATUS.NOT_VERY_EFFECTIVE) && movePower) {
+      if (attAbility === 'ABILITY_TINTED_LENS') steps.push({ op: 'x2' });
+    }
+  } else {
+    st.mask &= ~MOVE_STATUS.SUPER_EFFECTIVE;
+    st.mask &= ~MOVE_STATUS.NOT_VERY_EFFECTIVE;
+  }
+  return { struggle: false, steps, mask: st.mask, totalMul };
+}
+
+// Apply a plan to one damage value. Same integer helpers, same order, same `if (damage)` guard as the direct port.
+export function replayTypeChart(plan, damage) {
+  DAMAGE_STATS.replays++;
+  if (plan.struggle) return { damage, moveStatusMask: plan.mask, totalMul: plan.totalMul };
+  for (const s of plan.steps) {
+    switch (s.op) {
+      case 'stab15': damage = idiv(damage * 15, 10); break;
+      case 'x2': damage = s32(damage * 2); break;
+      case 'mul': if (damage) damage = battleDivide(damage * s.mul, 10); break;
+      case 'div34': damage = battleDivide(damage * 3, 4); break;
+      case 'pct': damage = idiv(damage * s.pct, 100); break;
+      default: throw new Error(`damage.mjs: unknown plan step ${s.op}`);
+    }
+  }
+  return { damage, moveStatusMask: plan.mask, totalMul: plan.totalMul };
+}
+
+// BattleSystem_ApplyTypeChart, product entry point: plan + replay. Same signature and result as applyTypeChartDirect.
+export function applyTypeChart(input, damage, opts = {}) {
+  return replayTypeChart(typeChartPlan(input, opts), damage);
+}
+
 // BattleSystem_CalcCriticalMulti — PP/src/battle/battle_lib.c:7105-7146, split into the
 // deterministic part (given that the crit roll succeeded) and the chance.
-export function critBlocked({ attacker, defender, move, field = {} }) {
-  const { f, attAbility, defAbility } = prepare({ attacker, defender, move, field });
+export function critBlocked(input) {
+  return critBlockedP(prepare(input), input);
+}
+function critBlockedP({ f, attAbility, defAbility }, { defender }) {
   return ignorable(attAbility, defAbility, 'ABILITY_BATTLE_ARMOR')
     || ignorable(attAbility, defAbility, 'ABILITY_SHELL_ARMOR')
     || !!f.defenderSide.luckyChant
     || !!defender.noCritical; // MOVE_EFFECT_NO_CRITICAL
 }
 export function critMultiplier(input) {
-  if (critBlocked(input)) return 1;
-  const { attAbility } = prepare(input);
-  return attAbility === 'ABILITY_SNIPER' ? 3 : 2; // :7142-7144
+  return critMultiplierP(prepare(input), input);
+}
+function critMultiplierP(prep, input) {
+  if (critBlockedP(prep, input)) return 1;
+  return prep.attAbility === 'ABILITY_SNIPER' ? 3 : 2; // :7142-7144
 }
 // Probability of a crit; `criticalStage` = battleCtx->criticalBoosts (move's high-crit stage).
 export function critChance(input, criticalStage = 0) {
@@ -684,14 +837,18 @@ export function critChance(input, criticalStage = 0) {
 // Returns { rolls[16] (multiplier 85..100), min, max, immune, moveStatusMask, critMul, base, preVariance }.
 export function calcDamage(input) {
   const { attacker, defender, move, field = {}, crit = false } = input;
-  const critMul = crit ? critMultiplier(input) : 1;
-  const base = calcBaseDamage({ attacker, defender, move, field, critMul });
-  const preVariance = applyScriptMultipliers({ attacker, defender, move, field }, base, critMul);
+  const core = { attacker, defender, move, field };
+  // 016: prepare() once and ONE type-chart plan per call, replayed for the 16 rolls (was 16 chart walks and 18
+  // prepare() calls per call; exact, see typeChartPlan). The plan does not depend on critMul.
+  const prep = prepare(core);
+  const critMul = crit ? critMultiplierP(prep, core) : 1;
+  const base = calcBaseDamageP(prep, { ...core, critMul });
+  const preVariance = applyScriptMultipliersP(prep, core, base, critMul);
+  const plan = typeChartPlanP(prep, core, { ignoreTypeChecks: false, moveStatusMask: 0 });
   const rolls = [];
   let moveStatusMask = 0;
   for (let i = 0; i < 16; i++) {
-    const v = applyVariance(preVariance, 85 + i);
-    const r = applyTypeChart({ attacker, defender, move, field }, v);
+    const r = replayTypeChart(plan, applyVariance(preVariance, 85 + i));
     moveStatusMask = r.moveStatusMask;
     rolls.push(r.damage);
   }

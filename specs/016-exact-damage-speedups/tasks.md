@@ -42,14 +42,14 @@ mode) and US3 (shared mappers) are separate code changes committed in that order
 **Purpose**: the numbers the branch is compared with, taken from `main` at comparison time under the same
 conditions as the branch runs (quickstart step 0).
 
-- [ ] T001 Create `specs/016-exact-damage-speedups/validation-log.md` (header: times Eastern, evidence dir
+- [X] T001 Create `specs/016-exact-damage-speedups/validation-log.md` (header: times Eastern, evidence dir
   `runs/016-evidence/`; sections per task; record branch `016-exact-damage-speedups`, base `main` 19519ed,
   `git diff --stat main HEAD -- sim src tests` expected empty, exit 0); `mkdir -p runs/016-evidence`
-- [ ] T002 `git switch main`; alone on the machine: `node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/main_v2.json`
+- [X] T002 `git switch main`; alone on the machine: `node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/main_v2.json`
   and `--policy expectimax2-v1 --json > runs/016-evidence/main_v1.json` (about 1 min each); `digest_full` MUST be
   `db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and `1273b69462bcce8c690e020e9c9699412e1a3f40809d4d7b1a77ecc23d3c3178`;
   record `gauntlets_per_s`, `ms_per_decision`, `ai_draws`, `wall_s` for both in the log (these are the "before" figures)
-- [ ] T003 Still on `main`, alone: `uv run platsim bench --workers 16 --json > runs/016-evidence/main_pool.json` (about 2 min);
+- [X] T003 Still on `main`, alone: `uv run platsim bench --workers 16 --json > runs/016-evidence/main_pool.json` (about 2 min);
   `digests_agree` MUST be true; record `pool_wall_s`, `pool_gauntlets_per_s`, `pool_digest_logs`; then
   `git switch 016-exact-damage-speedups`; record in the log
 
@@ -62,7 +62,7 @@ conditions as the branch runs (quickstart step 0).
 **Purpose**: confirm, before any code lands, that the 015 replay fixture is the reference for `main` 19519ed on
 this branch (positive control for every later replay gate).
 
-- [ ] T004 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests; diagnostic about 35-45 s,
+- [X] T004 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests; diagnostic about 35-45 s,
   6144 player decisions); record the diagnostic line in the log. If it fails here, nothing else may start: the
   fixture or the base is not what the plan assumes
 
@@ -82,7 +82,7 @@ Showdown cross-check in `damage.test.mjs` still passes.
 
 ### Tests for User Story 1 (write first; fail on the missing exports before T006)
 
-- [ ] T005 [US1] Create `sim/test/damage_typechart.test.mjs` per research R4: a seeded PRNG (mulberry32, seed
+- [X] T005 [US1] Create `sim/test/damage_typechart.test.mjs` per research R4: a seeded PRNG (mulberry32, seed
   constant, printed with `t.diagnostic`); `synthetic()` builds attacker/defender structs in the port's shape
   (`types` two of `ENUMS.types` excluding TYPE_MYSTERY, equal with p 1/4; `ability` from a weighted list incl.
   ABILITY_LEVITATE, WONDER_GUARD, FILTER, SOLID_ROCK, TINTED_LENS, ADAPTABILITY, SCRAPPY, MOLD_BREAKER, NORMALIZE,
@@ -109,7 +109,7 @@ Showdown cross-check in `damage.test.mjs` still passes.
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] In `sim/damage.mjs`: rename the current `applyTypeChart` body to `export function applyTypeChartDirect(...)`
+- [X] T006 [US1] In `sim/damage.mjs`: rename the current `applyTypeChart` body to `export function applyTypeChartDirect(...)`
   (verbatim, same citations, header comment "reference implementation, Constitution VI; the plan below is tested
   against it"); add `export function typeChartPlan({ attacker, defender, move, field = {} }, { ignoreTypeChecks =
   false, moveStatusMask = 0 } = {})` returning `{ struggle, steps, mask, totalMul }` with the step kinds of
@@ -119,12 +119,12 @@ Showdown cross-check in `damage.test.mjs` still passes.
   applying the steps in order with `idiv`, `s32`, `battleDivide` and the `if (damage)` guard on `mul`; make
   `applyTypeChart(input, damage, opts)` return `replayTypeChart(typeChartPlan(input, opts), damage)`; add
   `export const DAMAGE_STATS = { plans: 0, replays: 0, direct: 0 }` incremented in the three functions
-- [ ] T007 [US1] In `sim/damage.mjs` `calcDamage(input)`: call `prepare()` once and `typeChartPlan` once, then
+- [X] T007 [US1] In `sim/damage.mjs` `calcDamage(input)`: call `prepare()` once and `typeChartPlan` once, then
   `replayTypeChart` per roll; add private helpers `calcBaseDamageP(prep, input, critMul)`, `applyScriptMultipliersP(prep,
   input, base, critMul)`, `critMultiplierP(prep, input)` holding the current bodies, with the exported `calcBaseDamage`,
   `applyScriptMultipliers`, `critMultiplier` as thin wrappers that call `prepare()` themselves (signatures and results
   unchanged); update the module header's function map (lines 1-20) with the new names
-- [ ] T008 [US1] Gate (quickstart step 1): `(cd sim && node --test test/damage_typechart.test.mjs test/damage.test.mjs
+- [X] T008 [US1] Gate (quickstart step 1): `(cd sim && node --test test/damage_typechart.test.mjs test/damage.test.mjs
   test/replay.test.mjs test/ai_golden.test.mjs test/ai_gauntlet.test.mjs)` exit 0; freeze run exit 0; full Node suite
   exit 0 (326 + 4); alone on the machine `node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/bench-c1-v2.json`
   → `digest_full` `db6d20cf…`, `ai_draws` equal to T002; record `gauntlets_per_s`, `ms_per_decision` under "US1
