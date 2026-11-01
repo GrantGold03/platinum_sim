@@ -1,6 +1,17 @@
-# START HERE (updated 2026-11-01, 12:05 PM EST)
+# START HERE (updated 2026-11-01, 1:25 PM EST)
 
-- **Resume checklist (2026-10-31, 8:25 PM EDT).** Feature 015 (`015-exact-ai-speedups`) is implemented, T001-T034
+- **Feature 015 merged to `main` 2026-11-01, 1:20 PM EST (user's go): fast-forward c751fb2 → `3c77f0e`, pushed.**
+  `main` is checked out in the main checkout, in sync with `origin/main`; branch `015-exact-ai-speedups` is kept
+  (local + GitHub, same commit). Nothing is running. `data/generated/` needs no re-extract (identical on both
+  branches, `runs/015-evidence/extract_{main,branch}.log`). `sim_code_hash` changed, so optimizer checkpoints made
+  before 015 will not resume. Full merge-rule gates on the merged code: Node 326/326, fast mode 528 passed /
+  4 xfailed, full suite 556 passed / 4 xfailed in 1 h 20 min (was 2 h 9 min on c751fb2). Speed on the fixed set:
+  v2 0.386 → 0.779 gauntlets/s single process (2.02x), 16 workers 1.91 → 3.22 (1.68x), results byte-identical.
+  Next feature, only when the user asks (user runs the `/speckit-*` stages): FUTURE-FEATURES section 7 lists the
+  follow-ons (a3 second-level damage memo, a4 persisting damageTable/matchupScore, hoisting the ~250 `K()` sites,
+  feature 016 `expectimax2-v4`); H4 (section 0) is 017+; the `seeds.test.mjs` timestamp flake is a test-only item.
+  Hand check at any time: `node sim/bench.mjs --policy expectimax2-v2` must print `digest_full db6d20cf…`.
+- **Resume checklist (2026-10-31, 8:25 PM EDT; superseded by the merge note above, kept for the commands).** Feature 015 (`015-exact-ai-speedups`) is implemented, T001-T034
   done, **T035 (full suite) and the merge are open and wait for the user**. Branch `015-exact-ai-speedups` is checked
   out in the main checkout, in sync with `origin/015-exact-ai-speedups`. Last code commit `7f21e14` (five commits:
   `dcf620c`, `fb4634a`, `6bfe692`, `61341b6`, `7f21e14`); only `docs(015): resume checklist` commits sit on top of it. `main` is still `c751fb2`. Nothing is running; no stash. The only
@@ -23,8 +34,7 @@
   4. **T035 done 2026-11-01 (user's go): `uv run pytest -q --durations=25`, 10:40 AM to 12:00 PM EST, 556 passed,
      4 xfailed, exit 0, 1 h 20 min (vs 2 h 9 min on `main`, 1.61x).** Log `runs/015-evidence/full.log`, times in
      `full.start`, details in the validation log. All gates for the merge rule are now green on the branch.
-  5. **Next: merge, only on the user's go:** `git checkout main && git merge --ff-only 015-exact-ai-speedups && git push`,
-     then update this file. `sim_code_hash` changed, so optimizer checkpoints made before 015 will not resume.
+  5. **Merged 2026-11-01, 1:20 PM EST** (fast-forward to `3c77f0e`, pushed; see the top note). `sim_code_hash` changed, so optimizer checkpoints made before 015 will not resume.
   Follow-ons already written down: FUTURE-FEATURES.md section 7 (a3 second-level damage memo, a4 persisting
   damageTable/matchupScore, hoisting the ~250 `K()` sites, feature 016 `expectimax2-v4`); the seeds.test.mjs
   timestamp flake is a separate test-only Spec Kit item.
@@ -91,7 +101,7 @@
   merge. 013 and 014 were merged on fast mode + Node only (their specs and the user's plan asked for that); the
   last full suite is still 2026-10-27 (012). The 26 `battle_sim` tests (incl. `test_optimize_small.py`) have not
   run on 013/014 code. Ask the user whether to run the full suite on `main` before H4.
-- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`), feature 012 (fast test mode, merged 2026-10-27, `321cd02`), feature 013 (no single-use held items, merged 2026-10-29, `dd7b8eb`) and feature 014 (damage-boost held items, merged 2026-10-29, `b68b794`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`), feature 012 (fast test mode, merged 2026-10-27, `321cd02`), feature 013 (no single-use held items, merged 2026-10-29, `dd7b8eb`) feature 014 (damage-boost held items, merged 2026-10-29, `b68b794`) and feature 015 (exact expectimax2 speedups + `platsim bench`, merged 2026-11-01, `3c77f0e`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
