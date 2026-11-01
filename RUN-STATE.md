@@ -1,4 +1,32 @@
-# START HERE (updated 2026-10-31)
+# START HERE (updated 2026-10-31, 8:25 PM EDT, end of session before a reboot)
+
+- **Resume checklist (2026-10-31, 8:25 PM EDT).** Feature 015 (`015-exact-ai-speedups`) is implemented, T001-T034
+  done, **T035 (full suite) and the merge are open and wait for the user**. Branch `015-exact-ai-speedups` is checked
+  out in the main checkout at `7f21e14`, in sync with `origin/015-exact-ai-speedups` (five commits: `dcf620c`,
+  `fb4634a`, `6bfe692`, `61341b6`, `7f21e14`). `main` is still `c751fb2`. Nothing is running; no stash. The only
+  uncommitted files are the user's own (see "Uncommitted on purpose" below). `data/generated/` is identical on
+  `main` and the branch (same 11 file hashes, `runs/015-evidence/extract_{main,branch}.log`), so no re-extract is
+  needed when switching between them; 015 changed only `sim/`, not the extractor. Every session scratch file
+  (profiles, suite logs, baseline JSONs) has a byte-identical copy under `runs/015-evidence/` (git-ignored; manifest
+  `runs/015-evidence/scratchpad.sha256`), so losing the scratchpad on reboot loses nothing.
+  **To pick up testing in a new session**, from the repo root on the branch:
+  1. `git status --short` (expect only the user's files) and `git log --oneline -1` (expect `7f21e14`).
+  2. Quick gates: `(cd sim && node --test test/*.test.mjs)` expects 326 pass (about 5 min; the replay test alone
+     takes 35-45 s on 16 worker threads); `uv run pytest -q -m "not battle_sim"` expects 528 passed, 4 xfailed
+     (about 10 min). Known flake, not 015: `sim/test/seeds.test.mjs` compares raw logs with `|t:|` timestamps and
+     fails when two battles straddle a second (seen once, 325/326; rerun was 326/326).
+  3. Speed check by hand: `node sim/bench.mjs --policy expectimax2-v2` (40 gauntlets, about 1 min) must print
+     `digest_full db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and about 0.78 gauntlets/s;
+     `uv run platsim bench --workers 16` adds the pool half (about 2 min) and must end with `digests agree  True`.
+     Before/after numbers and logs: `specs/015-exact-ai-speedups/validation-log.md`, `runs/015-evidence/`.
+  4. On the user's go: T035 `uv run pytest -q > runs/015-evidence/full.log 2>&1` in the background (about 2 h 10 min
+     on 16 workers; 551 tests + the 5 new bench tests; nothing else running; never commit or switch branches while
+     it runs). Record the summary line, exit code and Eastern start/end in the validation log and here.
+  5. Merge only on the user's second go: `git checkout main && git merge --ff-only 015-exact-ai-speedups && git push`,
+     then update this file. `sim_code_hash` changed, so optimizer checkpoints made before 015 will not resume.
+  Follow-ons already written down: FUTURE-FEATURES.md section 7 (a3 second-level damage memo, a4 persisting
+  damageTable/matchupScore, hoisting the ~250 `K()` sites, feature 016 `expectimax2-v4`); the seeds.test.mjs
+  timestamp flake is a separate test-only Spec Kit item.
 
 - **In progress (2026-10-30, session started 2:54 PM EDT): expectimax2-v2 speed work, measurement phase.**
   Goal: make the player policy faster by algorithmic changes (not a port). User decisions: run the full
