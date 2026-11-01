@@ -2,15 +2,16 @@
 
 - **Resume checklist (2026-10-31, 8:25 PM EDT).** Feature 015 (`015-exact-ai-speedups`) is implemented, T001-T034
   done, **T035 (full suite) and the merge are open and wait for the user**. Branch `015-exact-ai-speedups` is checked
-  out in the main checkout at `7f21e14`, in sync with `origin/015-exact-ai-speedups` (five commits: `dcf620c`,
-  `fb4634a`, `6bfe692`, `61341b6`, `7f21e14`). `main` is still `c751fb2`. Nothing is running; no stash. The only
+  out in the main checkout, in sync with `origin/015-exact-ai-speedups`. Last code commit `7f21e14` (five commits:
+  `dcf620c`, `fb4634a`, `6bfe692`, `61341b6`, `7f21e14`); only `docs(015): resume checklist` commits sit on top of it. `main` is still `c751fb2`. Nothing is running; no stash. The only
   uncommitted files are the user's own (see "Uncommitted on purpose" below). `data/generated/` is identical on
   `main` and the branch (same 11 file hashes, `runs/015-evidence/extract_{main,branch}.log`), so no re-extract is
   needed when switching between them; 015 changed only `sim/`, not the extractor. Every session scratch file
   (profiles, suite logs, baseline JSONs) has a byte-identical copy under `runs/015-evidence/` (git-ignored; manifest
   `runs/015-evidence/scratchpad.sha256`), so losing the scratchpad on reboot loses nothing.
   **To pick up testing in a new session**, from the repo root on the branch:
-  1. `git status --short` (expect only the user's files) and `git log --oneline -1` (expect `7f21e14`).
+  1. `git status --short` (expect only the user's files); `git log --oneline -3` (expect `7f21e14` under the
+     resume-checklist doc commits); `git status -sb | head -1` (expect no ahead/behind).
   2. Quick gates: `(cd sim && node --test test/*.test.mjs)` expects 326 pass (about 5 min; the replay test alone
      takes 35-45 s on 16 worker threads); `uv run pytest -q -m "not battle_sim"` expects 528 passed, 4 xfailed
      (about 10 min). Known flake, not 015: `sim/test/seeds.test.mjs` compares raw logs with `|t:|` timestamps and
