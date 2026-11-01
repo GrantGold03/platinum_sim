@@ -243,20 +243,115 @@ test('015 freeze guard: with PLATSIM_AI_FREEZE=1 a write to a cached struct thro
       p1: { name: 'P', team: [mon('garchomp', ['earthquake'], { ability: 'Sand Veil' })] },
       p2: { name: 'AI', team: [mon('blissey', ['toxic'], { ability: 'Natural Cure' })] } });
     const ai = createAdapter(battle);
-    const inp = ai.damageInput(battle.p1.active[0], battle.p2.active[0], 'earthquake', { power: 100, type: 'TYPE_GROUND', powerMul: 10 });
+    const o = { power: 100, type: 'TYPE_GROUND', powerMul: 10 };
+    const inp = ai.damageInput(battle.p1.active[0], battle.p2.active[0], 'earthquake', o);
+    // 016: the plan and pre-variance memos are frozen too
+    const plan = ai.typeChartPlan(battle.p1.active[0], battle.p2.active[0], 'earthquake', o);
+    const pv = ai.preVariance(battle.p1.active[0], battle.p2.active[0], 'earthquake', o, 0);
     const results = [];
-    for (const f of [() => { inp.attacker.hp = 1; }, () => { inp.field.defenderSide.reflect = true; }, () => { inp.field.abilitiesOnField.push('x'); }]) {
+    for (const f of [() => { inp.attacker.hp = 1; }, () => { inp.field.defenderSide.reflect = true; }, () => { inp.field.abilitiesOnField.push('x'); },
+      () => { plan.steps.push({ op: 'x2' }); }, () => { pv.damage = 1; }]) {
       try { f(); results.push('no throw'); } catch (e) { results.push(e.constructor.name); }
     }
     console.log(results.join(','));
   `;
   const run = (env) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, ...env }, encoding: 'utf8' });
-  const on = run({ PLATSIM_AI_FREEZE: '1' });
+  const on = run({ PLATSIM_AI_FREEZE: '1', PLATSIM_AI_CHECK: '' });
   assert.equal(on.status, 0, on.stderr);
-  assert.equal(on.stdout.trim(), 'TypeError,TypeError,TypeError');
-  const off = run({ PLATSIM_AI_FREEZE: '' });
+  assert.equal(on.stdout.trim(), 'TypeError,TypeError,TypeError,TypeError,TypeError');
+  const off = run({ PLATSIM_AI_FREEZE: '', PLATSIM_AI_CHECK: '' });
   assert.equal(off.status, 0, off.stderr);
-  assert.equal(off.stdout.trim(), 'no throw,no throw,no throw');
+  assert.equal(off.stdout.trim(), 'no throw,no throw,no throw,no throw,no throw');
+});
+
+// Feature 016 (FR-005, FR-006): the trainer AI's pre-variance damage and the type-chart plan, memoised per decision
+// on the cached input structs (contracts/adapter-api.md).
+test('016 preVariance / typeChartPlan: equal to the direct computation on the cached inputs; memoised per decision; dropped by beginDecision', async () => {
+  const { typeChartPlan, replayTypeChart, calcBaseDamage } = await import('../damage.mjs');
+  const battle = makeBattle();
+  const ai = createAdapter(battle);
+  const [a, d] = [battle.p1.active[0], battle.p2.active[0]];
+  const CASES = [['earthquake', { power: 100, type: 'TYPE_GROUND', powerMul: 10 }, 0], ['toxic', { power: 0, type: 'TYPE_POISON', powerMul: 10 }, 0],
+    ['dragonrage', { power: 0, type: 'TYPE_DRAGON', powerMul: 10 }, 40], [89, { power: 0, type: undefined, powerMul: 10 }, 0]];
+  for (const [mv, o, fixed] of CASES) {
+    const input = ai.damageInput(a, d, mv, o);
+    const ignore = fixed !== 0;
+    const direct = typeChartPlan(input, { ignoreTypeChecks: ignore, moveStatusMask: 0 });
+    assert.deepEqual(ai.typeChartPlan(a, d, mv, o, { ignoreTypeChecks: ignore }), direct, `plan ${mv}`);
+    const r = replayTypeChart(direct, fixed === 0 ? calcBaseDamage({ ...input, critMul: 1 }) : fixed);
+    assert.deepEqual(ai.preVariance(a, d, mv, o, fixed), { damage: r.damage, moveStatusMask: r.moveStatusMask }, `preVariance ${mv}`);
+  }
+  // memoised: the same object comes back, no new build, hits grow
+  const s0 = { ...ai.cacheStats };
+  const p1 = ai.preVariance(a, d, 'earthquake', CASES[0][1], 0);
+  const p2 = ai.preVariance(a, d, 'earthquake', CASES[0][1], 0);
+  assert.equal(p1, p2);
+  assert.equal(ai.cacheStats.preVariance, s0.preVariance, 'no new pre-variance build for a repeated call');
+  assert.equal(ai.cacheStats.preVarianceHits, s0.preVarianceHits + 2);
+  const q1 = ai.typeChartPlan(a, d, 'earthquake', CASES[0][1]);
+  const q2 = ai.typeChartPlan(a, d, 'earthquake', CASES[0][1]);
+  assert.equal(q1, q2);
+  assert.equal(ai.cacheStats.plans, s0.plans, 'no new plan for a repeated call');
+  assert.ok(ai.cacheStats.planHits >= s0.planHits + 2);
+  // a different fixed damage or type is a different entry
+  assert.notEqual(ai.preVariance(a, d, 'earthquake', CASES[0][1], 40), p1);
+  assert.notEqual(ai.preVariance(a, d, 'earthquake', { ...CASES[0][1], type: 'TYPE_FIRE' }, 0), p1);
+  // dropped by beginDecision: rebuilt (new object, equal value)
+  const b0 = ai.cacheStats.preVariance;
+  ai.beginDecision();
+  const p3 = ai.preVariance(a, d, 'earthquake', CASES[0][1], 0);
+  assert.notEqual(p3, p1);
+  assert.deepEqual(p3, p1);
+  assert.equal(ai.cacheStats.preVariance, b0 + 1);
+  // non-singles throws like damageInput
+  const gt = battle.gameType;
+  battle.gameType = 'doubles';
+  assert.throws(() => ai.preVariance(a, d, 'earthquake', CASES[0][1], 0), /only singles/);
+  battle.gameType = gt;
+});
+
+test('016 CHECK mode: one Aaron battle per policy compares every memo hit (checks > 0, 0 mismatches); a corrupted memo is reported; off by default', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const url = (p) => JSON.stringify(new URL(p, import.meta.url).href);
+  const run = (script, env) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, ...env }, encoding: 'utf8', timeout: 300000 });
+  const clean = `
+    import { gd } from ${url('./ai_fixtures.mjs')};
+    import { runGauntlet } from ${url('../gauntlet.mjs')};
+    import { benchRequests } from ${url('../bench.mjs')};
+    import { CHECK_STATS } from ${url('../ai/adapter.mjs')};
+    for (const policy of ['expectimax2-v2', 'expectimax2-v1']) {
+      const [req] = benchRequests({ n: 1, teams: ['bench'], trainers: ['aaron'], policy });
+      runGauntlet(gd, req);
+    }
+    console.log(JSON.stringify(CHECK_STATS));
+  `;
+  const on = run(clean, { PLATSIM_AI_CHECK: '1', PLATSIM_AI_FREEZE: '' });
+  assert.equal(on.status, 0, on.stderr);
+  const stats = JSON.parse(on.stdout.trim().split('\n').pop());
+  assert.ok(stats.checks > 0, `checks ${stats.checks}`);
+  assert.equal(stats.mismatches, 0);
+  const corrupt = `
+    import { Battle } from ${url('../showdown.mjs')};
+    import { createAdapter } from ${url('../ai/adapter.mjs')};
+    const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 }, evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    const mon = (species, moves, extra = {}) => ({ species, moves, level: 50, nature: 'Serious', ivs, evs, item: '', ...extra });
+    const battle = new Battle({ formatid: 'gen4customgame', seed: [1, 2, 3, 4],
+      p1: { name: 'P', team: [mon('garchomp', ['earthquake'], { ability: 'Sand Veil' })] },
+      p2: { name: 'AI', team: [mon('blissey', ['toxic'], { ability: 'Natural Cure' })] } });
+    const ai = createAdapter(battle);
+    const [a, d] = [battle.p1.active[0], battle.p2.active[0]];
+    const o = { power: 100, type: 'TYPE_GROUND', powerMul: 10 };
+    const e = ai.preVariance(a, d, 'earthquake', o, 0);
+    e.damage = e.damage + 1;
+    ai.preVariance(a, d, 'earthquake', o, 0);
+    console.log('no throw');
+  `;
+  const bad = run(corrupt, { PLATSIM_AI_CHECK: '1', PLATSIM_AI_FREEZE: '' });
+  assert.notEqual(bad.status, 0, 'the corrupted memo must be reported');
+  assert.match(bad.stderr, /CHECK mismatch preVariance/);
+  const off = run(corrupt, { PLATSIM_AI_CHECK: '', PLATSIM_AI_FREEZE: '' });
+  assert.equal(off.status, 0, off.stderr);
+  assert.equal(off.stdout.trim(), 'no throw');
 });
 
 test('015 Constants.get fast path: a cold instance and a warmed one agree on every symbol; errors unchanged', async () => {

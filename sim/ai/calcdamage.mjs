@@ -9,7 +9,9 @@
 //   TAI:3127-3247 TrainerAI_MoveType                  -> moveType()
 //   TAI:3560-3598 AI_HasSuperEffectiveMove (singles)  -> hasSuperEffectiveMove()
 // over sim/damage.mjs (T037), which ports BattleSystem_CalcMoveDamage (battle_lib.c:6601-7079)
-// and BattleSystem_ApplyTypeChart (battle_lib.c:2560-2679).
+// and BattleSystem_ApplyTypeChart (battle_lib.c:2560-2679). Since feature 016 the CalcMoveDamage + ApplyTypeChart
+// part of TrainerAI_CalcDamage (TAI:3081-3103) and the type-chart plan are memoised per decision in the adapter
+// (`ai.preVariance`, `ai.typeChartPlan`), shared by the K samples on one state; the variance step stays here.
 //
 // The AI path differs from a real hit (sim/damage.mjs header): critical multiplier 1, NO
 // BattleScript_CalcMoveDamage post-multipliers (Life Orb, Metronome, Me First), the type chart
@@ -28,7 +30,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT, readList } from './constants.mjs';
-import { calcBaseDamage, applyTypeChart as dmgApplyTypeChart, battleDivide, MOVE_STATUS, ENUMS } from '../damage.mjs';
+import { replayTypeChart, battleDivide, MOVE_STATUS, ENUMS } from '../damage.mjs';
 
 const TAI_PATH = 'src/battle/trainer_ai/trainer_ai.c';
 const taiLines = readFileSync(join(DECOMP_ROOT, TAI_PATH), 'utf8').split('\n');
@@ -170,14 +172,16 @@ function judgmentType(ai, holdEffect) {
   return K(ai, 'TYPE_NORMAL');
 }
 
-// Damage-port input for `move` used by `attacker` against `defender`, with the game's
-// inPower (u16, battle_lib.c:6606) / inType (0 = TYPE_NORMAL = "use move data").
-function portInput(ai, attacker, defender, move, power, type) {
+// The two battlers' Pokemon objects and the damage-port move options for the game's inPower (u16,
+// battle_lib.c:6606) / inType (0 = TYPE_NORMAL = "use move data"). The adapter builds and caches the inputs
+// (015) and memoises the plan and pre-variance damage on them (016).
+function battlerPair(ai, attacker, defender) {
   const att = ai.pokemon(attacker);
   const def = ai.pokemon(defender);
   if (!att || !def) throw new Error(`calcdamage: battler ${att ? defender : attacker} is empty`);
-  return ai.damageInput(att, def, move, { power: power & 0xffff, type: typeName(type), powerMul: 10 }); // 015: cached per decision; structs are shared, never written
+  return [att, def];
 }
+const portOpts = (power, type) => ({ power: power & 0xffff, type: typeName(type), powerMul: 10 });
 
 // Eligibility used by FlagMoveDamageScore (TAI:1023-1036) and IfCurrentMoveKills (TAI:1538-1553):
 // alt-power effect, or power > 1 and not a no-damage-calc effect.
@@ -298,17 +302,11 @@ export function calcDamage(env, { move, heldItem, ivs, attacker, ability, embarg
       break;
   }
 
-  const input = portInput(ai, attacker, defender, move, power, type);
-  let ignoreTypeChecks = false;
-  if (damage === 0) {
-    // TAI:3081-3091: BattleSystem_CalcMoveDamage(..., criticalMul 1). Side/field conditions are
-    // the defender side's and the field's, which fromShowdown reads from the live battle.
-    damage = calcBaseDamage({ ...input, critMul: 1 });
-  } else {
-    ignoreTypeChecks = true; // TAI:3093 SYSCTL_IGNORE_TYPE_CHECKS (cleared again at TAI:3104)
-  }
-  // TAI:3096-3103
-  const r = dmgApplyTypeChart(input, damage, { ignoreTypeChecks, moveStatusMask: 0 });
+  // TAI:3081-3103 (memoised per decision in the adapter, feature 016): BattleSystem_CalcMoveDamage(..., criticalMul
+  // 1) when `damage` is still 0, then BattleSystem_ApplyTypeChart, with SYSCTL_IGNORE_TYPE_CHECKS set for fixed
+  // damage (TAI:3093, cleared again at TAI:3104). Side/field conditions are the defender side's and the field's.
+  const [att, def] = battlerPair(ai, attacker, defender);
+  const r = ai.preVariance(att, def, move, portOpts(power, type), damage);
   damage = r.damage | 0;
   if (r.moveStatusMask & MOVE_STATUS.IMMUNE) damage = 0; // TAI:3106-3107
   else damage = battleDivide((damage * (variance & 0xff)) | 0, 100); // TAI:3109
@@ -389,8 +387,8 @@ function noCloudNine(ai) {
 // BattleSystem_ApplyTypeChart(move, inType, attacker, defender, damage, &mask) with
 // SYSCTL_IGNORE_TYPE_CHECKS clear. Returns { damage, moveStatusMask }.
 export function applyTypeChart(env, { move, type, attacker, defender, damage }) {
-  const input = portInput(env.ai, attacker, defender, move, 0, type);
-  const r = dmgApplyTypeChart(input, damage, { ignoreTypeChecks: false, moveStatusMask: 0 });
+  const [att, def] = battlerPair(env.ai, attacker, defender);
+  const r = replayTypeChart(env.ai.typeChartPlan(att, def, move, portOpts(0, type)), damage); // 016: plan memoised per decision
   return { damage: r.damage, moveStatusMask: r.moveStatusMask };
 }
 

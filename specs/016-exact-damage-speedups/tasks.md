@@ -129,7 +129,7 @@ Showdown cross-check in `damage.test.mjs` still passes.
   exit 0 (326 + 4); alone on the machine `node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/bench-c1-v2.json`
   → `digest_full` `db6d20cf…`, `ai_draws` equal to T002; record `gauntlets_per_s`, `ms_per_decision` under "US1
   attribution" with the coverage diagnostic and the equivalence test's runtime
-- [ ] T009 [US1] Commit 1 by path (`sim/damage.mjs sim/test/damage_typechart.test.mjs specs/016-exact-damage-speedups/validation-log.md`),
+- [X] T009 [US1] Commit 1 by path (`sim/damage.mjs sim/test/damage_typechart.test.mjs specs/016-exact-damage-speedups/validation-log.md`),
   message `perf(016): type-chart plan replayed per roll (exact; equivalence test vs the kept reference; replay digest unchanged)`,
   push; record the hash
 
@@ -150,7 +150,7 @@ both digests.
 
 ### Tests for User Story 2 (write first; fail on the missing methods before T013)
 
-- [ ] T010 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("016 preVariance memo"): on the file's battle fixture and
+- [X] T010 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("016 preVariance memo"): on the file's battle fixture and
   a sample of moves (a damaging move, power 0 with a type override, fixedDamage 40 as Dragon Rage's path):
   `ai.typeChartPlan(att, def, num, opts)` deep-equals `typeChartPlan(ai.damageInput(att, def, num, opts), {
   ignoreTypeChecks: false, moveStatusMask: 0 })` and `ai.preVariance(att, def, num, opts, 0)` deep-equals
@@ -160,7 +160,7 @@ both digests.
   then a call → `preVariance` +1 (dropped); a different `fixedDamage` or `type` is a different entry; a non-singles
   battle throws. Extend the "015 freeze guard" child script: under `PLATSIM_AI_FREEZE=1`, `plan.steps.push({})` and
   `entry.damage = 1` throw `TypeError`; without it they do not (control)
-- [ ] T011 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("016 CHECK mode", child processes via `spawnSync` as the
+- [X] T011 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("016 CHECK mode", child processes via `spawnSync` as the
   freeze test does): (a) child with `PLATSIM_AI_CHECK: '1'` imports `../test/ai_fixtures.mjs` (`gd`), `runGauntlet` from
   `../gauntlet.mjs` and `CHECK_STATS` from `../ai/adapter.mjs`, runs `benchRequests({ n: 1, teams: ['bench'], trainers:
   ['aaron'], policy })` for `expectimax2-v2` and `expectimax2-v1`, prints `CHECK_STATS.checks` and `mismatches`; assert
@@ -168,7 +168,7 @@ both digests.
   an adapter on a small battle, calls `preVariance` once, sets the returned entry's `damage` to `damage + 1`, calls again
   with the same arguments; assert non-zero exit and stderr matching `/CHECK mismatch preVariance/` (positive control);
   (c) control: the same script with `PLATSIM_AI_CHECK: ''` exits 0 (no comparison)
-- [ ] T012 [P] [US2] Add to `sim/test/ai_cmds_damage.test.mjs` ("016 preVariance per decision"): with the file's AI
+- [X] T012 [P] [US2] Add to `sim/test/ai_cmds_damage.test.mjs` ("016 preVariance per decision"): with the file's AI
   env fixture, run `calcAllDamage` for K = 1, 2, 4 repeated calls (same `varyDamage` rolls pattern as the 015
   cacheStats test) without `beginDecision` between them: `cacheStats.preVariance` delta is the same for every K (one
   per attacker-defender-move), `preVarianceHits` grows with K, and the returned `damageVals` equal a by-hand computation
@@ -177,7 +177,7 @@ both digests.
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] In `sim/ai/adapter.mjs`: import `typeChartPlan`, `replayTypeChart`, `calcBaseDamage` from `../damage.mjs`;
+- [X] T013 [US2] In `sim/ai/adapter.mjs`: import `typeChartPlan`, `replayTypeChart`, `calcBaseDamage` from `../damage.mjs`;
   module-level `const CHECK = process.env.PLATSIM_AI_CHECK === '1'` and `export const CHECK_STATS = { checks: 0, mismatches: 0 }`;
   inside `createAdapter`: `plans = new Map()`, `pre = new Map()` (attacker struct → defender struct → key string), cleared
   by `beginDecision()`; `cacheStats` gains `plans, planHits, preVariance, preVarianceHits, checks`; `api.typeChartPlan(att,
@@ -187,14 +187,14 @@ both digests.
   and on a difference increments `mismatches` and throws `Error(\`adapter: CHECK mismatch ${kind} ${key}: memo=${a} fresh=${b}\`)`);
   update the header comment (016 paragraph) and `sim/ai/INTERFACE.md` ("Decision cache" section: the two methods, the
   counters, `PLATSIM_AI_CHECK` next to `PLATSIM_AI_FREEZE`)
-- [ ] T014 [US2] In `sim/ai/calcdamage.mjs`: `calcDamage(env, …)` lines 300-310 → `const att = ai.pokemon(attacker), def =
+- [X] T014 [US2] In `sim/ai/calcdamage.mjs`: `calcDamage(env, …)` lines 300-310 → `const att = ai.pokemon(attacker), def =
   ai.pokemon(defender)` (empty-battler error kept), `const r = ai.preVariance(att, def, move, { power: power & 0xffff,
   type: typeName(type), powerMul: 10 }, damage)`, then the immune check and variance step unchanged (TAI:3106-3109
   citations kept); `applyTypeChart(env, …)` → `replayTypeChart(env.ai.typeChartPlan(att, def, move, { power: 0, type:
   typeName(type), powerMul: 10 }), damage)` returning `{ damage, moveStatusMask }`; import `replayTypeChart` from
   `../damage.mjs`, drop `calcBaseDamage` / `dmgApplyTypeChart` / `portInput` if no longer referenced (grep first; keep
   what `damageCheckApplies` or others still use); update the file header's function map
-- [ ] T015 [US2] Gate (quickstart step 2): `(cd sim && node --test test/ai_adapter.test.mjs test/ai_cmds_damage.test.mjs
+- [X] T015 [US2] Gate (quickstart step 2): `(cd sim && node --test test/ai_adapter.test.mjs test/ai_cmds_damage.test.mjs
   test/replay.test.mjs test/ai_golden.test.mjs)` exit 0; freeze run exit 0; full Node suite exit 0; alone on the machine
   `PLATSIM_AI_CHECK=1 node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/check_v2.json` and `-v1 …
   check_v1.json`: exit 0, digests `db6d20cf…` / `1273b694…` (about 2 min each; record wall, this is the recorded

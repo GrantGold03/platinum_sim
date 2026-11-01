@@ -22,6 +22,7 @@ import { DIVERGENCES_PATH, GENERATED_DIR, loadGameData } from './gamedata.mjs';
 import { OPPONENT_POLICIES, PLAYER_POLICIES, RequestError, runGauntlet } from './gauntlet.mjs';
 import { STATS } from './policy/expectimax2.mjs';
 import { DECOMP_AI, stateFor } from './ai/opponent.mjs';
+import { CHECK_STATS } from './ai/adapter.mjs';
 import { simCodeHash } from './version.mjs';
 
 export const TEAM_FILES = {
@@ -158,6 +159,7 @@ export function runBench(gd, { policy = 'expectimax2-v2', block = 'a', n = 20, t
   const reqs = benchRequests({ block, n, teams, trainers, policy });
   const teamOf = reqs.map((r) => r.seed.split('-')[2]);
   const s0 = statsSnapshot();
+  const c0 = { ...CHECK_STATS }; // 016 control mode counters (PLATSIM_AI_CHECK=1), reported as deltas
   const jsons = [], results = [], records = [];
   let cleared = 0, battles = 0, turns = 0;
   const t0 = process.hrtime.bigint();
@@ -180,6 +182,8 @@ export function runBench(gd, { policy = 'expectimax2-v2', block = 'a', n = 20, t
     ms_per_decision: dec ? +(stats.ms / dec).toFixed(3) : null,
     ai_calls_per_decision: dec ? +(stats.aiCalls / dec).toFixed(2) : null,
     ai_draws: dec ? stats.aiDraws : null,
+    check_stats: process.env.PLATSIM_AI_CHECK === '1'
+      ? { checks: CHECK_STATS.checks - c0.checks, mismatches: CHECK_STATS.mismatches - c0.mismatches } : null,
     digest_full: digestFull(jsons),
     digest_logs: digestLogs(results, reqs.map((r) => r.seed)),
     stats,
@@ -236,6 +240,7 @@ export function main(argv = process.argv.slice(2)) {
       ['wall', `${out.wall_s} s`], ['gauntlets/s', out.gauntlets_per_s],
       ['decisions', out.decisions ?? 'n/a'], ['ms/decision', out.ms_per_decision ?? 'n/a'],
       ['AI calls/decision', out.ai_calls_per_decision ?? 'n/a'], ['AI draws', out.ai_draws ?? 'n/a'],
+      ['CHECK mode', out.check_stats ? `${out.check_stats.checks} checks, ${out.check_stats.mismatches} mismatches` : 'off'],
       ['digest_full', out.digest_full], ['digest_logs', out.digest_logs], ['sim_code_hash', out.sim_code_hash],
     ];
     for (const [k, v] of rows) process.stdout.write(`${k.padEnd(20)} ${v}\n`);

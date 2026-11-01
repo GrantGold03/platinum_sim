@@ -401,3 +401,37 @@ test('015 effectSet: equals names.some(K(n) === v) for every value; one hit and 
   assert.deepEqual([...a].sort(), [...b].sort());
   assert.equal(s.draws.length, 0);
 });
+
+// Feature 016 (FR-005): TrainerAI_CalcDamage's pre-variance part is computed once per attacker-defender-move per
+// decision and shared by the samples; the value equals the pre-016 computation done by hand.
+test('016 preVariance per decision: builds independent of K, hits grow; values equal the by-hand TAI:3081-3109 computation', async () => {
+  const { calcBaseDamage, applyTypeChartDirect, battleDivide, MOVE_STATUS } = await import('../damage.mjs');
+  const s = setup();
+  const args = { attacker: 1, moves: s.ai.moves(1), heldItem: 0, ivs: s.ai.ivs(1), ability: s.ai.battlerAbility(1), embargoTurns: 0, varyDamage: 0 };
+  const builds = [], hits = [];
+  let vals;
+  for (const K of [1, 2, 4]) {
+    s.ai.beginDecision();
+    const b0 = s.ai.cacheStats.preVariance, h0 = s.ai.cacheStats.preVarianceHits;
+    for (let k = 0; k < K; k++) vals = cd.calcAllDamage(s.ctx, args).damageVals;
+    builds.push(s.ai.cacheStats.preVariance - b0);
+    hits.push(s.ai.cacheStats.preVarianceHits - h0);
+  }
+  assert.ok(builds[0] >= 1 && builds[0] <= 4, `builds for one sample: ${builds[0]} (one per damaging move)`);
+  assert.deepEqual(builds, [builds[0], builds[0], builds[0]], 'builds independent of K');
+  assert.ok(hits[0] === 0 && hits[1] > hits[0] && hits[2] > hits[1], `hits grow with K: ${hits}`);
+  // by hand for the first damaging move (default switch branch: power 0, type TYPE_NORMAL -> "use move data"):
+  // CalcMoveDamage(critMul 1), ApplyTypeChart (checks on), immune -> 0, else BattleSystem_Divide(d * 100, 100).
+  // The AI's own eligibility (damageCheckApplies: alt-power effect, or power > 1 and not a no-damage-calc effect such
+  // as Explosion's); skip alt-power moves (Hidden Power, Gyro Ball), whose power/type come from the sample's inputs.
+  const moves = s.ai.moves(1);
+  const i = moves.findIndex((m) => m && cd.damageCheckApplies(s.ai, m) && !cd.effectSet(s.ai, cd.ALT_POWER_EFFECTS).has(s.ai.moveData(m).effect));
+  assert.ok(i >= 0, 'the fixture attacker has a plain damaging move');
+  const att = s.battle.p2.active[0], def = s.battle.p1.active[0];
+  const input = s.ai.damageInput(att, def, moves[i], { power: 0, type: undefined, powerMul: 10 });
+  const r = applyTypeChartDirect(input, calcBaseDamage({ ...input, critMul: 1 }), { ignoreTypeChecks: false, moveStatusMask: 0 });
+  const expected = (r.moveStatusMask & MOVE_STATUS.IMMUNE) ? 0 : battleDivide(((r.damage | 0) * 100) | 0, 100);
+  assert.equal(vals[i], expected);
+  assert.ok(expected > 0, 'positive control: the damaging move did damage');
+  assert.equal(s.draws.length, 0);
+});

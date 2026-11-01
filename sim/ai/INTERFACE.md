@@ -74,3 +74,21 @@ Handlers may add helpers to `ctx` only through `makeCtx({extra})` (as `choose.mj
   however many samples run).
 - **`PLATSIM_AI_FREEZE=1`** (read once at import, like `PLATSIM_AI_DEBUG`) deep-freezes every cached struct, so a
   write anywhere downstream throws `TypeError`. The Node suite is run once with it set when the AI port changes.
+
+## Decision memos (feature 016, `specs/016-exact-damage-speedups/contracts/adapter-api.md`)
+
+- **`ai.typeChartPlan(attackerPoke, defenderPoke, move, { power, type, powerMul }, { ignoreTypeChecks })`** returns
+  `damage.mjs` `typeChartPlan()` of the cached inputs, memoised for the decision on (attacker struct, defender
+  struct, move, power, type, ignoreTypeChecks). `calcdamage.mjs` `applyTypeChart` replays it.
+- **`ai.preVariance(attackerPoke, defenderPoke, move, { power, type, powerMul }, fixedDamage)`** returns
+  `{ damage, moveStatusMask }`, TrainerAI_CalcDamage before the sample's variance step (TAI:3081-3103; the spec's
+  "base damage"): CalcMoveDamage(critMul 1) then the chart when `fixedDamage` is 0, else the chart on `fixedDamage`
+  with type checks ignored. Memoised like the plan plus `fixedDamage`; shared by the K samples on one state.
+  `calcdamage.mjs` `calcDamage` applies the immune check and the variance per sample.
+- Both memos are dropped by **`beginDecision()`** and frozen under `PLATSIM_AI_FREEZE=1`. `ai.cacheStats` gains
+  `plans, planHits, preVariance, preVarianceHits, checks`.
+- **`PLATSIM_AI_CHECK=1`** (read once at import) recomputes every memo hit from the inputs and throws
+  `adapter: CHECK mismatch <kind> <key>: memo=… fresh=…` on a difference; the module export `CHECK_STATS`
+  `{ checks, mismatches }` aggregates across adapters, and `node sim/bench.mjs` reports it as `check_stats` when the
+  variable is set. The default Node suite runs one battle per policy with it on; the full fixed set under it is
+  recorded before a merge (016 validation log).

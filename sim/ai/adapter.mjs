@@ -21,6 +21,12 @@
 // structs are SHARED and read-only: callers must not write to them. With PLATSIM_AI_FREEZE=1 in the
 // environment they are deep-frozen when built, so any write throws (test guard).
 //
+// Feature 016 (specs/016-exact-damage-speedups/contracts/adapter-api.md): the same decision cache also memoises,
+// per (attacker struct, defender struct, move, power, type), the type-chart PLAN (damage.mjs typeChartPlan) and the
+// trainer AI's PRE-VARIANCE damage (TrainerAI_CalcDamage before the sample's roll, TAI:3081-3103; the spec calls it
+// the "base damage"). The K samples on one state share them; the samples' own rolls are applied by the caller.
+// PLATSIM_AI_CHECK=1 recomputes every memo hit and throws on a difference (control mode, see CHECK_STATS).
+//
 // Battler ids follow the game: battler & 1 is the side (BattleSystem_GetBattlerSide,
 // battle_system.c:360-363). BATTLER_PLAYER_1 = 0, BATTLER_ENEMY_1 = 1, BATTLER_PLAYER_2 = 2
 // (constants/battle.h:95-97). In singles only 0 and 1 exist; 2 and 3 return an empty BattleMon
@@ -34,9 +40,13 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT, loadConstants } from './constants.mjs';
-import { ENUMS, battlerFromShowdown } from '../damage.mjs';
+import { ENUMS, battlerFromShowdown, typeChartPlan, replayTypeChart, calcBaseDamage } from '../damage.mjs';
 
 const FREEZE = process.env.PLATSIM_AI_FREEZE === '1';
+// Feature 016 control mode: every memo hit in typeChartPlan() / preVariance() is recomputed and compared; a
+// difference throws. CHECK_STATS aggregates the comparisons across all adapters in the process (tests read it).
+const CHECK = process.env.PLATSIM_AI_CHECK === '1';
+export const CHECK_STATS = { checks: 0, mismatches: 0 };
 function deepFreeze(o) {
   if (o && typeof o === 'object' && !Object.isFrozen(o)) {
     Object.freeze(o);
@@ -207,7 +217,9 @@ export function createAdapter(battle, opts = {}) {
   // 015 decision cache (see damageInput below); declared before `api`, which exposes cacheStats.
   const battlers = new Map(); // Showdown Pokemon -> battlerFromShowdown(p)
   const fields = new Map(); // defender Side -> field members that do not depend on the pair
-  const cacheStats = { builds: 0, hits: 0, decisions: 0 };
+  const plans = new Map(); // 016: attacker struct -> defender struct -> key -> type-chart plan
+  const pre = new Map(); // 016: attacker struct -> defender struct -> key -> { damage, moveStatusMask }
+  const cacheStats = { builds: 0, hits: 0, decisions: 0, plans: 0, planHits: 0, preVariance: 0, preVarianceHits: 0, checks: 0 };
 
   const api = {
     battle,
@@ -576,9 +588,14 @@ export function createAdapter(battle, opts = {}) {
     beginDecision() {
       battlers.clear();
       fields.clear();
+      plans.clear();
+      pre.clear();
       cacheStats.decisions++;
     },
     damageInput,
+    // ---------- 016: per-decision memo of the type-chart plan and the pre-variance damage ----------
+    typeChartPlan: typeChartPlanMemo,
+    preVariance,
   };
 
   // Damage-formula inputs, identical to damage.mjs fromShowdown(battle, att, def, move, opts) for the
@@ -632,6 +649,72 @@ export function createAdapter(battle, opts = {}) {
     };
     const input = { attacker, defender, move: { id: moveConst, power, type, powerMul }, field, crit: false };
     return FREEZE ? deepFreeze(input) : input;
+  }
+
+  // 016 memos (contracts/adapter-api.md). Keyed on the cached attacker and defender structs (identity-stable within
+  // a decision) and the per-call move facts. Everything that varies per sample is in the key (power, type, fixed
+  // damage come from the sample's inputs and RNG draws) or applied after (the variance step), and the shared part
+  // draws no random numbers, so the K samples read identical values whether recomputed or memoised.
+  const memoKey = (mv, ignore, fixed) => `${mv.id}|${mv.power}|${mv.type}|${ignore ? 1 : 0}|${fixed}`;
+  function slotFor(map, att, def) {
+    let byDef = map.get(att);
+    if (!byDef) { byDef = new Map(); map.set(att, byDef); }
+    let slot = byDef.get(def);
+    if (!slot) { slot = new Map(); byDef.set(def, slot); }
+    return slot;
+  }
+  function checkSame(kind, key, memo, fresh) {
+    cacheStats.checks++;
+    CHECK_STATS.checks++;
+    const a = JSON.stringify(memo), b = JSON.stringify(fresh);
+    if (a !== b) {
+      CHECK_STATS.mismatches++;
+      throw new Error(`adapter: CHECK mismatch ${kind} ${key}: memo=${a} fresh=${b}`);
+    }
+  }
+  function planFor(input, ignoreTypeChecks) {
+    const key = memoKey(input.move, ignoreTypeChecks, '');
+    const slot = slotFor(plans, input.attacker, input.defender);
+    let plan = slot.get(key);
+    if (plan) {
+      cacheStats.planHits++;
+      if (CHECK) checkSame('typeChartPlan', key, plan, typeChartPlan(input, { ignoreTypeChecks, moveStatusMask: 0 }));
+      return plan;
+    }
+    plan = typeChartPlan(input, { ignoreTypeChecks, moveStatusMask: 0 });
+    if (FREEZE) deepFreeze(plan);
+    slot.set(key, plan);
+    cacheStats.plans++;
+    return plan;
+  }
+  function typeChartPlanMemo(attackerPoke, defenderPoke, moveIdOrNum, opts = {}, { ignoreTypeChecks = false } = {}) {
+    return planFor(damageInput(attackerPoke, defenderPoke, moveIdOrNum, opts), ignoreTypeChecks);
+  }
+  // TrainerAI_CalcDamage, TAI:3081-3103: BattleSystem_CalcMoveDamage(..., criticalMul 1) when there is no fixed
+  // damage, then BattleSystem_ApplyTypeChart with SYSCTL_IGNORE_TYPE_CHECKS set for fixed damage (TAI:3093). The
+  // immune check and the variance step (TAI:3106-3109) are the caller's, per sample.
+  function computePreVariance(input, fixedDamage, plan) {
+    const damage = fixedDamage === 0 ? calcBaseDamage({ ...input, critMul: 1 }) : fixedDamage;
+    const r = replayTypeChart(plan, damage);
+    return { damage: r.damage, moveStatusMask: r.moveStatusMask };
+  }
+  function preVariance(attackerPoke, defenderPoke, moveIdOrNum, opts = {}, fixedDamage = 0) {
+    const input = damageInput(attackerPoke, defenderPoke, moveIdOrNum, opts);
+    const ignore = fixedDamage !== 0;
+    const key = memoKey(input.move, ignore, fixedDamage);
+    const slot = slotFor(pre, input.attacker, input.defender);
+    let entry = slot.get(key);
+    if (entry) {
+      cacheStats.preVarianceHits++;
+      // The fresh value uses a fresh plan too, so a corrupted plan memo cannot hide behind a matching entry.
+      if (CHECK) checkSame('preVariance', key, entry, computePreVariance(input, fixedDamage, typeChartPlan(input, { ignoreTypeChecks: ignore, moveStatusMask: 0 })));
+      return entry;
+    }
+    entry = computePreVariance(input, fixedDamage, planFor(input, ignore));
+    if (FREEZE) deepFreeze(entry);
+    slot.set(key, entry);
+    cacheStats.preVariance++;
+    return entry;
   }
 
   function statusMask(p) {
