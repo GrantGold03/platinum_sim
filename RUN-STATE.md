@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-01, 4:20 PM EST)
+# START HERE (updated 2026-11-01, 5:05 PM EST)
 
 - **In progress: feature 016 `016-exact-damage-speedups` (exact speedups, round two), branch created from `main`
   19519ed in the main checkout, 2026-11-01.** Re-profile after 015 (measurement only, 3:46-3:49 PM EST; hooked digest
@@ -6,7 +6,7 @@
   (was 72%); top items now the type-chart walk repeated per damage roll (12.9% + 4.8% prepare), the AI's base damage
   recomputed per sample, and the adapter id mappers rebuilt cold per shadow view (3.8%). User chose items 1-3 as the
   next feature (exact, v1/v2 replaced in place, replay fixture unchanged); the approximations `expectimax2-v4` move
-  to 017, H4 after. `/speckit-specify` run 4:15 PM EST: `specs/016-exact-damage-speedups/spec.md` (4 stories,
+  to 017, H4 after. `/speckit-specify` run 5:00 PM EST: `specs/016-exact-damage-speedups/spec.md` (4 stories,
   FR-001..013, SC-001..006; SC-002 bar 1.2x single process, estimate 1.25-1.35x) + `checklists/requirements.md`
   (16/16). Next: the user runs `/speckit-clarify` (or `/speckit-plan`). Nothing is running.
 
