@@ -10,7 +10,12 @@
   FR-001..013, SC-001..006; SC-002 bar 1.2x single process, estimate 1.25-1.35x) + `checklists/requirements.md`
   (16/16). `/speckit-clarify` 2026-11-01: 2 questions; equivalence test = synthetic matchups (>= 10,000, every rule
   covered) plus >= 1,000 real-data matchups; base-damage control = one battle per policy in the default suite, full
-  fixed set as an opt-in env-var run recorded before the merge. Next: the user runs `/speckit-plan`. Nothing is running.
+  fixed set as an opt-in env-var run recorded before the merge. `/speckit-plan` 2026-11-01: plan.md, research.md
+  (R1-R7), data-model.md, contracts/{damage-api,adapter-api}.md, quickstart.md; design = `typeChartPlan` /
+  `replayTypeChart` in sim/damage.mjs (per-roll body kept as `applyTypeChartDirect`, the reference), adapter
+  `typeChartPlan` / `preVariance` memos in the 015 decision cache with `PLATSIM_AI_CHECK=1` control mode, module-level
+  shared id mappers; 4 commits (US1 plan, US2 memo, US3 mappers, US4 measurement). Next: the user runs
+  `/speckit-tasks`. Nothing is running.
 
 - **Feature 015 merged to `main` 2026-11-01, 1:20 PM EST (user's go): fast-forward c751fb2 → `3c77f0e`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `015-exact-ai-speedups` is kept
