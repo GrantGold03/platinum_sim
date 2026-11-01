@@ -121,14 +121,25 @@ export function decompTables(root = DECOMP_ROOT) {
 // sim/test/ai_adapter.test.mjs (moves differ only by four renames, e.g. MOVE_VICE_GRIP vs
 // "Vise Grip"; every Showdown-known item has num == decomp id).
 
-function makeMappers(dex, T) {
-  const cache = new Map();
-  const memo = (k, f) => { if (!cache.has(k)) cache.set(k, f()); return cache.get(k); };
+//
+// Feature 016 (specs/016-exact-damage-speedups/contracts/adapter-api.md): the mappers are pure functions of the
+// engine's dex and the decomp tables, both process-wide singletons, so one mapper set per (dex, tables) is built and
+// shared by every adapter (`mappersFor`) instead of a cold cache per adapter (tens of thousands of shadow-view
+// adapters per run). Each kind has its own Map keyed by its natural id; a miss resolves and validates as before.
+// `makeMappers` (exported for the equivalence test) builds an unshared set.
+export function makeMappers(dex, T) {
   const C = T.C;
+  const caches = { move: new Map(), ability: new Map(), item: new Map(), species: new Map(), type: new Map() };
+  const memo = (cache, k, f) => {
+    let v = cache.get(k);
+    if (v === undefined) { v = f(); cache.set(k, v); }
+    return v;
+  };
   return {
+    caches, // diagnostics (tests)
     move(id) {
       if (!id) return 0;
-      return memo(`m:${id}`, () => {
+      return memo(caches.move, id, () => {
         const m = dex.moves.get(id);
         if (!m.exists || !T.moves[m.num]) throw new Error(`adapter: no decomp move for Showdown move ${id}`);
         return m.num;
@@ -136,7 +147,7 @@ function makeMappers(dex, T) {
     },
     ability(id) {
       if (!id) return 0;
-      return memo(`a:${id}`, () => {
+      return memo(caches.ability, id, () => {
         const a = dex.abilities.get(id);
         if (!a.exists || !C.nameOf('abilities', a.num)) throw new Error(`adapter: no decomp ability for ${id}`);
         return a.num;
@@ -144,7 +155,7 @@ function makeMappers(dex, T) {
     },
     item(id) {
       if (!id) return 0; // ITEM_NONE
-      return memo(`i:${id}`, () => {
+      return memo(caches.item, id, () => {
         const it = dex.items.get(id);
         if (!it.exists || !T.items[it.num] || toID(T.items[it.num].name) !== it.id) {
           throw new Error(`adapter: no decomp item for Showdown item ${id}`);
@@ -153,20 +164,28 @@ function makeMappers(dex, T) {
       });
     },
     species(sp) {
-      return memo(`s:${sp.id}`, () => {
+      return memo(caches.species, sp.id, () => {
         if (!T.species[sp.num]) throw new Error(`adapter: no decomp species for ${sp.id}`);
         return sp.num;
       });
     },
     type(name) {
       // TYPE_X constants are generated/pokemon_types.txt; Showdown type names are 'Fire' etc.
-      return memo(`t:${name}`, () => {
+      return memo(caches.type, name, () => {
         const constName = name === '???' ? 'TYPE_MYSTERY' : `TYPE_${name.toUpperCase()}`;
         if (!C.has(constName)) throw new Error(`adapter: no decomp type for ${name}`);
         return C.get(constName);
       });
     },
   };
+}
+const MAPPERS = new WeakMap(); // dex -> { T, api }
+function mappersFor(dex, T) {
+  const hit = MAPPERS.get(dex);
+  if (hit && hit.T === T) return hit.api;
+  const api = makeMappers(dex, T);
+  MAPPERS.set(dex, { T, api });
+  return api;
 }
 
 // ---------- the adapter ----------
@@ -186,7 +205,7 @@ export function createAdapter(battle, opts = {}) {
   const T = decompTables(opts.root);
   const C = T.C;
   const dex = battle.dex;
-  const map = makeMappers(dex, T);
+  const map = mappersFor(dex, T); // 016: shared per (dex, tables)
   const aiSide = opts.aiSide || 'p2';
   const playerSide = aiSide === 'p2' ? 'p1' : 'p2';
   const sideOfBattler = (b) => ((b & 1) === 1 ? battle[aiSide] : battle[playerSide]);
@@ -226,6 +245,7 @@ export function createAdapter(battle, opts = {}) {
     constants: C,
     tables: T,
     map,
+    mappers: map, // 016: the shared mapper set (contracts/adapter-api.md)
     // AI_CONTEXT.attacker / defender in singles: TrainerAI_Main sets attacker = the AI battler and
     // defender = BattleSystem_RandomOpponent (trainer_ai.c:264-265), the only opposing battler.
     attacker: 1,

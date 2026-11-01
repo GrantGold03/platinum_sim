@@ -106,3 +106,27 @@ unchanged)`, pushed. Files: `sim/damage.mjs`, `sim/test/damage_typechart.test.mj
 - **US2 attribution** (alone, 6:20:29 to 6:21:12 PM): `bench-c2-v2.json`: digest `db6d20cf…`, `ai_draws` 849,962,
   wall 42.039 s, **0.9515 gauntlets/s, 13.312 ms/decision** (`main` T002 0.7251 / 17.800 → **1.312x**; US1 alone
   1.084x). SC-002's 1.2x bar is already met.
+
+## T016 Commit 2 (6:22 PM)
+
+`d4e6276 perf(016): memoise the trainer AI's pre-variance damage per decision (exact; CHECK mode; replay digest
+unchanged)`, pushed. Files: `sim/ai/adapter.mjs`, `sim/ai/calcdamage.mjs`, `sim/ai/INTERFACE.md`, `sim/bench.mjs`,
+`sim/test/ai_adapter.test.mjs`, `sim/test/ai_cmds_damage.test.mjs`, this log, tasks.md.
+
+## T017-T018 US3: shared mappers (6:22 to 6:23 PM)
+
+- T017 test "016 shared mappers" appended to `sim/test/ai_adapter.test.mjs`; red run 11 tests, 10 pass, 1 fail (no
+  `makeMappers` export / `ai.mappers`), as expected.
+- T018 `sim/ai/adapter.mjs`: `makeMappers(dex, T)` exported, five per-kind Maps with a `caches` diagnostic object,
+  same validation and error messages; module-level `MAPPERS` WeakMap + `mappersFor(dex, T)`; `createAdapter` uses
+  `mappersFor`; `api.mappers` alias of `map`. First run failed on the test side only: the types enum ends with a count
+  sentinel (not a `TYPE_*` constant), filtered in the test. Then **11/11** (over 700 identifiers compared, shared ==
+  fresh, same four error messages, two adapters share one set, shared caches populated).
+
+## T019 US3 gate (6:23:41 to 6:27:15 PM, `runs/016-evidence/gate-c3.status`)
+
+- Targeted (`ai_adapter`, `replay`, `ai_golden`): **32 pass, exit 0** (`t019-targeted.log`); replay digests, choices,
+  draws equal to the fixture. Full Node suite: **334 tests, 334 pass, exit 0** (`node-suite-c3.log`).
+- **US3 attribution** (alone, 6:26:36 to 6:27:15 PM): `bench-c3-v2.json`: digest `db6d20cf…`, `ai_draws` 849,962,
+  36/40 cleared, wall 38.44 s, **1.0406 gauntlets/s, 12.136 ms/decision** (`main` T002 0.7251 / 17.800 →
+  **1.435x**; US1 1.084x, US1+US2 1.312x).

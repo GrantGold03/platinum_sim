@@ -200,7 +200,7 @@ both digests.
   check_v1.json`: exit 0, digests `db6d20cf…` / `1273b694…` (about 2 min each; record wall, this is the recorded
   full-set control, SC-005); then `node sim/bench.mjs --policy expectimax2-v2 --json > runs/016-evidence/bench-c2-v2.json`
   (no CHECK) → digest and `ai_draws` unchanged; record `gauntlets_per_s`, `ms_per_decision` under "US2 attribution"
-- [ ] T016 [US2] Commit 2 by path (`sim/ai/adapter.mjs sim/ai/calcdamage.mjs sim/ai/INTERFACE.md sim/test/ai_adapter.test.mjs
+- [X] T016 [US2] Commit 2 by path (`sim/ai/adapter.mjs sim/ai/calcdamage.mjs sim/ai/INTERFACE.md sim/test/ai_adapter.test.mjs
   sim/test/ai_cmds_damage.test.mjs specs/016-exact-damage-speedups/validation-log.md`), message `perf(016): memoise the
   trainer AI's pre-variance damage per decision (exact; CHECK mode; replay digest unchanged)`, push; record the hash
 
@@ -218,7 +218,7 @@ messages; two adapters share one set; replay test passes.
 
 ### Tests for User Story 3 (write first; fail on the missing `makeMappers` export / `ai.mappers` before T018)
 
-- [ ] T017 [US3] Add to `sim/test/ai_adapter.test.mjs` ("016 shared mappers"): import `makeMappers`, `decompTables` from
+- [X] T017 [US3] Add to `sim/test/ai_adapter.test.mjs` ("016 shared mappers"): import `makeMappers`, `decompTables` from
   `../ai/adapter.mjs`; build `fresh = makeMappers(battle.dex, decompTables())` (unshared) and two adapters `a`, `b` on the
   same battle; assert `a.mappers === b.mappers` and `a.mappers !== fresh`; for every `battle.dex.moves.all()` entry with
   `num > 0` and `T.moves[num]`, `a.mappers.move(x.id) === fresh.move(x.id)`; same for abilities (`C.nameOf('abilities',
@@ -229,13 +229,13 @@ messages; two adapters share one set; replay test passes.
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] In `sim/ai/adapter.mjs`: replace `makeMappers(dex, T)`'s per-call `cache` / `memo` with five `Map`s
+- [X] T018 [US3] In `sim/ai/adapter.mjs`: replace `makeMappers(dex, T)`'s per-call `cache` / `memo` with five `Map`s
   (`move`, `ability`, `item`, `species`, `type`) looked up by their natural key (`id`, `id`, `id`, `sp.id`, `name`), same
   validation and error messages; export `makeMappers`; add module-level `const MAPPERS = new WeakMap()` and
   `function mappersFor(dex, T)` returning the cached set for `dex` when its `T` matches, else building and storing a new
   one; `createAdapter` uses `mappersFor(dex, T)` and exposes `api.mappers` (the shared set's function object, read-only);
   update the header comment
-- [ ] T019 [US3] Gate (quickstart step 3): `(cd sim && node --test test/ai_adapter.test.mjs test/replay.test.mjs
+- [X] T019 [US3] Gate (quickstart step 3): `(cd sim && node --test test/ai_adapter.test.mjs test/replay.test.mjs
   test/ai_golden.test.mjs)` exit 0; full Node suite exit 0; alone `node sim/bench.mjs --policy expectimax2-v2 --json >
   runs/016-evidence/bench-c3-v2.json` → digest and `ai_draws` unchanged; record `gauntlets_per_s`, `ms_per_decision`
   under "US3 attribution"

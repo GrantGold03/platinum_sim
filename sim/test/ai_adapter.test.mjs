@@ -379,3 +379,38 @@ test('015 Constants.get fast path: a cold instance and a warmed one agree on eve
   cyc.define('X015_B', { expr: 'X015_A', src: 'test' });
   assert.throws(() => cyc.get('X015_A'), /recursive definition X015_A -> X015_B -> X015_A/);
 });
+
+// Feature 016 (FR-008): the Showdown-id -> decomp-number mappers are built once per (dex, decomp tables) and shared
+// by every adapter; a shared set equals a freshly built one over every identifier the decomp knows.
+test('016 shared mappers: shared == fresh over every engine identifier the decomp knows; same errors; one set per dex', async () => {
+  const { makeMappers } = await import('../ai/adapter.mjs');
+  const { ENUMS } = await import('../damage.mjs');
+  const battle = makeBattle();
+  const T = decompTables();
+  const fresh = makeMappers(battle.dex, T);
+  const a = createAdapter(battle), b = createAdapter(battle);
+  assert.equal(a.mappers, b.mappers, 'two adapters on the same dex share one mapper set');
+  assert.notEqual(a.mappers, fresh);
+  const toID = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  let n = 0;
+  for (const m of battle.dex.moves.all()) if (m.num > 0 && T.moves[m.num]) { assert.equal(a.mappers.move(m.id), fresh.move(m.id), m.id); n++; }
+  for (const ab of battle.dex.abilities.all()) if (ab.num > 0 && C.nameOf('abilities', ab.num)) { assert.equal(a.mappers.ability(ab.id), fresh.ability(ab.id), ab.id); n++; }
+  for (const it of battle.dex.items.all()) if (it.num > 0 && T.items[it.num] && toID(T.items[it.num].name) === it.id) { assert.equal(a.mappers.item(it.id), fresh.item(it.id), it.id); n++; }
+  const TYPES = ENUMS.types.filter((t) => t.startsWith('TYPE_')); // the list ends with the count sentinel
+  for (const t of TYPES) {
+    const name = t === 'TYPE_MYSTERY' ? '???' : t.slice(5)[0] + t.slice(6).toLowerCase();
+    assert.equal(a.mappers.type(name), fresh.type(name), name); n++;
+  }
+  for (const p of [...battle.p1.pokemon, ...battle.p2.pokemon]) { assert.equal(a.mappers.species(p.species), fresh.species(p.species), p.species.id); n++; }
+  assert.ok(n > 700, `${n} identifiers compared`);
+  assert.equal(a.mappers.move(''), 0); assert.equal(a.mappers.ability(''), 0); assert.equal(a.mappers.item(''), 0);
+  // unknown identifiers: same message on both
+  const msg = (f) => { try { f(); return 'no throw'; } catch (e) { return e.message; } };
+  for (const [kind, id] of [['move', 'notamove'], ['ability', 'notanability'], ['item', 'notanitem'], ['type', 'Fairy']]) {
+    const s = msg(() => a.mappers[kind](id)), f = msg(() => fresh[kind](id));
+    assert.notEqual(s, 'no throw', `${kind} ${id} must throw`);
+    assert.equal(s, f);
+  }
+  // positive control: the lookups above went through the shared set's own Maps
+  assert.ok(a.mappers.caches.move.size > 300 && a.mappers.caches.type.size === TYPES.length, `shared caches: ${a.mappers.caches.move.size} moves, ${a.mappers.caches.type.size} types`);
+});
