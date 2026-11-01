@@ -40,6 +40,20 @@ test (feature 015) proving their decisions did not change. The remaining exact i
 (the replacement heuristic's memo, the interpreter's argument lookup, hoisting the constant lookups) and the
 approximations that change decisions (`expectimax2-v4`) are later features.
 
+## Clarifications
+
+### Session 2026-11-01
+
+- Q: How should the randomized equivalence test for the type-effectiveness evaluation generate its matchups: from
+  synthetic inputs built to hit every rule, from real game Pokemon and moves, or both? → A: Both: synthetic inputs
+  over the damage port's own input shape for guaranteed coverage of every rule and the positive control, plus a
+  real-data layer of at least 1,000 matchups drawn from the game's species, moves and items.
+- Q: Where should the memo-versus-recompute control for the shared base damage run: in the default Node suite on
+  the full fixed set, in the default suite on a short subset with the full set as a recorded opt-in gate, or only
+  as an opt-in run? → A: The default suite runs a short control (one battle per policy); the full 40-gauntlet
+  control is an opt-in run switched on by an environment variable (the feature-015 freeze-guard pattern),
+  required and recorded for the merge.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Type effectiveness is worked out once per matchup (Priority: P1)
@@ -64,11 +78,13 @@ same status flags as the per-roll evaluation, for every roll; a deliberately alt
 1. **Given** the replay fixture (result digests `db6d20cf…` for v2 and `1273b694…` for v1, every player choice
    and the trainer-AI draw count inside every decision for the 40 gauntlets), **When** the same 40 gauntlets run
    with this change, **Then** the digests, every choice and every draw count match.
-2. **Given** at least 10,000 generated matchups that between them exercise immunities, Levitate and Magnet
-   Rise, Wonder Guard, Filter and Solid Rock, the super-effective boosting item, Tinted Lens, same-type bonus
-   with and without Adaptability, Foresight and Scrappy, Normalize, a type override, the "ignore type checks"
-   mode, zero damage and the Struggle early exit, **When** each matchup is evaluated both ways for all 16 damage
-   rolls, with and without a critical hit, **Then** 0 mismatches in damage or status flags.
+2. **Given** at least 10,000 synthetic matchups (random attacker, defender, move and field facts in the damage
+   port's input shape, with the real type chart and move data) that between them exercise immunities, Levitate
+   and Magnet Rise, Wonder Guard, Filter and Solid Rock, the super-effective boosting item, Tinted Lens,
+   same-type bonus with and without Adaptability, Foresight and Scrappy, Normalize, a type override, the
+   "ignore type checks" mode, zero damage and the Struggle early exit, plus at least 1,000 real-data matchups
+   (random game species, moves, items and stages), **When** each matchup is evaluated both ways for all 16
+   damage rolls, with and without a critical hit, **Then** 0 mismatches in damage or status flags.
 3. **Given** the same generated matchups, **When** one step of the replayed evaluation is deliberately altered
    (positive control), **Then** the comparison reports mismatches.
 4. **Given** one entry of the player's damage table, **When** the type-effectiveness evaluations are counted,
@@ -96,8 +112,9 @@ difference; the count of base-damage computations per decision must be independe
 
 1. **Given** the replay fixture, **When** the 40 gauntlets run with this change, **Then** the digests, every
    choice and every draw count match.
-2. **Given** the control mode on the fixed set, **When** every remembered base damage is compared with a fresh
-   computation, **Then** 0 differences.
+2. **Given** the control mode switched on for the fixed set (opt-in run, recorded in the validation log before
+   the merge), **When** every remembered base damage is compared with a fresh computation, **Then** 0
+   differences; and the default Node suite runs the same control on one battle per policy on every run.
 3. **Given** one hypothetical state and K samples of the trainer AI on it, **When** base-damage computations are
    counted, **Then** each attacker-defender-move combination is computed once for that state, not once per sample.
 4. **Given** a battle in which a Pokemon's stats, types, ability or item change between two of the opponent's
@@ -203,11 +220,15 @@ single-process and pool digests agreeing on both sides.
   fixture and golden tests pass, and the recorded per-decision draw counts match (FR-001).
 - **FR-004**: The type-effectiveness evaluation for one attacker, defender, move and field MUST be performed once
   and replayed for each damage roll, and the replayed result (damage and status flags) MUST equal the per-roll
-  evaluation for every input: a randomized equivalence test over at least 10,000 generated matchups covering the
-  conditions listed in User Story 1, with a positive control showing an altered replay is detected.
+  evaluation for every input: a randomized equivalence test over at least 10,000 synthetic matchups (the damage
+  port's input shape, every flag and ability drawn independently, real type chart and move data) covering the
+  conditions listed in User Story 1, plus at least 1,000 matchups drawn from real game species, moves, items and
+  stages, with a positive control showing an altered replay is detected.
 - **FR-005**: Within one decision, the trainer AI's base damage for one attacker, defender and move on one state
-  MUST be computed at most once and shared by every sample on that state; a control mode MUST be able to compare
-  every shared value with a fresh computation and report differences.
+  MUST be computed at most once and shared by every sample on that state; a control mode, switched on by an
+  environment variable like the feature-015 freeze guard, MUST compare every shared value with a fresh computation
+  and report differences. The default Node suite MUST run that control on one battle per policy; the full fixed
+  set under the control is an opt-in run that MUST be recorded in the validation log before the merge.
 - **FR-006**: Anything remembered for the live opponent AI MUST be discarded at the end of each decision (the
   feature-015 rule extended to the new values).
 - **FR-007**: Nothing MUST write into a remembered value after it is created: the feature-015 freeze guard MUST
@@ -256,11 +277,12 @@ single-process and pool digests agreeing on both sides.
   reported, not hidden.
 - **SC-003**: The 16-worker wall time on the same gauntlets is reported for both sides with the ratio, with
   single-process and pool digests agreeing on each side.
-- **SC-004**: The randomized equivalence test reports 0 mismatches over at least 10,000 generated matchups x 16
-  rolls x normal and critical, with each listed condition exercised at least 100 times, and its positive control
-  detects an altered replay.
-- **SC-005**: The control mode for the shared base damage reports 0 differences on the fixed set, and the frozen
-  run passes every replay and AI test.
+- **SC-004**: The randomized equivalence test reports 0 mismatches over at least 10,000 synthetic matchups and
+  at least 1,000 real-data matchups, each x 16 rolls x normal and critical, with each listed condition exercised
+  at least 100 times in the synthetic layer, and its positive control detects an altered replay.
+- **SC-005**: The control mode for the shared base damage reports 0 differences on the full fixed set (opt-in
+  run, recorded) and on the one-battle-per-policy control in the default suite, and the frozen run passes every
+  replay and AI test.
 - **SC-006**: All existing tests pass: Node suite (326 tests today), fast mode (528 passed, 4 xfailed today) and,
   before merge, the full suite (556 passed, 4 xfailed today).
 

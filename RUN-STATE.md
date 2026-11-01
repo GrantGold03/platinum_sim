@@ -8,7 +8,9 @@
   next feature (exact, v1/v2 replaced in place, replay fixture unchanged); the approximations `expectimax2-v4` move
   to 017, H4 after. `/speckit-specify` run 5:00 PM EST: `specs/016-exact-damage-speedups/spec.md` (4 stories,
   FR-001..013, SC-001..006; SC-002 bar 1.2x single process, estimate 1.25-1.35x) + `checklists/requirements.md`
-  (16/16). Next: the user runs `/speckit-clarify` (or `/speckit-plan`). Nothing is running.
+  (16/16). `/speckit-clarify` 2026-11-01: 2 questions; equivalence test = synthetic matchups (>= 10,000, every rule
+  covered) plus >= 1,000 real-data matchups; base-damage control = one battle per policy in the default suite, full
+  fixed set as an opt-in env-var run recorded before the merge. Next: the user runs `/speckit-plan`. Nothing is running.
 
 - **Feature 015 merged to `main` 2026-11-01, 1:20 PM EST (user's go): fast-forward c751fb2 → `3c77f0e`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `015-exact-ai-speedups` is kept
