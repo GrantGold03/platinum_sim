@@ -419,6 +419,20 @@ reference team, seeds `prof-a-*`, all five trainers, decisions byte-identical be
 Feature 015 changed `sim/`, so `sim_code_hash` changed: optimizer checkpoints (`state.json`) written before it do
 not resume; rerun with `--force-new` or a new `--out`. Details: `specs/015-exact-ai-speedups/validation-log.md`.
 
+Feature 016 (2026-11-01, same fixed set and tool, decisions byte-identical; `main` re-measured the same day):
+
+| Setup | `main` 19519ed (after 015) | after 016 | ratio |
+|---|---|---|---|
+| `expectimax2-v2`, single process | 0.725 gauntlets/s, 17.8 ms/decision | 1.049 gauntlets/s, 12.0 ms/decision | 1.45x |
+| `expectimax2-v2`, 16 workers (40 jobs, tail-bound) | 2.91 gauntlets/s (13.7 s) | 3.99 gauntlets/s (10.0 s) | 1.37x |
+| `expectimax2-v1`, single process | 0.475 gauntlets/s | 0.706 gauntlets/s | 1.49x |
+
+Feature 016 changed `sim/` again (`sim_code_hash`), with the same consequence for earlier checkpoints. Its three
+changes (type-chart plan replayed per damage roll, the trainer AI's pre-variance damage memoised per decision,
+shared id mappers) are checked by a randomized equivalence test and the replay test; `PLATSIM_AI_CHECK=1` makes the
+AI recompute every memoised value and fail on a difference (`sim/ai/INTERFACE.md`). Details:
+`specs/016-exact-damage-speedups/validation-log.md`.
+
 Measured run times:
 
 | Run | Wall time |

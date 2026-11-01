@@ -239,7 +239,7 @@ messages; two adapters share one set; replay test passes.
   test/ai_golden.test.mjs)` exit 0; full Node suite exit 0; alone `node sim/bench.mjs --policy expectimax2-v2 --json >
   runs/016-evidence/bench-c3-v2.json` → digest and `ai_draws` unchanged; record `gauntlets_per_s`, `ms_per_decision`
   under "US3 attribution"
-- [ ] T020 [US3] Commit 3 by path (`sim/ai/adapter.mjs sim/test/ai_adapter.test.mjs specs/016-exact-damage-speedups/validation-log.md`),
+- [X] T020 [US3] Commit 3 by path (`sim/ai/adapter.mjs sim/test/ai_adapter.test.mjs specs/016-exact-damage-speedups/validation-log.md`),
   message `perf(016): share the Showdown-to-decomp id mappers across adapters (exact; replay digest unchanged)`, push;
   record the hash
 
@@ -254,21 +254,21 @@ messages; two adapters share one set; replay test passes.
 **Independent Test**: `runs/016-evidence/branch_*.json` exist with digests equal to `main`'s and `digests_agree` true;
 the validation log has both sides and the ratios.
 
-- [ ] T021 [US4] Alone on the machine, on the branch at commit 3: `node sim/bench.mjs --policy expectimax2-v2 --json >
+- [X] T021 [US4] Alone on the machine, on the branch at commit 3: `node sim/bench.mjs --policy expectimax2-v2 --json >
   runs/016-evidence/branch_v2.json`, `--policy expectimax2-v1 --json > runs/016-evidence/branch_v1.json`, `uv run platsim
   bench --workers 16 --json > runs/016-evidence/branch_pool.json` (`digests_agree` true, `pool_digest_logs` equal to
   T003's); write the table in the log: v2 and v1 single-process `gauntlets_per_s` and `ms_per_decision` (`main` T002 vs
   branch) with ratios, 16-worker `pool_wall_s` and `pool_gauntlets_per_s` (T003 vs branch) with ratio, the per-commit
   attribution column (T008, T015, T019); SC-002 verdict in one line (`gauntlets_per_s` ≥ 0.935 for v2, otherwise the
   smaller gain stated plainly)
-- [ ] T022 [P] [US4] Docs: `README.md` speed table: add the 016 row (single-process and 16-worker before/after from
+- [X] T022 [P] [US4] Docs: `README.md` speed table: add the 016 row (single-process and 16-worker before/after from
   T021) and extend the `sim_code_hash` note (016 changed it again); `README.md` or the sim docs where
   `PLATSIM_AI_FREEZE` is described: add `PLATSIM_AI_CHECK=1` in one line; `FUTURE-FEATURES.md` section 7: mark the
   three items done with the measured gain, keep the remaining items (replacement-heuristic memo, interpreter argument
   index, `K()` hoisting, cross-decision caches, `expectimax2-v4` as feature 017)
-- [ ] T023 [P] [US4] `RUN-STATE.md` START HERE: 016 state (commits, numbers, what is left: user testing, full suite,
+- [X] T023 [P] [US4] `RUN-STATE.md` START HERE: 016 state (commits, numbers, what is left: user testing, full suite,
   merge), the trap list (`sim_code_hash`, no commit during runs, fixture never re-recorded, `pgrep -f` trap)
-- [ ] T024 Gates (SC-006): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0 (FR-010); `(cd sim && node
+- [X] T024 Gates (SC-006): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0 (FR-010); `(cd sim && node
   --test test/*.test.mjs)` exit 0 → `runs/016-evidence/node-suite.log`; `uv run pytest -q -m "not battle_sim"` exit 0 →
   `runs/016-evidence/fast.log`; record summary lines and Eastern times in the log; commit 4 by path (`README.md
   FUTURE-FEATURES.md RUN-STATE.md specs/016-exact-damage-speedups/validation-log.md` plus any doc touched in T022),

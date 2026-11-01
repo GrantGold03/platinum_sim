@@ -152,16 +152,25 @@ fixed set with byte-identical decisions. Evidence: `runs/015-evidence/scratchpad
 `main` c751fb2), `specs/015-exact-ai-speedups/validation-log.md`, research R2 and R7. Every item below must keep the
 replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name if not.
 
-- **Exact, next in line.** Second-level memo: pre-variance damage per (view, attacker, defender, move, power,
-  type) inside one decision; `speedValuesNow` per view (2.4% in the profile); `party()` snapshots (1.9%).
-- **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (7.3% inclusive, 77% hit rate
-  within a decision), `matchupScore` (3.9%). Need a cache key that proves the inputs are unchanged.
+- **Done in feature 016 (2026-11-01, exact, 1.45x single process on top of 015; `specs/016-exact-damage-speedups/`).**
+  From the post-015 re-profile (`runs/015-evidence/scratchpad/prof2/REPORT2.md`): the type-chart walk repeated per
+  damage roll (12.9% + 4.8% prepare) → one plan per matchup replayed per roll (`damage.mjs` `typeChartPlan` /
+  `replayTypeChart`, reference kept as `applyTypeChartDirect`); the AI's pre-variance damage recomputed per sample
+  → memoised per decision in the adapter (`ai.preVariance`, with the `PLATSIM_AI_CHECK=1` control mode); the id
+  mappers rebuilt cold per shadow adapter (3.8%) → one shared set per dex. Attribution 1.08x / 1.31x / 1.44x.
+- **Exact, next in line (post-016 shares unmeasured; re-profile first).** `matchupScore` (7.6% of time after 015;
+  12,269 calls at 0.35 ms, each cloning the state and rebuilding the outcome buckets) and `damageOutcomes` (2.1%)
+  memoised per decision on a key covering every input; the interpreter's argument lookup (`ctx.arg` linear
+  `find` per instruction; interpreter + cmds 8.5%); `speedValuesNow` per view; `party()` snapshots.
+- **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (10.1% category after 015, 77% hit
+  rate within a decision), `matchupScore`. Need a cache key that proves the inputs are unchanged.
 - **Exact, mechanical.** Hoist the remaining ~250 `K()` / `C.get` name lookups in `sim/ai` to pre-resolved fields
-  (user decision 2026-10-31: out of 015, which made each a single memo read). Zero per-call name resolution; the
-  gain is bounded by what `Constants.get` still costs after 015 (re-profile first).
+  (user decision 2026-10-31: out of 015, which made each a single memo read). `Constants.get` was 4.9% after 015.
 - **Killed by the 015 profile (do not retry without new evidence).** Cloning / copy-on-write (0.7% of time);
   better prediction-cache keys (0.35% hit rate; coarse-key bound 11.6% of ply-2 calls); the end-state merge
   (collapses 0.5% of branches).
-- **Feature 016, approximations as `expectimax2-v4`** (never `-v3`, archived 007's name): K_PLY2 2 → 1 (about 30%
-  bound), a branch probability floor, switch beam 1 (10-15%). Reference-first (Principle VI): paired runs vs v2
-  on B1-B5 with McNemar exact; adopt only if not worse; gauntlets/s and wall recorded. v1 and v2 stay unchanged.
+- **Feature 017 (was "016" before the exact round two took that number), approximations as `expectimax2-v4`**
+  (never `-v3`, archived 007's name): K_PLY2 2 → 1 (about 21% of post-015 time; the two samples disagree in 29% of
+  ply-2 nodes), a branch probability floor, switch beam 1 (10-15%), root K 8 → 4 (about 8%; root samples agree only
+  52% of the time). Reference-first (Principle VI): paired runs vs v2 on B1-B5 with McNemar exact; adopt only if not
+  worse; gauntlets/s and wall recorded. v1 and v2 stay unchanged.

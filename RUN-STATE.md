@@ -1,23 +1,20 @@
-# START HERE (updated 2026-11-01, 5:05 PM EST)
+# START HERE (updated 2026-11-01, 6:35 PM EST)
 
-- **In progress: feature 016 `016-exact-damage-speedups` (exact speedups, round two), branch created from `main`
-  19519ed in the main checkout, 2026-11-01.** Re-profile after 015 (measurement only, 3:46-3:49 PM EST; hooked digest
-  == plain == db6d20cf..., report `runs/015-evidence/scratchpad/prof2/REPORT2.md`): AI prediction 50.7% of time
-  (was 72%); top items now the type-chart walk repeated per damage roll (12.9% + 4.8% prepare), the AI's base damage
-  recomputed per sample, and the adapter id mappers rebuilt cold per shadow view (3.8%). User chose items 1-3 as the
-  next feature (exact, v1/v2 replaced in place, replay fixture unchanged); the approximations `expectimax2-v4` move
-  to 017, H4 after. `/speckit-specify` run 5:00 PM EST: `specs/016-exact-damage-speedups/spec.md` (4 stories,
-  FR-001..013, SC-001..006; SC-002 bar 1.2x single process, estimate 1.25-1.35x) + `checklists/requirements.md`
-  (16/16). `/speckit-clarify` 2026-11-01: 2 questions; equivalence test = synthetic matchups (>= 10,000, every rule
-  covered) plus >= 1,000 real-data matchups; base-damage control = one battle per policy in the default suite, full
-  fixed set as an opt-in env-var run recorded before the merge. `/speckit-plan` 2026-11-01: plan.md, research.md
-  (R1-R7), data-model.md, contracts/{damage-api,adapter-api}.md, quickstart.md; design = `typeChartPlan` /
-  `replayTypeChart` in sim/damage.mjs (per-roll body kept as `applyTypeChartDirect`, the reference), adapter
-  `typeChartPlan` / `preVariance` memos in the 015 decision cache with `PLATSIM_AI_CHECK=1` control mode, module-level
-  shared id mappers; 4 commits (US1 plan, US2 memo, US3 mappers, US4 measurement). `/speckit-tasks` 2026-11-01:
-  tasks.md, 25 tasks (10 gates/measurements/commits). Next: the user runs `/speckit-analyze`, then `/speckit-implement`.
-  Nothing is running.
-
+- **Feature 016 `016-exact-damage-speedups` implemented 2026-11-01 (T001-T024 done; T025 full suite and the merge
+  wait for the user).** Branch from `main` 19519ed, main checkout, pushed; code commits `ba9fd21` (US1 type-chart
+  plan), `d4e6276` (US2 AI pre-variance memo + `PLATSIM_AI_CHECK` control mode), `a9ddfcf` (US3 shared id mappers),
+  then the docs commit. Exact: replay test against the unchanged 015 fixture green after every commit (digests
+  `db6d20cf…` v2 / `1273b694…` v1, every choice, every per-decision draw count); randomized equivalence test (20,000
+  synthetic + 1,500 real-data matchups x 16 rolls, 0 mismatches, positive control); full-set CHECK runs 5.59 M (v2)
+  and 7.90 M (v1) comparisons, 0 mismatches; freeze run 157/157. **Speed on the fixed set, same session: v2 0.725 →
+  1.049 gauntlets/s single process (1.45x, 17.8 → 12.0 ms/decision), 16 workers 2.91 → 3.99 (1.37x, 13.7 → 10.0 s),
+  v1 0.475 → 0.706 (1.49x).** Node suite 334/334. Log `specs/016-exact-damage-speedups/validation-log.md`, evidence
+  `runs/016-evidence/`. Remaining: the user's hands-on testing, then T025 `uv run pytest -q --durations=25` (about
+  1 h 20 min, nothing else running), then merge on the user's go. `sim_code_hash` changed again (checkpoints before
+  016 will not resume); `data/generated/` unaffected. Next feature after the merge: 017 = `expectimax2-v4`
+  approximations (FUTURE-FEATURES section 7), or the remaining exact items there, user's choice.
+  Hand check: `node sim/bench.mjs --policy expectimax2-v2` must print `digest_full db6d20cf…`;
+  `PLATSIM_AI_CHECK=1 node sim/bench.mjs --policy expectimax2-v2` must report `CHECK mode  N checks, 0 mismatches`.
 - **Feature 015 merged to `main` 2026-11-01, 1:20 PM EST (user's go): fast-forward c751fb2 → `3c77f0e`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `015-exact-ai-speedups` is kept
   (local + GitHub, same commit). Nothing is running. `data/generated/` needs no re-extract (identical on both

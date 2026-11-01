@@ -130,3 +130,48 @@ unchanged)`, pushed. Files: `sim/ai/adapter.mjs`, `sim/ai/calcdamage.mjs`, `sim/
 - **US3 attribution** (alone, 6:26:36 to 6:27:15 PM): `bench-c3-v2.json`: digest `db6d20cf…`, `ai_draws` 849,962,
   36/40 cleared, wall 38.44 s, **1.0406 gauntlets/s, 12.136 ms/decision** (`main` T002 0.7251 / 17.800 →
   **1.435x**; US1 1.084x, US1+US2 1.312x).
+
+## T020 Commit 3 (6:27 PM)
+
+`a9ddfcf perf(016): share the Showdown-to-decomp id mappers across adapters (exact; replay digest unchanged)`,
+pushed. Files: `sim/ai/adapter.mjs`, `sim/test/ai_adapter.test.mjs`, this log, tasks.md.
+
+## T021 Before/after on the same seeds (FR-011, SC-002, SC-003), branch at a9ddfcf, alone, 6:27:49 to 6:30:17 PM
+
+`node sim/bench.mjs --policy <p> --json` → `runs/016-evidence/branch_v2.json`, `branch_v1.json`;
+`uv run platsim bench --workers 16 --json` → `branch_pool.json`. All exit 0. Every digest equals `main`'s
+(`db6d20cf…`, `1273b694…`, pool `digest_logs` `be27826f…`), `ai_draws` equal, `digests_agree` true;
+`pool_sim_code_hash` sha256:c0780523… (changed from `main`'s 719e63b0…, as expected).
+
+| Measure, same 40 gauntlets, same session | `main` 19519ed (T002/T003) | branch a9ddfcf | ratio |
+|---|---|---|---|
+| expectimax2-v2 single process, gauntlets/s | 0.7251 | **1.0488** | **1.446x** |
+| expectimax2-v2 single process, ms/decision | 17.800 | 11.999 | |
+| expectimax2-v2 single process, wall | 55.168 s | 38.141 s | |
+| expectimax2-v1 single process, gauntlets/s | 0.4746 | 0.7058 | 1.487x |
+| expectimax2-v1 single process, ms/decision | 23.987 | 15.843 | |
+| expectimax2-v2 16-worker pool, wall | 13.725 s | **10.031 s** | **1.368x** |
+| expectimax2-v2 16-worker pool, gauntlets/s | 2.9144 | 3.9878 | 1.368x |
+| Attribution (single process, v2): US1 / +US2 / +US3 | | 1.084x / 1.312x / 1.435x | |
+
+**SC-002 met**: 1.0488 >= 0.935 (1.2x of 0.7251); the measured gain, 1.45x, is above the plan's 1.25x to 1.35x
+estimate. SC-003: 1.37x on the pool (40 jobs on 16 workers is tail-bound, as in 015). Combined with 015 on the
+same set: v2 0.386 (`main` c751fb2, 2026-10-30) → 1.049 gauntlets/s, about 2.7x in two features (different days,
+so the cross-feature ratio is indicative only).
+
+## T022-T023 Docs (6:31 to 6:36 PM)
+
+- `README.md`: feature 016 speed table (single process v2/v1, 16 workers) after the 015 table, `sim_code_hash` note
+  extended, one line on the three changes and `PLATSIM_AI_CHECK=1`. `FUTURE-FEATURES.md` section 7: the three items
+  marked done with attribution, the remaining exact items re-stated with post-015 shares, the approximations
+  renumbered to feature 017. `sim/ai/INTERFACE.md`: "Decision memos (feature 016)" section (committed with US2).
+  `RUN-STATE.md` START HERE: 016 state, commits, numbers, remaining steps, hand checks.
+
+## T024 Gates (SC-006, FR-010), `runs/016-evidence/gate-c4.status`
+
+- `git diff --stat main HEAD -- pokemon-showdown`: **empty, exit 0** (`showdown-diff.txt`, 0 bytes).
+- Full Node suite `(cd sim && node --test test/*.test.mjs)` 6:31:26 to 6:33:41 PM: **334 tests, 334 pass, 0 fail,
+  exit 0** (`node-suite.log`; 326 on `main` + 4 US1 + 3 US2 + 1 US3).
+- Fast mode `uv run pytest -q -m "not battle_sim"` 6:33:41 to 6:43:35 PM: **528 passed, 28 deselected, 4 xfailed,
+  1 warning, exit 0** (590.65 s; `fast.log`).
+- Commit 4 (docs + log) below. T025 (full suite, about 1 h 20 min) waits for the user's hands-on testing and go.
