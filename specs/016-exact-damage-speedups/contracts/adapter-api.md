@@ -39,7 +39,8 @@ Read once at import time (like `PLATSIM_AI_FREEZE`). When on, every memo hit in 
 recomputes the value from the current inputs and compares it with the memoised one (plan: `struggle`, `steps`,
 `mask`, `totalMul`; pre-variance: `damage`, `moveStatusMask`); a difference throws
 `Error('adapter: CHECK mismatch <kind> <key>: memo=<json> fresh=<json>')`. `cacheStats.checks` counts the
-comparisons. Default off: one boolean test per hit. Documented in `sim/ai/INTERFACE.md` next to
+comparisons per adapter; the module-level export `CHECK_STATS = { checks, mismatches }` aggregates them across all
+adapters in the process (read by the child-process test). Default off: one boolean test per hit. Documented in `sim/ai/INTERFACE.md` next to
 `PLATSIM_AI_FREEZE` and `PLATSIM_AI_DEBUG`.
 
 Required runs: the default Node suite runs one Aaron battle per policy (`expectimax2-v2`, `expectimax2-v1`) in a

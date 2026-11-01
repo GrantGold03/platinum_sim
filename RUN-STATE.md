@@ -14,8 +14,9 @@
   (R1-R7), data-model.md, contracts/{damage-api,adapter-api}.md, quickstart.md; design = `typeChartPlan` /
   `replayTypeChart` in sim/damage.mjs (per-roll body kept as `applyTypeChartDirect`, the reference), adapter
   `typeChartPlan` / `preVariance` memos in the 015 decision cache with `PLATSIM_AI_CHECK=1` control mode, module-level
-  shared id mappers; 4 commits (US1 plan, US2 memo, US3 mappers, US4 measurement). Next: the user runs
-  `/speckit-tasks`. Nothing is running.
+  shared id mappers; 4 commits (US1 plan, US2 memo, US3 mappers, US4 measurement). `/speckit-tasks` 2026-11-01:
+  tasks.md, 25 tasks (10 gates/measurements/commits). Next: the user runs `/speckit-analyze`, then `/speckit-implement`.
+  Nothing is running.
 
 - **Feature 015 merged to `main` 2026-11-01, 1:20 PM EST (user's go): fast-forward c751fb2 → `3c77f0e`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `015-exact-ai-speedups` is kept
