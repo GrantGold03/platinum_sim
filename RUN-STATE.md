@@ -1,4 +1,4 @@
-# START HERE (updated 2026-10-31, 8:25 PM EDT, end of session before a reboot)
+# START HERE (updated 2026-11-01, 12:05 PM EST)
 
 - **Resume checklist (2026-10-31, 8:25 PM EDT).** Feature 015 (`015-exact-ai-speedups`) is implemented, T001-T034
   done, **T035 (full suite) and the merge are open and wait for the user**. Branch `015-exact-ai-speedups` is checked
@@ -20,10 +20,10 @@
      `digest_full db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and about 0.78 gauntlets/s;
      `uv run platsim bench --workers 16` adds the pool half (about 2 min) and must end with `digests agree  True`.
      Before/after numbers and logs: `specs/015-exact-ai-speedups/validation-log.md`, `runs/015-evidence/`.
-  4. On the user's go: T035 `uv run pytest -q > runs/015-evidence/full.log 2>&1` in the background (about 2 h 10 min
-     on 16 workers; 551 tests + the 5 new bench tests; nothing else running; never commit or switch branches while
-     it runs). Record the summary line, exit code and Eastern start/end in the validation log and here.
-  5. Merge only on the user's second go: `git checkout main && git merge --ff-only 015-exact-ai-speedups && git push`,
+  4. **T035 done 2026-11-01 (user's go): `uv run pytest -q --durations=25`, 10:40 AM to 12:00 PM EST, 556 passed,
+     4 xfailed, exit 0, 1 h 20 min (vs 2 h 9 min on `main`, 1.61x).** Log `runs/015-evidence/full.log`, times in
+     `full.start`, details in the validation log. All gates for the merge rule are now green on the branch.
+  5. **Next: merge, only on the user's go:** `git checkout main && git merge --ff-only 015-exact-ai-speedups && git push`,
      then update this file. `sim_code_hash` changed, so optimizer checkpoints made before 015 will not resume.
   Follow-ons already written down: FUTURE-FEATURES.md section 7 (a3 second-level damage memo, a4 persisting
   damageTable/matchupScore, hoisting the ~250 `K()` sites, feature 016 `expectimax2-v4`); the seeds.test.mjs
@@ -76,8 +76,7 @@
   frozen run (`PLATSIM_AI_FREEZE=1`) 154/154. T032-T034 done 4:47 PM EDT: docs, Node 326/326, fast mode 528 passed /
   4 xfailed (`runs/015-evidence/node-suite.log`, `fast.log`). Known flake (not 015): `sim/test/seeds.test.mjs` compares
   raw logs with `|t:|` timestamps and fails when two battles straddle a second (seen once, 325/326; rerun clean).
-  Remaining: the user's hands-on testing, then T035 full suite (`uv run pytest -q`, ~2 h 10 min, nothing else
-  running), then merge on the user's go.
+  T035 full suite passed 2026-11-01 (556 passed, 4 xfailed, 1 h 20 min; see the resume checklist). Remaining: merge on the user's go.
   Traps: `sim_code_hash` changed (checkpoints before 015 will not resume); `uv run platsim extract` after every
   branch switch; never commit or switch while a run is going; the replay fixture is re-recorded only for an
   intended decision change (`node sim/bench.mjs --policy <name> --record sim/test/replay_prof_a.json`).

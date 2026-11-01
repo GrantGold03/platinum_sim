@@ -144,4 +144,10 @@ tail-bound; the per-job gain is the single-process 2.02x).
   **326 tests, 326 pass, 0 fail, exit 0** (replay 34.5 s). `runs/015-evidence/node-suite.log`.
   `uv run pytest -q -m "not battle_sim"` 4:34:09 to 4:44:04 PM EDT: **528 passed, 28 deselected, 4 xfailed, exit 0**
   (591.94 s; battle split: 0 worker starts). `runs/015-evidence/fast.log`.
-- T035 (full `uv run pytest -q`, about 2 h 10 min) waits for the user's go, after their hands-on testing.
+- **T035 merge gate (2026-11-01, user's go)**: `uv run pytest -q --durations=25 > runs/015-evidence/full.log 2>&1`,
+  nothing else running, 16 workers: 10:40:06 AM to 12:00:44 PM EST, **556 passed, 4 xfailed, 1 warning, exit 0**
+  (4834.93 s = 1:20:34; `main` c751fb2 on 2026-10-30 was 551 passed, 4 xfailed in 7760.06 s = 2:09:20, so 1.61x
+  faster end to end; the 5 extra tests are the bench tests). Slowest three: `test_optimize_quick_deterministic_and_legal`
+  1917.9 s, `test_expectimax2_beats_greedy_paired` 1034.1 s, `test_v7_reference_team_2000_runs` 925.8 s (no
+  per-test durations exist for the `main` run; these are the first recorded). `runs/015-evidence/full.log`,
+  `full.start`. Not merged: waits for the user's go.
