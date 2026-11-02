@@ -1,6 +1,18 @@
-# START HERE (updated 2026-11-01, 9:30 PM EST)
+# START HERE (updated 2026-11-01, 9:40 PM EST)
 
-- **Feature 016 `016-exact-damage-speedups` implemented 2026-11-01 (T001-T025 done; the merge waits for the user).** Branch from `main` 19519ed, main checkout, pushed; code commits `ba9fd21` (US1 type-chart
+- **Feature 016 merged to `main` 2026-11-01, 9:35 PM EST (user's go): fast-forward 19519ed → `b15dbb2`, pushed.**
+  `main` is checked out in the main checkout, in sync with `origin/main`; branch `016-exact-damage-speedups` is kept
+  (local + GitHub, same commit). Nothing is running. `data/generated/` needs no re-extract (no extractor change).
+  `sim_code_hash` changed (015 and 016), so optimizer checkpoints made before them will not resume. Merge-rule gates
+  on the merged code: Node 334/334, fast mode 528 passed / 4 xfailed, full suite 556 passed / 4 xfailed in 1 h 05 min
+  (2 h 09 min before 015). Speed on the fixed set: v2 0.386 (before 015) → 0.725 (after 015, same-day re-measure) →
+  1.049 gauntlets/s single process; 16 workers 2.91 → 3.99 after 016; results byte-identical throughout.
+  Next feature, only when the user asks (user runs the `/speckit-*` stages): FUTURE-FEATURES section 7, either
+  017 = `expectimax2-v4` approximations (paired B1-B5 runs vs v2, McNemar) or the remaining exact items (matchupScore /
+  damageOutcomes memo, interpreter argument index, `K()` hoisting); H4 held items after. The `seeds.test.mjs`
+  timestamp flake is still a separate test-only item. Hand checks: `node sim/bench.mjs --policy expectimax2-v2` prints
+  `digest_full db6d20cf…`; with `PLATSIM_AI_CHECK=1` it reports `0 mismatches`.
+- **Feature 016 `016-exact-damage-speedups` implemented 2026-11-01 (T001-T025 done; merged, see above).** Branch from `main` 19519ed, main checkout, pushed; code commits `ba9fd21` (US1 type-chart
   plan), `d4e6276` (US2 AI pre-variance memo + `PLATSIM_AI_CHECK` control mode), `a9ddfcf` (US3 shared id mappers),
   then the docs commit. Exact: replay test against the unchanged 015 fixture green after every commit (digests
   `db6d20cf…` v2 / `1273b694…` v1, every choice, every per-decision draw count); randomized equivalence test (20,000
@@ -115,7 +127,7 @@
   merge. 013 and 014 were merged on fast mode + Node only (their specs and the user's plan asked for that); the
   last full suite is still 2026-10-27 (012). The 26 `battle_sim` tests (incl. `test_optimize_small.py`) have not
   run on 013/014 code. Ask the user whether to run the full suite on `main` before H4.
-- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`), feature 012 (fast test mode, merged 2026-10-27, `321cd02`), feature 013 (no single-use held items, merged 2026-10-29, `dd7b8eb`) feature 014 (damage-boost held items, merged 2026-10-29, `b68b794`) and feature 015 (exact expectimax2 speedups + `platsim bench`, merged 2026-11-01, `3c77f0e`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
+- **State.** `main` (pushed) = pre-007 code plus feature 011 (held-item sources, merged 2026-10-26, `116008a`), feature 012 (fast test mode, merged 2026-10-27, `321cd02`), feature 013 (no single-use held items, merged 2026-10-29, `dd7b8eb`) feature 014 (damage-boost held items, merged 2026-10-29, `b68b794`) feature 015 (exact expectimax2 speedups + `platsim bench`, merged 2026-11-01, `3c77f0e`) and feature 016 (exact damage-path speedups round two, merged 2026-11-01, `b15dbb2`). Before 011: revert commit `b07ed2d`, code identical to pre-007 (`f88cdd0`); 007 spec/plan/tasks as of
   `2fa6059` (before the first `/speckit-implement`; all 007 tasks unchecked). See "Revert to pre-007" at the
   end of this file. Nothing is running; the web server is stopped.
 - **Archive.** Branches `007-status-moves-items`, `008-ledger-item-sources`, `009-move-item-classes`,
