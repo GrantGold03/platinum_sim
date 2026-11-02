@@ -170,14 +170,21 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
   adapter per decision (`ai.speedPair`, reference kept as `compareBattlerSpeedDirect`) and `speedInfo` once per state
   (247 k → 60 k calls): 1.037x. v2 1.014 → 1.244 gauntlets/s, v1 1.22x, pool 1.12x; `node sim/bench.mjs` reports
   `interp_steps`.
-- **Exact, next in line (post-017 shares unmeasured; re-profile first).** From the same 2026-11-02 profile: (D)
-  `Constants.get` 6.3% self over ~320 sites (see "mechanical"); (E) a `damageOutcomes` memo on (table entry, t.hp,
-  t.maxhp, effect): 66% of 620 k calls repeat within a decision (2.8% self); (F) skip the merge signature when
-  `resolveTurn` returns one branch (21% of 300 k calls, about 0.5%); (G) generalised compare-and-jump runs
-  (`IfLoadedEqualTo`, 4.3 M steps = 3% of the old count; the compared register can change between loads, so it needs
-  a side-effect check for about 0.3% of time). Killed by the 2026-11-02 profile: a per-decision `matchupScore` memo
-  (0 repeated keys in 12,269 calls; its cost was damage-table misses, which (B) covered). Not actionable: the real
-  battle's Showdown engine 9.4% (no Showdown changes), gc 4.4%.
+- **Exact, next in line (measured 2026-11-02 on `main` 6ab83b5 after 017, `runs/017-evidence/scratchpad/prof4/REPORT4.md`;
+  shares of sampled time, block a).** (D) `Constants.get` 5.9% self over ~320 sites: the `calcDamage` switch re-resolves
+  every case label per call (1.6%), `battlerAbility` three names per read (1.0%); resolve once per module into a frozen
+  field table (est. 4-5%). (F, revised) the end-state merge in `resolveTurn` computes a ~200-char signature for every
+  branch (1.05 M per run, 87% of signature calls, 3.5% self plus the Map lookups inside `resolveTurn`'s 6.7% self)
+  while collapsing 0.5% of branches; a cheap pre-key (both actives' hp, status, idx + turn) repeats for only 3.6% of
+  branches, so bucketing by pre-key and computing the full signature only inside a repeated bucket is exact and skips
+  96% of them (est. 4-6%). (E) `damageOutcomes` memo per decision on (table entry, t.hp, t.maxhp, effect): 66% of
+  620 k calls repeat, 3.6% self (est. 2%). (G) generalised compare-and-jump dispatch for `IfLoadedEqualTo` (407 checks
+  in 294 runs, longest 7) and `IfMoveEqualTo` (49 in 16 runs, longest 11): at most about 2.5 M of the remaining 15.9 M
+  steps, interpreter+cmds is 7.7% of time, est. under 1%: low value, deferred. (H, new) adapter per-battler read memos:
+  `moveEffectsMask` 2.3% self, `battlerAbility` 1.6%, `sideOfBattler` 1.7%, `moveEffectsData` 1.1% recomputed on every
+  read from an immutable shadow state; a per-decision memo per battler with the 015-017 lifecycle, freeze guard and
+  CHECK would be exact (est. 4-5%), the round after this one. Specify draft for the next feature (D, F, E):
+  `runs/017-evidence/scratchpad/prof4/specify_018.txt`; if it takes 018, the `expectimax2-v4` approximations move to 019.
 - **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (10.1% category after 015, 77% hit
   rate within a decision), `matchupScore`. Need a cache key that proves the inputs are unchanged.
 - **Exact, mechanical.** Hoist the remaining ~320 `K()` / `C.get` name lookups in `sim/ai` to pre-resolved fields

@@ -1,5 +1,16 @@
-# START HERE (updated 2026-11-02, 12:55 PM EST, feature 017 merged to main)
+# START HERE (updated 2026-11-02, 1:40 PM EST, post-017 re-profile done, next feature proposed)
 
+- **Post-017 re-profile done 2026-11-02, 1:40 PM EST (read-only; `main` 6ab83b5 untouched by code).** Same 40-gauntlet set
+  and harness, hooks verified (hooked == plain digest); report `runs/017-evidence/scratchpad/prof4/REPORT4.md`, manifest
+  `runs/017-evidence/prof4.sha256` (git-ignored). Headline 9.9 ms/decision; AI prediction 44.1% (adapter 20.4,
+  interpreter 7.7), turn resolution 11.9 (`resolveTurn` 6.7 self), real-battle Showdown 11.5, damage tables 7.8, gc 5.0.
+  Measured for D-G: `Constants.get` 5.9% self; the merge's cheap pre-key repeats for only 37,424 of 1,046,054 branches
+  (3.6%), so a bucketed merge is exact and skips 96% of the 1.05 M signatures; `damageOutcomes` 66% repeats of 3.6%;
+  G (`IfLoadedEqualTo` 294 short runs, longest 7) is worth under 1% and is deferred; new item H (adapter read memos,
+  est. 4-5%) recorded. **Proposed next feature (user's call, user runs the stages): exact round four = D constants
+  hoisting + F bucketed merge + E damage-outcome memo; specify text at
+  `runs/017-evidence/scratchpad/prof4/specify_018.txt`** (if it takes 018, the approximations move to 019). FUTURE-FEATURES
+  section 7 carries the measured list. Nothing is running.
 - **Feature 017 merged to `main` 2026-11-02 (user's go: "if there are no issues with the full suite, then merge"): fast-forward
   f6d845c → `3b4b3b1`, pushed; branch `017-exact-dispatch-speedups` kept (local + GitHub). T033 full suite
   11:55:41 AM to 12:50:51 PM EST: 556 passed, 4 xfailed, exit 0, 55 min 07 s (1 h 05 min after 016, 1.19x). Nothing is
