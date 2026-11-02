@@ -109,8 +109,9 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 > **Done: feature 012, merged to `main` 2026-10-27.** Fast mode `uv run pytest -q -m "not battle_sim"`: 504 passed, 4 xfailed in 10 min; 26 battle tests;
 > the split is checked in every run. See `specs/012-fast-test-mode/validation-log.md`. The scope below is history.
 
-- **Gap.** The full suite takes about 2.5 h, almost all of it in roughly 45 integration tests that run real Node /
-  Showdown battles. The ~477 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min
+- **Gap (as of 2026-10-26; the full suite took 1 h 05 min on 2026-11-01 after features 015 and 016, and per-test
+  timings are now recorded with `--durations=25` in their validation logs).** The full suite takes about 2.5 h,
+  almost all of it in roughly 45 integration tests that run real Node / Showdown battles. The ~477 other tests (unit, ledger, explain, extract, web, browser) finish in about 10-12 min
   (measured: `tests/unit` 474 tests in 109 s, 010 log; unit + ledger/web/explain/extract 400 tests in 10 min, 003
   log). There is no single command that runs only those. Per-test timings have never been recorded; the split
   below is from file contents and earlier logs (estimates marked).

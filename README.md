@@ -532,17 +532,21 @@ uv run pytest -q -m "not battle_sim"                       # fast mode: every te
 uv run pytest -q -m battle_sim                             # only the tests that start the battle worker
 uv run pytest -q -m browser tests/browser/                 # web page in the system Chrome (about 1 min)
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
-(cd sim && node --test test/*.test.mjs)                    # Node suites (314 tests)
+(cd sim && node --test test/*.test.mjs)                    # Node suites (334 tests, about 2.5 min)
+uv run pytest -q --durations=25                            # full suite with the 25 slowest tests listed (the merge gate)
 ```
 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-10-27 (feature 012, T015, browser tests included):
-  `uv run pytest -q` gave 530 passed, 4 xfailed in 8,886 s (2 h 28 min), 534 collected. Do not commit
-  during a full run: each process caches `repo_commit`, so a commit mid-run fails
-  `test_web_process_determinism.py` (seen on 2026-10-26). The 4 xfails are strict, documented story-rank
-  controls. See `specs/012-fast-test-mode/validation-log.md`.
+- **Full pytest:** the last full run was on 2026-11-01 (feature 016 merge gate, browser tests included):
+  `uv run pytest -q --durations=25` gave **556 passed, 4 xfailed in 3,924 s (1 h 05 min)**, 560 collected. The
+  same suite took 2 h 09 min on 2026-10-30 before feature 015 and 1 h 20 min after it: the three slowest tests
+  (`test_optimize_small.py` quick optimize 1,574 s, `test_policy_strength.py` paired benchmark 751 s,
+  `test_evaluate.py` V7 682 s) all run the sped-up battle player. Do not commit during a full run: each process
+  caches `repo_commit`, so a commit mid-run fails `test_web_process_determinism.py` (seen on 2026-10-26). The 4
+  xfails are strict, documented story-rank controls. See `specs/016-exact-damage-speedups/validation-log.md`
+  (T025) and `specs/012-fast-test-mode/validation-log.md`.
 - **Merge rule:** the full pytest suite (`uv run pytest -q`) and the Node suite both pass before every merge.
   The fast mode and the battle set are for iterating only; neither is enough for a merge.
 - **Fast mode** (feature 012): `battle_sim` marks every test that starts the battle worker
@@ -551,11 +555,17 @@ gauntlets) and two `quick` optimizes.
   worker start, an unmarked test that starts the worker fails at its teardown, and an unmarked test using a
   fixture that started it, a start outside any test, or a marked test that never reached the worker fail the
   session. The "battle split" section at the end of each run lists the counts and each marked test's route.
-  On 2026-10-27 the fast mode gave 504 passed, 26 deselected, 4 xfailed in 600 s (10 min); its slowest test
-  is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s).
+  On 2026-11-01 the fast mode gave 528 passed, 28 deselected, 4 xfailed in 591 s (10 min); its slowest test
+  is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s). The battle set is 28 tests
+  (26 before features 015 and 016 added the bench tests).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on 2026-10-27 it gave **314 pass, 0 fail, exit 0 in 276 s**.
+- **Node suite:** on 2026-11-01 it gave **334 pass, 0 fail, exit 0 in about 2 min 15 s** (314 before features
+  015 and 016; the replay test alone takes 30-45 s on 16 worker threads). Known flake, not a regression:
+  `sim/test/seeds.test.mjs` compares two raw battle logs including their `|t:|` timestamp lines and fails when
+  the two battles straddle a second boundary (seen once on 2026-10-31; a rerun passes). With
+  `PLATSIM_AI_FREEZE=1` the cached AI structs are frozen and `PLATSIM_AI_CHECK=1` recomputes every memoised AI
+  value (`sim/ai/INTERFACE.md`); both runs are recorded in the 015/016 validation logs.
 
 These environment variables shrink or redirect the long tests:
 
