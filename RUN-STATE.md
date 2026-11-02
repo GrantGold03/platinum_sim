@@ -1,6 +1,6 @@
-# START HERE (updated 2026-11-01, 9:40 PM EST)
+# START HERE (updated 2026-11-01, 9:30 PM EST)
 
-- **Feature 016 merged to `main` 2026-11-01, 9:35 PM EST (user's go): fast-forward 19519ed → `b15dbb2`, pushed.**
+- **Feature 016 merged to `main` 2026-11-01, 9:25 PM EST (user's go): fast-forward 19519ed → `b15dbb2`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `016-exact-damage-speedups` is kept
   (local + GitHub, same commit). Nothing is running. `data/generated/` needs no re-extract (no extractor change).
   `sim_code_hash` changed (015 and 016), so optimizer checkpoints made before them will not resume. Merge-rule gates
