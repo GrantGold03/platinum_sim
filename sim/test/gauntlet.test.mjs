@@ -3,7 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadGameData } from '../gamedata.mjs';
-import { PLACEHOLDER, runGauntlet } from '../gauntlet.mjs';
+import { PLACEHOLDER, runGauntlet, playerPolicyFor, RequestError } from '../gauntlet.mjs';
+import { loadTeam } from '../bench.mjs';
+import { V4_OPTS } from '../policy/expectimax2.mjs';
 
 const gd = loadGameData();
 const B = (species, level, moves, ability, held_item = null) => ({ species, start_level: level, moves, ability, held_item, nature: 'Hardy' });
@@ -85,4 +87,33 @@ test('pp_restore_between_battles from availability data restores PP', () => {
 test('invalid team and unknown policy are reported with the contract error kinds', () => {
   assert.throws(() => runGauntlet(gd, req({ team: [B('notamon', 50, ['tackle'], 'ABILITY_NONE')] })), (e) => e.kind === 'invalid_team');
   assert.throws(() => runGauntlet(gd, req({ player_policy: 'no-such-policy-v0' })), (e) => e.kind === 'internal' && /unknown player_policy/.test(e.message));
+});
+
+// Feature 018 (contracts/policy-api.md "playerPolicyFor"): candidate names carry their knobs and seed from the base name.
+test('018 candidate policy names: resolve and cache, reject bad ones, and equal the plain name with the same knobs', () => {
+  assert.equal(playerPolicyFor('expectimax2-v2').name, 'expectimax2-v2');
+  const full = `expectimax2-v4?kRoot=${V4_OPTS.kRoot}&kPly2=${V4_OPTS.kPly2}&beam=${V4_OPTS.beam}&floor=${V4_OPTS.floor}`;
+  const c1 = playerPolicyFor(full);
+  assert.equal(c1.name, full);
+  assert.equal(playerPolicyFor(full), c1, 'cached');
+  const invalid = (e) => e instanceof RequestError && e.kind === 'invalid_policy';
+  for (const bad of ['expectimax2-v4?', 'expectimax2-v4?bogus=1', 'expectimax2-v4?kRoot=0', 'expectimax2-v4?kRoot=33',
+    'expectimax2-v4?beam=6', 'expectimax2-v4?floor=0.6', 'expectimax2-v4?floor=-0.1', 'expectimax2-v4?kPly2=1&kPly2=2', 'expectimax2-v4?kPly2=x']) {
+    assert.throws(() => playerPolicyFor(bad), invalid, bad);
+  }
+  assert.throws(() => playerPolicyFor('nope'), (e) => e instanceof RequestError && /unknown player_policy/.test(e.message));
+  const team = loadTeam('bench');
+  const run = (pol, i) => runGauntlet(gd, { team, seed: `prof-a-bench-${i}`, player_policy: pol, opponent_policy: 'decomp-ai', stop_on_loss: false, trainers: ['aaron'] });
+  const strip = (r) => { const { player_policy, ...rest } = r; return JSON.stringify(rest); };
+  let differs = 0;
+  for (const i of [0, 1]) {
+    const plain = run('expectimax2-v4', i), cand = run(full, i);
+    assert.equal(plain.player_policy, 'expectimax2-v4');
+    assert.equal(cand.player_policy, full, 'the result names the full candidate');
+    assert.equal(strip(cand), strip(plain), `seed ${i}: a candidate with V4_OPTS's knobs equals the plain name (shared seeding)`);
+    const other = run(`expectimax2-v4?kRoot=${V4_OPTS.kRoot}&kPly2=${V4_OPTS.kPly2 + 1}&beam=${V4_OPTS.beam}&floor=${V4_OPTS.floor}`, i);
+    if (strip(other) !== strip(plain)) differs++;
+  }
+  assert.ok(differs >= 1, 'positive control: a different knob changes at least one of the two gauntlets');
+  assert.throws(() => run('expectimax2-v4?kRoot=0', 0), invalid, 'an invalid candidate is a request error, not a crash');
 });

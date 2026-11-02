@@ -6,6 +6,10 @@
 // VERSIONS (V1_OPTS / V2_OPTS):
 //   expectimax2-v1  W_ALIVE 1.0, W_FR 0.45, no koStop. Kept registered, unchanged, so recorded
 //                   results (T056, the T058 / US1 optimizer runs) stay reproducible.
+//   expectimax2-v4  (018) v2's model, leaf and horizon with a smaller search BUDGET (see V4_OPTS below): fewer
+//                   trainer-AI samples, one switch target at the root, low-probability first-ply branches valued
+//                   by the leaf. Validated reference-first against v2 on paired runs; the numbers are in
+//                   specs/018-expectimax2-v4/validation-log.md. v1 and v2 are unchanged.
 //   expectimax2-v2  koStop (see HORIZON), W_ALIVE 0.25, W_FR 0.10. Why: on a quick-run screening
 //                   finalist (L58 Infernape/Staraptor/Luxray/Garchomp/Gyarados/Gardevoir with plates
 //                   and Sitrus Berries) v1 cleared 109/400 vs greedy-v1 348/400 (McNemar p = 4e-60),
@@ -167,9 +171,22 @@ export const EXPECTIMAX2_V2 = 'expectimax2-v2';
 //   wFR     leaf value of one usable opponent Full Restore (PARAMS.W_FR when absent)
 export const V1_OPTS = Object.freeze({ koStop: false });
 export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
+// 018 (specs/018-expectimax2-v4): the search BUDGET as version options, read inside the search with today's values as
+// defaults, so v1 and v2 are byte-identical (the 015 replay fixture is the proof):
+//   kRoot   trainer-AI samples for the opponent's reply at the root (default PARAMS.K_ROOT)
+//   kPly2   samples at each hypothetical second-ply state (default PARAMS.K_PLY2)
+//   beam    switch targets searched at the root, best by the damage-race heuristic (default PARAMS.SWITCH_BEAM)
+//   floor   a first-ply branch whose weight P(opponent action) x P(branch) is below it is valued by the leaf instead of
+//           the second-ply search; the weight is kept (the expectation's mass is unchanged), never dropped (default 0)
+//   seedName  name used to seed the private trainer-AI streams (default: the policy name); candidate policies
+//           (sim/gauntlet.mjs playerPolicyFor) pass 'expectimax2-v4' so a candidate with v4's knobs equals v4 exactly.
+// V4_OPTS is PROVISIONAL (the all-four sizing set, REPORT4.md appendix) until the 018 ladder picks the fastest
+// combination that is not worse than v2 on paired runs; commit 4 of the feature sets the final values.
+export const EXPECTIMAX2_V4 = 'expectimax2-v4';
+export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 1, floor: 0.02 });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
-export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0 }; // speedInfo: 017 calls
+export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0, floored: 0 }; // speedInfo: 017 calls; floored: 018 leaf-valued branches
 
 // Search parameters (policy tuning).
 export const PARAMS = {
@@ -1122,7 +1139,7 @@ function valuePly2(X, S) {
   X.nodes++;
   replaceFainted(X, S);
   if (terminal(S)) return leafValue(X, S);
-  const opp = predictOpponent(X, S, 'p2', PARAMS.K_PLY2);
+  const opp = predictOpponent(X, S, 'p2', X.opts.kPly2 ?? PARAMS.K_PLY2); // 018: per-version budget
   let sp;
   const speedOf = () => (sp ??= speedInfo(X, S)); // 017: once per state
   let best = -Infinity;
@@ -1142,9 +1159,13 @@ function qValue(X, S, a, opp) {
   let q = 0;
   let sp;
   const speedOf = () => (sp ??= speedInfo(X, S)); // 017: once per state
+  const floor = X.opts.floor ?? 0; // 018: branches below this weight are leaf-valued (weight kept)
   for (const { p, act } of opp) {
     for (const br of resolveTurn(X, S, a, act, speedOf)) {
-      q += p * br.p * (X.opts.koStop && activeFainted(br.S) ? leafValue(X, br.S) : valuePly2(X, br.S));
+      const w = p * br.p;
+      const ko = X.opts.koStop && activeFainted(br.S);
+      if (!ko && w < floor) { STATS.floored++; q += w * leafValue(X, br.S); continue; }
+      q += w * (ko ? leafValue(X, br.S) : valuePly2(X, br.S));
     }
   }
   return q;
@@ -1170,7 +1191,7 @@ function rootState(X) {
 /** Builds the decision context. Reads the live battle; never writes it. */
 export function makeContext({ gd, battle, side, trainer }, opts = V1_OPTS, name = EXPECTIMAX2) {
   if (side.id !== 'p1') throw new Error('expectimax2: the policy plays p1');
-  const ms = mirrorFor(battle, trainer, name);
+  const ms = mirrorFor(battle, trainer, opts.seedName ?? name); // 018: candidates seed from their base name
   const mirror = ms.mirror;
   // The mirror's adapter lives for the whole battle; a new decision starts here (015, adapter-api.md).
   mirror.ai.beginDecision();
@@ -1224,11 +1245,11 @@ export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
   // Switch beam: only the PARAMS.SWITCH_BEAM best switch targets by the damage-race heuristic are
   // searched (the others are scored -Infinity). Ties keep party order.
   const ranked = switches.map((a) => ({ a, r: matchupScore(X, S, S.sides[0].mons[a.idx]) }))
-    .sort((x, y) => y.r - x.r).slice(0, PARAMS.SWITCH_BEAM).map((x) => x.a);
+    .sort((x, y) => y.r - x.r).slice(0, X.opts.beam ?? PARAMS.SWITCH_BEAM).map((x) => x.a); // 018: per-version beam
   const searched = new Set(ranked);
   acts.push(...switches);
   if (acts.length <= 1) return { X, acts, scores: acts.map(() => 0) };
-  const opp = X.battle.p2.requestState === 'move' ? predictOpponent(X, S, 'root', PARAMS.K_ROOT) : [{ p: 1, act: { kind: 'none' } }];
+  const opp = X.battle.p2.requestState === 'move' ? predictOpponent(X, S, 'root', X.opts.kRoot ?? PARAMS.K_ROOT) : [{ p: 1, act: { kind: 'none' } }]; // 018: per-version root samples
   const scores = acts.map((a) => (a.kind === 'switch' && !searched.has(a) ? -Infinity : qValue(X, S, a, opp)));
   return { X, acts, scores, opp };
 }
@@ -1257,4 +1278,5 @@ export function makeExpectimax2(name, opts) {
 }
 
 export const expectimax2 = makeExpectimax2(EXPECTIMAX2, V1_OPTS); // kept for recorded results
-export const expectimax2v2 = makeExpectimax2(EXPECTIMAX2_V2, V2_OPTS); // the default strong player
+export const expectimax2v2 = makeExpectimax2(EXPECTIMAX2_V2, V2_OPTS); // the default strong player (the reference for v4)
+export const expectimax2v4 = makeExpectimax2(EXPECTIMAX2_V4, V4_OPTS); // 018: the cheaper player, validated reference-first

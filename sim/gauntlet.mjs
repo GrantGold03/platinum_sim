@@ -28,7 +28,7 @@ import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
 import { InvalidTeam, P1_NAME, newBattle, opponentMembers, playerMember } from './team.mjs';
 import { greedy } from './policy/greedy.mjs';
-import { expectimax2, expectimax2v2 } from './policy/expectimax2.mjs';
+import { expectimax2, expectimax2v2, expectimax2v4, makeExpectimax2, EXPECTIMAX2_V4, V4_OPTS } from './policy/expectimax2.mjs';
 import { decompAI } from './ai/opponent.mjs';
 
 export const PLACEHOLDER = 'placeholder-default';
@@ -40,6 +40,46 @@ export const registerOpponentPolicy = (p) => OPPONENT_POLICIES.set(p.name, p);
 registerPlayerPolicy(greedy); // `greedy-v1` (T049, sim/policy/greedy.mjs)
 registerPlayerPolicy(expectimax2); // `expectimax2-v1` (T050, sim/policy/expectimax2.mjs, research R7)
 registerPlayerPolicy(expectimax2v2); // `expectimax2-v2` (sim/policy/expectimax2.mjs VERSIONS / HORIZON)
+registerPlayerPolicy(expectimax2v4); // `expectimax2-v4` (018: smaller search budget, validated reference-first)
+
+// 018 candidate policies (specs/018-expectimax2-v4/contracts/policy-api.md): a name of the form
+// `expectimax2-v4?kRoot=4&kPly2=1&beam=1&floor=0.02` is a v4 variant with those knobs, built once, cached under the
+// full name (so results name exactly what played) and seeded from the base name 'expectimax2-v4', so a candidate with
+// v4's own knobs is byte-identical to v4. Only the ladder's comparison script uses these; the shipped policy is the
+// plain name. Unknown keys, repeats or out-of-range values are a request error.
+const CANDIDATE_KEYS = {
+  kRoot: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 32 ? +v : undefined),
+  kPly2: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 32 ? +v : undefined),
+  beam: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 5 ? +v : undefined),
+  floor: (v) => (/^\d+(\.\d+)?$/.test(v) && +v >= 0 && +v <= 0.5 ? +v : undefined),
+};
+function parseCandidate(name) {
+  const query = name.slice(EXPECTIMAX2_V4.length + 1);
+  if (!query) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: empty query`);
+  const knobs = {};
+  for (const part of query.split('&')) {
+    const eq = part.indexOf('=');
+    const key = eq >= 0 ? part.slice(0, eq) : part;
+    const parse = CANDIDATE_KEYS[key];
+    if (!parse) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: unknown key ${key}`);
+    if (key in knobs) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: repeated key ${key}`);
+    const value = eq >= 0 ? parse(part.slice(eq + 1)) : undefined;
+    if (value === undefined) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: bad value for ${key}`);
+    knobs[key] = value;
+  }
+  return knobs;
+}
+/** The player policy for a request's `player_policy`: a registered name, or an expectimax2-v4 candidate. */
+export function playerPolicyFor(name) {
+  const registered = PLAYER_POLICIES.get(name);
+  if (registered) return registered;
+  if (typeof name === 'string' && name.startsWith(`${EXPECTIMAX2_V4}?`)) {
+    const policy = makeExpectimax2(name, { ...V4_OPTS, ...parseCandidate(name), seedName: EXPECTIMAX2_V4 });
+    PLAYER_POLICIES.set(name, policy);
+    return policy;
+  }
+  throw new RequestError('internal', `unknown player_policy ${name} (known: ${[...PLAYER_POLICIES.keys()].filter((k) => !k.includes('?'))})`);
+}
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)
@@ -83,8 +123,7 @@ function collect(gd, battle, party) {
 }
 
 export function runGauntlet(gd, req) {
-  const playerPolicy = PLAYER_POLICIES.get(req.player_policy ?? PLACEHOLDER);
-  if (!playerPolicy) throw new RequestError('internal', `unknown player_policy ${req.player_policy} (known: ${[...PLAYER_POLICIES.keys()]})`);
+  const playerPolicy = playerPolicyFor(req.player_policy ?? PLACEHOLDER); // 018: registered names and v4 candidates
   const oppPolicy = OPPONENT_POLICIES.get(req.opponent_policy ?? 'decomp-ai'); // default: the game's AI (spec FR-010)
   if (!oppPolicy) throw new RequestError('internal', `unknown opponent_policy ${req.opponent_policy}`);
   if (!Array.isArray(req.team) || req.team.length < 1 || req.team.length > 6) {

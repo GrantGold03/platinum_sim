@@ -25,7 +25,7 @@ import { readFileSync } from 'node:fs';
 
 const FIXTURE = new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url);
 const TEAM = JSON.parse(readFileSync(FIXTURE, 'utf8')).team;
-const POLICIES = ['greedy-v1', 'expectimax2-v1', 'expectimax2-v2'];
+const POLICIES = ['greedy-v1', 'expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4']; // 018: v4 too
 const N = 200;
 const digest = (r) => createHash('sha256').update(JSON.stringify(r)).digest('hex');
 const req = (pol, seed, extra = {}) => ({ team: TEAM, seed, player_policy: pol, opponent_policy: DECOMP_AI, ...extra });

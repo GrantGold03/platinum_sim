@@ -42,11 +42,11 @@ US3's runs and US4's gated switch with docs (commit 5). Phase labels name the st
 
 **Purpose**: the log, the evidence directory, and the presence of the four fixed teams.
 
-- [ ] T001 Create `specs/018-expectimax2-v4/validation-log.md` (header: times Eastern, evidence dir `runs/018-evidence/`,
+- [X] T001 Create `specs/018-expectimax2-v4/validation-log.md` (header: times Eastern, evidence dir `runs/018-evidence/`,
   sections per task; record branch `018-expectimax2-v4`, base `main` 7a88ae6, `git diff --stat main HEAD -- sim src tests`
   expected empty apart from the Spec Kit 1.2.6 upgrade commit `875080a` (which touched no `sim/`, `src/` or `tests/`
   file), exit 0); `mkdir -p runs/018-evidence/pairs`
-- [ ] T002 [P] Verify the four fixed teams exist and load: `tests/fixtures/policy_benchmark_team.json` (`.team`, 6 members,
+- [X] T002 [P] Verify the four fixed teams exist and load: `tests/fixtures/policy_benchmark_team.json` (`.team`, 6 members,
   Lv 57), `tests/fixtures/reference_team.json` (`.builds`, Lv 60), `runs/014-evidence/b2-main/result.json` and
   `runs/014-evidence/b2-branch/result.json` (`.team.builds`, 6 members with `start_level` and `held_item`); record
   the member species, levels and items of all four in the log. If a 014 result is missing, regenerate ONE B2 team on
@@ -60,7 +60,7 @@ US3's runs and US4's gated switch with docs (commit 5). Phase labels name the st
 
 ## Phase 2: Foundational (the replay gate on unchanged code)
 
-- [ ] T003 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests, about 25-45 s); record the
+- [X] T003 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests, about 25-45 s); record the
   diagnostic line. If it fails here, nothing else may start
 
 **Checkpoint**: the v1/v2 reference is known-good on this base.
@@ -79,7 +79,7 @@ floor counter is 0 for v2 and positive for v4 on a position.
 
 ### Tests for User Story 1 (write first; fail on the missing exports before T007)
 
-- [ ] T004 [P] [US1] Add to `sim/test/expectimax2.test.mjs` ("018 version options and v4"): import `V4_OPTS`,
+- [X] T004 [P] [US1] Add to `sim/test/expectimax2.test.mjs` ("018 version options and v4"): import `V4_OPTS`,
   `EXPECTIMAX2_V4`, `expectimax2v4`, `STATS`; assert `V1_OPTS` and `V2_OPTS` deep-equal their recorded values (no knob
   keys), `V4_OPTS` deep-equals `{ koStop: true, wAlive: 0.25, wFR: 0.1, kRoot: 4, kPly2: 1, beam: 1, floor: 0.02 }` (the
   provisional set; this assertion is updated in T026 to the final set) and is frozen; `expectimax2v4.name ===
@@ -87,7 +87,7 @@ floor counter is 0 for v2 and positive for v4 on a position.
   `STATS.floored` grows by > 0, while `scoreActions(ctx, V2_OPTS, 'expectimax2-v2')` leaves `STATS.floored` unchanged;
   on the same position the v4 root prediction (`opp`) has at most `V4_OPTS.kRoot` distinct actions and the number of
   searched switches (scores not `-Infinity` among `switch` acts) is at most `V4_OPTS.beam`
-- [ ] T005 [P] [US1] Add to `sim/test/gauntlet.test.mjs` ("018 candidate policy names"): import `playerPolicyFor`,
+- [X] T005 [P] [US1] Add to `sim/test/gauntlet.test.mjs` ("018 candidate policy names"): import `playerPolicyFor`,
   `RequestError`, `runGauntlet`; `playerPolicyFor('expectimax2-v2')` is the registered object; `playerPolicyFor(
   'expectimax2-v4?kRoot=4&kPly2=1&beam=1&floor=0.02')` returns an object whose `name` is the full string and the same
   object on a second call (cached); each of `'expectimax2-v4?'`, `'expectimax2-v4?bogus=1'`, `'expectimax2-v4?kRoot=0'`,
@@ -99,12 +99,12 @@ floor counter is 0 for v2 and positive for v4 on a position.
   spelling out `V4_OPTS`'s values give byte-identical `JSON.stringify` results apart from the `player_policy` field
   (compare after deleting it), proving the shared seeding; a candidate with a different knob (`kPly2=2`) differs
   (positive control)
-- [ ] T006 [P] [US1] In `sim/test/determinism.test.mjs` add `'expectimax2-v4'` to `POLICIES` (same seed → identical
+- [X] T006 [P] [US1] In `sim/test/determinism.test.mjs` add `'expectimax2-v4'` to `POLICIES` (same seed → identical
   logs, other seed differs; the battle PRNG and the live AI RNG untouched, as the file checks for v1/v2)
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] In `sim/policy/expectimax2.mjs`: `export const EXPECTIMAX2_V4 = 'expectimax2-v4'`; `export const V4_OPTS =
+- [X] T007 [US1] In `sim/policy/expectimax2.mjs`: `export const EXPECTIMAX2_V4 = 'expectimax2-v4'`; `export const V4_OPTS =
   Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 1, floor: 0.02 })` (provisional; a comment says commit 4 sets the
   ladder's result); `STATS.floored = 0`; in `valuePly2` use `X.opts.kPly2 ?? PARAMS.K_PLY2`; in `scoreActions` use
   `X.opts.beam ?? PARAMS.SWITCH_BEAM` for the slice and `X.opts.kRoot ?? PARAMS.K_ROOT` for the root prediction; in
@@ -115,7 +115,7 @@ floor counter is 0 for v2 and positive for v4 on a position.
   come from the seed name); `export const expectimax2v4 = makeExpectimax2(EXPECTIMAX2_V4, V4_OPTS)`; header: a VERSIONS
   entry for v4 (knobs, provisional, "measured in specs/018 validation log") and a short "BUDGET" paragraph defining the
   four knobs and the floor semantics (weight kept, leaf-valued, never dropped)
-- [ ] T008 [US1] In `sim/gauntlet.mjs`: `registerPlayerPolicy(expectimax2v4)` after v2 (import it); `export function
+- [X] T008 [US1] In `sim/gauntlet.mjs`: `registerPlayerPolicy(expectimax2v4)` after v2 (import it); `export function
   playerPolicyFor(name)`: registered → return; `/^expectimax2-v4\?(.*)$/` → parse `key=value&…` (keys `kRoot`, `kPly2`
   integers 1..32, `beam` integer 1..5, `floor` decimal in [0, 0.5], each key at most once, no empty query, no other
   key), on success `makeExpectimax2(name, { ...V4_OPTS, ...parsed, seedName: EXPECTIMAX2_V4 })` cached in
@@ -123,10 +123,10 @@ floor counter is 0 for v2 and positive for v4 on a position.
   candidate ${name}: ${reason}\`)`; else the existing unknown-policy `RequestError`; `runGauntlet` uses
   `playerPolicyFor(req.player_policy ?? PLACEHOLDER)`; header comment: candidate names (research R2), the worker's hello
   still lists base names only
-- [ ] T009 [US1] Gate (quickstart step 1): `(cd sim && node --test test/expectimax2.test.mjs test/gauntlet.test.mjs
+- [X] T009 [US1] Gate (quickstart step 1): `(cd sim && node --test test/expectimax2.test.mjs test/gauntlet.test.mjs
   test/determinism.test.mjs test/replay.test.mjs test/ai_golden.test.mjs)` exit 0 (replay still 2 policies, v1/v2
   digests unchanged); full Node suite exit 0 → `runs/018-evidence/node-suite-c1.log`; record
-- [ ] T010 [US1] Commit 1 by path (`sim/policy/expectimax2.mjs sim/gauntlet.mjs sim/test/expectimax2.test.mjs
+- [X] T010 [US1] Commit 1 by path (`sim/policy/expectimax2.mjs sim/gauntlet.mjs sim/test/expectimax2.test.mjs
   sim/test/gauntlet.test.mjs sim/test/determinism.test.mjs specs/018-expectimax2-v4/validation-log.md`), message
   `feat(018): expectimax2-v4 with per-version search budget and candidate names (v1/v2 byte-identical)`, push; record the hash
 

@@ -12,8 +12,9 @@ import { readFileSync } from 'node:fs';
 import { runGauntlet, PLAYER_POLICIES, registerPlayerPolicy } from '../gauntlet.mjs';
 import { AIRng } from '../ai/choose.mjs';
 import { DECOMP_AI } from '../ai/opponent.mjs';
-import { expectimax2, makeContext, scoreActions, _internal, PARAMS, STATS, V1_OPTS, V2_OPTS } from '../policy/expectimax2.mjs';
+import { expectimax2, makeContext, scoreActions, _internal, PARAMS, STATS, V1_OPTS, V2_OPTS, V4_OPTS, EXPECTIMAX2_V4, expectimax2v4 } from '../policy/expectimax2.mjs';
 import { B, gd, leagueBattle } from './ai_fixtures.mjs';
+import { loadTeam } from '../bench.mjs';
 
 const TEAM = JSON.parse(readFileSync(new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url), 'utf8')).team;
 const key = (a) => `${a.kind}${a.slot ?? ''}${a.idx ?? ''}`;
@@ -146,4 +147,28 @@ test('017 speedInfo once per state: calls <= ply-2 nodes + root actions + 1; one
   assert.ok(calls <= X.nodes + acts.length + 1, `${calls} speedInfo calls for ${X.nodes} ply-2 nodes and ${acts.length} root actions`);
   assert.ok(X.rootView.ai.cacheStats.speedPairs <= 1, `root adapter built ${X.rootView.ai.cacheStats.speedPairs} speed pairs in its first decision`);
   assert.ok(X.rootView.ai.cacheStats.speedPairHits > 0, 'the root samples and the root turn resolution shared it');
+});
+
+// Feature 018 (contracts/policy-api.md): the search budget as version options; expectimax2-v4.
+test('018 version options: v1/v2 unchanged, V4_OPTS, the floor counter, root samples and beam bounds', () => {
+  assert.deepEqual({ ...V1_OPTS }, { koStop: false });
+  assert.deepEqual({ ...V2_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1 });
+  assert.deepEqual({ ...V4_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1, kRoot: 4, kPly2: 1, beam: 1, floor: 0.02 });
+  assert.ok(Object.isFrozen(V4_OPTS));
+  assert.equal(EXPECTIMAX2_V4, 'expectimax2-v4');
+  assert.equal(expectimax2v4.name, EXPECTIMAX2_V4);
+  const f0 = STATS.floored;
+  const r2 = scoreActions(spiritombPosition(), V2_OPTS, 'expectimax2-v2');
+  assert.equal(STATS.floored, f0, 'v2 never floors a branch');
+  assert.ok(r2.acts.some((a) => a.kind === 'switch'), 'the position offers switches');
+  const r4 = scoreActions(spiritombPosition(), V4_OPTS, EXPECTIMAX2_V4);
+  // The floor: over one Aaron battle v4 leaf-values some low-weight first-ply branches; v2 never does.
+  const one = (pol) => runGauntlet(gd, { team: loadTeam('bench'), seed: 'prof-a-bench-0', player_policy: pol, opponent_policy: DECOMP_AI, stop_on_loss: false, trainers: ['aaron'] });
+  const f1 = STATS.floored; one('expectimax2-v2'); assert.equal(STATS.floored, f1, 'v2 never floors');
+  one(EXPECTIMAX2_V4); assert.ok(STATS.floored > f1, `v4 floored ${STATS.floored - f1} branches over one Aaron battle`);
+  const moveScores = r4.acts.map((a, i) => [a, r4.scores[i]]).filter(([a]) => a.kind === 'move').map(([, s]) => s);
+  assert.ok(moveScores.length > 0 && moveScores.every(Number.isFinite), JSON.stringify(moveScores));
+  const searchedSwitches = r4.acts.filter((a, i) => a.kind === 'switch' && Number.isFinite(r4.scores[i])).length;
+  assert.ok(searchedSwitches <= V4_OPTS.beam, `${searchedSwitches} switches searched, beam ${V4_OPTS.beam}`);
+  assert.ok(r4.opp.length <= V4_OPTS.kRoot, `${r4.opp.length} distinct root predictions, kRoot ${V4_OPTS.kRoot}`);
 });
