@@ -39,3 +39,20 @@ No regeneration needed.
   different knob changes the result (positive control); determinism holds for v4 (200 gauntlets); **replay for v1/v2
   unchanged** (digests `db6d20cf…` / `1273b694…`, every choice and draw count).
 - Full Node suite 3:32:01 to 3:34:23 PM EST: **351 pass, 0 fail, exit 0**, 142.0 s (`runs/018-evidence/node-suite-c1.log`).
+
+## T011-T015 US3 code half: one default constant, `optimize --player-policy` (3:35 to 4:13:38 PM EST)
+
+- Tests first: `tests/unit/test_default_policy.py` (new) and the resume test addition failed before T013 (4 failures);
+  after: 17 passed. Two corrections while gating, both test-side or precedent: (1) the first fingerprint version added
+  `player_policy` unconditionally and broke the two tests that pin the recorded default fingerprint
+  (`test_required_hms`, `test_legality_options`); changed to the feature-006 `required_hms` rule (the key joins the
+  fingerprint only when the policy differs from the default), contract and data model updated; (2) a missing
+  module-level import in `run.py` (my guard mistook a comment for the import) made the first fast-mode rerun fail 14
+  tests with `NameError`; fixed. Deviation from T017's wording: the script's unit test lives in its own file
+  `tests/unit/test_paired_policies.py` (the existing `test_scripts.py` covers the decomp field-script parser, not the
+  014 scripts).
+- Smoke (3:37 PM EST): `optimize … --player-policy expectimax2-v9` exits 1 at once with `worker does not offer
+  'expectimax2-v9' (policies: [... 'expectimax2-v4'])`; `--player-policy expectimax2-v4` runs (stopped after 75 s in the
+  calibrate stage) and `state.json` records `fingerprint.player_policy = expectimax2-v4` (`runs/018-evidence/smoke-*`).
+- Gates: targeted unit files **47 passed** (45.8 s); fast mode 4:03:23 to 4:13:38 PM EST: **535 passed, 28 deselected,
+  4 xfailed, exit 0**, 612.4 s (`runs/018-evidence/fast-c2.log`; 528 + 7 new).

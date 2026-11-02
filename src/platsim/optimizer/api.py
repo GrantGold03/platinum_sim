@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from platsim.budget import DEFAULT_PRESET
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
 from platsim.legality.models import LegalityOptions
 
 
@@ -29,6 +30,9 @@ class OptimizeRequest:
     # 006: HMs that must be carried in some member's final moveset (move keys, HM-number order).
     # Part of the fingerprint and reports only when non-empty, so default jobs are unchanged.
     required_hms: tuple[str, ...] = ()
+    # 018: the strong player for the level search, the setup check and the confirmation runs (the screening
+    # stages keep greedy-v1). Part of the job fingerprint; named in the result's provenance.
+    player_policy: str = DEFAULT_PLAYER_POLICY
 
     def __post_init__(self) -> None:
         if self.required_hms:

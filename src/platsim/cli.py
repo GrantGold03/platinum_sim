@@ -137,7 +137,9 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
                    help="minimum full gauntlets (default 2000); more are added until the budget CI target is met")
     p.add_argument("--seed", default="0", help="master seed (any string; default '0')")
     p.add_argument("--workers", type=int, default=None, help="worker processes (default: CPU count)")
-    p.add_argument("--player-policy", default="expectimax2-v2", help="player policy (default expectimax2-v2)")
+    from platsim.evaluate import DEFAULT_PLAYER_POLICY
+
+    p.add_argument("--player-policy", default=DEFAULT_PLAYER_POLICY, help=f"player policy (default {DEFAULT_PLAYER_POLICY})")
     p.add_argument("--budget", choices=sorted(PRESETS), default=DEFAULT_PRESET,
                    help="budget preset (research R8): CI target for the gauntlet and Cynthia (default standard)")
     p.add_argument("--min-clear", type=float, default=0.75, help="qualification threshold (default 0.75, FR-015)")
@@ -189,19 +191,21 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--force-new", action="store_true",
                    help="start over even if --out holds a checkpoint (it is moved to superseded-N/); needed when the "
                         "checkpoint was made by different code or data, which is never resumed")
+    from platsim.evaluate import DEFAULT_PLAYER_POLICY
+
+    p.add_argument("--player-policy", default=DEFAULT_PLAYER_POLICY,
+                   help=f"strong player for the level search, setup check and confirmation (default {DEFAULT_PLAYER_POLICY}); "
+                        "the screening stages keep greedy-v1 (018)")
     _add_legality_flags(p)
     _add_hm_flags(p)
 
     def run(args: argparse.Namespace) -> int:
-        from platsim.optimizer.api import InvalidRequest, OptimizeRequest, run_optimization
+        from platsim.optimizer.api import InvalidRequest, run_optimization
 
         if len(args.species) != 6:
             print(f"platsim optimize: exactly 6 species are required, got {len(args.species)}", file=sys.stderr)
             return 2
-        req = OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
-                              budget=args.budget, workers=args.workers, out_dir=args.out,
-                              force_new=args.force_new, legality=_legality(args),
-                              required_hms=tuple(args.require_hm))
+        req = optimize_request(args)
         try:
             res = run_optimization(req)
         except InvalidRequest as e:
@@ -226,6 +230,16 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
         return 0
 
     p.set_defaults(func=run)
+
+
+def optimize_request(args: argparse.Namespace):
+    """The OptimizeRequest for parsed `optimize` arguments (018: exposed for tests; includes --player-policy)."""
+    from platsim.optimizer.api import OptimizeRequest
+
+    return OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
+                          budget=args.budget, workers=args.workers, out_dir=args.out,
+                          force_new=args.force_new, legality=_legality(args),
+                          required_hms=tuple(args.require_hm), player_policy=args.player_policy)
 
 
 # serve, explain and report are appended below, each after its _add_* function.
@@ -298,7 +312,9 @@ _SUBCOMMANDS.append(_add_report)
 def _add_bench(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("bench", help="time the battle player on the fixed seed set, single process and worker pool "
                                      "(feature 015; exit 1 if the two result digests differ)")
-    p.add_argument("--policy", default="expectimax2-v2", help="player policy name (default expectimax2-v2)")
+    from platsim.evaluate import DEFAULT_PLAYER_POLICY
+
+    p.add_argument("--policy", default=DEFAULT_PLAYER_POLICY, help=f"player policy name (default {DEFAULT_PLAYER_POLICY})")
     p.add_argument("--n", type=int, default=20, help="gauntlets per team (default 20)")
     p.add_argument("--block", default="a", help="seed block: seeds prof-<block>-<team>-<i> (default a)")
     p.add_argument("--teams", type=lambda s: [t for t in s.split(",") if t], default=["bench", "ref"],

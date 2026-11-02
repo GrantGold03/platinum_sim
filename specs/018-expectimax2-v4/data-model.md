@@ -49,7 +49,8 @@ from the current worker's is not reused (recomputed, noted in the log).
 
 ## Optimizer request and result (`src/platsim/optimizer/api.py`, `result.json`)
 
-`OptimizeRequest.player_policy: str = DEFAULT_PLAYER_POLICY` (new field; the web leaves it at the default);
+`OptimizeRequest.player_policy: str = DEFAULT_PLAYER_POLICY` (new field; the web leaves it at the default; in the job
+fingerprint only when it differs from the default, the 006 `required_hms` precedent);
 `result.json.player_policy` (already present) now reflects the request. `evaluate` and `bench` keep their explicit
 arguments, defaulting to the same constant.
 

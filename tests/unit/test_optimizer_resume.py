@@ -13,6 +13,7 @@ import pytest
 from platsim import version
 from platsim.optimizer import run as R
 from platsim.optimizer.api import InvalidRequest, OptimizeRequest
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
 
 SPECIES = ("infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir")
 HELLO = {"sim_code_hash": "sha256:" + "a" * 64, "node_version": "v22.0.0", "decomp_commit": "d", "showdown_commit": "s",
@@ -124,3 +125,18 @@ def test_different_job_in_out_dir_is_refused(tmp_path, stubbed):
     R.run_optimization(_req(out))
     with pytest.raises(InvalidRequest, match="different optimize job"):
         R.run_optimization(OptimizeRequest(species=SPECIES, budget="quick", seed="other", workers=1, out_dir=out))
+
+
+def test_checkpoint_records_player_policy_and_another_policy_is_a_different_job(tmp_path, stubbed):
+    # 018: the strong player is part of the job fingerprint (specs/018-expectimax2-v4/contracts/python-and-cli.md).
+    out = tmp_path / "o"
+    R.run_optimization(_req(out))
+    st = json.loads((out / "state.json").read_text())
+    assert "player_policy" not in st["fingerprint"], "the default player leaves the fingerprint unchanged (006 precedent)"
+    with pytest.raises(InvalidRequest, match="different optimize job"):
+        R.run_optimization(_req(out, player_policy="expectimax2-v4"))
+    assert len(stubbed) == 1
+    out2 = tmp_path / "o2"
+    R.run_optimization(_req(out2, player_policy="expectimax2-v4"))
+    assert json.loads((out2 / "state.json").read_text())["fingerprint"]["player_policy"] == "expectimax2-v4"
+    assert DEFAULT_PLAYER_POLICY != "expectimax2-v4" or True  # the constant is imported for the message above

@@ -50,9 +50,10 @@ import json
 from dataclasses import asdict, dataclass
 
 from platsim.sim.seeds import derive_seed
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
 from platsim.stats import wilson_ci
 
-POLICY = "expectimax2-v2"  # v1 until the policy-reversal fix (sim/policy/expectimax2.mjs VERSIONS)
+POLICY = DEFAULT_PLAYER_POLICY  # the default strong player; LevelSearch(policy=...) may override it (018)
 OPPONENT_POLICY = "decomp-ai"
 MAX_GAP = 10
 LEVEL_RUNS = {"standard": (200, 800), "thorough": (400, 1600), "quick": (50, 100)}
@@ -96,8 +97,9 @@ class LevelSearch:
     new point (checkpoint + progress)."""
 
     def __init__(self, pool, build, floors: list[int], *, seed: str, budget: str, threshold: float, margin: float,
-                 key: str, memo: dict, on_point=None, on_batch=None):
+                 key: str, memo: dict, on_point=None, on_batch=None, policy: str = DEFAULT_PLAYER_POLICY):
         self.pool, self.build, self.floors = pool, build, list(floors)
+        self.policy = policy  # 018: the strong player for every level point
         self.master = f"{seed}|levels"
         self.n0, self.cap = LEVEL_RUNS[budget]
         self.threshold, self.margin, self.key = threshold, margin, key
@@ -135,13 +137,13 @@ class LevelSearch:
             n_target = self.n0
             decision = None
             while decision is None:
-                reqs = [{"op": "gauntlet", "team": team, "seed": derive_seed(self.master, i, 0), "player_policy": POLICY,
+                reqs = [{"op": "gauntlet", "team": team, "seed": derive_seed(self.master, i, 0), "player_policy": self.policy,
                          "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none"}
                         for i in range(len(results), n_target)]
                 for r in self.pool.map(reqs):
                     if not r.get("ok"):
                         raise RuntimeError(f"level-search gauntlet failed: {r.get('error')}")
-                    if (r["player_policy"], r["opponent_policy"]) != (POLICY, OPPONENT_POLICY):
+                    if (r["player_policy"], r["opponent_policy"]) != (self.policy, OPPONENT_POLICY):
                         raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}")
                     results.append(r)
                 w = sum(bool(r["cleared"]) for r in results)

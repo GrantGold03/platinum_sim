@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from platsim.sim.pool import WorkerPool
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BENCH_MJS = REPO_ROOT / "sim" / "bench.mjs"
@@ -27,7 +28,7 @@ TEAM_FILES = {
     "ref": ("tests/fixtures/reference_team.json", "builds"),
 }
 LEAGUE = ["aaron", "bertha", "flint", "lucian", "cynthia"]
-DEFAULT_POLICY = "expectimax2-v2"
+DEFAULT_POLICY = DEFAULT_PLAYER_POLICY  # 018: the one default strong player
 
 
 class BenchError(Exception):

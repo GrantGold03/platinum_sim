@@ -145,20 +145,20 @@ only if the name is unknown to the worker (it is known after commit 1).
 
 ### Tests for User Story 3, code half (write first; fail before T013)
 
-- [ ] T011 [P] [US3] Create `tests/unit/test_default_policy.py`: `platsim.evaluate.DEFAULT_PLAYER_POLICY == platsim.bench.DEFAULT_POLICY`; the argparse
+- [X] T011 [P] [US3] Create `tests/unit/test_default_policy.py`: `platsim.evaluate.DEFAULT_PLAYER_POLICY == platsim.bench.DEFAULT_POLICY`; the argparse
   defaults of `evaluate --player-policy`, `bench --policy` and `optimize --player-policy` (parse `["evaluate", "x.json"]`,
   `["bench"]`, `["optimize"] + six species`) all equal the constant and the help text mentions it;
   `OptimizeRequest(species=...).player_policy == DEFAULT_PLAYER_POLICY`; `optimize ... --player-policy expectimax2-v4`
   parses into `OptimizeRequest.player_policy == 'expectimax2-v4'` (use the CLI's request-building function; if it is
   inline in `cli.py`, factor it into `platsim.cli.optimize_request(args)` in T013 and test that)
-- [ ] T012 [P] [US3] Add to `tests/unit/test_optimizer_resume.py`: a checkpoint written with `player_policy='expectimax2-v2'`
+- [X] T012 [P] [US3] Add to `tests/unit/test_optimizer_resume.py`: a checkpoint written with `player_policy='expectimax2-v2'`
   is not resumed by a request with `player_policy='expectimax2-v4'` (fingerprint mismatch → fresh run or the documented
   error, whichever the resume code does for other fingerprint fields; assert that behaviour), and `state.json` records
   `player_policy`
 
 ### Implementation for User Story 3, code half
 
-- [ ] T013 [US3] `src/platsim/optimizer/api.py`: `player_policy: str = DEFAULT_PLAYER_POLICY` on `OptimizeRequest`
+- [X] T013 [US3] `src/platsim/optimizer/api.py`: `player_policy: str = DEFAULT_PLAYER_POLICY` on `OptimizeRequest`
   (import from `platsim.evaluate`; part of the fingerprint and of `state.json`); `src/platsim/optimizer/run.py`: replace
   every `POLICY` use with `req.player_policy` (level search construction, setup check, confirmation `evaluate_team`
   calls, the result/provenance at line ~706, the "[confirm] winner … (<policy>, >= N runs)" log line); `src/platsim/
@@ -168,11 +168,11 @@ only if the name is unknown to the worker (it is known after commit 1).
   gains `--player-policy` (default the constant, help "strong player for level search, setup check and confirmation;
   the screening stages keep greedy-v1") passed into `OptimizeRequest`; `src/platsim/bench.py`: `DEFAULT_POLICY =
   DEFAULT_PLAYER_POLICY`; the web runner untouched (default)
-- [ ] T014 [US3] Gate: `uv run pytest -q tests/unit/test_default_policy.py tests/unit/test_optimizer_resume.py` exit 0; `uv run pytest -q -m "not battle_sim"` exit 0 → `runs/018-evidence/fast-c2.log`; smoke: `uv run
+- [X] T014 [US3] Gate: `uv run pytest -q tests/unit/test_default_policy.py tests/unit/test_optimizer_resume.py` exit 0; `uv run pytest -q -m "not battle_sim"` exit 0 → `runs/018-evidence/fast-c2.log`; smoke: `uv run
   platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 018-smoke --player-policy
   expectimax2-v4 --workers 4 --out runs/018-evidence/smoke-v4` started and stopped (Ctrl-C / timeout 60 s) after the
   first log lines show the policy name, or the full quick run if it is under 15 min; record
-- [ ] T015 [US3] Commit 2 by path (`src/platsim/optimizer/api.py src/platsim/optimizer/run.py src/platsim/optimizer/levels.py
+- [X] T015 [US3] Commit 2 by path (`src/platsim/optimizer/api.py src/platsim/optimizer/run.py src/platsim/optimizer/levels.py
   src/platsim/cli.py src/platsim/bench.py tests/unit/test_default_policy.py tests/unit/test_optimizer_resume.py
   specs/018-expectimax2-v4/validation-log.md`), message
   `feat(018): one default player constant; optimize --player-policy (default unchanged)`, push; record the hash
@@ -192,7 +192,7 @@ verdicts, speeds), the control row with 0 discordant pairs, and a named final ca
 
 ### Script (write first; its own unit test covers the pure parts)
 
-- [ ] T016 [P] [US2] Create `specs/018-expectimax2-v4/scripts/paired_policies.py` per contracts/python-and-cli.md:
+- [X] T016 [P] [US2] Create `specs/018-expectimax2-v4/scripts/paired_policies.py` per contracts/python-and-cli.md:
   argparse (`--a`, `--b`, `--teams` default `bench,ref,b2main,b2branch`, `--runs` default 2000, `--workers`, `--out`
   default `runs/018-evidence/pairs`, `--self`); team loaders (`bench`: fixture `.team`; `ref`: `.builds` via
   `load_and_validate` + `worker_team`; `b2main` / `b2branch`: `runs/014-evidence/b2-{main,branch}/result.json` `.team`
@@ -204,7 +204,7 @@ verdicts, speeds), the control row with 0 discordant pairs, and a named final ca
   per-team text block and a row appended to `<out>/summary.json`; `--self` plays `--a` twice (two independent pool
   passes) on the first team and exits 1 unless 0 discordant; exit 1 on any failed request. Pure helpers
   (`safe_name`, row building, cache validity) in functions a unit test can import
-- [ ] T017 [P] [US2] Add `tests/unit/test_scripts.py` cases (the file already tests the 014 scripts' pure parts, follow
+- [X] T017 [P] [US2] Add `tests/unit/test_scripts.py` cases (the file already tests the 014 scripts' pure parts, follow
   its pattern): `safe_name('expectimax2-v4?kRoot=4&kPly2=1&beam=1&floor=0.02')` is filesystem-safe and reversible
   enough to be unique; a cache entry with a different `sim_code_hash` is rejected; the summary row for a hand-built
   pair of outcome lists has the expected `a_only`, `b_only`, verdict (use `mcnemar_exact` directly as the oracle)

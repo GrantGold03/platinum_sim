@@ -18,8 +18,10 @@ Row for the README command table: `--player-policy` (default `DEFAULT_PLAYER_POL
 
 ## `OptimizeRequest.player_policy: str = DEFAULT_PLAYER_POLICY` (`platsim.optimizer.api`)
 
-New dataclass field with a default, so every existing constructor call is unchanged. Recorded in `state.json` with the
-other request fields (a resumed run keeps its policy).
+New dataclass field with a default, so every existing constructor call is unchanged. It joins the job fingerprint in
+`state.json` only when it differs from the default (the feature-006 `required_hms` precedent: default fingerprints,
+default output-directory hashes and the resume of default jobs are unchanged; a run with another strong player is a
+different job and is never resumed from a default checkpoint). A resumed run keeps its policy.
 
 ## `specs/018-expectimax2-v4/scripts/paired_policies.py`
 
