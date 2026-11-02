@@ -1,6 +1,6 @@
-# START HERE (updated 2026-11-01, 9:50 PM EST, end of session before a reboot)
+# START HERE (updated 2026-11-01, 10:40 PM EST, end of session before a reboot)
 
-- **Resume checklist (2026-11-01, 9:50 PM EST).** `main` is checked out in the main checkout, in sync with
+- **Resume checklist (2026-11-01, 10:40 PM EST).** `main` is checked out in the main checkout, in sync with
   `origin/main` (015 and 016 merged today; last commits are doc-only: RUN-STATE, README testing section,
   FUTURE-FEATURES section 5 after a stale-docs pass). Nothing is running; no stash. The only uncommitted files are
   the user's own (see "Uncommitted on purpose" below). `data/generated/` is current for `main` (no extractor change
