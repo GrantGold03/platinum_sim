@@ -36,6 +36,18 @@ unchanged as the reference; the cheaper player is a new policy, `expectimax2-v4`
 archived feature-007 policy), adopted only if paired comparison on the same seeds and opponents shows it is not
 worse. Speed is not the risk; accuracy is, and the paired comparison is how it is judged.
 
+## Clarifications
+
+### Session 2026-11-02
+
+- Q: Should every single-knob candidate get the full comparison budget (2,000 paired runs on all four teams), or a
+  cheaper screening budget with the full protocol reserved for the combinations? → A: The full protocol for every
+  candidate, single knob or combination: 2,000 paired runs on all four teams each (about 5 to 6 hours of local pool
+  time in total); no screening budget.
+- Q: If the fastest combination that passes the comparison is slower than the 1.5x target, should it still become
+  the default player? → A: Yes: any passing combination that is faster than v2 becomes the default; 1.5x stays the
+  target and a smaller gain is reported as such (speed is reported, not gated).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A new, cheaper player that can be chosen by name (Priority: P1)
@@ -82,8 +94,8 @@ with its numbers.
 **Why this priority**: This is the Principle VI gate: an approximation is adopted only against a reference on paired
 runs. Without it the speed is worthless.
 
-**Independent Test**: For each candidate parameter set, 2,000 paired full gauntlets per team against `expectimax2-v2`
-with the McNemar exact test at alpha 0.05, plus a pairing control (v2 against itself on the same seeds: 0 discordant
+**Independent Test**: For each candidate parameter set, single knob or combination alike, 2,000 paired full gauntlets
+per team on all four teams against `expectimax2-v2` with the McNemar exact test at alpha 0.05, plus a pairing control (v2 against itself on the same seeds: 0 discordant
 pairs). The validation log holds the table of candidates, teams, clear rates, discordant counts, p-values and the
 verdicts.
 
@@ -101,8 +113,9 @@ verdicts.
 4. **Given** that no combination passes, **When** the ladder is exhausted, **Then** the feature records the negative
    result with its evidence and ships no default change (v4 may still exist by name, marked as not validated, or be
    withdrawn; the plan decides and the log says which).
-5. **Given** the chosen parameters, **When** the fixed set is timed, **Then** the speed is at least 1.5x v2 (User
-   Story 1, scenario 2); if the passing combination is slower than that, the smaller gain is reported, not hidden.
+5. **Given** the chosen parameters, **When** the fixed set is timed, **Then** the speed is reported against the 1.5x
+   target (User Story 1, scenario 2); a passing combination slower than that still proceeds to User Stories 3 and 4
+   as long as it is faster than v2, and the smaller gain is reported, not hidden.
 
 ---
 
@@ -201,21 +214,23 @@ default and the date it changed.
   streams are private to the policy name.
 - **FR-004**: Each budget change MUST be evaluated alone and then in combination against `expectimax2-v2` on the same
   seeds and opponents (paired), on four fixed teams (benchmark fixture team, reference fixture team, the feature-014
-  B2 final teams from `main` and from the branch, each at its own fixed levels), 2,000 paired full gauntlets per team,
+  B2 final teams from `main` and from the branch, each at its own fixed levels), 2,000 paired full gauntlets per team
+  for every candidate, single knob or combination (clarification 2026-11-02: no cheaper screening budget),
   McNemar exact at alpha 0.05, with a pairing control (v2 against itself: 0 discordant pairs); every candidate's clear
   rates, discordant counts, p-values, verdicts and fixed-set speed MUST be recorded in the validation log.
 - **FR-005**: v4's final parameters MUST be the fastest evaluated combination that is not worse than v2 on every one
   of the four teams (no statistically supported drop in clear rate). A knob that is worse on any team MUST be
   excluded and its numbers kept. If no combination passes, the negative result MUST be recorded with its evidence and
   no default MUST change.
-- **FR-006**: With the final parameters, `expectimax2-v4` MUST be at least 1.5x `expectimax2-v2`'s single-process
-  throughput on the fixed 40-gauntlet set measured in the same session with the committed benchmark tool, and faster
-  on the 16-worker pool, with single-process and pool digests agreeing; a smaller gain MUST be reported as such.
+- **FR-006**: With the final parameters, `expectimax2-v4` MUST be faster than `expectimax2-v2` single process on the
+  fixed 40-gauntlet set measured in the same session with the committed benchmark tool and faster on the 16-worker
+  pool, with single-process and pool digests agreeing. The target is 1.5x single process; a smaller gain MUST be
+  reported as such and does not block FR-008 (clarification 2026-11-02: speed is reported, not gated).
 - **FR-007**: The optimizer MUST be run end to end on B2 with v4 and with v2 (quick budget, the feature-014 seed), and
   the two results compared by the feature-010 equal-levels rule (both final teams at the v4 team's start levels, 2,000
   paired runs): the v4 result MUST NOT clear significantly less and MUST NOT have a higher expected average final
   level; both wall times and the ratio MUST be reported. The v4 result MUST pass the legality validator.
-- **FR-008**: Only if FR-005 and FR-007 pass MUST `expectimax2-v4` become the default player for the optimizer's level
+- **FR-008**: Only if FR-005 and FR-007 pass, and v4 is faster than v2 (FR-006), MUST `expectimax2-v4` become the default player for the optimizer's level
   search, setup check and confirmation runs, `evaluate`, `bench` and the web interface; every report MUST name the
   policy that played; `expectimax2-v2` MUST remain selectable by name. If either fails, the default MUST stay
   `expectimax2-v2` and the documentation MUST say so with the numbers.
@@ -260,9 +275,9 @@ default and the date it changed.
   counts, p-value, verdict) and its fixed-set speed; the pairing control shows 0 discordant pairs.
 - **SC-003**: v4's final parameters show no statistically supported drop on any of the four teams (McNemar exact,
   alpha 0.05, 2,000 paired runs each).
-- **SC-004**: v4 is at least 1.5x v2 single process on the fixed set (same session; today's v2 figure 1.244
-  gauntlets/s, 9.8 ms per decision; the sizing runs suggest 1.5x to 1.75x) and faster on the 16-worker pool; digests
-  agree on both sides; v4's own replay entry reproduces on the fixed set.
+- **SC-004**: v4 is faster than v2 single process on the fixed set and on the 16-worker pool (same session; today's
+  v2 figure 1.244 gauntlets/s, 9.8 ms per decision), reported against the 1.5x target the sizing runs suggest (1.5x to
+  1.75x); digests agree on both sides; v4's own replay entry reproduces on the fixed set.
 - **SC-005**: On B2 (quick budget, the 014 seed), the v4 optimizer result at equal levels does not clear significantly
   less than the v2 result and has no higher expected average final level; both wall times and the ratio are
   reported, with the v4 optimization expected to be markedly faster.
@@ -285,8 +300,9 @@ default and the date it changed.
   With 2,000 paired runs the test resolves differences of a few percentage points in clear rate.
 - The ladder order is: each knob alone, then all passing knobs together, then the next fastest subsets; the plan fixes
   the exact order and stops at the first passing combination.
-- Compute is local only: each candidate costs 4 teams x 2,000 paired runs (v4 side only; the v2 side is played once per
-  team and reused), about 8 to 10 minutes per team on the 16-worker pool; the B2 optimizations about 20 minutes (v2,
+- Compute is local only: each candidate, single knob or combination, costs 4 teams x 2,000 paired runs (v4 side only;
+  the v2 side is played once per team and reused), about 8 to 10 minutes per team on the 16-worker pool, so about 35 to
+  40 minutes per candidate and 5 to 6 hours for five single knobs plus the combinations (clarification 2026-11-02); the B2 optimizations about 20 minutes (v2,
   already recorded in 014 but re-run on today's code for a fair wall time) and less for v4; the equal-levels replay
   about 22 minutes. The plan estimates the total and orders the runs so a failing knob is dropped early.
 - The feature-014 B2 final teams (`runs/014-evidence/b2-main/result.json`, `b2-branch/result.json`) exist locally
