@@ -285,17 +285,17 @@ validator's pass on the v4 result, both wall times.
   usage `equal_levels.py <v2_out_dir> <v4_out_dir> <runs> [--self]`, A = the v4 result team, B = the v2 result team, both
   at A's start levels, validated, played by `expectimax2-v2` (the reference player) on master `018-equal|B2`,
   `mcnemar_exact(A, B)`, mean final levels; `--self` plays B against itself (control)
-- [ ] T030 [US3] Background, alone: `uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget
+- [X] T030 [US3] Background, alone: `uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget
   quick --seed 014-b2 --player-policy expectimax2-v2 --out runs/018-evidence/b2-v2 > runs/018-evidence/b2-v2.log 2>&1`
   (about 15 min; `/usr/bin/time -v` or start/end times for the wall); record exit and wall; consistency check: the
   result team equals `runs/014-evidence/b2-branch/result.json`'s team (015-017 were exact) apart from provenance;
   if it differs, say so and investigate before going on
-- [ ] T031 [US3] Background, alone: the same with `--player-policy expectimax2-v4 --out runs/018-evidence/b2-v4`;
+- [X] T031 [US3] Background, alone: the same with `--player-policy expectimax2-v4 --out runs/018-evidence/b2-v4`;
   record exit and wall; write `result.json`'s `team` object to `runs/018-evidence/b2-v4/team.json` (the optimizer
   writes `team.txt`, `result.json`, `state.json`, `result.csv`, `result.xlsx` and no team JSON; the equal-levels
   script's `at_levels` helper does the same write per side) and `uv run platsim validate runs/018-evidence/b2-v4/team.json`
   exit 0; wall ratio in the log (SC-005)
-- [ ] T032 [US3] Background, alone: `uv run python specs/018-expectimax2-v4/scripts/equal_levels.py runs/018-evidence/b2-v2
+- [X] T032 [US3] Background, alone: `uv run python specs/018-expectimax2-v4/scripts/equal_levels.py runs/018-evidence/b2-v2
   runs/018-evidence/b2-v4 200 --self` (control, 0 discordant) then `… 2000` (about 15 min): verdict not `B`, mean final
   level of A not higher; record (`runs/018-evidence/equal-levels.txt`)
 

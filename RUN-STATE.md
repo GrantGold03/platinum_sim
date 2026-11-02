@@ -1,5 +1,16 @@
-# START HERE (updated 2026-11-02, 3:06 PM EST, feature 018 tasks written)
+# START HERE (updated 2026-11-02, 4:14 PM EST, feature 018 IN PROGRESS: the ladder is running)
 
+- **Feature 018 in progress (2026-11-02, 4:14 PM EST).** Branch `018-expectimax2-v4` in the main checkout. Commits so far:
+  `518fe1f` (US1: v4 with the per-version search budget, candidate names; v1/v2 byte-identical, Node 351/351),
+  `412783d` (US3 code half: `DEFAULT_PLAYER_POLICY` single source, `optimize --player-policy`, fast mode 535 passed).
+  **A ladder run may be in flight**: `runs/018-evidence/ladder.status` has the step timestamps and exit codes;
+  `runs/018-evidence/pairs/` holds the cached sides and `summary.json`; `pgrep -a -x node` shows the pool. Never start
+  another pool, bench or suite while it runs, and never edit `sim/` until the ladder is done (the pairs cache is keyed by
+  `sim_code_hash`). Remaining: T018-T023 (ladder: control, five single knobs, combinations; each row goes in
+  `specs/018-expectimax2-v4/validation-log.md`), T024-T028 (final `V4_OPTS`, fixture entry, strength tests, bench),
+  T029-T032 (B2 optimize with v2 and v4, equal levels), T033-T036 (gated default switch, docs, gates), T037 (full suite
+  on the user's go). The ladder script: `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py --a <candidate>
+  --b expectimax2-v2 --runs 2000 --workers 16` (v2 sides cached after the first run).
 - **Feature 018 `018-expectimax2-v4` specified 2026-11-02, 1:53 PM EST (`/speckit-specify`, user's go).** Branch from `main`
   7a88ae6, main checkout; `specs/018-expectimax2-v4/spec.md` + `checklists/requirements.md` (all items pass, 0
   clarification markers). Four stories: US1 the new policy by name (v1/v2 unchanged, determinism, own replay entry),

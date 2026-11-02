@@ -185,3 +185,42 @@ tail-bound, as in 015-017).
 ## T028 Gate and commit 4 (5:48:33 to 5:50:57 PM EST)
 
 Full Node suite: **351 pass, 0 fail, exit 0**, 143.7 s (`runs/018-evidence/node-suite-c4.log`).
+
+## Commit 4 (5:51 PM EST)
+
+`718002f feat(018): expectimax2-v4 final search budget; replay fixture entry; strength tests cover v4`, pushed.
+
+## T030-T031 B2 end to end (5:51:44 to 6:04:59 PM EST, alone)
+
+`uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 014-b2 --player-policy <p>
+--workers 16 --out runs/018-evidence/b2-<p>`, both exit 0 (`b2-expectimax2-v2.log`, `b2-expectimax2-v4.log`).
+
+| | expectimax2-v2 | expectimax2-v4 |
+|---|---|---|
+| wall | 407 s (6 min 47 s) | **350 s** (5 min 50 s), ratio 0.86 |
+| final team (species, start level, item) | garchomp 51 earth_plate, infernape 53 sitrus, staraptor 53 sitrus, rotom 53 expert_belt, floatzel 53 sitrus, weavile 54 sitrus | garchomp **54** earth_plate, infernape **52** sitrus, staraptor **54** sitrus, rotom **54** expert_belt, floatzel **54** sitrus, weavile **55** sitrus |
+| mean start level | 52.83 | 53.83 |
+| expected average final level (own levels, 500 confirm runs, quick) | 53.34 | 54.30 |
+| clear rate at own levels (500 runs) | 0.838 | 0.886 |
+| `result.json.player_policy` | expectimax2-v2 | expectimax2-v4 |
+
+Consistency check of 015-017 (exact speedups): the v2 re-run's team is **identical** to the 014 branch result's team
+(species, moves, items, levels); the 014 wall was 1198 s on the then-current code, 407 s today. `uv run platsim validate
+runs/018-evidence/b2-expectimax2-v4/team.json`: **legal (no violations)** (`validate-v4.txt`). Quick never qualifies
+(`qualified false` on both sides, by design).
+
+## T032 Equal-levels comparison (6:04:59 to 6:13:26 PM EST)
+
+Control (`equal_levels.py … 200 --self`): B against itself, 0 discordant pairs, OK. Comparison (`… 2000`): both final
+teams at A's (the v4 result's) start levels [54, 52, 54, 54, 54, 55], played by `expectimax2-v2`, master `018-equal|B2`:
+**A 0.8595 vs B 0.8595, only 0/0, p 1, indistinguishable; mean final level 54.2955 vs 54.2955** (`equal-levels.txt`,
+385 s). FR-007's letter is met (no drop, no higher mean final level).
+
+**Finding (Principle V, stated plainly).** The two optimizer results have the same species, moves and items and differ
+ONLY in start levels, so at equal levels they are the same team and the comparison cannot distinguish them (0 discordant
+pairs is the identity, not evidence of parity). The real end-to-end difference is in the objective itself: with v4 the
+optimizer settled one level higher on five of six members (+0.95 expected average final level on B2 at the quick
+budget). The mechanism is the ladder's consistent small deficit (0.3 to 1.05 points of clear rate, never statistically
+supported on 2,000 paired runs): the level search bisects on the clear-rate threshold, so a slightly weaker player
+crosses it one level later. Whether this is noise of the quick level search or v4's systematic cost cannot be decided
+from one seed; it is the question the user must weigh before the default switch (T033).
