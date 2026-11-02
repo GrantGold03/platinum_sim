@@ -557,14 +557,14 @@ uv run pytest -q --durations=25                            # full suite with the
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-11-01 (feature 016 merge gate, browser tests included):
-  `uv run pytest -q --durations=25` gave **556 passed, 4 xfailed in 3,924 s (1 h 05 min)**, 560 collected. The
-  same suite took 2 h 09 min on 2026-10-30 before feature 015 and 1 h 20 min after it: the three slowest tests
-  (`test_optimize_small.py` quick optimize 1,574 s, `test_policy_strength.py` paired benchmark 751 s,
-  `test_evaluate.py` V7 682 s) all run the sped-up battle player. Do not commit during a full run: each process
+- **Full pytest:** the last full run was on 2026-11-02 (feature 017 merge gate, browser tests included):
+  `uv run pytest -q --durations=25` gave **556 passed, 4 xfailed in 3,308 s (55 min)**, 560 collected. The
+  same suite took 2 h 09 min on 2026-10-30 before feature 015, 1 h 20 min after it and 1 h 05 min after 016: the
+  three slowest tests (`test_optimize_small.py` quick optimize 1,294 s, `test_policy_strength.py` paired benchmark
+  586 s, `test_evaluate.py` V7 562 s) all run the sped-up battle player. Do not commit during a full run: each process
   caches `repo_commit`, so a commit mid-run fails `test_web_process_determinism.py` (seen on 2026-10-26). The 4
-  xfails are strict, documented story-rank controls. See `specs/016-exact-damage-speedups/validation-log.md`
-  (T025) and `specs/012-fast-test-mode/validation-log.md`.
+  xfails are strict, documented story-rank controls. See `specs/017-exact-dispatch-speedups/validation-log.md`
+  (T033) and `specs/012-fast-test-mode/validation-log.md`.
 - **Merge rule:** the full pytest suite (`uv run pytest -q`) and the Node suite both pass before every merge.
   The fast mode and the battle set are for iterating only; neither is enough for a merge.
 - **Fast mode** (feature 012): `battle_sim` marks every test that starts the battle worker

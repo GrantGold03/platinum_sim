@@ -136,3 +136,12 @@ interpreter steps (143.0 M before). Combined with 015 and 016 on the same set: v
   (`node-suite.log`). Fast mode `uv run pytest -q -m "not battle_sim"` 11:41:10 to 11:51:11 AM EST: **528 passed,
   28 deselected, 4 xfailed, 1 warning, exit 0**, 598.78 s (`fast.log`; battle split clean: 0 worker starts).
 - Commit 5 below. T033 (full suite, about 1 h 05 min) waits for the user's hands-on testing and go.
+
+## T033 Merge gate (2026-11-02, user's go)
+
+`uv run pytest -q --durations=25 > runs/017-evidence/full.log 2>&1`, nothing else running, 16 workers:
+11:55:41 AM to 12:50:51 PM EST, **556 passed, 4 xfailed, 1 warning, exit 0** (3307.69 s = 0:55:07). `main` f6d845c on
+2026-11-01 (016 merge gate): 556 passed, 4 xfailed in 3924.22 s = 1:05:24, so **1.19x faster end to end**; before 015:
+2:09:20. Slowest three: `test_optimize_quick_deterministic_and_legal` 1293.54 s (1573.53 after 016);
+`test_expectimax2_beats_greedy_paired` 586.24 s (751.29); `test_v7_reference_team_2000_runs` 561.88 s (682.06).
+`runs/017-evidence/full.log`, `full.start`. Merged on the user's go (see RUN-STATE).

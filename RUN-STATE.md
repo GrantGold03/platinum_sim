@@ -1,7 +1,12 @@
-# START HERE (updated 2026-11-02, 11:38 AM EST, feature 017 implemented; user testing, full suite and merge open)
+# START HERE (updated 2026-11-02, 12:55 PM EST, feature 017 merged to main)
 
-- **Feature 017 `017-exact-dispatch-speedups` implemented 2026-11-02 (T001-T032 done; T033 full suite and the merge wait
-  for the user).** Branch from `main` f6d845c, main checkout, pushed; code commits `6ed38a3` (instrumentation:
+- **Feature 017 merged to `main` 2026-11-02 (user's go: "if there are no issues with the full suite, then merge"): fast-forward
+  f6d845c → the branch head, pushed; branch `017-exact-dispatch-speedups` kept (local + GitHub). T033 full suite
+  11:55:41 AM to 12:50:51 PM EST: 556 passed, 4 xfailed, exit 0, 55 min 07 s (1 h 05 min after 016, 1.19x). Nothing is
+  running. `data/generated/` needs no re-extract. Next feature, only when the user asks (user runs the `/speckit-*`
+  stages): FUTURE-FEATURES section 7, either the remaining exact items D-G (re-profile first) or 018 = `expectimax2-v4`
+  approximations; H4 held items after.**
+- **Feature 017 `017-exact-dispatch-speedups` implemented 2026-11-02 (T001-T033 done; merged, see above).** Branch from `main` f6d845c, main checkout, pushed; code commits `6ed38a3` (instrumentation:
   `INTERP_STATS`, bench `interp_steps`), `e10e818` (US1 dispatch tables + argument index + one interpreter loop),
   `ea727ec` (US2 policy damage inputs from the root adapter's memo, CHECK covers the structs), `3d3cb09` (US3 speed pair
   memo, `compareBattlerSpeedDirect` reference, `speedInfo` once per state), then the docs commit. Exact: replay test
