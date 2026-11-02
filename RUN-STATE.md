@@ -1,7 +1,7 @@
 # START HERE (updated 2026-11-02, 12:55 PM EST, feature 017 merged to main)
 
 - **Feature 017 merged to `main` 2026-11-02 (user's go: "if there are no issues with the full suite, then merge"): fast-forward
-  f6d845c → the branch head, pushed; branch `017-exact-dispatch-speedups` kept (local + GitHub). T033 full suite
+  f6d845c → `3b4b3b1`, pushed; branch `017-exact-dispatch-speedups` kept (local + GitHub). T033 full suite
   11:55:41 AM to 12:50:51 PM EST: 556 passed, 4 xfailed, exit 0, 55 min 07 s (1 h 05 min after 016, 1.19x). Nothing is
   running. `data/generated/` needs no re-extract. Next feature, only when the user asks (user runs the `/speckit-*`
   stages): FUTURE-FEATURES section 7, either the remaining exact items D-G (re-profile first) or 018 = `expectimax2-v4`
