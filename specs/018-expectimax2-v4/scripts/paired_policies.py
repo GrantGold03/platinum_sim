@@ -68,6 +68,9 @@ def load_team_requests(name: str, out: Path) -> list[dict]:
     if name == "ref":
         team, led = load_and_validate(REPO / "tests/fixtures/reference_team.json")
         return worker_team(team, led)
+    if name.startswith("file:"):  # any team JSON (TeamCandidate / {'builds': [...]}) at its own levels, e.g. an optimizer result's team.json
+        team, led = load_and_validate(Path(name[5:]))
+        return worker_team(team, led)
     if name in ("b2main", "b2branch"):
         res = json.loads((REPO / "runs/014-evidence" / f"b2-{name[2:]}" / "result.json").read_text())
         path = out / "teams" / f"{name}.json"  # beside the pairs cache, never /tmp
@@ -75,13 +78,13 @@ def load_team_requests(name: str, out: Path) -> list[dict]:
         path.write_text(json.dumps(res["team"]))
         team, led = load_and_validate(path)
         return worker_team(team, led)
-    raise SystemExit(f"unknown team {name} (known: {', '.join(TEAM_NAMES)})")
+    raise SystemExit(f"unknown team {name} (known: {', '.join(TEAM_NAMES)}, or file:<team.json>)")
 
 
 def run_side(pool, team: str, team_reqs: list[dict], policy: str, n: int, out: Path, log, suffix: str = "") -> dict:
     from platsim.sim.seeds import derive_seed
 
-    cache = out / f"{team}__{safe_name(policy)}__{n}{suffix}.json"
+    cache = out / f"{safe_name(team)}__{safe_name(policy)}__{n}{suffix}.json"
     if cache.exists():
         entry = json.loads(cache.read_text())
         if cache_valid(entry, pool.sim_code_hash, n):
