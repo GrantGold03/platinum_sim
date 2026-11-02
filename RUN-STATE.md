@@ -1,12 +1,17 @@
-# START HERE (updated 2026-11-02, 1:53 PM EST, feature 018 specified)
+# START HERE (updated 2026-11-02, 2:22 PM EST, feature 018 planned)
 
 - **Feature 018 `018-expectimax2-v4` specified 2026-11-02, 1:53 PM EST (`/speckit-specify`, user's go).** Branch from `main`
   7a88ae6, main checkout; `specs/018-expectimax2-v4/spec.md` + `checklists/requirements.md` (all items pass, 0
   clarification markers). Four stories: US1 the new policy by name (v1/v2 unchanged, determinism, own replay entry),
   US2 the reference-first ladder (each knob alone, then combinations; 2,000 paired runs vs v2 on four fixed teams,
   McNemar exact, pairing control), US3 the B2 optimizer end to end at equal levels (010 rule, wall ratio), US4 the
-  default-player switch only after US2 and US3 pass. Next: the user runs `/speckit-clarify` (optional) then
-  `/speckit-plan`. Nothing is running.
+  default-player switch only after US2 and US3 pass. `/speckit-clarify` (2 answers: full 2,000 x 4-team protocol for every
+  candidate; speed reported, not gated). `/speckit-plan` 2:22 PM EST: plan.md, research.md (R1-R9), data-model.md,
+  contracts/{policy-api,python-and-cli}.md, quickstart.md. Design: the four knobs as version options (`V4_OPTS`),
+  candidate names `expectimax2-v4?kRoot=..&kPly2=..&beam=..&floor=..` resolved by the gauntlet (seeded from the base
+  name), `scripts/paired_policies.py` for the ladder, `DEFAULT_PLAYER_POLICY` as the single Python default plus
+  `optimize --player-policy`; five commits; about 4-5 h of local pool time. Next: the user runs `/speckit-tasks`.
+  Nothing is running.
 - **User decision 2026-11-02 (1:50 PM EST): the next feature is 018 = `expectimax2-v4` (approximations), ahead of the exact
   items D, F, E, H.** Sizing runs done read-only (in-memory parameter patches, `runs/017-evidence/scratchpad/prof4/REPORT4.md`
   appendix, `v4_*.json`): K_PLY2 1 → 1.25x, beam 1 → 1.22x, K_ROOT 4 → 1.08x, floor 0.02 → 1.07x (0.05 → 1.20x),
