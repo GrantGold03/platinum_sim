@@ -1,12 +1,19 @@
-# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 specified)
+# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 planned)
 
 - **Feature 017 `017-exact-dispatch-speedups` specified 2026-11-02, 10:26 AM EST (`/speckit-specify`, user's go).** Branch from
   `main` f6d845c, main checkout; `specs/017-exact-dispatch-speedups/spec.md` + `checklists/requirements.md` (all items
   pass, 0 clarification markers). Three stories: US1 one-step effect dispatch in the trainer-AI interpreter (both loops,
   plain and tracing), US2 live-Pokemon conversions shared per player decision, US3 one speed pair per hypothetical state;
   US4 measurement. Acceptance = the unchanged 015 replay fixture (digests `db6d20cf…` / `1273b694…`, every choice and
-  draw count), SC-002 >= 1.15x single process vs the same-session `main` figure. Next: the user runs `/speckit-clarify`
-  (optional) then `/speckit-plan`. `data/generated/` needs no re-extract (no extractor change). Nothing is running.
+  draw count), SC-002 >= 1.15x single process vs the same-session `main` figure. `/speckit-clarify` 10:30 AM EST (2 answers:
+  the in-script speed comparison shares the per-state speed values; the bench tool reports interpreter steps).
+  `/speckit-plan` 10:43 AM EST: plan.md, research.md (R1-R7), data-model.md, contracts/{interp-api,adapter-api,policy-and-bench}.md,
+  quickstart.md. Design: parse-time dispatch tables on effect-check runs (split at entry points) + `ins.a`/`ins.jt`
+  argument index + one interpreter loop with an `onStep` hook; the policy's `damageTable` reads the root adapter's 015
+  memo and copies before `fix()`; one speed pair per adapter per decision (`ai.speedPair`, `compareBattlerSpeedDirect`
+  kept as reference) + `speedInfo` once per state via a thunk; `INTERP_STATS` reported by `bench.mjs`. Five commits
+  (instrumentation, US1, US2, US3, docs). Next: the user runs `/speckit-tasks`. `data/generated/` needs no re-extract
+  (no extractor change). Nothing is running.
 - **Resume checklist (2026-11-02, 10:18 AM EST; superseded by the 017 note above for the branch state).** Session goal: continue the expectimax2 speed work. `main` f67ff1e is checked out,
   in sync with `origin/main`; nothing is running; no feature branch yet. Health check on `main` this morning: Node suite
   334/334 (139 s), `node sim/bench.mjs --policy expectimax2-v2` digest `db6d20cf…`, 1.019 gauntlets/s, 12.4 ms/decision.
