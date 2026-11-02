@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-02, 2:22 PM EST, feature 018 planned)
+# START HERE (updated 2026-11-02, 3:06 PM EST, feature 018 tasks written)
 
 - **Feature 018 `018-expectimax2-v4` specified 2026-11-02, 1:53 PM EST (`/speckit-specify`, user's go).** Branch from `main`
   7a88ae6, main checkout; `specs/018-expectimax2-v4/spec.md` + `checklists/requirements.md` (all items pass, 0
@@ -10,8 +10,10 @@
   contracts/{policy-api,python-and-cli}.md, quickstart.md. Design: the four knobs as version options (`V4_OPTS`),
   candidate names `expectimax2-v4?kRoot=..&kPly2=..&beam=..&floor=..` resolved by the gauntlet (seeded from the base
   name), `scripts/paired_policies.py` for the ladder, `DEFAULT_PLAYER_POLICY` as the single Python default plus
-  `optimize --player-policy`; five commits; about 4-5 h of local pool time. Next: the user runs `/speckit-tasks`.
-  Nothing is running.
+  `optimize --player-policy`; five commits; about 4-5 h of local pool time. `/speckit-tasks` 3:06 PM EST: tasks.md, 37 tasks
+  (15 runs/gates/commits): T001-T003 setup + replay gate, T004-T010 US1 policy (commit 1), T011-T015 US3 plumbing (commit 2),
+  T016-T023 US2 ladder (commit 3, the long part), T024-T028 US1 final + fixture (commit 4), T029-T037 US3 runs, US4 gated
+  switch, docs, full suite. Next: the user runs `/speckit-analyze` (optional) then `/speckit-implement`. Nothing is running.
 - **User decision 2026-11-02 (1:50 PM EST): the next feature is 018 = `expectimax2-v4` (approximations), ahead of the exact
   items D, F, E, H.** Sizing runs done read-only (in-memory parameter patches, `runs/017-evidence/scratchpad/prof4/REPORT4.md`
   appendix, `v4_*.json`): K_PLY2 1 → 1.25x, beam 1 → 1.22x, K_ROOT 4 → 1.08x, floor 0.02 → 1.07x (0.05 → 1.20x),
