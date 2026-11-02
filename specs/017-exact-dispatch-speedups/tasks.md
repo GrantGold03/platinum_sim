@@ -174,7 +174,7 @@ below 20 M.
   expectimax2-v2 --json > runs/017-evidence/c2_v2.json` → `digest_full` `db6d20cf…`, `ai_draws` equal to T002,
   `interp_steps` < 20,000,000 (record the exact value; SC-004), `interp_dispatches` > 0; record `gauntlets_per_s`,
   `ms_per_decision` under "US1 attribution" with the equivalence diagnostic (comparisons, 0 mismatches)
-- [ ] T014 [US1] Commit 2 by path (`sim/ai/parse.mjs sim/ai/interp.mjs sim/ai/choose.mjs sim/ai/OPCODES.md
+- [X] T014 [US1] Commit 2 by path (`sim/ai/parse.mjs sim/ai/interp.mjs sim/ai/choose.mjs sim/ai/OPCODES.md
   sim/test/ai_interp.test.mjs sim/test/ai_golden.test.mjs sim/test/bench.test.mjs specs/017-exact-dispatch-speedups/validation-log.md`),
   message `perf(017): dispatch tables for effect-check runs, argument index, one interpreter loop (exact; exhaustive equivalence; replay digest unchanged)`,
   push; record the hash
@@ -240,7 +240,7 @@ full-set CHECK run matches both digests.
   record wall and `checks`: the recorded full-set control, SC-005); then `node sim/bench.mjs --policy expectimax2-v2
   --json > runs/017-evidence/c3_v2.json` (no CHECK) → digest and `ai_draws` unchanged; record `gauntlets_per_s`,
   `ms_per_decision` under "US2 attribution"
-- [ ] T020 [US2] Commit 3 by path (`sim/ai/adapter.mjs sim/ai/INTERFACE.md sim/policy/expectimax2.mjs
+- [X] T020 [US2] Commit 3 by path (`sim/ai/adapter.mjs sim/ai/INTERFACE.md sim/policy/expectimax2.mjs
   sim/test/expectimax2.test.mjs sim/test/ai_adapter.test.mjs specs/017-exact-dispatch-speedups/validation-log.md`),
   message `perf(017): the policy's damage inputs come from the root adapter's per-decision memo (exact; CHECK covers the structs; replay digest unchanged)`,
   push; record the hash
@@ -316,7 +316,7 @@ decision is at most the ply-2 node count plus the root actions.
   exit 0; alone `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c4_v2.json` → digest and
   `ai_draws` unchanged; record `gauntlets_per_s`, `ms_per_decision` under "US3 attribution" with the speed-pair
   coverage diagnostic
-- [ ] T028 [US3] Commit 4 by path (`sim/ai/adapter.mjs sim/ai/cmds/battler.mjs sim/ai/INTERFACE.md sim/policy/expectimax2.mjs
+- [X] T028 [US3] Commit 4 by path (`sim/ai/adapter.mjs sim/ai/cmds/battler.mjs sim/ai/INTERFACE.md sim/policy/expectimax2.mjs
   sim/test/ai_cmds_battler.test.mjs sim/test/ai_adapter.test.mjs sim/test/expectimax2.test.mjs specs/017-exact-dispatch-speedups/validation-log.md`),
   message `perf(017): one speed pair per view, speedInfo once per state (exact; equivalence vs the kept reference; replay digest unchanged)`,
   push; record the hash
