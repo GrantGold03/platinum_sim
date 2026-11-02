@@ -196,7 +196,7 @@ full-set CHECK run matches both digests.
 
 ### Tests for User Story 2 (write first; fail on the missing counters / the policy still calling `fromShowdown` before T017)
 
-- [ ] T015 [P] [US2] Add to `sim/test/expectimax2.test.mjs` ("017 damage inputs from the root adapter's memo"): build
+- [X] T015 [P] [US2] Add to `sim/test/expectimax2.test.mjs` ("017 damage inputs from the root adapter's memo"): build
   the file's existing League battle fixture at a mid-battle position (reuse the helper the file already has for
   `scoreActions`), call `scoreActions(ctx, V2_OPTS, 'expectimax2-v2')` once and read `X.rootView.ai.cacheStats` before
   and after: `builds` delta <= number of Pokemon with `hp > 0` on both sides, `fieldBuilds` delta <= 2, `hits` delta >
@@ -206,7 +206,7 @@ full-set CHECK run matches both digests.
   not name `fromShowdown` (regex on that one `import { … } from '../damage.mjs'` statement, so comments elsewhere in the
   file cannot trip it); and the memo served every table entry: `hits` delta >= `X.dmg.size` (each table miss asks for an
   attacker and a defender struct, both cache hits after the first use)
-- [ ] T016 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("017 CHECK covers battler and field structs", child
+- [X] T016 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("017 CHECK covers battler and field structs", child
   processes via `spawnSync` as the 016 CHECK test does): (a) extend the existing clean child (one Aaron battle per
   policy) to print the aggregate `structChecks` summed over adapters (or add `CHECK_STATS.structChecks` and print it)
   and assert > 0; (b) new child with `PLATSIM_AI_CHECK: '1'` and no FREEZE: build an adapter on a small battle, `const di
@@ -218,7 +218,7 @@ full-set CHECK run matches both digests.
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] In `sim/ai/adapter.mjs`: `cacheStats` gains `fieldBuilds, structChecks, speedPairs, speedPairHits`
+- [X] T017 [US2] In `sim/ai/adapter.mjs`: `cacheStats` gains `fieldBuilds, structChecks, speedPairs, speedPairHits`
   (the last two filled in US3; declared now so the shape is stable); in `battler(p)` on a hit under `CHECK`:
   `checkSame('battler', \`${p.species.id}#${p.side.id}${p.position}\`, b, battlerFromShowdown(p))` and
   `cacheStats.structChecks++`; in `fieldFor(defenderPoke)` on a hit under `CHECK`: rebuild the field object into a local
@@ -227,13 +227,13 @@ full-set CHECK run matches both digests.
   table now reads `damageInput` and copies; CHECK covers the structs). `sim/ai/INTERFACE.md`: in the 015 "Decision
   cache" bullet replace "(the policy's own damage table, which mutates its inputs, uses `fromShowdown`)" with "(the
   policy's own damage table copies the structs before its per-state adjustments, feature 017)"; add the counters
-- [ ] T018 [US2] In `sim/policy/expectimax2.mjs` `damageTable`: replace `const base = fromShowdown(X.battle, u.ref, t.ref,
+- [X] T018 [US2] In `sim/policy/expectimax2.mjs` `damageTable`: replace `const base = fromShowdown(X.battle, u.ref, t.ref,
   num, { power, type, powerMul: 10 });` with `const di = X.rootView.ai.damageInput(u.ref, t.ref, num, { power, type,
   powerMul: 10 }); const base = { attacker: { ...di.attacker }, defender: { ...di.defender }, move: di.move, field: {
   ...di.field }, crit: false };` (comment: the structs are shared and read-only, 015 contract; `fix()` writes to the
   copies; `stages` and `types` are replaced, never mutated); remove `fromShowdown` from the import; the header's
   "Decision context" comment gains one line. No other change in the function
-- [ ] T019 [US2] Gate (quickstart step 3): `(cd sim && node --test test/expectimax2.test.mjs test/ai_adapter.test.mjs
+- [X] T019 [US2] Gate (quickstart step 3): `(cd sim && node --test test/expectimax2.test.mjs test/ai_adapter.test.mjs
   test/replay.test.mjs test/ai_golden.test.mjs)` exit 0; freeze run exit 0; full Node suite exit 0; alone on the
   machine `PLATSIM_AI_CHECK=1 node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/check_v2.json` and
   `-v1 … check_v1.json`: exit 0, `check_stats.mismatches` 0, digests `db6d20cf…` / `1273b694…` (about 2 min each;

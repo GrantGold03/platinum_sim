@@ -61,3 +61,18 @@ half inside it 1.0406 gauntlets/s. Switched back to `017-exact-dispatch-speedups
   digest `db6d20cf…`, `ai_draws` 849,962 (= T002), **`interp_steps` 15,893,649** (< 20 M, SC-004; 142,966,719 before,
   9.0x fewer), `interp_dispatches` 1,204,945, **1.1080 gauntlets/s, 11.303 ms/decision** (US1 attribution: 1.093x vs
   T002 1.0140, 1.076x vs the instrumentation commit's 1.0301 taken 7 minutes earlier).
+
+## T015-T019 US2: policy damage inputs from the root adapter's memo (11:10 to 11:23:02 AM EST)
+
+- Tests first: the new `expectimax2.test.mjs` test (builds per decision, `fromShowdown` import) and the new
+  `ai_adapter.test.mjs` CHECK test (corrupted battler struct, changed side) failed before T017/T018 (3 failures incl.
+  the extended 016 CHECK test's `structChecks > 0`); after, `expectimax2 + ai_adapter + replay + ai_golden`: 39 pass.
+- Gates: `PLATSIM_AI_FREEZE=1` run **171 pass, 0 fail, exit 0** (`t019-freeze.log`: the copies absorb `fix()`); full Node
+  suite **344 pass, 0 fail, exit 0**, 123.2 s (`node-suite-c3.log`).
+- Full-set control runs, alone (SC-005): `PLATSIM_AI_CHECK=1 node sim/bench.mjs --policy expectimax2-v2 --json`
+  (11:15:10 to 11:18:11 AM EST): exit 0, **35,247,740 checks, 0 mismatches**, digest `db6d20cf…`, `ai_draws` 849,962,
+  181.4 s wall (`check_v2.json`); `-v1` (11:18:11 to 11:22:29): exit 0, **50,183,315 checks, 0 mismatches**, digest
+  `1273b694…`, `ai_draws` 1,206,240, 256.1 s (`check_v1.json`).
+- Alone (11:22:29 to 11:23:02 AM EST): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c3_v2.json`:
+  digest `db6d20cf…`, `ai_draws` 849,962, `interp_steps` 15,893,649 (unchanged), **1.2044 gauntlets/s, 10.242 ms/decision**
+  (US2 attribution: 1.087x vs commit 2's 1.1080; cumulative 1.188x vs T002's 1.0140).

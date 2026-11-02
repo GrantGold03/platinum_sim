@@ -330,6 +330,7 @@ test('016 CHECK mode: one Aaron battle per policy compares every memo hit (check
   const stats = JSON.parse(on.stdout.trim().split('\n').pop());
   assert.ok(stats.checks > 0, `checks ${stats.checks}`);
   assert.equal(stats.mismatches, 0);
+  assert.ok(stats.structChecks > 0, `017: battler/field struct hits compared: ${stats.structChecks}`);
   const corrupt = `
     import { Battle } from ${url('../showdown.mjs')};
     import { createAdapter } from ${url('../ai/adapter.mjs')};
@@ -413,4 +414,38 @@ test('016 shared mappers: shared == fresh over every engine identifier the decom
   }
   // positive control: the lookups above went through the shared set's own Maps
   assert.ok(a.mappers.caches.move.size > 300 && a.mappers.caches.type.size === TYPES.length, `shared caches: ${a.mappers.caches.move.size} moves, ${a.mappers.caches.type.size} types`);
+});
+
+// Feature 017 (FR-006; contracts/adapter-api.md): the control mode also recomputes every battler-struct and
+// field-struct hit of the 015 memo.
+test('017 CHECK covers the battler and field structs: a corrupted struct or a changed side is reported; off by default', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const url = (p) => JSON.stringify(new URL(p, import.meta.url).href);
+  const run = (script, env) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, ...env }, encoding: 'utf8', timeout: 300000 });
+  const base = `
+    import { Battle } from ${url('../showdown.mjs')};
+    import { createAdapter } from ${url('../ai/adapter.mjs')};
+    const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 }, evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    const mon = (species, moves, extra = {}) => ({ species, moves, level: 50, nature: 'Serious', ivs, evs, item: '', ...extra });
+    const battle = new Battle({ formatid: 'gen4customgame', seed: [1, 2, 3, 4],
+      p1: { name: 'P', team: [mon('garchomp', ['earthquake'], { ability: 'Sand Veil' })] },
+      p2: { name: 'AI', team: [mon('blissey', ['toxic'], { ability: 'Natural Cure' })] } });
+    const ai = createAdapter(battle);
+    const [a, d] = [battle.p1.active[0], battle.p2.active[0]];
+    const o = { power: 100, type: 'TYPE_GROUND', powerMul: 10 };
+    const di = ai.damageInput(a, d, 'earthquake', o);
+  `;
+  const battlerCorrupt = base + `di.attacker.hp = di.attacker.hp + 1; ai.damageInput(a, d, 'earthquake', o); console.log('no throw');`;
+  const fieldCorrupt = base + `battle.p2.sideConditions.luckychant = { id: 'luckychant', duration: 5 }; ai.damageInput(a, d, 'earthquake', o); console.log('no throw');`;
+  const b = run(battlerCorrupt, { PLATSIM_AI_CHECK: '1', PLATSIM_AI_FREEZE: '' });
+  assert.notEqual(b.status, 0, 'the corrupted battler struct must be reported');
+  assert.match(b.stderr, /CHECK mismatch battler/);
+  const f = run(fieldCorrupt, { PLATSIM_AI_CHECK: '1', PLATSIM_AI_FREEZE: '' });
+  assert.notEqual(f.status, 0, 'the changed side must be reported');
+  assert.match(f.stderr, /CHECK mismatch field/);
+  for (const script of [battlerCorrupt, fieldCorrupt]) {
+    const off = run(script, { PLATSIM_AI_CHECK: '', PLATSIM_AI_FREEZE: '' });
+    assert.equal(off.status, 0, off.stderr);
+    assert.equal(off.stdout.trim(), 'no throw');
+  }
 });

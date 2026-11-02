@@ -110,3 +110,28 @@ test('v2 options: koStop and the fitted leaf weights; v1 options are the recorde
   assert.equal(PARAMS.W_ALIVE, 1.0); // v1's weight, used when an option is absent
   assert.equal(PARAMS.W_FR, 0.45);
 });
+
+// Feature 017 (FR-006, FR-007; contracts/policy-and-bench.md): the policy's damage tables read the root adapter's
+// per-decision memo (015 damageInput) and copy the structs before fix(); fromShowdown is no longer imported.
+test('017 damage inputs from the root adapter\'s memo: at most one conversion per live Pokemon and one field per side per decision; dropped between decisions; fromShowdown not imported', () => {
+  const ctx = spiritombPosition();
+  const r1 = scoreActions(ctx, V2_OPTS, 'expectimax2-v2');
+  const ai = r1.X.rootView.ai;
+  const cs1 = { ...ai.cacheStats };
+  const alive = ctx.battle.sides.flatMap((s) => s.pokemon).filter((p) => p.hp > 0).length;
+  assert.equal(cs1.decisions, 1, 'a fresh mirror adapter: this decision is its first');
+  assert.ok(cs1.builds >= 2 && cs1.builds <= alive, `battler builds ${cs1.builds} (alive ${alive})`);
+  assert.ok(cs1.fieldBuilds >= 1 && cs1.fieldBuilds <= 2, `field builds ${cs1.fieldBuilds}`);
+  assert.ok(cs1.hits > cs1.builds, `hits ${cs1.hits} > builds ${cs1.builds}`);
+  assert.ok(r1.X.dmg.size > 20, `${r1.X.dmg.size} damage-table entries`);
+  assert.ok(cs1.hits >= r1.X.dmg.size, `hits ${cs1.hits} >= table entries ${r1.X.dmg.size}: the memo served every entry`);
+  const r2 = scoreActions(ctx, V2_OPTS, 'expectimax2-v2');
+  assert.equal(r2.X.rootView.ai, ai, 'the per-battle mirror adapter is reused');
+  const cs2 = ai.cacheStats;
+  assert.equal(cs2.decisions, 2);
+  assert.ok(cs2.builds - cs1.builds >= 2, 'the conversions were dropped at the decision boundary and rebuilt');
+  const src = readFileSync(new URL('../policy/expectimax2.mjs', import.meta.url), 'utf8');
+  const imp = src.match(/^import \{([^}]*)\} from '\.\.\/damage\.mjs';$/m);
+  assert.ok(imp, 'the policy imports from ../damage.mjs');
+  assert.ok(!/\bfromShowdown\b/.test(imp[1]), `fromShowdown still imported: ${imp[0]}`);
+});

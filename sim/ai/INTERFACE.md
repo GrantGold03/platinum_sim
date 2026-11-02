@@ -66,7 +66,8 @@ Handlers may add helpers to `ctx` only through `makeCtx({extra})` (as `choose.mj
   `damage.mjs` `fromShowdown(battle, …)` (`{ attacker, defender, move, field, crit: false }`), with the battler
   structs cached per Pokemon object and the field struct per defender side for the current decision. Used by
   `calcdamage.mjs` `portInput` and the post-KO switch scorer in `switch.mjs`. The structs are **shared and
-  read-only**: never write to them (the policy's own damage table, which mutates its inputs, uses `fromShowdown`).
+  read-only**: never write to them (the policy's own damage table copies them before its per-state adjustments,
+  feature 017).
 - **`ai.beginDecision()`** drops the cache. Called at the start of `opponent.mjs` `decide()` and in
   `policy/expectimax2.mjs` `makeContext()` (the root view's adapter is the per-battle mirror's). Shadow-view
   adapters are built per state and need no call.
@@ -92,3 +93,18 @@ Handlers may add helpers to `ctx` only through `makeCtx({extra})` (as `choose.mj
   `{ checks, mismatches }` aggregates across adapters, and `node sim/bench.mjs` reports it as `check_stats` when the
   variable is set. The default Node suite runs one battle per policy with it on; the full fixed set under it is
   recorded before a merge (016 validation log).
+
+## Decision memos, round three (feature 017, `specs/017-exact-dispatch-speedups/contracts/adapter-api.md`)
+
+- The player policy's damage table (`policy/expectimax2.mjs` `damageTable`) reads **`ai.damageInput()`** of its root
+  view (the per-battle mirror adapter, whose `beginDecision()` runs at `makeContext()`) and shallow-copies the
+  attacker, defender and field structs before `fix()`; the 015 structs stay shared and read-only.
+- **`PLATSIM_AI_CHECK=1`** now also recomputes every battler-struct and field-struct hit (`adapter: CHECK mismatch
+  battler <species#side+position>` / `… field <side>`), counted in `cacheStats.structChecks` and
+  `CHECK_STATS.structChecks`. `cacheStats` gains `fieldBuilds, structChecks, speedPairs, speedPairHits`.
+- **`ai.speedPair(build)`**: one memo slot per decision for the two battlers' speed facts (`cmds/battler.mjs`
+  `compareBattlerSpeed`; the comparison and its tie-break draws stay per call); dropped by `beginDecision()`, frozen
+  under `PLATSIM_AI_FREEZE=1`, recomputed and compared under `PLATSIM_AI_CHECK=1`.
+- Interpreter: `interp.mjs` `runSection(ctx, start, { maxSteps, onStep })` is the only loop; runs of
+  `IfCurrentMoveEffectEqualTo` are answered by a parse-time table (`parse.mjs` `indexInstructions`); `ctx.arg` /
+  `ctx.target` read `ins.a` / `ins.jt`; `INTERP_STATS { steps, dispatches }` is reported by `sim/bench.mjs`.

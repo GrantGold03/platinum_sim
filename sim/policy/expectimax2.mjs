@@ -149,7 +149,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { calcDamage, critChance, fromShowdown, DECOMP, ENUMS } from '../damage.mjs';
+import { calcDamage, critChance, DECOMP, ENUMS } from '../damage.mjs';
 import { createAdapter } from '../ai/adapter.mjs';
 import { AIRng, checkInvalidMoves, speedValuesNow, trainerAIMain } from '../ai/choose.mjs';
 import { createAIState, processLog, stateFor } from '../ai/opponent.mjs';
@@ -489,7 +489,11 @@ function damageTable(X, S, u, t, rec) {
     if (power === undefined || power <= 0) { X.dmg.set(key, null); return null; }
     if (e === 'RANDOM_POWER_BASED_ON_IVS') type = hiddenPowerType(u.ref);
   }
-  const base = fromShowdown(X.battle, u.ref, t.ref, num, { power, type, powerMul: 10 });
+  // 017: the live-Pokemon conversions come from the root adapter's per-decision memo (015 damageInput, identical to
+  // fromShowdown for the current live state; dropped by beginDecision() in makeContext). The structs are shared and
+  // read-only, so fix() below works on shallow copies; `stages` and `types` are replaced, never mutated.
+  const di = X.rootView.ai.damageInput(u.ref, t.ref, num, { power, type, powerMul: 10 });
+  const base = { attacker: { ...di.attacker }, defender: { ...di.defender }, move: di.move, field: { ...di.field }, crit: false };
   const fix = (bt, m, info) => {
     bt.stages = { atk: m.boosts.atk, def: m.boosts.def, spa: m.boosts.spa, spd: m.boosts.spd };
     bt.hp = m.hp;

@@ -27,6 +27,13 @@
 // the "base damage"). The K samples on one state share them; the samples' own rolls are applied by the caller.
 // PLATSIM_AI_CHECK=1 recomputes every memo hit and throws on a difference (control mode, see CHECK_STATS).
 //
+// Feature 017 (specs/017-exact-dispatch-speedups/contracts/adapter-api.md): the player policy's own damage table now
+// reads `damageInput()` too (the per-battle mirror adapter is the policy's root view) and copies the structs before
+// its per-state adjustments, so the live conversions happen once per Pokemon per decision for both users. The
+// control mode therefore also recomputes every battler-struct and field-struct hit (`cacheStats.structChecks`,
+// `CHECK_STATS.structChecks`). `speedPair()` memoises the two battlers' speed facts for the decision
+// (cmds/battler.mjs compareBattlerSpeed); same lifecycle, freeze guard and control mode.
+//
 // Battler ids follow the game: battler & 1 is the side (BattleSystem_GetBattlerSide,
 // battle_system.c:360-363). BATTLER_PLAYER_1 = 0, BATTLER_ENEMY_1 = 1, BATTLER_PLAYER_2 = 2
 // (constants/battle.h:95-97). In singles only 0 and 1 exist; 2 and 3 return an empty BattleMon
@@ -46,7 +53,7 @@ const FREEZE = process.env.PLATSIM_AI_FREEZE === '1';
 // Feature 016 control mode: every memo hit in typeChartPlan() / preVariance() is recomputed and compared; a
 // difference throws. CHECK_STATS aggregates the comparisons across all adapters in the process (tests read it).
 const CHECK = process.env.PLATSIM_AI_CHECK === '1';
-export const CHECK_STATS = { checks: 0, mismatches: 0 };
+export const CHECK_STATS = { checks: 0, mismatches: 0, structChecks: 0 }; // structChecks: 017 battler/field comparisons
 function deepFreeze(o) {
   if (o && typeof o === 'object' && !Object.isFrozen(o)) {
     Object.freeze(o);
@@ -238,7 +245,8 @@ export function createAdapter(battle, opts = {}) {
   const fields = new Map(); // defender Side -> field members that do not depend on the pair
   const plans = new Map(); // 016: attacker struct -> defender struct -> key -> type-chart plan
   const pre = new Map(); // 016: attacker struct -> defender struct -> key -> { damage, moveStatusMask }
-  const cacheStats = { builds: 0, hits: 0, decisions: 0, plans: 0, planHits: 0, preVariance: 0, preVarianceHits: 0, checks: 0 };
+  const cacheStats = { builds: 0, hits: 0, decisions: 0, plans: 0, planHits: 0, preVariance: 0, preVarianceHits: 0, checks: 0,
+    fieldBuilds: 0, structChecks: 0, speedPairs: 0, speedPairHits: 0 }; // 017: the last four
 
   const api = {
     battle,
@@ -623,7 +631,11 @@ export function createAdapter(battle, opts = {}) {
   // defender side until beginDecision(). Reads only battle state, like fromShowdown.
   function battler(p) {
     let b = battlers.get(p);
-    if (b) { cacheStats.hits++; return b; }
+    if (b) {
+      cacheStats.hits++;
+      if (CHECK) { cacheStats.structChecks++; CHECK_STATS.structChecks++; checkSame('battler', `${p.species.id}#${p.side.id}${p.position}`, b, battlerFromShowdown(p)); }
+      return b;
+    }
     b = battlerFromShowdown(p);
     if (FREEZE) deepFreeze(b);
     battlers.set(p, b);
@@ -631,13 +643,11 @@ export function createAdapter(battle, opts = {}) {
     return b;
   }
   const abilityOf = (b) => (b.abilitySuppressed ? 'ABILITY_NONE' : b.ability);
-  function fieldFor(defenderPoke) {
-    let f = fields.get(defenderPoke.side);
-    if (f) return f;
+  function buildField(defenderPoke) {
     const active = battle.getAllActive();
     const ds = defenderPoke.side.sideConditions;
     const anyVol = (id) => active.some((p) => p.volatiles[id]) || !!battle.field.pseudoWeather[id];
-    f = {
+    return {
       weather: WEATHER[battle.field.weather] ?? '',
       abilitiesOnField: active.filter((p) => p.hp > 0).map((p) => abilityOf(battler(p))),
       defenderSide: { reflect: !!ds.reflect, lightScreen: !!ds.lightscreen, luckyChant: !!ds.luckychant },
@@ -645,8 +655,17 @@ export function createAdapter(battle, opts = {}) {
       mudSport: anyVol('mudsport'),
       waterSport: anyVol('watersport'),
     };
+  }
+  function fieldFor(defenderPoke) {
+    let f = fields.get(defenderPoke.side);
+    if (f) {
+      if (CHECK) { cacheStats.structChecks++; CHECK_STATS.structChecks++; checkSame('field', defenderPoke.side.id, f, buildField(defenderPoke)); }
+      return f;
+    }
+    f = buildField(defenderPoke);
     if (FREEZE) deepFreeze(f);
     fields.set(defenderPoke.side, f);
+    cacheStats.fieldBuilds++;
     return f;
   }
   function damageInput(attackerPoke, defenderPoke, moveIdOrNum, { power, type, powerMul } = {}) {
