@@ -146,7 +146,7 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
 | `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
-| `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture) | `--policy` (default `expectimax2-v2`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
+| `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture; since feature 017 the single-process half also reports the trainer-AI interpreter step count) | `--policy` (default `expectimax2-v2`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
 - **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
@@ -433,6 +433,24 @@ shared id mappers) are checked by a randomized equivalence test and the replay t
 AI recompute every memoised value and fail on a difference (`sim/ai/INTERFACE.md`). Details:
 `specs/016-exact-damage-speedups/validation-log.md`.
 
+Feature 017 (2026-11-02, same fixed set and tool, decisions byte-identical; `main` re-measured in the same session):
+
+| Setup | `main` f6d845c (after 016) | after 017 | ratio |
+|---|---|---|---|
+| `expectimax2-v2`, single process | 1.014 gauntlets/s, 12.4 ms/decision | 1.244 gauntlets/s, 9.8 ms/decision | 1.23x |
+| `expectimax2-v2`, 16 workers (40 jobs, tail-bound) | 4.07 gauntlets/s (9.8 s) | 4.55 gauntlets/s (8.8 s) | 1.12x |
+| `expectimax2-v1`, single process | 0.700 gauntlets/s | 0.856 gauntlets/s | 1.22x |
+| Trainer-AI script instructions per run (v2) | 143.0 M | 15.9 M | 9.0x fewer |
+
+Feature 017 changed `sim/` again (`sim_code_hash`), with the same consequence for earlier checkpoints. Its three
+changes (runs of consecutive effect checks in the trainer-AI script answered by a parse-time table, the player's
+damage inputs taken from the trainer AI's per-decision memo instead of rebuilt from the live battle, one speed
+comparison per hypothetical state shared by the player and the trainer AI) are checked by an exhaustive dispatch
+equivalence test (every table x every effect value), a speed-pair equivalence test over 1,000 real views against the
+kept reference, the replay test, and `PLATSIM_AI_CHECK=1`, which now also recomputes the shared battler and field
+structs and the speed pair. `node sim/bench.mjs` and `platsim bench` report the interpreter step count
+(`interp_steps`, `interp_dispatches`). Details: `specs/017-exact-dispatch-speedups/validation-log.md`.
+
 Measured run times:
 
 | Run | Wall time |
@@ -560,12 +578,13 @@ gauntlets) and two `quick` optimizes.
   (26 before features 015 and 016 added the bench tests).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on 2026-11-01 it gave **334 pass, 0 fail, exit 0 in about 2 min 15 s** (314 before features
-  015 and 016; the replay test alone takes 30-45 s on 16 worker threads). Known flake, not a regression:
+- **Node suite:** on 2026-11-02 it gave **347 pass, 0 fail, exit 0 in about 2 min** (334 before feature 017, 314
+  before features 015 and 016; the replay test alone takes 25-45 s on 16 worker threads). Known flake, not a regression:
   `sim/test/seeds.test.mjs` compares two raw battle logs including their `|t:|` timestamp lines and fails when
   the two battles straddle a second boundary (seen once on 2026-10-31; a rerun passes). With
   `PLATSIM_AI_FREEZE=1` the cached AI structs are frozen and `PLATSIM_AI_CHECK=1` recomputes every memoised AI
-  value (`sim/ai/INTERFACE.md`); both runs are recorded in the 015/016 validation logs.
+  value, including (since 017) the shared battler and field structs and the speed pair (`sim/ai/INTERFACE.md`); both
+  runs are recorded in the 015/016/017 validation logs.
 
 These environment variables shrink or redirect the long tests:
 

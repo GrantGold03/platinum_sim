@@ -159,21 +159,25 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
   `replayTypeChart`, reference kept as `applyTypeChartDirect`); the AI's pre-variance damage recomputed per sample
   → memoised per decision in the adapter (`ai.preVariance`, with the `PLATSIM_AI_CHECK=1` control mode); the id
   mappers rebuilt cold per shadow adapter (3.8%) → one shared set per dex. Attribution 1.08x / 1.31x / 1.44x.
-- **Exact, next in line (measured 2026-11-02 on `main` f67ff1e, `runs/016-evidence/scratchpad/prof3/REPORT3.md`;
-  shares of sampled time, block a).** (A) The trainer-AI interpreter executes 143 M instructions per bench run, 128 M
-  of them `IfCurrentMoveEffectEqualTo` in two contiguous runs of 178 and 152 instructions in script.s (no jump lands
-  inside a run): fuse each run into one table lookup at parse time and pre-resolve `ctx.arg`'s linear find
-  (interpreter+cmds 10.7%, est. 6-9%). (B) `damageTable` rebuilds the damage inputs with `fromShowdown` on the live
-  battle per miss (141 k calls, 677 k `battlerFromShowdown` builds, live `getTypes` events 4.6%): memoise per live mon
-  per decision, as the 016 adapter memo already does for the AI (5.8%, est. 5%). (C) `speedValuesNow` runs once per AI
-  sample and `speedInfo` once per `resolveTurn` (247 k calls, 79% view hits that still pay a signature string) while
-  both depend only on the view: one speed pair per view, `speedInfo` hoisted to one call per state (7.2% + 2.4%, est.
-  4-5%). (D) `Constants.get` 6.3% self over ~320 sites (see "mechanical"). (E) `damageOutcomes` memo on (table entry,
-  t.hp, t.maxhp, effect): 66% repeats of 2.8% self. (F) skip the merge signature when `resolveTurn` returns one branch
-  (21% of calls, 0.5%). Killed by this profile: a per-decision `matchupScore` memo (0 repeated keys in 12,269 calls);
-  `matchupScore` is 4.9% and its cost is mostly damage-table misses (55% of all misses), which (B) covers. Not
-  actionable: the real battle's Showdown engine 9.4% (no Showdown changes), gc 4.4%. Specify draft:
-  `runs/016-evidence/scratchpad/prof3/specify_017.txt` (US1 = A, US2 = B, US3 = C; D-F next).
+- **Done in feature 017 (2026-11-02, exact, 1.23x single process on top of 016; `specs/017-exact-dispatch-speedups/`).**
+  From the post-016 re-profile (`runs/016-evidence/scratchpad/prof3/REPORT3.md`): (A) the trainer-AI interpreter
+  executed 143 M instructions per bench run, 128 M of them `IfCurrentMoveEffectEqualTo` in two contiguous runs of 178
+  and 152 checks → each run is answered by one parse-time table (`parse.mjs` `indexInstructions`, split at entry
+  points; `ins.a` / `ins.jt` argument index; one interpreter loop with an `onStep` hook): 15.9 M steps after, 9.0x
+  fewer, attribution 1.076x; (B) the policy's `damageTable` rebuilt its inputs from the live battle per miss (677 k
+  conversions) → it reads the root adapter's 015 memo and copies before `fix()`, with `PLATSIM_AI_CHECK=1` now
+  covering the structs: 1.087x; (C) `speedValuesNow` per sample and `speedInfo` per `resolveTurn` → one speed pair per
+  adapter per decision (`ai.speedPair`, reference kept as `compareBattlerSpeedDirect`) and `speedInfo` once per state
+  (247 k → 60 k calls): 1.037x. v2 1.014 → 1.244 gauntlets/s, v1 1.22x, pool 1.12x; `node sim/bench.mjs` reports
+  `interp_steps`.
+- **Exact, next in line (post-017 shares unmeasured; re-profile first).** From the same 2026-11-02 profile: (D)
+  `Constants.get` 6.3% self over ~320 sites (see "mechanical"); (E) a `damageOutcomes` memo on (table entry, t.hp,
+  t.maxhp, effect): 66% of 620 k calls repeat within a decision (2.8% self); (F) skip the merge signature when
+  `resolveTurn` returns one branch (21% of 300 k calls, about 0.5%); (G) generalised compare-and-jump runs
+  (`IfLoadedEqualTo`, 4.3 M steps = 3% of the old count; the compared register can change between loads, so it needs
+  a side-effect check for about 0.3% of time). Killed by the 2026-11-02 profile: a per-decision `matchupScore` memo
+  (0 repeated keys in 12,269 calls; its cost was damage-table misses, which (B) covered). Not actionable: the real
+  battle's Showdown engine 9.4% (no Showdown changes), gc 4.4%.
 - **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (10.1% category after 015, 77% hit
   rate within a decision), `matchupScore`. Need a cache key that proves the inputs are unchanged.
 - **Exact, mechanical.** Hoist the remaining ~320 `K()` / `C.get` name lookups in `sim/ai` to pre-resolved fields
@@ -183,7 +187,7 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
 - **Killed by the 015 profile (do not retry without new evidence).** Cloning / copy-on-write (0.7% of time);
   better prediction-cache keys (0.35% hit rate; coarse-key bound 11.6% of ply-2 calls); the end-state merge
   (collapses 0.5% of branches).
-- **Feature 017 (was "016" before the exact round two took that number), approximations as `expectimax2-v4`**
+- **Feature 018 (was "017" before the exact round three took that number), approximations as `expectimax2-v4`**
   (never `-v3`, archived 007's name): K_PLY2 2 → 1 (about 21% of post-015 time; the two samples disagree in 29% of
   ply-2 nodes), a branch probability floor, switch beam 1 (10-15%), root K 8 → 4 (about 8%; root samples agree only
   52% of the time). Reference-first (Principle VI): paired runs vs v2 on B1-B5 with McNemar exact; adopt only if not

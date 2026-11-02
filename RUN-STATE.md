@@ -1,5 +1,27 @@
-# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 tasks written)
+# START HERE (updated 2026-11-02, 11:38 AM EST, feature 017 implemented; user testing, full suite and merge open)
 
+- **Feature 017 `017-exact-dispatch-speedups` implemented 2026-11-02 (T001-T032 done; T033 full suite and the merge wait
+  for the user).** Branch from `main` f6d845c, main checkout, pushed; code commits `6ed38a3` (instrumentation:
+  `INTERP_STATS`, bench `interp_steps`), `e10e818` (US1 dispatch tables + argument index + one interpreter loop),
+  `ea727ec` (US2 policy damage inputs from the root adapter's memo, CHECK covers the structs), `3d3cb09` (US3 speed pair
+  memo, `compareBattlerSpeedDirect` reference, `speedInfo` once per state), then the docs commit. Exact: replay test
+  against the unchanged 015 fixture green after every commit (digests `db6d20cf…` / `1273b694…`, every choice, every
+  draw count); exhaustive dispatch equivalence 10 tables x 279 values, 0 mismatches; speed-pair equivalence 1,001 real
+  views x 3 callers, 0 differences; full-set CHECK runs 35.2 M (v2) / 50.2 M (v1) comparisons, 0 mismatches; freeze run
+  174/174. **Speed on the fixed set, same session: v2 1.014 → 1.244 gauntlets/s single process (1.23x, 12.4 → 9.8
+  ms/decision), v1 1.22x, 16 workers 4.07 → 4.55 (1.12x, 9.8 → 8.8 s); interpreter steps 143.0 M → 15.9 M (9.0x
+  fewer); results byte-identical throughout.** Node suite 347/347 (one known `seeds.test.mjs` timestamp flake on the
+  first run, rerun clean). Log `specs/017-exact-dispatch-speedups/validation-log.md`, evidence `runs/017-evidence/`.
+  Remaining: the user's hands-on testing, then T033 (`uv run pytest -q --durations=25 > runs/017-evidence/full.log 2>&1`,
+  about 1 h 05 min, nothing else running), then merge on the user's go (`git checkout main && git merge --ff-only
+  017-exact-dispatch-speedups && git push`). `sim_code_hash` changed again (checkpoints before 017 will not resume);
+  `data/generated/` unaffected. Hand checks: `node sim/bench.mjs --policy expectimax2-v2` prints `digest_full
+  db6d20cf…` and `interpreter steps` about 15.9 M; `PLATSIM_AI_CHECK=1 node sim/bench.mjs --policy expectimax2-v2`
+  reports `0 mismatches`. Traps: never commit or switch while a run is going; the replay fixture and the golden
+  fixtures are never re-recorded; `pgrep -a -x node` before measurements (never `pgrep -f` with the script name);
+  tests that hand-edit an instruction copy must rebuild `ins.a` (`withArg` in `ai_cmds_misc.test.mjs`); tests that
+  change `speedRand` on an adapter must call `beginDecision()`. Next feature after the merge: FUTURE-FEATURES section 7
+  (D-G exact items, or 018 = `expectimax2-v4` approximations), user's choice.
 - **Feature 017 `017-exact-dispatch-speedups` specified 2026-11-02, 10:26 AM EST (`/speckit-specify`, user's go).** Branch from
   `main` f6d845c, main checkout; `specs/017-exact-dispatch-speedups/spec.md` + `checklists/requirements.md` (all items
   pass, 0 clarification markers). Three stories: US1 one-step effect dispatch in the trainer-AI interpreter (both loops,

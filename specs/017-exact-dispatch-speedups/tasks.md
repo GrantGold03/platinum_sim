@@ -332,22 +332,22 @@ decision is at most the ply-2 node count plus the root actions.
 **Independent Test**: `runs/017-evidence/branch_*.json` exist with digests equal to `main`'s and `digests_agree`
 true; the validation log has both sides, the step counts and the ratios.
 
-- [ ] T029 [US4] Alone on the machine, on the branch at commit 4: `node sim/bench.mjs --policy expectimax2-v2 --json >
+- [X] T029 [US4] Alone on the machine, on the branch at commit 4: `node sim/bench.mjs --policy expectimax2-v2 --json >
   runs/017-evidence/branch_v2.json`, `--policy expectimax2-v1 --json > runs/017-evidence/branch_v1.json`, `uv run platsim
   bench --workers 16 --json > runs/017-evidence/branch_pool.json` (`digests_agree` true, `pool_digest_logs` equal to
   T003's); write the table in the log: v2 and v1 single-process `gauntlets_per_s` and `ms_per_decision` (`main` T002 vs
   branch) with ratios, `interp_steps` (T007 vs branch) with ratio, 16-worker `pool_wall_s` and `pool_gauntlets_per_s`
   (T003 vs branch) with ratio, the per-commit attribution column (T013, T019, T027); SC-002 verdict in one line
   (`gauntlets_per_s` >= 1.15 x T002's for v2, otherwise the smaller gain stated plainly); SC-004 verdict (< 20 M)
-- [ ] T030 [P] [US4] Docs: `README.md` speed table: add the 017 row (single-process and 16-worker before/after from
+- [X] T030 [P] [US4] Docs: `README.md` speed table: add the 017 row (single-process and 16-worker before/after from
   T029, the interpreter step count) and extend the `sim_code_hash` note (017 changed it again); the bench command
   table gains the two new rows; `FUTURE-FEATURES.md` section 7: mark A, B, C done with the measured gain, keep D
   (`Constants.get` hoisting), E (`damageOutcomes` memo), F (merge signature), the generalised compare-and-jump idea
   (`IfLoadedEqualTo`, R1) and the killed `matchupScore` memo; renumber the `expectimax2-v4` approximations to 018
-- [ ] T031 [P] [US4] `RUN-STATE.md` START HERE: 017 state (commits, numbers, what is left: user testing, full suite,
+- [X] T031 [P] [US4] `RUN-STATE.md` START HERE: 017 state (commits, numbers, what is left: user testing, full suite,
   merge), the trap list (`sim_code_hash`, no commit during runs, fixture and golden fixtures never re-recorded,
   `pgrep -f` trap)
-- [ ] T032 Gates (SC-007, FR-010): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0; `(cd sim && node
+- [X] T032 Gates (SC-007, FR-010): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0; `(cd sim && node
   --test test/*.test.mjs)` exit 0 → `runs/017-evidence/node-suite.log`; `uv run pytest -q -m "not battle_sim"` exit 0 →
   `runs/017-evidence/fast.log`; record summary lines and Eastern times in the log; commit 5 by path (`README.md
   FUTURE-FEATURES.md RUN-STATE.md specs/017-exact-dispatch-speedups/validation-log.md` plus any doc touched in T030),
