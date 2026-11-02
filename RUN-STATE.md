@@ -239,6 +239,7 @@
   Checked: `cli.py` AST identical; `.mjs` diffs comment-only; fast mode 504 passed, 4 xfailed (592 s); Node 314/314.
   The battle set was not rerun (comment and docstring changes only).
   Backlog: `FUTURE-FEATURES.md` (Shift battle style, plain-language output, follow-ups).
+- **Tooling (2026-11-02):** Spec Kit project files upgraded to 1.2.6 (`specify self upgrade`, then `specify init --here --force`, `specify integration upgrade claude`, `specify extension update`; `.specify/init-options.json` records 1.2.6; constitution and templates unchanged in content; the assess extension at 1.0.2 is the user's, untracked). `/speckit-taskstoissues` is deprecated upstream.
 - **Working rules** (memory): Spec Kit for every change, via `/speckit-implement`; keep features small;
   feature branch merged only after the user's test; push code commits; times in Eastern; `data/generated/`
   must be rebuilt (`uv run platsim extract`) after switching branches.
