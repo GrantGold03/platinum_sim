@@ -1,4 +1,21 @@
-# START HERE (updated 2026-11-01, 10:40 PM EST, end of session before a reboot)
+# START HERE (updated 2026-11-02, 10:18 AM EST, post-016 re-profile, next feature proposed)
+
+- **Resume checklist (2026-11-02, 10:18 AM EST).** Session goal: continue the expectimax2 speed work. `main` f67ff1e is checked out,
+  in sync with `origin/main`; nothing is running; no feature branch yet. Health check on `main` this morning: Node suite
+  334/334 (139 s), `node sim/bench.mjs --policy expectimax2-v2` digest `db6d20cf…`, 1.019 gauntlets/s, 12.4 ms/decision.
+  **Post-016 re-profile done (read-only; repo untouched):** same 40-gauntlet set and harness as 015's, hooks verified
+  (hooked == plain digest), report `runs/016-evidence/scratchpad/prof3/REPORT3.md`, evidence manifest
+  `runs/016-evidence/prof3.sha256` (git-ignored, local only; scratchpad copy in `prof3/`). Headline: AI prediction 45.8%
+  of time (adapter 18.7, interpreter 10.7, choose 6.6, damage 5.8), turn resolution 10.8, real-battle Showdown 9.4,
+  policy damage tables 9.2, shadow views 5.5, matchupScore 4.9, gc 4.4. New counters: the interpreter runs 143 M
+  instructions per bench run, 128 M of them `IfCurrentMoveEffectEqualTo` (two script runs of 178 and 152 instructions);
+  `battlerFromShowdown` built 677 k times for ~34 k distinct (live mon, decision) pairs; `speedInfo` 247 k calls for
+  55 k views; a `matchupScore` memo would hit 0 of 12,269 (killed); a `damageOutcomes` memo would hit 66%. Ranked list
+  and estimates: FUTURE-FEATURES section 7 ("Exact, next in line", A-F). **Proposed next feature (user's call, user runs
+  the stages): exact round three = A interpreter effect dispatch + B policy damage-input memo + C one speed pair per
+  view; specify text drafted at `runs/016-evidence/scratchpad/prof3/specify_017.txt`** (if it takes the number 017, the
+  `expectimax2-v4` approximations move to 018). D (`Constants.get` hoisting), E, F after. Acceptance as in 015/016: the
+  replay fixture unchanged, digests `db6d20cf…` / `1273b694…`, every choice and draw count equal; no Showdown diff.
 
 - **Resume checklist (2026-11-01, 10:40 PM EST).** `main` is checked out in the main checkout, in sync with
   `origin/main` (015 and 016 merged today; last commits are doc-only: RUN-STATE, README testing section,
