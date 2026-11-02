@@ -79,12 +79,14 @@ replay gate), then land the instrumentation commit so the interpreter step count
   `interp_dispatches: INTERP_STATS.dispatches - i0.dispatches` to the report after `ai_draws`; print both in the human
   table in `main()`. In `src/platsim/bench.py` add the rows `("single: interpreter steps", out.get("interp_steps"))`
   and `("single: interpreter dispatches", out.get("interp_dispatches"))` after the AI-draws row
-- [ ] T006 [P] Extend `sim/test/bench.test.mjs`: the report of a one-battle run (the file's existing small run)
-  has integer `interp_steps > 0` and `interp_dispatches === 0` (becomes `> 0` after US1; assert `>= 0` here and
-  tighten in T009); `INTERP_STATS.steps` grows across the run (delta > 0, positive control)
+- [ ] T006 [P] Extend `sim/test/bench.test.mjs` with one test "017 interpreter steps in the report": import `runBench`
+  and `INTERP_STATS`; `const s0 = INTERP_STATS.steps; const r = runBench(gd, { policy: 'expectimax2-v2', n: 1, teams:
+  ['bench'], trainers: ['aaron'] })` (one Aaron battle, a few seconds); assert `Number.isInteger(r.interp_steps)`,
+  `r.interp_steps > 0`, `r.interp_steps === INTERP_STATS.steps - s0` (the report is the delta), and
+  `r.interp_dispatches >= 0` (tightened to `> 0` in T009); positive control: `INTERP_STATS.steps` grew across the run
 - [ ] T007 Gate and commit 1 (quickstart step 1): `(cd sim && node --test test/bench.test.mjs test/replay.test.mjs test/ai_golden.test.mjs)`
-  exit 0; `uv run pytest -q tests/test_bench.py` (or the pytest file that covers `platsim bench`; `grep -rl "platsim bench\|bench.py" tests/`
-  first) exit 0; alone on the machine `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c1_v2.json`
+  exit 0; `uv run pytest -q tests/unit/test_bench_cli.py` exit 0 (the two new rows parse; `tests/integration/test_bench.py` is
+  marked `battle_sim` and runs in T033's full suite); alone on the machine `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c1_v2.json`
   → `digest_full` `db6d20cf…`, `ai_draws` equal to T002, `interp_steps` about 143 M (record the exact value: the SC-004
   before figure), `interp_dispatches` 0, `gauntlets_per_s` within noise of T002; commit by path
   (`sim/ai/interp.mjs sim/ai/choose.mjs sim/bench.mjs src/platsim/bench.py sim/test/bench.test.mjs specs/017-exact-dispatch-speedups/validation-log.md`),
@@ -199,11 +201,11 @@ full-set CHECK run matches both digests.
   `scoreActions`), call `scoreActions(ctx, V2_OPTS, 'expectimax2-v2')` once and read `X.rootView.ai.cacheStats` before
   and after: `builds` delta <= number of Pokemon with `hp > 0` on both sides, `fieldBuilds` delta <= 2, `hits` delta >
   `builds` delta, `decisions` delta === 1; a second `scoreActions` on the same battle (new context) rebuilds (`builds`
-  delta > 0 again: the memo did not leak across decisions, scenario 5). `fromShowdown` is not called by the policy:
-  wrap it via a module-level spy exported for tests (`_internal.fromShowdownCalls` counter incremented in the policy's
-  old call site is gone, so instead assert `X.rootView.ai.cacheStats.hits` delta >= the number of `X.dmg` entries
-  created, `X.dmg.size`, which `fromShowdown` would have served one by one) and `grep -c "fromShowdown" sim/policy/expectimax2.mjs`
-  returns 0 as a static check in the test (read the file with `readFileSync` and assert no match outside comments)
+  delta > 0 again: the memo did not leak across decisions, scenario 5). `fromShowdown` is no longer imported by the
+  policy: read `sim/policy/expectimax2.mjs` with `readFileSync` and assert the import line from `'../damage.mjs'` does
+  not name `fromShowdown` (regex on that one `import { … } from '../damage.mjs'` statement, so comments elsewhere in the
+  file cannot trip it); and the memo served every table entry: `hits` delta >= `X.dmg.size` (each table miss asks for an
+  attacker and a defender struct, both cache hits after the first use)
 - [ ] T016 [P] [US2] Add to `sim/test/ai_adapter.test.mjs` ("017 CHECK covers battler and field structs", child
   processes via `spawnSync` as the 016 CHECK test does): (a) extend the existing clean child (one Aaron battle per
   policy) to print the aggregate `structChecks` summed over adapters (or add `CHECK_STATS.structChecks` and print it)
@@ -263,18 +265,20 @@ decision is at most the ply-2 node count plus the root actions.
   `expectimax2-v2` decisions on 3 to 5 fixture battles from `ai_fixtures.mjs` (`leagueBattle` for different trainers,
   play a few turns with `battle.makeChoices` using the policy's `choose` for p1 and `decide` for p2, and after each
   player decision collect `[X.rootView, ...X.views.values()]` from `scoreActions`'s returned `X`) until >= 1,000 distinct
-  views, including views where an active has `hp === 0` (take ply-2 states before `replaceFainted` by also pushing
-  `shadowBattle(X, S)`-based views for states with a fainted active via `_internal`), and report a coverage diagnostic
+  views, including views where an active has `hp === 0` (for each harvested `X`, also push two fainted-active views:
+  `const S = _internal.cloneState(X.root); S.sides[i].mons[S.sides[i].active].hp = 0; _internal.viewOf(X, S)` for `i`
+  in 0 and 1), and report a coverage diagnostic
   (count of views with stages != 0, paralysis, Choice Scarf / Quick Claw items, Trick Room, weather, a fainted active).
   For each view and each caller shape `[(0, 1, () => 0), (1, 0, () => 0), (1, 0, seeded stub rng)]`: build two fresh
   contexts `{ ai: view.ai, mem: { monSpeedValues: [0, 0, 0, 0] }, rand }` with independently seeded but identical stub
   RNGs (`stubRng` with the same sequence), call `compareBattlerSpeedDirect` on one and `compareBattlerSpeed` on the
   other; assert equal result, deep-equal `mem.monSpeedValues`, equal draw counts; `view.ai.cacheStats.speedPairs`
   delta over all nine calls on the view is exactly 1 (0 for fainted-active views) and `speedPairHits` >= 8. Positive
-  control: on one view with both alive, take `view.ai.speedPair(() => { throw })` (the stored pair), build a copy with
-  `b[0].speed` changed, and assert that a comparison computed from the copy (call the exported comparison helper, or
-  re-run `compareBattlerSpeed` on a throwaway adapter whose `speedPair` returns the copy) differs from the direct result
-  for at least one view. Runtime target under 20 s
+  control: on one view with both alive, `const pair = view.ai.speedPair(() => { throw new Error('must hit'); })` (the
+  stored pair), `const bad = { b: [{ ...pair.b[0], speed: pair.b[0].speed + 1 }, pair.b[1]] }`; assert
+  `compareWith(ctx, 0, 1, bad.b[0], bad.b[1])` differs from `compareBattlerSpeedDirect(ctx, 0, 1)` in result or in
+  `mem.monSpeedValues` for at least one such view over the set (ties may hide the result difference on a single view,
+  the `monSpeedValues` write never does). Runtime target under 20 s
 - [ ] T022 [P] [US3] Add to `sim/test/ai_adapter.test.mjs` ("017 speedPair memo"): `ai.speedPair(build)` calls `build`
   once and returns its value, a second call returns the same object without calling `build` (`speedPairs` +1,
   `speedPairHits` +1); `beginDecision()` then a call builds again; the freeze child: under `PLATSIM_AI_FREEZE=1`
@@ -297,8 +301,9 @@ decision is at most the ply-2 node count plus the root actions.
   `const pair = ai.speedPair(() => { const ncn = countAliveAbility(ctx, K(ctx, 'ABILITY_CLOUD_NINE')) === 0 &&
   countAliveAbility(ctx, K(ctx, 'ABILITY_AIR_LOCK')) === 0; return { b: [battlerSpeed(ctx, 0, ncn), battlerSpeed(ctx, 1,
   ncn)] }; })`, `b1 = pair.b[battler1]`, `b2 = pair.b[battler2]`, then the `monSpeedValues` writes and the comparison
-  block verbatim (move it into a shared private helper `compareWith(ctx, battler1, battler2, b1, b2)` used by both
-  functions so the comparison text exists once; the direct function keeps computing its own `b1`, `b2`). Doc comment:
+  block verbatim (move it into a shared helper `compareWith(ctx, battler1, battler2, b1, b2)`, exported for tests only
+  and documented as such in its comment, used by both functions so the comparison text exists once; the direct function
+  keeps computing its own `b1`, `b2`). Doc comment:
   why the pair is order-independent and draw-free (research R4)
 - [ ] T026 [US3] In `sim/policy/expectimax2.mjs`: `STATS.speedInfo = 0` and `STATS.speedInfo++` at the top of `speedInfo`;
   `resolveTurn(X, S, pa, oa, speedOf = () => speedInfo(X, S))` using `speedOf().pFirst` where it read `speedInfo(X, S).pFirst`;
@@ -407,8 +412,7 @@ Task: "T023 STATS.speedInfo once per state in sim/test/expectimax2.test.mjs"
 - The structure test's expected run lengths (13 runs; 178, 152, …) are facts of the pinned decomp script measured on
   2026-11-02 (`runs/016-evidence/scratchpad/prof3/chains.mjs`); a decomp bump would change them and the test says so
   in its message.
-- The policy test in T015 cannot spy on `fromShowdown` without changing the policy's exports; the static check on
-  the source plus the cache counters is the agreed proof. If a cleaner hook is wanted, add `STATS.fromShowdown` to the
-  policy and assert 0; record the choice in the validation log.
+- The policy test in T015 proves the switch two ways: the import statement no longer names `fromShowdown`, and the
+  root adapter's hit count covers every table entry.
 - The eight measurement runs are about 40 s each single-process and 1 min on the pool; the two CHECK runs about
   2 min each; the full suite (T033) is the only long run.
