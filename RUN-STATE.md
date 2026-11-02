@@ -1,6 +1,13 @@
-# START HERE (updated 2026-11-02, 10:18 AM EST, post-016 re-profile, next feature proposed)
+# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 specified)
 
-- **Resume checklist (2026-11-02, 10:18 AM EST).** Session goal: continue the expectimax2 speed work. `main` f67ff1e is checked out,
+- **Feature 017 `017-exact-dispatch-speedups` specified 2026-11-02, 10:26 AM EST (`/speckit-specify`, user's go).** Branch from
+  `main` f6d845c, main checkout; `specs/017-exact-dispatch-speedups/spec.md` + `checklists/requirements.md` (all items
+  pass, 0 clarification markers). Three stories: US1 one-step effect dispatch in the trainer-AI interpreter (both loops,
+  plain and tracing), US2 live-Pokemon conversions shared per player decision, US3 one speed pair per hypothetical state;
+  US4 measurement. Acceptance = the unchanged 015 replay fixture (digests `db6d20cf…` / `1273b694…`, every choice and
+  draw count), SC-002 >= 1.15x single process vs the same-session `main` figure. Next: the user runs `/speckit-clarify`
+  (optional) then `/speckit-plan`. `data/generated/` needs no re-extract (no extractor change). Nothing is running.
+- **Resume checklist (2026-11-02, 10:18 AM EST; superseded by the 017 note above for the branch state).** Session goal: continue the expectimax2 speed work. `main` f67ff1e is checked out,
   in sync with `origin/main`; nothing is running; no feature branch yet. Health check on `main` this morning: Node suite
   334/334 (139 s), `node sim/bench.mjs --policy expectimax2-v2` digest `db6d20cf…`, 1.019 gauntlets/s, 12.4 ms/decision.
   **Post-016 re-profile done (read-only; repo untouched):** same 40-gauntlet set and harness as 015's, hooks verified
