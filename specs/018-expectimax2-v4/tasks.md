@@ -49,9 +49,10 @@ US3's runs and US4's gated switch with docs (commit 5). Phase labels name the st
 - [ ] T002 [P] Verify the four fixed teams exist and load: `tests/fixtures/policy_benchmark_team.json` (`.team`, 6 members,
   Lv 57), `tests/fixtures/reference_team.json` (`.builds`, Lv 60), `runs/014-evidence/b2-main/result.json` and
   `runs/014-evidence/b2-branch/result.json` (`.team.builds`, 6 members with `start_level` and `held_item`); record
-  the member species, levels and items of all four in the log. If a 014 result is missing, regenerate it with
-  `uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 014-b2 --out
-  runs/018-evidence/b2-regen-<side>` on today's code and record that it was regenerated
+  the member species, levels and items of all four in the log. If a 014 result is missing, regenerate ONE B2 team on
+  today's code (`uv run platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 014-b2
+  --out runs/018-evidence/b2-regen`), run the ladder on three teams (both 014 sides would regenerate to the same team
+  now that their code is on `main`), and record the change in the log and the spec's assumption
 
 **Checkpoint**: log started; the four teams are known.
 
@@ -144,8 +145,7 @@ only if the name is unknown to the worker (it is known after commit 1).
 
 ### Tests for User Story 3, code half (write first; fail before T013)
 
-- [ ] T011 [P] [US3] Add to `tests/unit/test_bench_cli.py` (or a new `tests/unit/test_default_policy.py` if the file's
-  scope does not fit): `platsim.evaluate.DEFAULT_PLAYER_POLICY == platsim.bench.DEFAULT_POLICY`; the argparse
+- [ ] T011 [P] [US3] Create `tests/unit/test_default_policy.py`: `platsim.evaluate.DEFAULT_PLAYER_POLICY == platsim.bench.DEFAULT_POLICY`; the argparse
   defaults of `evaluate --player-policy`, `bench --policy` and `optimize --player-policy` (parse `["evaluate", "x.json"]`,
   `["bench"]`, `["optimize"] + six species`) all equal the constant and the help text mentions it;
   `OptimizeRequest(species=...).player_policy == DEFAULT_PLAYER_POLICY`; `optimize ... --player-policy expectimax2-v4`
@@ -168,13 +168,13 @@ only if the name is unknown to the worker (it is known after commit 1).
   gains `--player-policy` (default the constant, help "strong player for level search, setup check and confirmation;
   the screening stages keep greedy-v1") passed into `OptimizeRequest`; `src/platsim/bench.py`: `DEFAULT_POLICY =
   DEFAULT_PLAYER_POLICY`; the web runner untouched (default)
-- [ ] T014 [US3] Gate: `uv run pytest -q tests/unit/test_bench_cli.py tests/unit/test_optimizer_resume.py` (and the new
-  file if any) exit 0; `uv run pytest -q -m "not battle_sim"` exit 0 → `runs/018-evidence/fast-c2.log`; smoke: `uv run
+- [ ] T014 [US3] Gate: `uv run pytest -q tests/unit/test_default_policy.py tests/unit/test_optimizer_resume.py` exit 0; `uv run pytest -q -m "not battle_sim"` exit 0 → `runs/018-evidence/fast-c2.log`; smoke: `uv run
   platsim optimize garchomp infernape staraptor rotom floatzel weavile --budget quick --seed 018-smoke --player-policy
   expectimax2-v4 --workers 4 --out runs/018-evidence/smoke-v4` started and stopped (Ctrl-C / timeout 60 s) after the
   first log lines show the policy name, or the full quick run if it is under 15 min; record
 - [ ] T015 [US3] Commit 2 by path (`src/platsim/optimizer/api.py src/platsim/optimizer/run.py src/platsim/optimizer/levels.py
-  src/platsim/cli.py src/platsim/bench.py tests/unit/<files> specs/018-expectimax2-v4/validation-log.md`), message
+  src/platsim/cli.py src/platsim/bench.py tests/unit/test_default_policy.py tests/unit/test_optimizer_resume.py
+  specs/018-expectimax2-v4/validation-log.md`), message
   `feat(018): one default player constant; optimize --player-policy (default unchanged)`, push; record the hash
 
 **Checkpoint**: the optimizer can run with any registered player; the default is still v2.
@@ -196,7 +196,7 @@ verdicts, speeds), the control row with 0 discordant pairs, and a named final ca
   argparse (`--a`, `--b`, `--teams` default `bench,ref,b2main,b2branch`, `--runs` default 2000, `--workers`, `--out`
   default `runs/018-evidence/pairs`, `--self`); team loaders (`bench`: fixture `.team`; `ref`: `.builds` via
   `load_and_validate` + `worker_team`; `b2main` / `b2branch`: `runs/014-evidence/b2-{main,branch}/result.json` `.team`
-  written to a temp JSON then `load_and_validate` + `worker_team`); seeds `derive_seed(f"018-pairs|{team}", i, 0)`;
+  written to `<out>/teams/<team>.json` (beside the pairs cache; never /tmp) then `load_and_validate` + `worker_team`); seeds `derive_seed(f"018-pairs|{team}", i, 0)`;
   requests as in `run_full_gauntlets` (`stop_on_loss: True`, `log: "none"`); one `WorkerPool(workers)`; result checks
   (`ok`, policies echoed, first-battle seeds equal across sides); cache files `<out>/<team>__<safe policy>__<runs>.json`
   with `cleared`, `battles_seed_0`, `wall_s`, `gauntlets_per_s`, `sim_code_hash`, `hello` (reuse only when
@@ -249,8 +249,10 @@ strength test's new pairs pass at the in-suite size.
   numbers (per-team rates and verdicts for the chosen set); in `sim/test/expectimax2.test.mjs` update the `V4_OPTS`
   assertion of T004 to the final values
 - [ ] T025 [US1] Alone: `node sim/bench.mjs --policy expectimax2-v4 --record sim/test/replay_prof_a.json` (adds the v4
-  entry; v1/v2 entries untouched: `git diff --stat sim/test/replay_prof_a.json` and a JSON diff of the v1/v2 keys
-  empty); in `sim/test/replay.test.mjs` expect `['expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4']`; `(cd sim && node
+  entry; v1/v2 entries untouched: load the fixture before and after and assert `policies['expectimax2-v1']` and
+  `policies['expectimax2-v2']` deep-equal their `main` versions (the file itself changes: the recorder rewrites the
+  file-level `recorded` and `set` blocks, `sim/bench.mjs:209-211`, which is expected and noted in the log)); in
+  `sim/test/replay.test.mjs` expect `['expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4']`; `(cd sim && node
   --test test/replay.test.mjs)` exit 0 (now 3 x 40 gauntlets); record the v4 digests
 - [ ] T026 [US1] In `tests/integration/test_policy_strength.py`: `POLICIES` gains `'expectimax2-v4'`; `pairs` gains
   `('expectimax2-v4', 'greedy-v1')` (asserted verdict `A`, p < 0.05 like the v1/v2 pairs) and `('expectimax2-v4',
@@ -289,8 +291,10 @@ validator's pass on the v4 result, both wall times.
   result team equals `runs/014-evidence/b2-branch/result.json`'s team (015-017 were exact) apart from provenance;
   if it differs, say so and investigate before going on
 - [ ] T031 [US3] Background, alone: the same with `--player-policy expectimax2-v4 --out runs/018-evidence/b2-v4`;
-  record exit and wall; `uv run platsim validate runs/018-evidence/b2-v4/team.json` (or the result's team file the
-  optimizer writes) exit 0; wall ratio in the log (SC-005)
+  record exit and wall; write `result.json`'s `team` object to `runs/018-evidence/b2-v4/team.json` (the optimizer
+  writes `team.txt`, `result.json`, `state.json`, `result.csv`, `result.xlsx` and no team JSON; the equal-levels
+  script's `at_levels` helper does the same write per side) and `uv run platsim validate runs/018-evidence/b2-v4/team.json`
+  exit 0; wall ratio in the log (SC-005)
 - [ ] T032 [US3] Background, alone: `uv run python specs/018-expectimax2-v4/scripts/equal_levels.py runs/018-evidence/b2-v2
   runs/018-evidence/b2-v4 200 --self` (control, 0 discordant) then `… 2000` (about 15 min): verdict not `B`, mean final
   level of A not higher; record (`runs/018-evidence/equal-levels.txt`)
