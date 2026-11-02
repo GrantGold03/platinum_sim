@@ -38,6 +38,19 @@ This feature removes that waste and nothing else. It is an exact speedup under C
 the constant lookups, a memo for the damage-outcome buckets, skipping the merge signature for single-branch
 turns) and the approximations that change decisions (`expectimax2-v4`) are later features.
 
+## Clarifications
+
+### Session 2026-11-02
+
+- Q: Should the trainer AI's in-script speed comparison (the one that draws a random number on ties) also reuse
+  the shared per-state speed values, keeping only the tie draw per sample, or stay fully per sample? → A: Share
+  the speed values with the in-script comparison too; its tie draw stays per sample, and the equivalence test
+  covers all three users of the values.
+- Q: Should the interpreter step count that SC-004 relies on be reported by the committed benchmark tool, or
+  only measured by the profiling harness in the scratchpad? → A: The committed benchmark tool reports the
+  interpreter step count per run; SC-004 is checked from that output (a plain per-step counter, measured at
+  under 1% of run time even at today's 143 million steps).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The trainer AI answers a list of effect checks in one step (Priority: P1)
@@ -75,8 +88,9 @@ deliberately altered entry must be detected.
    script has no such jump; the preparation checks this rather than assumes it.)
 5. **Given** the existing trainer-AI golden fixtures (score additions with their script lines, choices and
    draws), **When** they run, **Then** they pass unchanged.
-6. **Given** one bench run of the fixed set, **When** the interpreter's steps are counted, **Then** fewer than 20
-   million (today 143 million), with the per-decision count independent of the length of the lists.
+6. **Given** one bench run of the fixed set, **When** the benchmark tool reports the interpreter's step count,
+   **Then** fewer than 20 million (today 143 million), with the per-decision count independent of the length of
+   the lists.
 
 ---
 
@@ -120,16 +134,18 @@ at most one per live Pokemon plus one per side.
 
 A user runs the same optimization. For each hypothetical state the player examines, the two battlers' speeds
 and who moves first are worked out once and shared by everything that needs them on that state: the player's
-turn resolution for every pair of actions it tries, and every trainer-AI sample taken on that state. Today the
+turn resolution for every pair of actions it tries, every trainer-AI sample taken on that state, and the trainer
+AI's own in-script speed comparison, which keeps only its tie-breaking random draw per sample. Today the
 trainer-AI samples each compute it again, and the player computes it again for every pair of actions.
 
 **Why this priority**: Third item (about 7% of all time plus 2.4% of state lookups caused by it); exact because
-the result depends only on the state, and both users of it ask the same question with no random draws.
+the speed values depend only on the state, and the only random draw (the in-script tie break) happens after the
+values are known and stays per sample.
 
 **Independent Test**: Replay the fixed seed set with only this change applied; the fixture matches. For many
-hypothetical states, the shared speed values equal the values each user computed on its own before this
-change, including states where an active Pokemon has fainted; the count of speed computations per state is at
-most one for the shared uses.
+hypothetical states, the shared speed values equal the values each of the three users computed on its own
+before this change, including states where an active Pokemon has fainted; the count of speed computations per
+state is at most one.
 
 **Acceptance Scenarios**:
 
@@ -137,11 +153,12 @@ most one for the shared uses.
    choice and every draw count match.
 2. **Given** at least 1,000 hypothetical states drawn from real battles on the fixed set (including states with
    stat stages, paralysis, speed-changing items and abilities, weather, and a fainted active on either side),
-   **When** the speeds and the first mover are computed the shared way and the two original ways, **Then** the
-   values are equal in every case.
+   **When** the speeds and the first mover are computed the shared way and the three original ways (the player's
+   turn resolution, the trainer AI's speed memory, the trainer AI's in-script comparison), **Then** the values are
+   equal in every case, and the in-script comparison's result and its tie-break draws are unchanged.
 3. **Given** one hypothetical state and K trainer-AI samples plus every pair of actions the player tries on it,
-   **When** speed computations are counted, **Then** at most one for the shared uses on that state; the trainer
-   AI's own in-script speed comparison, which draws a random number on ties, is still evaluated per sample.
+   **When** speed computations are counted, **Then** at most one on that state; the trainer AI's in-script speed
+   comparison reuses the values and keeps only its tie-breaking random draw per sample.
 4. **Given** the trainer-AI draw counts recorded in the fixture, **When** the gauntlets run, **Then** every
    per-decision count is equal (no draw is added or removed by sharing).
 
@@ -204,8 +221,9 @@ single-process and pool digests agreeing on both sides, and the single-process f
 - The player asks who moves first in the middle of resolving a turn for one move's power (Gyro Ball): that
   question is about the partially resolved state and must keep seeing that state's facts, as today. "Once per
   state" means once per distinct set of state facts, never a stale answer for a state that has since changed.
-- Draw counts: the shared computations contain no random draws, and the trainer AI's own in-script speed
-  comparison (which draws on ties) is untouched; the recorded per-decision draw counts are the proof.
+- Draw counts: the shared speed values contain no random draws; the trainer AI's in-script speed comparison
+  reuses the values and still draws its tie break per sample, in the same order; the recorded per-decision draw
+  counts are the proof.
 - Any edit under `sim/` changes the sim code hash, so optimizer checkpoints written before the change will not
   resume (expected; stated in the plan). `data/generated/` needs no rebuild for this feature unless the
   extractor changes, which it does not.
@@ -243,17 +261,19 @@ single-process and pool digests agreeing on both sides, and the single-process f
   cover the shared conversions, and the replay and AI tests MUST pass with it on. Shared conversions MUST be
   discarded at the end of every decision.
 - **FR-008**: For one hypothetical state, the battlers' speeds and the first mover MUST be computed at most once
-  for the player's turn resolution and the trainer AI's speed memory together, and the shared values MUST equal
-  the values each computed on its own before this feature, including states with a fainted active; the trainer
-  AI's in-script speed comparison, which may draw a random number, MUST stay per sample. A test over at least
-  1,000 real states MUST show equality.
+  for the player's turn resolution, the trainer AI's speed memory and the trainer AI's in-script speed comparison
+  together, and the shared values MUST equal the values each computed on its own before this feature, including
+  states with a fainted active; the in-script comparison's tie-breaking random draw MUST stay per sample, in the
+  same order (clarification 2026-11-02). A test over at least 1,000 real states MUST show equality for all three
+  users.
 - **FR-009**: The player's search MUST be unchanged: same sample counts, same beam, same evaluation, same
   registered policy names; no new policy is added.
 - **FR-010**: The vendored Showdown tree MUST NOT be edited.
 - **FR-011**: Run time MUST be measured before and after on the same seeds with the committed benchmark tool and
   recorded in the validation log: gauntlets/s and ms per decision as a single process (v2 and v1), the
   single-process v2 figure after each story's commit, wall time and gauntlets/s through the 16-worker pool, and
-  the single-process and pool digests, which MUST agree on each side.
+  the single-process and pool digests, which MUST agree on each side. The benchmark tool MUST also report the
+  number of trainer-AI script instructions executed in the run (clarification 2026-11-02), before and after.
 - **FR-012**: The Node test suite, fast mode (`not battle_sim`) and, before merge, the full pytest suite MUST
   pass, with their output recorded.
 - **FR-013**: Scope is the three items above. Hoisting the remaining constant lookups, the damage-outcome bucket
@@ -271,13 +291,15 @@ single-process and pool digests agreeing on both sides, and the single-process f
 - **Per-state adjustment**: the hypothetical state's HP, status, stat stages, item, screens and freshness,
   applied on a copy of a live conversion to form one damage table's inputs.
 - **State speed facts**: the two active battlers' effective speeds and the resulting first mover for one
-  hypothetical state; shared by the player's turn resolution and the trainer AI's speed memory on that state.
+  hypothetical state; shared by the player's turn resolution, the trainer AI's speed memory and the trainer AI's
+  in-script speed comparison on that state (the latter adds its own tie-break draw per sample).
 - **Decision**: one player or opponent choice; the unit after which shared live values are discarded
   (feature 015).
 - **Replay fixture**: the recorded digests, player choices and per-decision draw counts of the fixed seed set
   (feature 015), unchanged by this feature.
 - **Benchmark tool**: the project command from feature 015 that replays the fixed set with a named policy and
-  reports throughput, ms per decision and the digests, as a single process and through the worker pool.
+  reports throughput, ms per decision, the digests and, from this feature, the interpreter step count, as a
+  single process and through the worker pool.
 
 ## Success Criteria *(mandatory)*
 
@@ -293,13 +315,14 @@ single-process and pool digests agreeing on both sides, and the single-process f
 - **SC-003**: The 16-worker wall time on the same gauntlets is reported for both sides with the ratio, with
   single-process and pool digests agreeing on each side.
 - **SC-004**: The effect-check equivalence test reports 0 mismatches over every list x every defined effect
-  value (277) plus an undefined value, and its positive control detects an altered entry; the interpreter
-  executes fewer than 20 million steps per bench run of the fixed set (today 143 million).
+  value (277) plus an undefined value, and its positive control detects an altered entry; the benchmark tool
+  reports fewer than 20 million interpreter steps per bench run of the fixed set (today 143 million, measured
+  with the profiling harness; the tool's own before figure is recorded first).
 - **SC-005**: The control mode for shared live conversions reports 0 differences on the full fixed set (opt-in
   run, recorded) and on the one-battle-per-policy control in the default suite; the frozen run passes every
   replay and AI test; live conversions per decision are at most one per live Pokemon plus one per side.
-- **SC-006**: The speed-sharing equivalence test reports 0 differences over at least 1,000 real states, and
-  speed computations for the shared uses are at most one per hypothetical state.
+- **SC-006**: The speed-sharing equivalence test reports 0 differences over at least 1,000 real states for all
+  three users of the values, and speed computations are at most one per hypothetical state.
 - **SC-007**: All existing tests pass: Node suite (334 tests today), fast mode (528 passed, 4 xfailed today)
   and, before merge, the full suite (556 passed, 4 xfailed today).
 
@@ -317,8 +340,9 @@ single-process and pool digests agreeing on both sides, and the single-process f
   the shared values draws a random number for them; the equivalence test (FR-008) is the proof.
 - The feature-015 replay fixture is still the right reference: 015 and 016 were exact, so the digests recorded
   at the 015 instrumentation commit equal today's `main` digests, as the 2026-11-02 health check shows.
-- The benchmark tool from feature 015 is the measurement; no new tooling is needed, except a counter for
-  interpreter steps if the plan wants SC-004's count from the tool rather than from the profiling harness.
+- The benchmark tool from feature 015 is the measurement; the only addition is the interpreter step count in
+  its report (clarification 2026-11-02), a plain per-step counter whose cost was measured at under 1% of run
+  time at today's step count.
 - The expected gain (about 15 to 19% of time, roughly 1.2x) is an estimate from profile shares, not a
   measurement; SC-002 sets the bar below it.
 - Numbering: this feature takes 017, so the decision-changing approximations (`expectimax2-v4`, called 017 in
