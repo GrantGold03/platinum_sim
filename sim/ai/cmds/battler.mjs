@@ -148,13 +148,10 @@ function battlerSpeed(ctx, b, noCloudNine) {
 // (BL:1188-1454). Draws ctx.rand() exactly where the C calls BattleSystem_RandNext. Side effect:
 // battleCtx->monSpeedValues[b] (BL:1372-1373, battle_context.h:259), later read by Gyro Ball in
 // TrainerAI_CalcDamage; kept in ctx.mem.monSpeedValues because ctx.ai is read-only.
-export function compareBattlerSpeed(ctx, battler1, battler2) {
+// Kept verbatim as the reference implementation (Constitution VI, feature 017); compareBattlerSpeed below
+// memoises the pair and must equal it (sim/test/ai_cmds_battler.test.mjs).
+export function compareBattlerSpeedDirect(ctx, battler1, battler2) {
   const ai = ctx.ai;
-  const FASTER = K(ctx, 'COMPARE_SPEED_FASTER');
-  const SLOWER = K(ctx, 'COMPARE_SPEED_SLOWER');
-  const TIE = K(ctx, 'COMPARE_SPEED_TIE');
-  let result = FASTER;
-
   // BL:1204-1210: these return the literals 1 and 0.
   if (ai.curHP(battler1) === 0 && ai.curHP(battler2)) return 1;
   if (ai.curHP(battler1) && ai.curHP(battler2) === 0) return 0;
@@ -163,6 +160,18 @@ export function compareBattlerSpeed(ctx, battler1, battler2) {
     && countAliveAbility(ctx, K(ctx, 'ABILITY_AIR_LOCK')) === 0;
   const b1 = battlerSpeed(ctx, battler1, noCloudNine);
   const b2 = battlerSpeed(ctx, battler2, noCloudNine);
+  return compareWith(ctx, battler1, battler2, b1, b2);
+}
+
+// The comparison proper (BL:1372-1454): records battleCtx->monSpeedValues and compares the two battlers' speed
+// facts with the Quick Claw / Lagging Tail / Stall / Trick Room rules, drawing ctx.rand() for the coin flips exactly
+// where the C does. Shared by compareBattlerSpeedDirect and compareBattlerSpeed; exported for tests only (017).
+export function compareWith(ctx, battler1, battler2, b1, b2) {
+  const ai = ctx.ai;
+  const FASTER = K(ctx, 'COMPARE_SPEED_FASTER');
+  const SLOWER = K(ctx, 'COMPARE_SPEED_SLOWER');
+  const TIE = K(ctx, 'COMPARE_SPEED_TIE');
+  let result = FASTER;
 
   if (!ctx.mem.monSpeedValues) ctx.mem.monSpeedValues = [0, 0, 0, 0];
   ctx.mem.monSpeedValues[battler1] = b1.speed;
@@ -203,6 +212,27 @@ export function compareBattlerSpeed(ctx, battler1, battler2) {
     if (s1 === s2 && coin()) result = TIE;
   }
   return result;
+}
+
+// Feature 017 (specs/017-exact-dispatch-speedups/contracts/adapter-api.md): the deterministic part of the
+// comparison (both battlers' speed facts and the Cloud Nine check) is memoised per adapter per decision through
+// ai.speedPair(). battlerSpeed(b) reads only the adapter's state and ai.speedRand(b) (fixed for the decision), draws
+// nothing, and depends on neither the other battler nor the argument order, so one pair serves (0, 1) and (1, 0)
+// alike; the fainted-battler early returns come first and build nothing; the comparison and its coin flips run per
+// call exactly as in compareBattlerSpeedDirect, the kept reference (Constitution VI). Doubles battler ids (>= 2,
+// unreachable in singles) and adapters without the memo take the direct path.
+export function compareBattlerSpeed(ctx, battler1, battler2) {
+  const ai = ctx.ai;
+  // BL:1204-1210: these return the literals 1 and 0.
+  if (ai.curHP(battler1) === 0 && ai.curHP(battler2)) return 1;
+  if (ai.curHP(battler1) && ai.curHP(battler2) === 0) return 0;
+  if ((battler1 | battler2) > 1 || battler1 === battler2 || typeof ai.speedPair !== 'function') return compareBattlerSpeedDirect(ctx, battler1, battler2);
+  const pair = ai.speedPair(() => {
+    const noCloudNine = countAliveAbility(ctx, K(ctx, 'ABILITY_CLOUD_NINE')) === 0
+      && countAliveAbility(ctx, K(ctx, 'ABILITY_AIR_LOCK')) === 0;
+    return { b: [battlerSpeed(ctx, 0, noCloudNine), battlerSpeed(ctx, 1, noCloudNine)] };
+  });
+  return compareWith(ctx, battler1, battler2, pair.b[battler1], pair.b[battler2]);
 }
 
 // Shared body of the IfHPPercent* handlers (TAI:588-646).

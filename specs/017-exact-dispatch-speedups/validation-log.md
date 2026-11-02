@@ -76,3 +76,26 @@ half inside it 1.0406 gauntlets/s. Switched back to `017-exact-dispatch-speedups
 - Alone (11:22:29 to 11:23:02 AM EST): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c3_v2.json`:
   digest `db6d20cf…`, `ai_draws` 849,962, `interp_steps` 15,893,649 (unchanged), **1.2044 gauntlets/s, 10.242 ms/decision**
   (US2 attribution: 1.087x vs commit 2's 1.1080; cumulative 1.188x vs T002's 1.0140).
+
+## T021-T027 US3: one speed pair per view, speedInfo once per state (11:24 to 11:34:50 AM EST)
+
+- Tests first: the three new tests (`ai_cmds_battler`, `ai_adapter`, `expectimax2`) failed before T024-T026 (missing
+  `compareBattlerSpeedDirect` / `speedPair`); after, the targeted set `ai_cmds_battler + ai_adapter + expectimax2 +
+  replay + ai_golden`: **61 pass**. Speed-pair equivalence: **1,001 real views** (harvested from expectimax2-v2
+  decisions on the benchmark team vs Aaron, plus two fainted-active views per decision; 91 fainted-active, 1
+  both-fainted), **3 caller shapes x 1,001 = 3,003 comparisons, 0 differences** in result, `monSpeedValues` and draw
+  counts; every shadow view built its pair at most once; positive control 20/20 tampered pairs detected. Coverage of
+  the harvested set: 119 views with speed stages, 287 with weather, 0 with paralysis / speed items / Quick Claw /
+  Trick Room / tie draws; those paths are exercised by the existing `IfSpeedCompareEqualTo` tests in the same file
+  (tie draws one RandNext, Quick Claw with `speedRand`), which now run through the memo and pass.
+- Test-side fix (not a behaviour change): the Quick Claw test changes the adapter's `speedRand` input between two
+  comparisons on the same adapter; `speedRand` is fixed per decision in the game and the port (drawn per turn,
+  battle_context.h:293), so the test now calls `beginDecision()` after changing it. My own fainted-active assertion
+  was too strict for the both-fainted case, where the game (and both versions) compute the speeds; corrected.
+- Gates: `PLATSIM_AI_FREEZE=1` run **174 pass, 0 fail, exit 0** (`t027-freeze.log`); full Node suite first run 346/347:
+  the one failure is the known `seeds.test.mjs` `|t:|` timestamp flake (`|t:|1793636996` vs `…997`, README "Node suite"),
+  rerun **347 pass, 0 fail, exit 0**, 120.9 s (`node-suite-c4b.log`; 334 + 6 interp + 1 golden + 1 bench + 1 + 2 + 1 + 1).
+- Alone (11:31:52 to 11:32:24 AM EST): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c4_v2.json`:
+  digest `db6d20cf…`, `ai_draws` 849,962, `interp_steps` 15,893,649, `stats.speedInfo` **59,584** calls (246,632 before
+  the hoist, from the 2026-11-02 profile), **1.2493 gauntlets/s, 9.806 ms/decision** (US3 attribution: 1.037x vs commit
+  3's 1.2044; cumulative 1.232x vs T002's 1.0140).

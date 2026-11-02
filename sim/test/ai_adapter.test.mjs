@@ -449,3 +449,46 @@ test('017 CHECK covers the battler and field structs: a corrupted struct or a ch
     assert.equal(off.stdout.trim(), 'no throw');
   }
 });
+
+// Feature 017 (contracts/adapter-api.md): one speed-pair memo slot per decision.
+test('017 speedPair memo: built once, hit after, dropped by beginDecision; frozen under FREEZE; compared under CHECK', async () => {
+  const ai = createAdapter(makeBattle());
+  let builds = 0;
+  const build = () => { builds++; return { b: [{ speed: 10 + builds }, { speed: 20 }] }; };
+  const p1 = ai.speedPair(build);
+  const p2 = ai.speedPair(build);
+  assert.equal(builds, 1);
+  assert.equal(p2, p1);
+  assert.equal(ai.cacheStats.speedPairs, 1);
+  assert.equal(ai.cacheStats.speedPairHits, 1);
+  ai.beginDecision();
+  const p3 = ai.speedPair(build);
+  assert.equal(builds, 2, 'dropped at the decision boundary');
+  assert.notEqual(p3, p1);
+  assert.equal(ai.cacheStats.speedPairs, 2);
+  const { spawnSync } = await import('node:child_process');
+  const url = (p) => JSON.stringify(new URL(p, import.meta.url).href);
+  const run = (script, env) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, ...env }, encoding: 'utf8', timeout: 300000 });
+  const base = `
+    import { Battle } from ${url('../showdown.mjs')};
+    import { createAdapter } from ${url('../ai/adapter.mjs')};
+    const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 }, evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    const mon = (species, moves, extra = {}) => ({ species, moves, level: 50, nature: 'Serious', ivs, evs, item: '', ...extra });
+    const battle = new Battle({ formatid: 'gen4customgame', seed: [1, 2, 3, 4],
+      p1: { name: 'P', team: [mon('garchomp', ['earthquake'], { ability: 'Sand Veil' })] },
+      p2: { name: 'AI', team: [mon('blissey', ['toxic'], { ability: 'Natural Cure' })] } });
+    const ai = createAdapter(battle);
+  `;
+  const freeze = base + `const pair = ai.speedPair(() => ({ b: [{ speed: 1 }, { speed: 2 }] })); try { pair.b[0].speed = 9; console.log('no throw'); } catch (e) { console.log(e.constructor.name); }`;
+  const on = run(freeze, { PLATSIM_AI_FREEZE: '1', PLATSIM_AI_CHECK: '' });
+  assert.equal(on.status, 0, on.stderr);
+  assert.equal(on.stdout.trim(), 'TypeError');
+  const off = run(freeze, { PLATSIM_AI_FREEZE: '', PLATSIM_AI_CHECK: '' });
+  assert.equal(off.stdout.trim(), 'no throw');
+  const check = base + `let n = 0; ai.speedPair(() => ({ b: [{ speed: ++n }, { speed: 2 }] })); ai.speedPair(() => ({ b: [{ speed: ++n }, { speed: 2 }] })); console.log('no throw');`;
+  const bad = run(check, { PLATSIM_AI_CHECK: '1', PLATSIM_AI_FREEZE: '' });
+  assert.notEqual(bad.status, 0, 'a pair that recomputes differently must be reported');
+  assert.match(bad.stderr, /CHECK mismatch speedPair/);
+  const quiet = run(check, { PLATSIM_AI_CHECK: '', PLATSIM_AI_FREEZE: '' });
+  assert.equal(quiet.stdout.trim(), 'no throw');
+});

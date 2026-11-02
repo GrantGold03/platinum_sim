@@ -13,6 +13,12 @@ import { parseAiScript } from '../ai/parse.mjs';
 import { makeCtx, HANDLERS } from '../ai/interp.mjs';
 import { handlers as battlerHandlers } from '../ai/cmds/battler.mjs';
 import { loadConstants } from '../ai/constants.mjs';
+import { compareBattlerSpeed, compareBattlerSpeedDirect, compareWith } from '../ai/cmds/battler.mjs';
+import { scoreActions, _internal, V2_OPTS } from '../policy/expectimax2.mjs';
+import { runGauntlet, registerPlayerPolicy } from '../gauntlet.mjs';
+import { DECOMP_AI } from '../ai/opponent.mjs';
+import { loadTeam } from '../bench.mjs';
+import { gd, stubRng } from './ai_fixtures.mjs';
 
 const C = loadConstants();
 const K = (n) => C.get(n);
@@ -273,6 +279,7 @@ test('IfSpeedCompareEqualTo: Quick Claw uses speedRand[battler] % (100 / 20) and
   let ctx = ctxFor(ai);
   assert.ok(jumped(ctx, FASTER));
   speedRand = 3; // 3 % 5 != 0 -> slower Blissey stays slower
+  ai.beginDecision(); // 017: speedRand is fixed per decision (battle_context.h:293 is drawn per turn); the speed pair memo lives one decision
   ctx = ctxFor(ai);
   assert.ok(fell(ctx, FASTER));
   assert.ok(jumped(ctx, insAt('IfSpeedCompareEqualTo', 1864)));
@@ -535,4 +542,99 @@ test('IfLevel / IfTargetIsNotTaunted', () => {
   ctx = ctxFor(ai);
   assert.ok(fell(ctx, notTaunted));
   assert.equal(ctx.rand.calls, 0);
+});
+
+// ---------------------------------------------------------------------------------------------
+// Feature 017 (FR-008, SC-006; contracts/adapter-api.md): the deterministic part of compareBattlerSpeed is memoised
+// per view (ai.speedPair); the comparison and its tie-break draws stay per call. Reference: compareBattlerSpeedDirect.
+
+// Real hypothetical-state views, harvested from expectimax2-v2 decisions on the benchmark team (one gauntlet per
+// trainer until enough), plus two fainted-active views per decision built from the root state.
+function harvestViews(minViews) {
+  const views = [];
+  let fainted = 0;
+  registerPlayerPolicy({ name: 'harvest-017', choose(ctx) {
+    const { request } = ctx;
+    if (!request || request.wait || request.teamPreview) return 'default';
+    if (!request.forceSwitch && !request.active?.[0]) return 'default';
+    const { X, acts, scores } = scoreActions(ctx, V2_OPTS, 'expectimax2-v2');
+    if (views.length < minViews) {
+      views.push(X.rootView, ...X.views.values());
+      for (const i of [0, 1]) {
+        const S = _internal.cloneState(X.root);
+        const side = S.sides[i];
+        if (side.active >= 0 && side.mons[side.active].hp > 0) { side.mons[side.active].hp = 0; views.push(_internal.viewOf(X, S)); fainted++; }
+      }
+    }
+    if (!acts.length) return 'default';
+    let bi = 0;
+    for (let i = 1; i < scores.length; i++) if (scores[i] > scores[bi]) bi = i;
+    return acts[bi].choice;
+  } });
+  const team = loadTeam('bench');
+  for (const trainer of ['aaron', 'bertha', 'flint', 'lucian', 'cynthia']) {
+    if (views.length >= minViews) break;
+    runGauntlet(gd, { team, seed: `speedpair-017-${trainer}`, player_policy: 'harvest-017', opponent_policy: DECOMP_AI, trainers: [trainer], stop_on_loss: false });
+  }
+  return { views, fainted };
+}
+
+test('017 speed pair: memo == direct over >= 1,000 real views x three caller shapes (result, monSpeedValues, draws); one build per view; positive control', (t) => {
+  const { views, fainted } = harvestViews(1000);
+  assert.ok(views.length >= 1000, `${views.length} views`);
+  const shapes = [[0, 1, []], [1, 0, []], [1, 0, [1, 0, 1, 1, 0, 1]]]; // (battler1, battler2, stub RNG values; [] = always 0)
+  const cov = { stages: 0, par: 0, speedItem: 0, quickClaw: 0, trickRoom: 0, weather: 0, fainted: 0, bothFainted: 0, ties: 0, draws: 0 };
+  const active = (v, i) => v.battle.sides[i].active[0];
+  let compared = 0;
+  for (const v of views) {
+    const a0 = active(v, 0), a1 = active(v, 1);
+    const bothAlive = a0 && a1 && a0.hp > 0 && a1.hp > 0;
+    if (!bothAlive) cov.fainted++;
+    if (a0 && a1 && a0.hp <= 0 && a1.hp <= 0) cov.bothFainted++;
+    if (bothAlive) {
+      if (a0.boosts.spe || a1.boosts.spe) cov.stages++;
+      if (a0.status === 'par' || a1.status === 'par') cov.par++;
+      if ([a0.item, a1.item].some((it) => /choicescarf|ironball|machobrace|power/.test(it || ''))) cov.speedItem++;
+      if ([a0.item, a1.item].includes('quickclaw')) cov.quickClaw++;
+      if (v.battle.field.pseudoWeather.trickroom) cov.trickRoom++;
+      if (v.battle.field.weather) cov.weather++;
+    }
+    const before = { ...v.ai.cacheStats };
+    for (const [b1, b2, vals] of shapes) {
+      const mk = () => { const rng = stubRng([...vals], 0); return { rng, ctx: { ai: v.ai, mem: { monSpeedValues: [0, 0, 0, 0] }, rand: () => rng.next() } }; };
+      const D = mk(), M = mk();
+      const direct = compareBattlerSpeedDirect(D.ctx, b1, b2);
+      const memo = compareBattlerSpeed(M.ctx, b1, b2);
+      assert.equal(memo, direct, `result, view ${v.key}, shape ${b1},${b2}`);
+      assert.deepEqual(M.ctx.mem.monSpeedValues, D.ctx.mem.monSpeedValues, `monSpeedValues, view ${v.key}`);
+      assert.equal(M.rng.draws, D.rng.draws, `draw count, view ${v.key}`);
+      if (D.rng.draws > 0) { cov.ties++; cov.draws += D.rng.draws; }
+      compared++;
+    }
+    const after = v.ai.cacheStats;
+    const builds = after.speedPairs - before.speedPairs, hits = after.speedPairHits - before.speedPairHits;
+    const oneFainted = (a0?.hp > 0) !== (a1?.hp > 0); // exactly one fainted: BL:1204-1210 returns before any speed is read
+    if (oneFainted) {
+      assert.equal(builds, 0, `one fainted active returns before the memo (view ${v.key})`);
+      assert.equal(hits, 0);
+    } else { // both alive, or both fainted (the game computes the speeds then, and so do both versions)
+      assert.ok(builds <= 1, `at most one build during the test calls (view ${v.key}: ${builds})`);
+      assert.equal(builds + hits, shapes.length, `every memo call built or hit (view ${v.key})`);
+      if (v.key !== 'root') assert.ok(after.speedPairs <= 1, `a shadow view builds its pair at most once in its lifetime (${after.speedPairs})`);
+    }
+  }
+  // Positive control: a tampered pair changes the comparison's outputs against the direct result.
+  let differs = 0, controls = 0;
+  for (const v of views) {
+    const a0 = active(v, 0), a1 = active(v, 1);
+    if (!(a0 && a1 && a0.hp > 0 && a1.hp > 0) || controls >= 20) continue;
+    controls++;
+    const pair = v.ai.speedPair(() => { throw new Error('must hit: the pair was built by the calls above'); });
+    const bad = [{ ...pair.b[0], speed: pair.b[0].speed + 1 }, pair.b[1]];
+    const D = { ai: v.ai, mem: { monSpeedValues: [0, 0, 0, 0] }, rand: () => 0 }, M = { ai: v.ai, mem: { monSpeedValues: [0, 0, 0, 0] }, rand: () => 0 };
+    const direct = compareBattlerSpeedDirect(D, 0, 1), tampered = compareWith(M, 0, 1, bad[0], bad[1]);
+    if (tampered !== direct || M.mem.monSpeedValues[0] !== D.mem.monSpeedValues[0]) differs++;
+  }
+  assert.ok(controls >= 10 && differs >= 1, `positive control: ${differs}/${controls} tampered pairs detected`);
+  t.diagnostic(`speed pair: ${views.length} views (${fainted} fainted-active), ${compared} comparisons, 0 differences; coverage ${JSON.stringify(cov)}`);
 });

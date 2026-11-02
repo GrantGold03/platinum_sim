@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { runGauntlet, PLAYER_POLICIES, registerPlayerPolicy } from '../gauntlet.mjs';
 import { AIRng } from '../ai/choose.mjs';
 import { DECOMP_AI } from '../ai/opponent.mjs';
-import { expectimax2, makeContext, scoreActions, _internal, PARAMS, V1_OPTS, V2_OPTS } from '../policy/expectimax2.mjs';
+import { expectimax2, makeContext, scoreActions, _internal, PARAMS, STATS, V1_OPTS, V2_OPTS } from '../policy/expectimax2.mjs';
 import { B, gd, leagueBattle } from './ai_fixtures.mjs';
 
 const TEAM = JSON.parse(readFileSync(new URL('../../tests/fixtures/policy_benchmark_team.json', import.meta.url), 'utf8')).team;
@@ -134,4 +134,16 @@ test('017 damage inputs from the root adapter\'s memo: at most one conversion pe
   const imp = src.match(/^import \{([^}]*)\} from '\.\.\/damage\.mjs';$/m);
   assert.ok(imp, 'the policy imports from ../damage.mjs');
   assert.ok(!/\bfromShowdown\b/.test(imp[1]), `fromShowdown still imported: ${imp[0]}`);
+});
+
+// Feature 017 (FR-008; contracts/policy-and-bench.md): turn-order facts once per state, one speed pair per view.
+test('017 speedInfo once per state: calls <= ply-2 nodes + root actions + 1; one speed pair on the root adapter', () => {
+  const ctx = spiritombPosition();
+  const s0 = STATS.speedInfo;
+  const { X, acts } = scoreActions(ctx, V2_OPTS, 'expectimax2-v2');
+  const calls = STATS.speedInfo - s0;
+  assert.ok(calls > 0, 'speedInfo was used');
+  assert.ok(calls <= X.nodes + acts.length + 1, `${calls} speedInfo calls for ${X.nodes} ply-2 nodes and ${acts.length} root actions`);
+  assert.ok(X.rootView.ai.cacheStats.speedPairs <= 1, `root adapter built ${X.rootView.ai.cacheStats.speedPairs} speed pairs in its first decision`);
+  assert.ok(X.rootView.ai.cacheStats.speedPairHits > 0, 'the root samples and the root turn resolution shared it');
 });

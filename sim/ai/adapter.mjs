@@ -245,6 +245,7 @@ export function createAdapter(battle, opts = {}) {
   const fields = new Map(); // defender Side -> field members that do not depend on the pair
   const plans = new Map(); // 016: attacker struct -> defender struct -> key -> type-chart plan
   const pre = new Map(); // 016: attacker struct -> defender struct -> key -> { damage, moveStatusMask }
+  let speedPairMemo; // 017: the two battlers' speed facts for this decision (cmds/battler.mjs compareBattlerSpeed)
   const cacheStats = { builds: 0, hits: 0, decisions: 0, plans: 0, planHits: 0, preVariance: 0, preVarianceHits: 0, checks: 0,
     fieldBuilds: 0, structChecks: 0, speedPairs: 0, speedPairHits: 0 }; // 017: the last four
 
@@ -618,7 +619,22 @@ export function createAdapter(battle, opts = {}) {
       fields.clear();
       plans.clear();
       pre.clear();
+      speedPairMemo = undefined; // 017
       cacheStats.decisions++;
+    },
+    // ---------- 017: one speed-pair memo per decision (contracts/adapter-api.md) ----------
+    // `build` is cmds/battler.mjs's pair builder: a pure function of this adapter's state. Stored for the rest of
+    // the decision (frozen under PLATSIM_AI_FREEZE=1); under PLATSIM_AI_CHECK=1 every hit rebuilds and compares.
+    speedPair(build) {
+      if (speedPairMemo !== undefined) {
+        cacheStats.speedPairHits++;
+        if (CHECK) checkSame('speedPair', 'pair', speedPairMemo, build());
+        return speedPairMemo;
+      }
+      speedPairMemo = build();
+      if (FREEZE) deepFreeze(speedPairMemo);
+      cacheStats.speedPairs++;
+      return speedPairMemo;
     },
     damageInput,
     // ---------- 016: per-decision memo of the type-chart plan and the pre-variance damage ----------

@@ -261,7 +261,7 @@ decision is at most the ply-2 node count plus the root actions.
 
 ### Tests for User Story 3 (write first; fail on the missing `compareBattlerSpeedDirect` / `ai.speedPair` before T024)
 
-- [ ] T021 [US3] Create the block "017 speed pair" in `sim/test/ai_cmds_battler.test.mjs`: harvest views by running
+- [X] T021 [US3] Create the block "017 speed pair" in `sim/test/ai_cmds_battler.test.mjs`: harvest views by running
   `expectimax2-v2` decisions on 3 to 5 fixture battles from `ai_fixtures.mjs` (`leagueBattle` for different trainers,
   play a few turns with `battle.makeChoices` using the policy's `choose` for p1 and `decide` for p2, and after each
   player decision collect `[X.rootView, ...X.views.values()]` from `scoreActions`'s returned `X`) until >= 1,000 distinct
@@ -279,22 +279,22 @@ decision is at most the ply-2 node count plus the root actions.
   `compareWith(ctx, 0, 1, bad.b[0], bad.b[1])` differs from `compareBattlerSpeedDirect(ctx, 0, 1)` in result or in
   `mem.monSpeedValues` for at least one such view over the set (ties may hide the result difference on a single view,
   the `monSpeedValues` write never does). Runtime target under 20 s
-- [ ] T022 [P] [US3] Add to `sim/test/ai_adapter.test.mjs` ("017 speedPair memo"): `ai.speedPair(build)` calls `build`
+- [X] T022 [P] [US3] Add to `sim/test/ai_adapter.test.mjs` ("017 speedPair memo"): `ai.speedPair(build)` calls `build`
   once and returns its value, a second call returns the same object without calling `build` (`speedPairs` +1,
   `speedPairHits` +1); `beginDecision()` then a call builds again; the freeze child: under `PLATSIM_AI_FREEZE=1`
   `pair.b[0].speed = 1` throws `TypeError`, without it does not; the CHECK child: with `PLATSIM_AI_CHECK: '1'`, `speedPair`
   whose `build` returns a different object on the second call exits non-zero with `/CHECK mismatch speedPair/`
-- [ ] T023 [P] [US3] Add to `sim/test/expectimax2.test.mjs` ("017 speedInfo once per state"): around one
+- [X] T023 [P] [US3] Add to `sim/test/expectimax2.test.mjs` ("017 speedInfo once per state"): around one
   `scoreActions` on the fixture position, `STATS.speedInfo` delta <= `X.nodes` + `acts.length` + 1 (root) and > 0;
   and `X.rootView.ai.cacheStats.speedPairs` delta <= 1
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] In `sim/ai/adapter.mjs`: decision-cache slot `let speedPair;` cleared in `beginDecision()`;
+- [X] T024 [US3] In `sim/ai/adapter.mjs`: decision-cache slot `let speedPair;` cleared in `beginDecision()`;
   `api.speedPair(build)`: hit → `speedPairHits++`, under CHECK `checkSame('speedPair', 'pair', speedPair, build())`,
   return it; miss → `speedPair = build()`, `if (FREEZE) deepFreeze(speedPair)`, `speedPairs++`, return. Header and
   `sim/ai/INTERFACE.md` 017 section (method, counters, CHECK)
-- [ ] T025 [US3] In `sim/ai/cmds/battler.mjs`: rename today's `compareBattlerSpeed` body to `export function
+- [X] T025 [US3] In `sim/ai/cmds/battler.mjs`: rename today's `compareBattlerSpeed` body to `export function
   compareBattlerSpeedDirect(ctx, battler1, battler2)` (verbatim, citations kept; comment "reference, Constitution VI");
   new `export function compareBattlerSpeed(ctx, battler1, battler2)`: the two early returns verbatim (BL:1204-1210);
   if `(battler1 | battler2) > 1` return `compareBattlerSpeedDirect(ctx, battler1, battler2)` (doubles slots); else
@@ -305,13 +305,13 @@ decision is at most the ply-2 node count plus the root actions.
   and documented as such in its comment, used by both functions so the comparison text exists once; the direct function
   keeps computing its own `b1`, `b2`). Doc comment:
   why the pair is order-independent and draw-free (research R4)
-- [ ] T026 [US3] In `sim/policy/expectimax2.mjs`: `STATS.speedInfo = 0` and `STATS.speedInfo++` at the top of `speedInfo`;
+- [X] T026 [US3] In `sim/policy/expectimax2.mjs`: `STATS.speedInfo = 0` and `STATS.speedInfo++` at the top of `speedInfo`;
   `resolveTurn(X, S, pa, oa, speedOf = () => speedInfo(X, S))` using `speedOf().pFirst` where it read `speedInfo(X, S).pFirst`;
   in `valuePly2` after `replaceFainted` and the terminal check: `let sp; const speedOf = () => (sp ??= speedInfo(X, S));`
   passed to its `resolveTurn` calls; in `qValue` the same thunk per call passed to its `resolveTurn` calls;
   `variablePower` unchanged. Header "Decision context" comment: one line on the thunk and why `S` is constant across
   the loop (research R4)
-- [ ] T027 [US3] Gate (quickstart step 4): `(cd sim && node --test test/ai_cmds_battler.test.mjs test/ai_adapter.test.mjs
+- [X] T027 [US3] Gate (quickstart step 4): `(cd sim && node --test test/ai_cmds_battler.test.mjs test/ai_adapter.test.mjs
   test/expectimax2.test.mjs test/replay.test.mjs test/ai_golden.test.mjs)` exit 0; freeze run exit 0; full Node suite
   exit 0; alone `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c4_v2.json` → digest and
   `ai_draws` unchanged; record `gauntlets_per_s`, `ms_per_decision` under "US3 attribution" with the speed-pair

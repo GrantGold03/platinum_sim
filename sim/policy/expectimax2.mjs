@@ -169,7 +169,7 @@ export const V1_OPTS = Object.freeze({ koStop: false });
 export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
-export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0 };
+export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0 }; // speedInfo: 017 calls
 
 // Search parameters (policy tuning).
 export const PARAMS = {
@@ -416,6 +416,7 @@ function viewOf(X, S) {
 
 const FASTER = 0; // COMPARE_SPEED_FASTER, include/constants/battle.h:163
 function speedInfo(X, S) {
+  STATS.speedInfo++;
   const v = viewOf(X, S);
   if (v.speed) return v.speed;
   const mem = { monSpeedValues: [0, 0, 0, 0] };
@@ -850,7 +851,9 @@ function endOfTurn(X, S) {
 
 const priorityOf = (act) => (act.kind === 'move' && act.rec ? act.rec.priority : 0);
 
-function resolveTurn(X, S, pa, oa) {
+// 017: `speedOf` is a lazy thunk for speedInfo(X, S) that the callers share across every (action, opponent action)
+// pair on the same S (S is never written here: S0 is the clone), so the state's turn-order facts are looked up once.
+function resolveTurn(X, S, pa, oa, speedOf = () => speedInfo(X, S)) {
   STATS.turns++;
   const S0 = cloneState(S);
   if (pa.kind === 'switch') doSwitch(X, S0, 0, pa.idx);
@@ -869,7 +872,7 @@ function resolveTurn(X, S, pa, oa) {
     const p0 = priorityOf(pa), p1 = priorityOf(oa);
     if (p0 !== p1) orders = [[p0 > p1 ? [0, 1] : [1, 0], 1]];
     else {
-      const f = speedInfo(X, S).pFirst; // turn order is fixed at the start of the turn
+      const f = speedOf().pFirst; // turn order is fixed at the start of the turn
       orders = f === 1 ? [[[0, 1], 1]] : f === 0 ? [[[1, 0], 1]] : [[[0, 1], 0.5], [[1, 0], 0.5]];
     }
   } else orders = [[movers, 1]];
@@ -1120,11 +1123,13 @@ function valuePly2(X, S) {
   replaceFainted(X, S);
   if (terminal(S)) return leafValue(X, S);
   const opp = predictOpponent(X, S, 'p2', PARAMS.K_PLY2);
+  let sp;
+  const speedOf = () => (sp ??= speedInfo(X, S)); // 017: once per state
   let best = -Infinity;
   for (const a of playerMoveActs(X, S)) {
     let q = 0;
     for (const { p, act } of opp) {
-      for (const br of resolveTurn(X, S, a, act)) q += p * br.p * leafValue(X, br.S);
+      for (const br of resolveTurn(X, S, a, act, speedOf)) q += p * br.p * leafValue(X, br.S);
     }
     if (q > best) best = q;
   }
@@ -1135,8 +1140,10 @@ function valuePly2(X, S) {
 const activeFainted = (S) => { const a = activeOf(S, 0), o = activeOf(S, 1); return !a || a.hp <= 0 || !o || o.hp <= 0; };
 function qValue(X, S, a, opp) {
   let q = 0;
+  let sp;
+  const speedOf = () => (sp ??= speedInfo(X, S)); // 017: once per state
   for (const { p, act } of opp) {
-    for (const br of resolveTurn(X, S, a, act)) {
+    for (const br of resolveTurn(X, S, a, act, speedOf)) {
       q += p * br.p * (X.opts.koStop && activeFainted(br.S) ? leafValue(X, br.S) : valuePly2(X, br.S));
     }
   }
