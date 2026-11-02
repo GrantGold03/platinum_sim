@@ -6,10 +6,13 @@
 // VERSIONS (V1_OPTS / V2_OPTS):
 //   expectimax2-v1  W_ALIVE 1.0, W_FR 0.45, no koStop. Kept registered, unchanged, so recorded
 //                   results (T056, the T058 / US1 optimizer runs) stay reproducible.
-//   expectimax2-v4  (018) v2's model, leaf and horizon with a smaller search BUDGET (see V4_OPTS below): fewer
-//                   trainer-AI samples, one switch target at the root, low-probability first-ply branches valued
-//                   by the leaf. Validated reference-first against v2 on paired runs; the numbers are in
-//                   specs/018-expectimax2-v4/validation-log.md. v1 and v2 are unchanged.
+//   expectimax2-v4  (018) v2's model, leaf and horizon with a smaller search BUDGET (V4_OPTS below): 4 root
+//                   samples instead of 8, 1 second-ply sample instead of 2, first-ply branches below weight 0.05
+//                   valued by the leaf; the switch beam stays 2 (beam 1 was worse on one team). Validated
+//                   reference-first against v2: 2,000 paired gauntlets on four fixed teams, no statistically
+//                   supported drop (bench 0.8505 vs 0.8595, ref 0.9430 vs 0.9460, 014 B2 main 0.9110 vs 0.9150,
+//                   014 B2 branch 0.7845 vs 0.7950; p 0.33 to 0.71), about 1.55x faster in the pool
+//                   (specs/018-expectimax2-v4/validation-log.md). v1 and v2 are unchanged.
 //   expectimax2-v2  koStop (see HORIZON), W_ALIVE 0.25, W_FR 0.10. Why: on a quick-run screening
 //                   finalist (L58 Infernape/Staraptor/Luxray/Garchomp/Gyarados/Gardevoir with plates
 //                   and Sitrus Berries) v1 cleared 109/400 vs greedy-v1 348/400 (McNemar p = 4e-60),
@@ -180,10 +183,13 @@ export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 //           the second-ply search; the weight is kept (the expectation's mass is unchanged), never dropped (default 0)
 //   seedName  name used to seed the private trainer-AI streams (default: the policy name); candidate policies
 //           (sim/gauntlet.mjs playerPolicyFor) pass 'expectimax2-v4' so a candidate with v4's knobs equals v4 exactly.
-// V4_OPTS is PROVISIONAL (the all-four sizing set, REPORT4.md appendix) until the 018 ladder picks the fastest
-// combination that is not worse than v2 on paired runs; commit 4 of the feature sets the final values.
+// V4_OPTS is the 018 ladder's result (specs/018-expectimax2-v4/validation-log.md T019-T022, 2026-11-02): each knob
+// alone and then the combination, 2,000 paired gauntlets vs v2 on four fixed teams, McNemar exact at alpha 0.05.
+// kRoot 4, kPly2 1 and the floor (0.02 and 0.05) each passed alone; switch beam 1 was WORSE on the 014 B2 main team
+// (p 0.0065) and is excluded, so the beam stays 2. The combination 4 / 1 / 2 / 0.05 passed on all four teams
+// (deficits 0.3 to 1.05 points, p 0.33 to 0.71, none supported) at about 1.55x v2 in the pool.
 export const EXPECTIMAX2_V4 = 'expectimax2-v4';
-export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 1, floor: 0.02 });
+export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05 });
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0, floored: 0 }; // speedInfo: 017 calls; floored: 018 leaf-valued branches

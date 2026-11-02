@@ -42,7 +42,7 @@ if (!isMainThread && workerData?.replayWorker) {
   const policies = Object.keys(fixture.policies);
 
   test('fixture: both policies, the fixed set, the main digest for expectimax2-v2', () => {
-    assert.deepEqual(policies.sort(), ['expectimax2-v1', 'expectimax2-v2']);
+    assert.deepEqual(policies.sort(), ['expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4']); // 018: v4 entry added
     assert.equal(fixture.set.n, 20);
     assert.deepEqual(fixture.set.teams, ['bench', 'ref']);
     assert.equal(fixture.set.stop_on_loss, false);

@@ -37,7 +37,7 @@ from platsim.stats import mcnemar_exact, wilson_ci
 FIXTURE = pins.REPO_ROOT / "tests" / "fixtures" / "policy_benchmark_team.json"
 REVERSAL_FIXTURE = pins.REPO_ROOT / "tests" / "fixtures" / "policy_reversal_team.json"
 SPECIES = pins.REPO_ROOT / "data" / "generated" / "species.json"
-POLICIES = ("greedy-v1", "expectimax2-v1", "expectimax2-v2")
+POLICIES = ("greedy-v1", "expectimax2-v1", "expectimax2-v2", "expectimax2-v4")  # 018: v4 too
 OPPONENT = "decomp-ai"
 MASTER = "t056-policy-strength"
 REVERSAL_MASTER = "x2v2-reversal"
@@ -110,11 +110,16 @@ def test_expectimax2_beats_greedy_paired():
     n = int(os.environ.get("PLATSIM_STRENGTH_N", "2000"))
     workers = int(os.environ.get("PLATSIM_STRENGTH_WORKERS", str(os.cpu_count() or 1)))
     outcomes, timing, hello = _paired(_team(), POLICIES, n, MASTER, workers)
-    pairs = [("expectimax2-v1", "greedy-v1"), ("expectimax2-v2", "greedy-v1"), ("expectimax2-v2", "expectimax2-v1")]
+    pairs = [("expectimax2-v1", "greedy-v1"), ("expectimax2-v2", "greedy-v1"), ("expectimax2-v2", "expectimax2-v1"),
+             ("expectimax2-v4", "greedy-v1"), ("expectimax2-v4", "expectimax2-v2")]  # 018: v4 beats greedy; v4 not worse than v2
     text, cmps = _report("T056 policy strength", n, MASTER, workers, hello, outcomes, timing, pairs)
     print(text)
-    for pair in pairs[:2]:
+    for pair in (pairs[0], pairs[1], pairs[3]):
         assert cmps[pair].verdict == "A" and cmps[pair].p_value < 0.05, text
+    # 018 regression guard (the proof is the ladder in specs/018-expectimax2-v4/validation-log.md): v4 must not show a
+    # statistically supported drop against v2 on the benchmark team.
+    v4v2 = cmps[("expectimax2-v4", "expectimax2-v2")]
+    assert not (v4v2.verdict == "B" and v4v2.p_value < 0.05), text
 
 
 @pytest.mark.battle_sim
@@ -122,9 +127,10 @@ def test_expectimax2_v2_not_worse_than_greedy_on_reversal_team():
     n = int(os.environ.get("PLATSIM_REVERSAL_N", "400"))
     workers = int(os.environ.get("PLATSIM_STRENGTH_WORKERS", str(os.cpu_count() or 1)))
     team = json.loads(REVERSAL_FIXTURE.read_text())["team"]
-    outcomes, timing, hello = _paired(team, ("greedy-v1", "expectimax2-v2"), n, REVERSAL_MASTER, workers)
+    outcomes, timing, hello = _paired(team, ("greedy-v1", "expectimax2-v2", "expectimax2-v4"), n, REVERSAL_MASTER, workers)
     text, cmps = _report("policy reversal team", n, REVERSAL_MASTER, workers, hello, outcomes, timing,
-                         [("expectimax2-v2", "greedy-v1")])
+                         [("expectimax2-v2", "greedy-v1"), ("expectimax2-v4", "greedy-v1")])
     print(text)
-    cmp = cmps[("expectimax2-v2", "greedy-v1")]
-    assert not (cmp.verdict == "B" and cmp.p_value < 0.05), text
+    for pair in (("expectimax2-v2", "greedy-v1"), ("expectimax2-v4", "greedy-v1")):  # 018: v4 too
+        cmp = cmps[pair]
+        assert not (cmp.verdict == "B" and cmp.p_value < 0.05), text

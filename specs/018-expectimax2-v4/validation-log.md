@@ -136,3 +136,52 @@ p 0.0065). Pool speed of C1 vs v2 with `stop_on_loss`: 1.53x, 1.58x, 1.59x, 1.59
 0 discordant pairs. Total ladder wall: 4:14 to 5:40 PM EST (1 h 26 min; under the 5 to 6 h estimate because the pool
 with `stop_on_loss` runs 9 to 17 gauntlets/s rather than the 4.5 estimated from the bench tool's full gauntlets).
 `runs/018-evidence/pairs/summary.json` holds the 29 rows.
+
+## Commit 3 (5:41 PM EST)
+
+`6e00512 test(018): paired policy comparison script; ladder recorded (v4 = kRoot 4, kPly2 1, beam 2, floor 0.05)`, pushed.
+
+## T024 Final `V4_OPTS` (5:41 PM EST)
+
+`sim/policy/expectimax2.mjs`: `V4_OPTS = { ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05 }` with the ladder's
+numbers in the VERSIONS entry; `expectimax2.test.mjs` asserts the final set. `expectimax2 + gauntlet` tests: 14 pass.
+
+## T025 The v4 replay-fixture entry (5:41:50 to 5:42:33 PM EST)
+
+`node sim/bench.mjs --policy expectimax2-v4 --record sim/test/replay_prof_a.json` (alone): exit 0, **2.0514 gauntlets/s,
+5.447 ms/decision**, AI draws 343,327, interpreter steps 6,526,653, 40 gauntlets, **`digest_full 05fa8cb1…`**. The v1 and
+v2 subtrees of the fixture are byte-identical to before (JSON comparison of `policies['expectimax2-v1']` and
+`['expectimax2-v2']`; the file-level `recorded` block now says commit 6e00512, `sim_code_hash` sha256:d74ca541…).
+`replay.test.mjs` expects three policies; `(cd sim && node --test test/replay.test.mjs)`: **3 pass, exit 0**,
+`replay: 120 gauntlets, 8997 player decisions, 16 workers, 22.6 s` (`runs/018-evidence/t025-replay.log`).
+
+## T026 Policy-strength tests cover v4, in-suite smoke (5:43:08 to 5:46:31 PM EST)
+
+`PLATSIM_STRENGTH_N=400 PLATSIM_REVERSAL_N=200 uv run pytest -q tests/integration/test_policy_strength.py -s`: **3 passed**,
+202.8 s (`runs/018-evidence/strength-smoke.log`). Benchmark team, 400 paired: greedy 0.1575, v1 0.5000, v2 0.8575,
+**v4 0.8450**; v4 vs greedy only 286/11, p 2.7e-70, verdict A; **v4 vs v2 only 44/49, p 0.679, indistinguishable**.
+Reversal team, 200 paired: greedy 0.8500, v2 0.8750, v4 0.8700; v4 vs greedy p 0.659, indistinguishable (not worse).
+v4 ran 13.7 and 14.2 gauntlets/s on the pool vs v2's 9.0 and 7.9. The full-size run (2,000) is the merge-gate suite (T037).
+
+## T027 Before/after on the same seeds (FR-006, SC-004), alone, 5:46:31 to 5:48:33 PM EST
+
+`node sim/bench.mjs --policy <p> --json` → `runs/018-evidence/bench_v2.json`, `bench_v4.json`; `uv run platsim bench
+--policy <p> --workers 16 --json` → `pool_v2.json`, `pool_v4.json`. All exit 0; `digests_agree` true on both sides; v2's
+digest is `main`'s `db6d20cf…`; **v4's single-process digest equals its fixture entry `05fa8cb1…`**.
+
+| Measure, same 40 gauntlets, same session | expectimax2-v2 | expectimax2-v4 | ratio |
+|---|---|---|---|
+| single process, gauntlets/s | 1.2791 | **2.0968** | **1.64x** (target 1.5x) |
+| single process, ms/decision | 9.593 | 5.334 | |
+| trainer-AI calls per decision | 44.69 | 17.77 | |
+| interpreter steps per run | 15,893,649 | 6,526,653 | |
+| cleared (sanity) | 36/40 | 37/40 | |
+| 16-worker pool, wall | 8.256 s | **6.098 s** | **1.35x** |
+| 16-worker pool, gauntlets/s | 4.8451 | 6.5599 | 1.35x |
+
+**SC-004 met**: faster single process (1.64x, above the 1.5x target) and on the pool (1.35x; 40 jobs on 16 workers is
+tail-bound, as in 015-017).
+
+## T028 Gate and commit 4 (5:48:33 to 5:50:57 PM EST)
+
+Full Node suite: **351 pass, 0 fail, exit 0**, 143.7 s (`runs/018-evidence/node-suite-c4.log`).

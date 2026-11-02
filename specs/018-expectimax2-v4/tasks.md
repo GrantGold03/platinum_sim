@@ -244,28 +244,28 @@ verdicts, speeds), the control row with 0 discordant pairs, and a named final ca
 **Independent Test**: the replay test checks three policies and passes; bench digests for v4 agree single vs pool; the
 strength test's new pairs pass at the in-suite size.
 
-- [ ] T024 [US1] In `sim/policy/expectimax2.mjs`: set `V4_OPTS` to the final knobs from T021 (or keep provisional and
+- [X] T024 [US1] In `sim/policy/expectimax2.mjs`: set `V4_OPTS` to the final knobs from T021 (or keep provisional and
   add "NOT VALIDATED" to the VERSIONS entry if the ladder failed); update the header's VERSIONS entry with the ladder's
   numbers (per-team rates and verdicts for the chosen set); in `sim/test/expectimax2.test.mjs` update the `V4_OPTS`
   assertion of T004 to the final values
-- [ ] T025 [US1] Alone: `node sim/bench.mjs --policy expectimax2-v4 --record sim/test/replay_prof_a.json` (adds the v4
+- [X] T025 [US1] Alone: `node sim/bench.mjs --policy expectimax2-v4 --record sim/test/replay_prof_a.json` (adds the v4
   entry; v1/v2 entries untouched: load the fixture before and after and assert `policies['expectimax2-v1']` and
   `policies['expectimax2-v2']` deep-equal their `main` versions (the file itself changes: the recorder rewrites the
   file-level `recorded` and `set` blocks, `sim/bench.mjs:209-211`, which is expected and noted in the log)); in
   `sim/test/replay.test.mjs` expect `['expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4']`; `(cd sim && node
   --test test/replay.test.mjs)` exit 0 (now 3 x 40 gauntlets); record the v4 digests
-- [ ] T026 [US1] In `tests/integration/test_policy_strength.py`: `POLICIES` gains `'expectimax2-v4'`; `pairs` gains
+- [X] T026 [US1] In `tests/integration/test_policy_strength.py`: `POLICIES` gains `'expectimax2-v4'`; `pairs` gains
   `('expectimax2-v4', 'greedy-v1')` (asserted verdict `A`, p < 0.05 like the v1/v2 pairs) and `('expectimax2-v4',
   'expectimax2-v2')` (asserted verdict is not `B`); keep `PLATSIM_STRENGTH_N`; the reversal-team test also runs v4 (not
   worse than greedy, verdict not `B`); run both with `PLATSIM_STRENGTH_N=400 PLATSIM_REVERSAL_N=200 uv run pytest -q
   tests/integration/test_policy_strength.py` as the in-suite smoke (about 6 min) and record; the full-size run happens
   in the merge-gate suite (T036)
-- [ ] T027 [US1] Alone (FR-006, SC-004): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/018-evidence/bench_v2.json`,
+- [X] T027 [US1] Alone (FR-006, SC-004): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/018-evidence/bench_v2.json`,
   `--policy expectimax2-v4 --json > runs/018-evidence/bench_v4.json`, `uv run platsim bench --policy expectimax2-v4
   --workers 16 --json > runs/018-evidence/pool_v4.json`, `--policy expectimax2-v2 … pool_v2.json`: v4 > v2 single and pool,
   `digests_agree` true, v4 single digest equals the fixture entry's; table in the log with the ratio against the 1.5x
   target, ms/decision, AI calls/decision, interpreter steps
-- [ ] T028 [US1] Gate: full Node suite exit 0 → `runs/018-evidence/node-suite-c4.log`; commit 4 by path
+- [X] T028 [US1] Gate: full Node suite exit 0 → `runs/018-evidence/node-suite-c4.log`; commit 4 by path
   (`sim/policy/expectimax2.mjs sim/test/expectimax2.test.mjs sim/test/replay.test.mjs sim/test/replay_prof_a.json
   tests/integration/test_policy_strength.py specs/018-expectimax2-v4/validation-log.md`), message `feat(018): expectimax2-v4
   final search budget; replay fixture entry; strength tests cover v4`, push; record the hash
@@ -281,7 +281,7 @@ strength test's new pairs pass at the in-suite size.
 **Independent Test**: two result directories with `result.json`, the equal-levels verdict and mean final levels, the
 validator's pass on the v4 result, both wall times.
 
-- [ ] T029 [US3] Create `specs/018-expectimax2-v4/scripts/equal_levels.py` from `specs/014-damage-boost-items/scripts/equal_levels.py`:
+- [X] T029 [US3] Create `specs/018-expectimax2-v4/scripts/equal_levels.py` from `specs/014-damage-boost-items/scripts/equal_levels.py`:
   usage `equal_levels.py <v2_out_dir> <v4_out_dir> <runs> [--self]`, A = the v4 result team, B = the v2 result team, both
   at A's start levels, validated, played by `expectimax2-v2` (the reference player) on master `018-equal|B2`,
   `mcnemar_exact(A, B)`, mean final levels; `--self` plays B against itself (control)
