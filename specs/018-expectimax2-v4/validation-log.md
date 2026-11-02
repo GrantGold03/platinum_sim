@@ -224,3 +224,24 @@ budget). The mechanism is the ladder's consistent small deficit (0.3 to 1.05 poi
 supported on 2,000 paired runs): the level search bisects on the clear-rate threshold, so a slightly weaker player
 crosses it one level later. Whether this is noise of the quick level search or v4's systematic cost cannot be decided
 from one seed; it is the question the user must weigh before the default switch (T033).
+
+## Diagnostic after T032: v4 vs v2 on the v2 optimizer's B2 team at its own levels (6:15:18 to 6:21:04 PM EST)
+
+`paired_policies.py --a expectimax2-v4 --b expectimax2-v2 --teams file:runs/018-evidence/b2-expectimax2-v2/team.json
+--runs 2000 --workers 16 --out runs/018-evidence/pairs-diag` (the script gained `file:<team.json>` for this, commit
+966a86a; master `018-pairs|file:…`, different seeds from the ladder's). Levels [51, 53, 53, 53, 53, 54]: the team the
+quick level search chose with v2, identical to the ladder's `b2branch` team and levels.
+
+| team | A (v4) | B (v2) | only A / only B | p (exact) | verdict |
+|---|---|---|---|---|---|
+| v2 B2 result at its own levels (2,000 new seeds) | 1527 / 0.7635 | 1586 / 0.7930 | 194 / 253 | **0.00602** | **B** |
+| ladder `b2branch` row, C1 (2,000 seeds, T021) | 1569 / 0.7845 | 1590 / 0.7950 | 197 / 218 | 0.326 | indistinguishable |
+| pooled, 4,000 pairs | | | 391 / 471 | **0.00709** (`mcnemar_exact_p(391, 471)`) | **B** |
+
+**Reading.** Near the qualification threshold, where the optimizer's level search operates, v4 is about 2 to 3 points
+of clear rate weaker than v2, and the difference is statistically supported once 4,000 pairs are counted; the ladder's
+four teams sat at 0.80 to 0.95 clear rate, where the same deficit was not resolvable at 2,000 pairs. This is the
+mechanism behind the B2 result one level higher (T030-T031): v4 at the v2 team's levels clears 0.76, too close to the
+0.75 threshold for the level search's margin, so it stops one level up. FR-005's letter (per team, 2,000 pairs) passed;
+Principle VI's rule ("adopt only if not worse by a statistically supported margin") is not met on the team that matters
+most once the extra sample is counted. Decision referred to the user (T033).
