@@ -211,24 +211,24 @@ verdicts, speeds), the control row with 0 discordant pairs, and a named final ca
 
 ### Runs (background, alone; each logged with start and end times and the command)
 
-- [ ] T018 [US2] Pairing control: `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py --a expectimax2-v2
+- [X] T018 [US2] Pairing control: `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py --a expectimax2-v2
   --b expectimax2-v2 --self --teams bench --runs 200 --workers 16` → exit 0, 0 discordant; record
   (`runs/018-evidence/pairs/control.txt`)
-- [ ] T019 [US2] Single knob 1 and the v2 sides: `--a 'expectimax2-v4?kRoot=8&kPly2=1&beam=2&floor=0' --b expectimax2-v2
+- [X] T019 [US2] Single knob 1 and the v2 sides: `--a 'expectimax2-v4?kRoot=8&kPly2=1&beam=2&floor=0' --b expectimax2-v2
   --runs 2000 --workers 16` on all four teams (about 40 min: v2 is computed and cached here); four rows in the log
-- [ ] T020 [US2] Single knobs 2 to 5, one command each (about 20 min each, v2 cached): `--a 'expectimax2-v4?kRoot=8&kPly2=2&beam=1&floor=0'`,
+- [X] T020 [US2] Single knobs 2 to 5, one command each (about 20 min each, v2 cached): `--a 'expectimax2-v4?kRoot=8&kPly2=2&beam=1&floor=0'`,
   `--a 'expectimax2-v4?kRoot=4&kPly2=2&beam=2&floor=0'`, `--a 'expectimax2-v4?kRoot=8&kPly2=2&beam=2&floor=0.02'`,
   `--a 'expectimax2-v4?kRoot=8&kPly2=2&beam=2&floor=0.05'`; four rows each; mark each knob pass / fail (fail = any team
   verdict `B`)
-- [ ] T021 [US2] Combinations, fastest first, until one passes on all four teams: first all passing knobs together
+- [X] T021 [US2] Combinations, fastest first, until one passes on all four teams: first all passing knobs together
   (with the larger passing floor); then that set minus one knob each in descending sizing speed; then pairs; each a
   single `paired_policies.py` run on the four teams (about 20 min); record every row; name the final candidate and its
   knobs in the log, or the negative result if nothing passes (then T026 keeps `V4_OPTS` provisional and marks v4 "not
   validated", and T034 ships no default change)
-- [ ] T022 [US2] Ladder table in the validation log: candidate x team with a_rate, b_rate, a_only, b_only, p, verdict,
+- [X] T022 [US2] Ladder table in the validation log: candidate x team with a_rate, b_rate, a_only, b_only, p, verdict,
   a and b gauntlets/s, plus the control row; the chosen set stated in one line with its per-team verdicts (SC-002,
   SC-003)
-- [ ] T023 [US2] Commit 3 by path (`specs/018-expectimax2-v4/scripts/paired_policies.py tests/unit/test_scripts.py
+- [X] T023 [US2] Commit 3 by path (`specs/018-expectimax2-v4/scripts/paired_policies.py tests/unit/test_scripts.py
   specs/018-expectimax2-v4/validation-log.md`), message `test(018): paired policy comparison script; ladder recorded`,
   push; record the hash
 
