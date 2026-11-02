@@ -1,4 +1,14 @@
-# START HERE (updated 2026-11-01, 9:30 PM EST)
+# START HERE (updated 2026-11-01, 9:50 PM EST, end of session before a reboot)
+
+- **Resume checklist (2026-11-01, 9:50 PM EST).** `main` is checked out in the main checkout, in sync with
+  `origin/main` (015 and 016 merged today; last commits are doc-only: RUN-STATE, README testing section,
+  FUTURE-FEATURES section 5 after a stale-docs pass). Nothing is running; no stash. The only uncommitted files are
+  the user's own (see "Uncommitted on purpose" below). `data/generated/` is current for `main` (no extractor change
+  in 015/016). Every session scratch file has a copy under `runs/015-evidence/` or `runs/016-evidence/` (manifests
+  `scratchpad.sha256` in each; git-ignored, local only). No feature is in progress; the next one is the user's
+  choice (FUTURE-FEATURES section 7: 017 `expectimax2-v4` approximations or the remaining exact items; then H4).
+  Quick health check on resume: `(cd sim && node --test test/*.test.mjs)` expects 334 pass (about 2.5 min);
+  `node sim/bench.mjs --policy expectimax2-v2` expects `digest_full db6d20cf…` and about 1.0 gauntlets/s.
 
 - **Feature 016 merged to `main` 2026-11-01, 9:25 PM EST (user's go): fast-forward 19519ed → `b15dbb2`, pushed.**
   `main` is checked out in the main checkout, in sync with `origin/main`; branch `016-exact-damage-speedups` is kept
