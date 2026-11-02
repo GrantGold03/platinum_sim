@@ -37,19 +37,35 @@ export const INTERP_STATS = { steps: 0, dispatches: 0 };
 
 // Runs one flag section for the current ctx.mem.moveSlot, starting at instruction index `start`,
 // until a handler calls ctx.end(). Mirrors the per-move loop body of TrainerAI_EvalMoves
-// (pokeplatinum/src/battle/trainer_ai/trainer_ai.c:483).
-export function runSection(ctx, start, { maxSteps = 200000 } = {}) {
+// (pokeplatinum/src/battle/trainer_ai/trainer_ai.c:483). This is the only interpreter loop (017): `onStep(ins,
+// before, after)`, when given, is called after every step with the current move slot's score before and after it
+// (the trace hook choose.mjs evalMoves uses). A run of consecutive IfCurrentMoveEffectEqualTo checks whose head
+// carries `ins.dispatch` (parse.mjs indexInstructions) is answered in one step: the first entry equal to the current
+// move's effect (MOVE_DATA(AI_CONTEXT.move).effect, TAI:1441-1451) is the destination, otherwise the instruction after
+// the run; identical to stepping through the checks, which read nothing else and change nothing. A dispatch counts as
+// one step for `maxSteps` and INTERP_STATS.
+export function runSection(ctx, start, { maxSteps = 200000, onStep } = {}) {
   ctx.pc = start;
   ctx.done = false;
+  const instructions = ctx.prog.instructions;
   for (let steps = 0; !ctx.done; steps++) {
     if (steps >= maxSteps) throw new Error(`AI section did not terminate after ${maxSteps} steps (started at instruction ${start})`);
     INTERP_STATS.steps++;
-    const ins = ctx.prog.instructions[ctx.pc];
+    const ins = instructions[ctx.pc];
     if (!ins) throw new Error(`AI pc ${ctx.pc} out of range`);
-    const fn = HANDLERS[ins.name];
-    if (!fn) throw new AIUnimplemented(ins.name, ins.line);
-    ctx.next = ins.index + 1;
-    fn(ctx, ins);
+    const before = onStep ? ctx.mem.moveScore[ctx.mem.moveSlot] : 0;
+    const d = ins.dispatch;
+    if (d) {
+      const target = d.table.get(ctx.ai.moveData(ctx.mem.move & 0xffff).effect);
+      ctx.next = target !== undefined ? target : d.after;
+      INTERP_STATS.dispatches++;
+    } else {
+      const fn = HANDLERS[ins.name];
+      if (!fn) throw new AIUnimplemented(ins.name, ins.line);
+      ctx.next = ins.index + 1;
+      fn(ctx, ins);
+    }
+    if (onStep) onStep(ins, before, ctx.mem.moveScore[ctx.mem.moveSlot]);
     ctx.pc = ctx.next;
   }
 }
@@ -59,16 +75,16 @@ export function makeCtx({ prog, ai, mem, rand, extra = {} }) {
   const ctx = {
     prog, ai, mem, rand,
     pc: 0, next: 0, done: false,
-    // Value of a named argument (labels resolve to their instruction index via `target`).
+    // Value of a named argument (labels resolve to their instruction index via `target`). 017: read from the
+    // parse-time index (ins.a / ins.jt, parse.mjs indexInstructions) instead of scanning ins.args; same errors.
     arg: (ins, name) => {
-      const a = ins.args.find((x) => x.name === name);
-      if (!a) throw new Error(`${ins.name} (script.s:${ins.line}) has no argument ${name}`);
-      return a.value;
+      if (!(name in ins.a)) throw new Error(`${ins.name} (script.s:${ins.line}) has no argument ${name}`);
+      return ins.a[name];
     },
     target: (ins, name = 'jump') => {
-      const a = ins.args.find((x) => x.name === name);
-      if (!a || a.targetInstr === undefined) throw new Error(`${ins.name} (script.s:${ins.line}) has no jump target ${name}`);
-      return a.targetInstr;
+      const t = ins.jt[name];
+      if (t === undefined) throw new Error(`${ins.name} (script.s:${ins.line}) has no jump target ${name}`);
+      return t;
     },
     jump: (ins, name = 'jump') => { ctx.next = ctx.target(ins, name); },
     end: () => { ctx.done = true; },

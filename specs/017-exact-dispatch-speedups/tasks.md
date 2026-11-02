@@ -109,7 +109,7 @@ below 20 M.
 
 ### Tests for User Story 1 (write first; fail on the missing `effectRuns` export / `ins.dispatch` before T010)
 
-- [ ] T008 [US1] Create `sim/test/ai_interp.test.mjs`: import `aiProgram` from `../ai/choose.mjs`, `effectRuns`,
+- [X] T008 [US1] Create `sim/test/ai_interp.test.mjs`: import `aiProgram` from `../ai/choose.mjs`, `effectRuns`,
   `parseAiScript` from `../ai/parse.mjs`, `makeCtx`, `runSection`, `INTERP_STATS` from `../ai/interp.mjs`, `readList`
   from `../ai/constants.mjs`. Test 1 (structure, real script): `effectRuns(prog)` after splitting has 13 runs with
   lengths `[178, 152, 5, 5, 5, 5, 4, 3, 2, 2, 1, 1]` sorted descending, `split === false` for all, exactly 11 heads
@@ -134,7 +134,7 @@ below 20 M.
   (`leagueBattle` + `decide` from `ai_fixtures.mjs` / `opponent.mjs`, as `ai_golden.test.mjs` does) between two
   `INTERP_STATS` snapshots: `dispatches` delta > 0 and `steps` delta < 2,000 (a stepped evaluation of the two long runs
   alone would exceed it; record the actual number in a diagnostic)
-- [ ] T009 [P] [US1] Add to `sim/test/ai_golden.test.mjs` one test "017 full trace: one entry per dispatched run":
+- [X] T009 [P] [US1] Add to `sim/test/ai_golden.test.mjs` one test "017 full trace: one entry per dispatched run":
   run fixture A1 with `decide(x.st, x.p2, { trace: 'full' })`; among the entries with `op === 'IfCurrentMoveEffectEqualTo'`
   the count is below 100 (a stepped run would produce hundreds) and every such entry's `line` is the line of a run
   head (from `effectRuns`); the default-trace entries (`compact(r.detail.trace)`) still equal the fixture's `trace`.
@@ -142,7 +142,7 @@ below 20 M.
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] In `sim/ai/parse.mjs`: add `export function indexInstructions(prog)` run at the end of `parseAiScript`
+- [X] T010 [US1] In `sim/ai/parse.mjs`: add `export function indexInstructions(prog)` run at the end of `parseAiScript`
   (before `return`): (a) for every instruction set `ins.a = Object.create(null)` with `a[arg.name] = arg.value` for
   every `args[]` entry and `ins.jt = Object.create(null)` with `jt[arg.name] = arg.targetInstr` for `kind === 'jump'`;
   (b) entry points = `Set` of every `jump` argument's `targetInstr`, every label's `instr` (defined ones), and
@@ -153,7 +153,7 @@ below 20 M.
   `[{ start, end, head, split }]` (recomputed from the instructions, `split` true when the run's start is an interior
   entry point of the maximal run). Header comment: cite TAI:1441-1451 for the handler the table replaces and the
   exactness argument (research R1). `args[]`, `image`, `labels` untouched
-- [ ] T011 [US1] In `sim/ai/interp.mjs`: `runSection(ctx, start, { maxSteps = 200000, onStep } = {})`: per iteration
+- [X] T011 [US1] In `sim/ai/interp.mjs`: `runSection(ctx, start, { maxSteps = 200000, onStep } = {})`: per iteration
   `INTERP_STATS.steps++`; `if (ins.dispatch) { const d = ins.dispatch; const t = d.table.get(ctx.ai.moveData(ctx.mem.move & 0xffff).effect);
   ctx.next = t !== undefined ? t : d.after; INTERP_STATS.dispatches++; }` else the handler path as today (`ctx.next =
   ins.index + 1; fn(ctx, ins)`); when `onStep` is given, capture `before = ctx.mem.moveScore[ctx.mem.moveSlot]` before the
@@ -161,14 +161,14 @@ below 20 M.
   `maxSteps` error message unchanged. `makeCtx`: `arg: (ins, name) => { if (!(name in ins.a)) throw new Error(\`${ins.name} (script.s:${ins.line}) has no argument ${name}\`); return ins.a[name]; }`,
   `target: (ins, name = 'jump') => { const t = ins.jt[name]; if (t === undefined) throw new Error(\`${ins.name} (script.s:${ins.line}) has no jump target ${name}\`); return t; }`.
   Header comment: the dispatch step, the hook, `INTERP_STATS`
-- [ ] T012 [US1] In `sim/ai/choose.mjs`: delete `runSectionTraced`; in `evalMoves`, when `trace` is set call
+- [X] T012 [US1] In `sim/ai/choose.mjs`: delete `runSectionTraced`; in `evalMoves`, when `trace` is set call
   `runSection(ctx, sectionStart, { onStep: (ins, before, after) => { …the same two trace shapes as today… } })`, else
   `runSection(ctx, sectionStart)`; the full-trace entry for a dispatch step is the head instruction's `{ flagBit,
   slot, line, op: ins.name, jumped: ctx.next !== ins.index + 1 }` (no special case needed: `ctx.next` is the table's
   answer). Update the `trainerAIMain` doc comment (full trace: one entry per executed step, a dispatched run counts
   once). In `sim/ai/OPCODES.md` add one note under the table: runs of `IfCurrentMoveEffectEqualTo` are answered by a
   parse-time table (feature 017), instruction counts unchanged
-- [ ] T013 [US1] Gate (quickstart step 2): `(cd sim && node --test test/ai_interp.test.mjs test/ai_golden.test.mjs
+- [X] T013 [US1] Gate (quickstart step 2): `(cd sim && node --test test/ai_interp.test.mjs test/ai_golden.test.mjs
   test/ai_choose.test.mjs test/ai_parse.test.mjs test/ai_gauntlet.test.mjs test/bench.test.mjs test/replay.test.mjs)`
   exit 0; freeze run exit 0; full Node suite exit 0 (334 + new); alone on the machine `node sim/bench.mjs --policy
   expectimax2-v2 --json > runs/017-evidence/c2_v2.json` → `digest_full` `db6d20cf…`, `ai_draws` equal to T002,

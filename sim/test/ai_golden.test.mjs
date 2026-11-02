@@ -23,6 +23,7 @@ import * as calcdamage from '../ai/calcdamage.mjs';
 import { afterTurn, decide, processLog } from '../ai/opponent.mjs';
 import { postKOSwitchIn } from '../ai/switch.mjs';
 import { aiProgram } from '../ai/choose.mjs';
+import { effectRuns } from '../ai/parse.mjs';
 import { B, leagueBattle, sendIn, setHP, stubRng } from './ai_fixtures.mjs';
 
 const prog = aiProgram();
@@ -279,4 +280,19 @@ test('golden E1 Encore: FIGHT under Encore uses the encored move without running
   const before = x.st.rng.draws;
   const r = decide(x.st, x.p2);
   assert.deepEqual([r.kind, r.choice, x.st.rng.draws - before], ['encore', 'move 3', 0]);
+});
+
+// Feature 017 (contracts/interp-api.md "Traces"): the full trace records one entry per dispatched run; the default
+// trace (score additions with script lines) is unchanged.
+test('017 full trace: one entry per dispatched effect-check run; default trace unchanged (fixture A1)', () => {
+  const fx = FIXTURES[0];
+  const x = leagueBattle(fx.trainer, fx.player, { rng: stubRng([], 255) });
+  fx.setup?.(x);
+  const r = decide(x.st, x.p2, { trace: 'full' });
+  assert.equal(r.choice, fx.choice);
+  const effectEntries = r.detail.trace.filter((e) => e.op === 'IfCurrentMoveEffectEqualTo');
+  assert.ok(effectEntries.length > 0 && effectEntries.length < 100, `${effectEntries.length} effect-check entries (a stepped run would produce hundreds)`);
+  const headLines = new Set(effectRuns(prog).map((run) => prog.instructions[run.start].line));
+  for (const e of effectEntries) assert.ok(headLines.has(e.line), `entry at script.s:${e.line} is a run head`);
+  assert.deepEqual(compact(r.detail.trace.filter((e) => 'add' in e)), fx.trace);
 });

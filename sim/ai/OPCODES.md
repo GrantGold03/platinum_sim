@@ -22,6 +22,10 @@ handler in `pokeplatinum/src/battle/trainer_ai/trainer_ai.c` (TAI below).
   Battler arguments go through `AIScript_Battler` (TAI:2765): ATTACKER → `attacker` (1),
   DEFENDER and any other value → `defender` (0).
 
+- **Dispatch (feature 017)**: runs of consecutive `IfCurrentMoveEffectEqualTo` instructions are answered in one
+  interpreter step by a parse-time table (`parse.mjs` `indexInstructions`, `interp.mjs` `runSection`); the
+  instructions and the counts below are unchanged.
+
 ## Table
 
 | Op | Name | Handler (TAI line) | Count | First | Semantics | Adapter | File |

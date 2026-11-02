@@ -39,3 +39,25 @@ half inside it 1.0406 gauntlets/s. Switched back to `017-exact-dispatch-speedups
 - Alone: `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c1_v2.json`: digest `db6d20cf…`, `ai_draws`
   849,962 (= T002), **`interp_steps` 142,966,719** (the SC-004 before figure; equal to the 2026-11-02 profiling harness
   count), `interp_dispatches` 0, 1.0301 gauntlets/s, 12.224 ms/decision (within noise of T002's 1.0140).
+
+## T008-T013 US1: effect dispatch, argument index, one interpreter loop (11:02:00 to 11:09:08 AM EST)
+
+- Tests first: `ai_interp.test.mjs` (6 tests) and the golden full-trace test failed on the missing `effectRuns` export
+  before T010; after T010-T012 all pass. Structure (real script): **13 runs**, lengths 178, 152, 5, 5, 5, 5, 4, 3, 2, 2,
+  1, 1, 1 (= 364 checks; the tasks' "11 heads" guess was wrong: **10** runs of length >= 2 carry a table), 0 splits,
+  one repeated value (first wins). Exhaustive equivalence: **10 tables x 279 effect values = 2,790 comparisons,
+  0 mismatches**; positive controls (retargeted / deleted entry) detected; synthetic split script yields runs
+  `[0,1,false]`, `[2,3,true]` with agreeing tables; argument errors unchanged; one Aaron decision: **151 interpreter
+  steps, 10 dispatched runs** (a stepped evaluation of the two long runs alone is 330 per visit).
+- Test-side fix (not a behaviour change): four tests in `sim/test/ai_cmds_misc.test.mjs` hand-edited a copied
+  instruction's `args` array (`{ ...ins, args: … }`); handlers now read the parse-time index `ins.a`, so the copies
+  read stale values (two failed: IfSideCondition 825 vs 827, LoadSpikesLayers 2 vs 0; two passed by coincidence). A
+  `withArg(ins, name, value)` helper rebuilds `args` and `a` together. Recorded here because FR-005 keeps the handler
+  API, which these tests bypassed.
+- Gates: `PLATSIM_AI_FREEZE=1` run **169 pass, 0 fail, exit 0** (`t013-freeze.log`); full Node suite **342 pass, 0 fail,
+  exit 0**, 130.6 s (`node-suite-c2.log`; 334 + 6 interp + 1 golden + 1 bench); `ai_cmds_misc.test.mjs` re-run after
+  the fourth helper site: green (below).
+- Alone (11:04:48 to 11:05:27 AM EST): `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c2_v2.json`:
+  digest `db6d20cf…`, `ai_draws` 849,962 (= T002), **`interp_steps` 15,893,649** (< 20 M, SC-004; 142,966,719 before,
+  9.0x fewer), `interp_dispatches` 1,204,945, **1.1080 gauntlets/s, 11.303 ms/decision** (US1 attribution: 1.093x vs
+  T002 1.0140, 1.076x vs the instrumentation commit's 1.0301 taken 7 minutes earlier).

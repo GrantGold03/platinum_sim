@@ -40,6 +40,15 @@ function ins(name, line) {
   return i;
 }
 
+// A copy of `ins` with one argument's value replaced. Handlers read arguments through the parse-time index
+// (ins.a, feature 017), so a hand-edited copy must rebuild it as well as `args`.
+function withArg(ins, name, value) {
+  const args = ins.args.map((x) => (x.name === name ? { ...x, value } : x));
+  const a = Object.create(null);
+  for (const x of args) a[x.name] = x.value;
+  return { ...ins, args, a };
+}
+
 // Counting stub for BattleSystem_RandNext: returns the given u16 values in order.
 function randStub(values) {
   const r = () => {
@@ -118,7 +127,7 @@ test('IfSideCondition (TAI:732): side of AIScript_Battler, real Light Screen / S
   assert.equal(r.rand.calls, 0);
   assert.equal(r.mem.calcTemp, SENTINEL);
   // Same Stealth Rock mask with battler ATTACKER (hand-edited argument): side 1 -> jump.
-  const srAtk = { ...sr, args: sr.args.map((x) => (x.name === 'battler' ? { ...x, value: 1 } : x)) };
+  const srAtk = withArg(sr, 'battler', 1);
   assert.equal(run(ai, srAtk).ctx.next, jumpTarget(sr));
 });
 
@@ -261,10 +270,10 @@ test('LoadSpikesLayers (TAI:1948): spikes / toxic spikes layers; other args leav
   assert.equal(run(ai, sp).mem.calcTemp, 2);
   assert.equal(run(ai, ts).mem.calcTemp, 1);
   // ATTACKER side has none.
-  const spAtk = { ...sp, args: sp.args.map((a) => (a.name === 'battler' ? { ...a, value: 1 } : a)) };
+  const spAtk = withArg(sp, 'battler', 1);
   assert.equal(run(ai, spAtk).mem.calcTemp, 0);
   // Hand-built argument SIDE_CONDITION_STEALTH_ROCK: no switch case -> calcTemp unchanged.
-  const other = { ...sp, args: sp.args.map((a) => (a.name === 'side_conditions' ? { ...a, value: ai.constants.get('SIDE_CONDITION_STEALTH_ROCK') } : a)) };
+  const other = withArg(sp, 'side_conditions', ai.constants.get('SIDE_CONDITION_STEALTH_ROCK'));
   assert.equal(run(ai, other).mem.calcTemp, SENTINEL);
 });
 
@@ -279,7 +288,7 @@ test('IfAnyPartyMemberIsWounded (TAI:1968): non-active slot with hp != maxHP (fa
   battle.makeChoices('move safeguard', 'switch 2');
   assert.equal(run(ai, i).ctx.next, jumpTarget(i));
   // Fainted member counts: player side, Snorlax explodes and faints, Blissey replaces it.
-  const def = { ...i, args: i.args.map((a) => (a.name === 'battler' ? { ...a, value: 0 } : a)) };
+  const def = withArg(i, 'battler', 0);
   battle.makeChoices('switch 2', 'switch 3');
   battle.makeChoices('move explosion', 'move protect');
   battle.makeChoices('switch 3', '');

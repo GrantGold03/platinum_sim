@@ -25,7 +25,8 @@
 // Output of parseAiScript():
 //   { opcodes, macros, labels, instructions, data, image, wordToInstr, flagTable, symbolsUsed }
 //   instructions[i] = { index, op, name, args:[{name, kind, text, value, label?, targetWord?,
-//                       targetInstr?}], line, word, size }
+//                       targetInstr?}], line, word, size,
+//                       a: {argName: value}, jt: {argName: targetInstr}, dispatch? }   (feature 017, see below)
 //   image: Int32Array of every word of gTrainerAITable, exactly what the game reads.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -248,7 +249,81 @@ export function parseAiScript({ root = DECOMP_ROOT, scriptText } = {}) {
   for (const l of Object.values(labels)) l.instr = wordToInstr.get(l.word);
 
   const flagTable = resolveFlagTable({ root, labels, data, lines });
-  return { opcodes, macros, labels, instructions, data, image, wordToInstr, flagTable, symbolsUsed, totalWords, constants };
+  const prog = { opcodes, macros, labels, instructions, data, image, wordToInstr, flagTable, symbolsUsed, totalWords, constants };
+  indexInstructions(prog); // 017: ins.a / ins.jt and the effect-check dispatch tables
+  return prog;
+}
+
+// ---------- feature 017: argument index and effect-check dispatch tables ----------
+// (specs/017-exact-dispatch-speedups/contracts/interp-api.md, research R1/R2)
+//
+// AICmd_IfCurrentMoveEffectEqualTo (trainer_ai.c:1441-1451) reads MOVE_DATA(AI_CONTEXT.move).effect, compares it
+// with its argument and jumps on a match; it has no other effect, and AI_CONTEXT.move does not change inside a
+// section. script.s evaluates long lists of these checks one after another (two runs of 178 and 152 checks, see
+// the 017 spec), so a run of consecutive checks can be answered in one step: the first entry whose value equals the
+// current move's effect gives the destination, otherwise control falls through to the instruction after the run.
+// `indexInstructions` attaches that table to the first instruction of every run of two or more checks
+// (`ins.dispatch = { table, after, length }`, first entry wins) and gives every instruction its arguments by name
+// (`ins.a`, and `ins.jt` for jump targets) so handlers no longer scan `args`. Runs are split at every possible entry
+// point other than their first instruction (jump targets, labelled instructions, the return point after a
+// PushAndGoTo), so entering a run in the middle evaluates exactly the checks from that point on, as stepping would.
+// The interpreter (interp.mjs runSection) consumes `dispatch`; sim/test/ai_interp.test.mjs compares every table
+// with the step-by-step walk for every defined effect value.
+const EFFECT_CHECK = 'IfCurrentMoveEffectEqualTo';
+
+// Instructions control can reach other than by falling through from their predecessor.
+function entryPoints(prog) {
+  const set = new Set();
+  for (const ins of prog.instructions) {
+    for (const a of ins.args) if (a.kind === 'jump' && a.targetInstr !== undefined) set.add(a.targetInstr);
+    if (ins.name === 'PushAndGoTo') set.add(ins.index + 1); // PopOrEnd returns to the next instruction (flow.mjs)
+  }
+  for (const l of Object.values(prog.labels)) if (l.instr !== undefined) set.add(l.instr);
+  return set;
+}
+
+// Runs of consecutive effect checks after splitting at interior entry points: [{ start, end, split }], where
+// `split` marks a run that starts at an interior entry point of a longer maximal run. Exported for tests.
+export function effectRuns(prog) {
+  const entries = entryPoints(prog);
+  const ins = prog.instructions;
+  const out = [];
+  for (let i = 0; i < ins.length;) {
+    if (ins[i].name !== EFFECT_CHECK) { i++; continue; }
+    let j = i;
+    while (j + 1 < ins.length && ins[j + 1].name === EFFECT_CHECK) j++;
+    let start = i;
+    for (let k = i + 1; k <= j; k++) {
+      if (entries.has(k)) { out.push({ start, end: k - 1, split: start !== i }); start = k; }
+    }
+    out.push({ start, end: j, split: start !== i });
+    i = j + 1;
+  }
+  return out;
+}
+
+export function indexInstructions(prog) {
+  for (const ins of prog.instructions) {
+    const a = Object.create(null);
+    const jt = Object.create(null);
+    for (const arg of ins.args) {
+      a[arg.name] = arg.value;
+      if (arg.kind === 'jump') jt[arg.name] = arg.targetInstr;
+    }
+    ins.a = a;
+    ins.jt = jt;
+  }
+  for (const r of effectRuns(prog)) {
+    if (r.end === r.start) continue; // nothing to gain from a table of one
+    const table = new Map();
+    for (let k = r.start; k <= r.end; k++) {
+      const ins = prog.instructions[k];
+      const key = ins.a.battle_effect | 0; // the handler compares `int` (AIScript_Read) with the effect
+      if (!table.has(key)) table.set(key, ins.jt.jump); // first match wins
+    }
+    prog.instructions[r.start].dispatch = { table, after: r.end + 1, length: r.end - r.start + 1 };
+  }
+  return prog;
 }
 
 // gTrainerAITable starts with FlagTable (script.s:15-18): one LabelDistance per thinking-mask bit.

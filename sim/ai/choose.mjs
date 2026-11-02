@@ -30,7 +30,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT } from './constants.mjs';
-import { HANDLERS, AIUnimplemented, makeCtx, runSection, INTERP_STATS } from './interp.mjs';
+import { makeCtx, runSection } from './interp.mjs';
 import { parseAiScript } from './parse.mjs';
 import * as calcdamage from './calcdamage.mjs';
 import { compareBattlerSpeed } from './cmds/battler.mjs';
@@ -238,24 +238,6 @@ export function trainerAIInit(st, battler, initScore = 0xf) {
 // ---------------------------------------------------------------------------------------------
 // TrainerAI_EvalMoves (TAI:483-526)
 
-// runSection with a per-instruction hook, for traces (identical loop to interp.mjs runSection).
-function runSectionTraced(ctx, start, onStep, maxSteps = 200000) {
-  ctx.pc = start;
-  ctx.done = false;
-  for (let steps = 0; !ctx.done; steps++) {
-    if (steps >= maxSteps) throw new Error(`AI section did not terminate after ${maxSteps} steps`);
-    INTERP_STATS.steps++; // 017: same counter as interp.mjs runSection
-    const ins = ctx.prog.instructions[ctx.pc];
-    const fn = HANDLERS[ins.name];
-    if (!fn) throw new AIUnimplemented(ins.name, ins.line);
-    ctx.next = ins.index + 1;
-    const before = ctx.mem.moveScore[ctx.mem.moveSlot];
-    fn(ctx, ins);
-    onStep(ins, before, ctx.mem.moveScore[ctx.mem.moveSlot]);
-    ctx.pc = ctx.next;
-  }
-}
-
 const AI_STATUS_FLAG_BREAK = 1 << 3; // include/constants/battle/trainer_ai.h:19
 
 function evalMoves(ctx, sectionStart, trace) {
@@ -268,13 +250,15 @@ function evalMoves(ctx, sectionStart, trace) {
     // AI_EVAL_STEP_EVAL (TAI:499-519)
     if (mem.move !== 0) {
       if (trace) {
-        runSectionTraced(ctx, sectionStart, (ins, before, after) => {
+        // 017: the one interpreter loop with its per-step hook (interp.mjs runSection). A dispatched run of
+        // effect checks is one step: one full-trace entry with the run head's line and `jumped` from the table.
+        runSection(ctx, sectionStart, { onStep: (ins, before, after) => {
           if (ins.name === 'AddToMoveScore') {
             trace.push({ flagBit: mem.thinkingBitShift, slot: mem.moveSlot, line: ins.line, add: ctx.arg(ins, 'i') | 0, before, after });
           } else if (trace.full) {
             trace.push({ flagBit: mem.thinkingBitShift, slot: mem.moveSlot, line: ins.line, op: ins.name, jumped: ctx.next !== ins.index + 1 });
           }
-        });
+        } });
       } else {
         runSection(ctx, sectionStart);
       }
@@ -294,7 +278,8 @@ function evalMoves(ctx, sectionStart, trace) {
  *   { slot, scores (s8 values after evaluation), rolls, invalidMoves, ties, trace? }
  * `st` = { ai, prog, knowledge, rng, thinkingMask, monSpeedValues? }.
  * opts.trace: collect every AddToMoveScore (flag bit, slot, script.s line, value); 'full' also
- * records every other executed instruction (line, op, jumped).
+ * records every other executed step (line, op, jumped); a dispatched run of IfCurrentMoveEffectEqualTo
+ * checks (017, parse.mjs indexInstructions) is one step with the run head's line.
  */
 export function trainerAIMain(st, battler = 1, opts = {}) {
   const { ai } = st;

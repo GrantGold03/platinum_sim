@@ -90,6 +90,6 @@ test('017 interpreter steps in the report: runBench reports INTERP_STATS deltas 
   assert.ok(Number.isInteger(r.interp_steps), `interp_steps ${r.interp_steps}`);
   assert.ok(r.interp_steps > 0, 'the trainer AI ran script instructions');
   assert.equal(r.interp_steps, INTERP_STATS.steps - s0, 'the report is the delta over the run');
-  assert.ok(Number.isInteger(r.interp_dispatches) && r.interp_dispatches >= 0, `interp_dispatches ${r.interp_dispatches}`);
+  assert.ok(Number.isInteger(r.interp_dispatches) && r.interp_dispatches > 0, `interp_dispatches ${r.interp_dispatches} (017: effect-check runs are dispatched)`);
   assert.ok(INTERP_STATS.steps > s0, 'positive control: the counter grew across the run');
 });
