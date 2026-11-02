@@ -273,7 +273,7 @@ the validation log has both sides and the ratios.
   `runs/016-evidence/fast.log`; record summary lines and Eastern times in the log; commit 4 by path (`README.md
   FUTURE-FEATURES.md RUN-STATE.md specs/016-exact-damage-speedups/validation-log.md` plus any doc touched in T022),
   message `docs(016): speed table, CHECK mode note, follow-ons, run state; gates recorded`, push
-- [ ] T025 Merge gate (after the user's hands-on testing and go, nothing else running, background): `uv run pytest -q
+- [X] T025 Merge gate (after the user's hands-on testing and go, nothing else running, background): `uv run pytest -q
   --durations=25 > runs/016-evidence/full.log 2>&1` (about 1 h 20 min; give the start time); record the summary line,
   exit code and Eastern start/end in the log and RUN-STATE. Do not merge; report to the user
 

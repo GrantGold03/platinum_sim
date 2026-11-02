@@ -1,7 +1,6 @@
-# START HERE (updated 2026-11-01, 6:35 PM EST)
+# START HERE (updated 2026-11-01, 9:30 PM EST)
 
-- **Feature 016 `016-exact-damage-speedups` implemented 2026-11-01 (T001-T024 done; T025 full suite and the merge
-  wait for the user).** Branch from `main` 19519ed, main checkout, pushed; code commits `ba9fd21` (US1 type-chart
+- **Feature 016 `016-exact-damage-speedups` implemented 2026-11-01 (T001-T025 done; the merge waits for the user).** Branch from `main` 19519ed, main checkout, pushed; code commits `ba9fd21` (US1 type-chart
   plan), `d4e6276` (US2 AI pre-variance memo + `PLATSIM_AI_CHECK` control mode), `a9ddfcf` (US3 shared id mappers),
   then the docs commit. Exact: replay test against the unchanged 015 fixture green after every commit (digests
   `db6d20cf…` v2 / `1273b694…` v1, every choice, every per-decision draw count); randomized equivalence test (20,000
@@ -9,8 +8,8 @@
   and 7.90 M (v1) comparisons, 0 mismatches; freeze run 157/157. **Speed on the fixed set, same session: v2 0.725 →
   1.049 gauntlets/s single process (1.45x, 17.8 → 12.0 ms/decision), 16 workers 2.91 → 3.99 (1.37x, 13.7 → 10.0 s),
   v1 0.475 → 0.706 (1.49x).** Node suite 334/334. Log `specs/016-exact-damage-speedups/validation-log.md`, evidence
-  `runs/016-evidence/`. Remaining: the user's hands-on testing, then T025 `uv run pytest -q --durations=25` (about
-  1 h 20 min, nothing else running), then merge on the user's go. `sim_code_hash` changed again (checkpoints before
+  `runs/016-evidence/`. **T025 full suite passed 2026-11-01, 8:19 to 9:24 PM EST: 556 passed, 4 xfailed, exit 0, 1 h 05 min (vs 1 h 20 min
+  on `main` after 015).** Remaining: merge on the user's go (`git checkout main && git merge --ff-only 016-exact-damage-speedups && git push`). `sim_code_hash` changed again (checkpoints before
   016 will not resume); `data/generated/` unaffected. Next feature after the merge: 017 = `expectimax2-v4`
   approximations (FUTURE-FEATURES section 7), or the remaining exact items there, user's choice.
   Hand check: `node sim/bench.mjs --policy expectimax2-v2` must print `digest_full db6d20cf…`;

@@ -175,3 +175,11 @@ so the cross-feature ratio is indicative only).
 - Fast mode `uv run pytest -q -m "not battle_sim"` 6:33:41 to 6:43:35 PM: **528 passed, 28 deselected, 4 xfailed,
   1 warning, exit 0** (590.65 s; `fast.log`).
 - Commit 4 (docs + log) below. T025 (full suite, about 1 h 20 min) waits for the user's hands-on testing and go.
+
+## T025 Merge gate (2026-11-01, user's go)
+
+`uv run pytest -q --durations=25 > runs/016-evidence/full.log 2>&1`, nothing else running, 16 workers:
+8:18:53 PM to 9:24:20 PM EST, **556 passed, 4 xfailed, 1 warning, exit 0** (3924.22 s = 1:05:24). `main` 19519ed on
+2026-11-01 (015 merge gate): 556 passed, 4 xfailed in 4834.93 s = 1:20:34, so **1.23x faster end to end**; `main`
+c751fb2 before 015: 2:09:20. Slowest three: `test_optimize_quick_deterministic_and_legal` 1573.53s; `test_expectimax2_beats_greedy_paired` 751.29s; `test_v7_reference_team_2000_runs` 682.06s (vs 1917.9 / 1034.1 / 925.8 s on the 015 run).
+`runs/016-evidence/full.log`, `full.start`. Not merged: waits for the user's go.
