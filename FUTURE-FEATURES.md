@@ -184,7 +184,7 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
   `moveEffectsMask` 2.3% self, `battlerAbility` 1.6%, `sideOfBattler` 1.7%, `moveEffectsData` 1.1% recomputed on every
   read from an immutable shadow state; a per-decision memo per battler with the 015-017 lifecycle, freeze guard and
   CHECK would be exact (est. 4-5%), the round after this one. Specify draft for the next feature (D, F, E):
-  `runs/017-evidence/scratchpad/prof4/specify_018.txt`; if it takes 018, the `expectimax2-v4` approximations move to 019.
+  `runs/017-evidence/scratchpad/prof4/specify_018.txt` (written before the user chose v4 first; it becomes 019 or later).
 - **Exact, cross-decision.** Caches that persist across decisions: `damageTable` (10.1% category after 015, 77% hit
   rate within a decision), `matchupScore`. Need a cache key that proves the inputs are unchanged.
 - **Exact, mechanical.** Hoist the remaining ~320 `K()` / `C.get` name lookups in `sim/ai` to pre-resolved fields
@@ -194,8 +194,14 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
 - **Killed by the 015 profile (do not retry without new evidence).** Cloning / copy-on-write (0.7% of time);
   better prediction-cache keys (0.35% hit rate; coarse-key bound 11.6% of ply-2 calls); the end-state merge
   (collapses 0.5% of branches).
-- **Feature 018 (was "017" before the exact round three took that number), approximations as `expectimax2-v4`**
-  (never `-v3`, archived 007's name): K_PLY2 2 → 1 (about 21% of post-015 time; the two samples disagree in 29% of
-  ply-2 nodes), a branch probability floor, switch beam 1 (10-15%), root K 8 → 4 (about 8%; root samples agree only
-  52% of the time). Reference-first (Principle VI): paired runs vs v2 on B1-B5 with McNemar exact; adopt only if not
-  worse; gauntlets/s and wall recorded. v1 and v2 stay unchanged.
+- **Feature 018 = `expectimax2-v4` approximations (user's choice 2026-11-02, ahead of the exact items D, F, E, H;
+  never `-v3`, archived 007's name).** Sized in memory on the fixed set on 2026-11-02 (`REPORT4.md` appendix; the
+  decisions change, so these are candidates, not results): K_PLY2 2 → 1 gives 1.25x, switch beam 2 → 1 1.22x, K_ROOT
+  8 → 4 1.08x, a branch-probability floor that values first-ply branches below 0.02 by the leaf 1.07x (9.3% of
+  second-ply subtrees, 0.48% of the mass; 0.05: 1.20x, 20.7% / 2.2%), K_PLY2 1 + beam 1 1.49x, all four 1.75x (2.24
+  gauntlets/s). Root samples agree only 52% of the time and second-ply samples 71%, so accuracy is the risk.
+  Reference-first (Principle VI): each knob alone, then the combination; v4 = the fastest combination not worse than
+  v2 on paired runs (benchmark team, reference team, the two 014 B2 final teams; 2,000 paired, McNemar exact) plus the
+  B2 optimizer end to end at equal levels (the 010 rule); only then the default player. v1 and v2 stay unchanged.
+  Specify draft: `runs/017-evidence/scratchpad/prof4/specify_018_v4.txt`. The exact round four (D, F, E) and H follow
+  as 019+.

@@ -1,5 +1,12 @@
-# START HERE (updated 2026-11-02, 1:40 PM EST, post-017 re-profile done, next feature proposed)
+# START HERE (updated 2026-11-02, 1:50 PM EST, v4 chosen as the next feature, sizing done)
 
+- **User decision 2026-11-02 (1:50 PM EST): the next feature is 018 = `expectimax2-v4` (approximations), ahead of the exact
+  items D, F, E, H.** Sizing runs done read-only (in-memory parameter patches, `runs/017-evidence/scratchpad/prof4/REPORT4.md`
+  appendix, `v4_*.json`): K_PLY2 1 → 1.25x, beam 1 → 1.22x, K_ROOT 4 → 1.08x, floor 0.02 → 1.07x (0.05 → 1.20x),
+  K_PLY2 1 + beam 1 → 1.49x, all four → 1.75x; clear counts over 40 gauntlets within noise. Specify draft:
+  `runs/017-evidence/scratchpad/prof4/specify_018_v4.txt` (reference-first acceptance: paired 2,000-run comparisons vs v2
+  on four teams + the B2 optimizer at equal levels; v4 becomes the default only if not worse). Next: the user runs
+  `/speckit-specify` with that text. Nothing is running; `main` 6ab83b5+docs, code untouched.
 - **Post-017 re-profile done 2026-11-02, 1:40 PM EST (read-only; `main` 6ab83b5 untouched by code).** Same 40-gauntlet set
   and harness, hooks verified (hooked == plain digest); report `runs/017-evidence/scratchpad/prof4/REPORT4.md`, manifest
   `runs/017-evidence/prof4.sha256` (git-ignored). Headline 9.9 ms/decision; AI prediction 44.1% (adapter 20.4,
