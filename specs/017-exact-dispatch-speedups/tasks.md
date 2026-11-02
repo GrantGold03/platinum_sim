@@ -46,15 +46,15 @@ each gain is attributed; US4 (measurement and docs) depends on all three.
 **Purpose**: the numbers the branch is compared with, taken from `main` at comparison time under the same
 conditions as the branch runs (quickstart step 0).
 
-- [ ] T001 Create `specs/017-exact-dispatch-speedups/validation-log.md` (header: times Eastern, evidence dir
+- [X] T001 Create `specs/017-exact-dispatch-speedups/validation-log.md` (header: times Eastern, evidence dir
   `runs/017-evidence/`; sections per task; record branch `017-exact-dispatch-speedups`, base `main` f6d845c,
   `git diff --stat main HEAD -- sim src tests` expected empty, exit 0); `mkdir -p runs/017-evidence`
-- [ ] T002 `git switch main`; alone on the machine: `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/main_v2.json`
+- [X] T002 `git switch main`; alone on the machine: `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/main_v2.json`
   and `--policy expectimax2-v1 --json > runs/017-evidence/main_v1.json` (about 40 s each); `digest_full` MUST be
   `db6d20cf59008d32640358a6a143eb94d5102b46ebcc0d116f39c2856fd504d3` and `1273b69462bcce8c690e020e9c9699412e1a3f40809d4d7b1a77ecc23d3c3178`;
   record `gauntlets_per_s`, `ms_per_decision`, `ai_draws`, `wall_s` for both in the log (the "before" figures; the
   2026-11-02 health check saw 1.0187 / 12.36 for v2)
-- [ ] T003 Still on `main`, alone: `uv run platsim bench --workers 16 --json > runs/017-evidence/main_pool.json` (about 1 min);
+- [X] T003 Still on `main`, alone: `uv run platsim bench --workers 16 --json > runs/017-evidence/main_pool.json` (about 1 min);
   `digests_agree` MUST be true; record `pool_wall_s`, `pool_gauntlets_per_s`, `pool_digest_logs`; then
   `git switch 017-exact-dispatch-speedups`; record in the log
 
@@ -68,10 +68,10 @@ conditions as the branch runs (quickstart step 0).
 replay gate), then land the instrumentation commit so the interpreter step count has a committed before figure
 (clarification 2 of 2026-11-02; contract `policy-and-bench.md`). No behaviour change in this phase.
 
-- [ ] T004 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests; diagnostic about 35-45 s,
+- [X] T004 On the branch: `(cd sim && node --test test/replay.test.mjs)` exit 0 (3 tests; diagnostic about 35-45 s,
   6144 player decisions); record the diagnostic line in the log. If it fails here, nothing else may start: the
   fixture or the base is not what the plan assumes
-- [ ] T005 In `sim/ai/interp.mjs`: `export const INTERP_STATS = { steps: 0, dispatches: 0 }` (header comment: one
+- [X] T005 In `sim/ai/interp.mjs`: `export const INTERP_STATS = { steps: 0, dispatches: 0 }` (header comment: one
   integer increment per loop iteration, diagnostics only, never reset by the module); in `runSection`, `INTERP_STATS.steps++`
   once per iteration (before the handler lookup). In `sim/ai/choose.mjs` `runSectionTraced`: the same increment
   (removed again in T012 when the loops merge). In `sim/bench.mjs`: import `INTERP_STATS`; in `runBench` snapshot it
@@ -79,12 +79,12 @@ replay gate), then land the instrumentation commit so the interpreter step count
   `interp_dispatches: INTERP_STATS.dispatches - i0.dispatches` to the report after `ai_draws`; print both in the human
   table in `main()`. In `src/platsim/bench.py` add the rows `("single: interpreter steps", out.get("interp_steps"))`
   and `("single: interpreter dispatches", out.get("interp_dispatches"))` after the AI-draws row
-- [ ] T006 [P] Extend `sim/test/bench.test.mjs` with one test "017 interpreter steps in the report": import `runBench`
+- [X] T006 [P] Extend `sim/test/bench.test.mjs` with one test "017 interpreter steps in the report": import `runBench`
   and `INTERP_STATS`; `const s0 = INTERP_STATS.steps; const r = runBench(gd, { policy: 'expectimax2-v2', n: 1, teams:
   ['bench'], trainers: ['aaron'] })` (one Aaron battle, a few seconds); assert `Number.isInteger(r.interp_steps)`,
   `r.interp_steps > 0`, `r.interp_steps === INTERP_STATS.steps - s0` (the report is the delta), and
   `r.interp_dispatches >= 0` (tightened to `> 0` in T009); positive control: `INTERP_STATS.steps` grew across the run
-- [ ] T007 Gate and commit 1 (quickstart step 1): `(cd sim && node --test test/bench.test.mjs test/replay.test.mjs test/ai_golden.test.mjs)`
+- [X] T007 Gate and commit 1 (quickstart step 1): `(cd sim && node --test test/bench.test.mjs test/replay.test.mjs test/ai_golden.test.mjs)`
   exit 0; `uv run pytest -q tests/unit/test_bench_cli.py` exit 0 (the two new rows parse; `tests/integration/test_bench.py` is
   marked `battle_sim` and runs in T033's full suite); alone on the machine `node sim/bench.mjs --policy expectimax2-v2 --json > runs/017-evidence/c1_v2.json`
   → `digest_full` `db6d20cf…`, `ai_draws` equal to T002, `interp_steps` about 143 M (record the exact value: the SC-004

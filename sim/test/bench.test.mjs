@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { benchRequests, digestFull, digestLogs, diffRecorded, fixtureRecord, logLine, runRecorded } from '../bench.mjs';
+import { benchRequests, digestFull, digestLogs, diffRecorded, fixtureRecord, logLine, runBench, runRecorded } from '../bench.mjs';
+import { INTERP_STATS } from '../ai/interp.mjs';
 import { runGauntlet } from '../gauntlet.mjs';
 import { DECOMP_AI } from '../ai/opponent.mjs';
 import { gd } from './ai_fixtures.mjs';
@@ -80,4 +81,15 @@ test('diffRecorded: identical records give no differences; one altered choice or
   const e = structuredClone(entry);
   e.digest_full = 'x';
   assert.ok(diffRecorded(entry, e).some((m) => /digest_full/.test(m)));
+});
+
+// Feature 017 (contracts/policy-and-bench.md): the report carries the interpreter step counters as deltas.
+test('017 interpreter steps in the report: runBench reports INTERP_STATS deltas (one Aaron battle, expectimax2-v2)', () => {
+  const s0 = INTERP_STATS.steps;
+  const r = runBench(gd, { policy: 'expectimax2-v2', n: 1, teams: ['bench'], trainers: ['aaron'] });
+  assert.ok(Number.isInteger(r.interp_steps), `interp_steps ${r.interp_steps}`);
+  assert.ok(r.interp_steps > 0, 'the trainer AI ran script instructions');
+  assert.equal(r.interp_steps, INTERP_STATS.steps - s0, 'the report is the delta over the run');
+  assert.ok(Number.isInteger(r.interp_dispatches) && r.interp_dispatches >= 0, `interp_dispatches ${r.interp_dispatches}`);
+  assert.ok(INTERP_STATS.steps > s0, 'positive control: the counter grew across the run');
 });

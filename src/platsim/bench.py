@@ -104,7 +104,9 @@ def _table(out: dict) -> str:
     if "gauntlets_per_s" in out:
         rows += [("single: gauntlets/s", out["gauntlets_per_s"]), ("single: wall", f"{out['wall_s']} s"),
                  ("single: ms/decision", out.get("ms_per_decision")), ("single: AI calls/decision", out.get("ai_calls_per_decision")),
-                 ("single: AI draws", out.get("ai_draws")), ("single: digest_full", out["digest_full"]),
+                 ("single: AI draws", out.get("ai_draws")),
+                 ("single: interpreter steps", out.get("interp_steps")), ("single: interpreter dispatches", out.get("interp_dispatches")),
+                 ("single: digest_full", out["digest_full"]),
                  ("single: digest_logs", out["digest_logs"]), ("single: sim_code_hash", out["sim_code_hash"])]
     if "pool_gauntlets_per_s" in out:
         rows += [(f"pool ({out['pool_workers']} workers): gauntlets/s", out["pool_gauntlets_per_s"]),

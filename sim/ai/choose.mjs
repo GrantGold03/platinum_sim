@@ -30,7 +30,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DECOMP_ROOT } from './constants.mjs';
-import { HANDLERS, AIUnimplemented, makeCtx, runSection } from './interp.mjs';
+import { HANDLERS, AIUnimplemented, makeCtx, runSection, INTERP_STATS } from './interp.mjs';
 import { parseAiScript } from './parse.mjs';
 import * as calcdamage from './calcdamage.mjs';
 import { compareBattlerSpeed } from './cmds/battler.mjs';
@@ -244,6 +244,7 @@ function runSectionTraced(ctx, start, onStep, maxSteps = 200000) {
   ctx.done = false;
   for (let steps = 0; !ctx.done; steps++) {
     if (steps >= maxSteps) throw new Error(`AI section did not terminate after ${maxSteps} steps`);
+    INTERP_STATS.steps++; // 017: same counter as interp.mjs runSection
     const ins = ctx.prog.instructions[ctx.pc];
     const fn = HANDLERS[ins.name];
     if (!fn) throw new AIUnimplemented(ins.name, ins.line);

@@ -30,6 +30,11 @@ function mergeHandlers(groups) {
 
 export const HANDLERS = mergeHandlers({ flow, battler, moves, damage, misc });
 
+// Feature 017 (specs/017-exact-dispatch-speedups/contracts/interp-api.md): process-wide counters, one integer
+// increment per interpreter step; `dispatches` counts fused effect-check runs answered in one step. Diagnostics
+// only, never reset by the module; sim/bench.mjs reports the deltas (`interp_steps`, `interp_dispatches`).
+export const INTERP_STATS = { steps: 0, dispatches: 0 };
+
 // Runs one flag section for the current ctx.mem.moveSlot, starting at instruction index `start`,
 // until a handler calls ctx.end(). Mirrors the per-move loop body of TrainerAI_EvalMoves
 // (pokeplatinum/src/battle/trainer_ai/trainer_ai.c:483).
@@ -38,6 +43,7 @@ export function runSection(ctx, start, { maxSteps = 200000 } = {}) {
   ctx.done = false;
   for (let steps = 0; !ctx.done; steps++) {
     if (steps >= maxSteps) throw new Error(`AI section did not terminate after ${maxSteps} steps (started at instruction ${start})`);
+    INTERP_STATS.steps++;
     const ins = ctx.prog.instructions[ctx.pc];
     if (!ins) throw new Error(`AI pc ${ctx.pc} out of range`);
     const fn = HANDLERS[ins.name];
