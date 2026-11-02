@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 planned)
+# START HERE (updated 2026-11-02, 10:26 AM EST, feature 017 tasks written)
 
 - **Feature 017 `017-exact-dispatch-speedups` specified 2026-11-02, 10:26 AM EST (`/speckit-specify`, user's go).** Branch from
   `main` f6d845c, main checkout; `specs/017-exact-dispatch-speedups/spec.md` + `checklists/requirements.md` (all items
@@ -12,8 +12,10 @@
   argument index + one interpreter loop with an `onStep` hook; the policy's `damageTable` reads the root adapter's 015
   memo and copies before `fix()`; one speed pair per adapter per decision (`ai.speedPair`, `compareBattlerSpeedDirect`
   kept as reference) + `speedInfo` once per state via a thunk; `INTERP_STATS` reported by `bench.mjs`. Five commits
-  (instrumentation, US1, US2, US3, docs). Next: the user runs `/speckit-tasks`. `data/generated/` needs no re-extract
-  (no extractor change). Nothing is running.
+  (instrumentation, US1, US2, US3, docs). `/speckit-tasks` 10:47 AM EST: tasks.md, 33 tasks (12 gates/measurements/commits),
+  5 commits: T001-T003 baseline on `main`, T004-T007 replay gate + instrumentation commit, T008-T014 US1, T015-T020 US2,
+  T021-T028 US3, T029-T033 US4 + full suite. Next: the user runs `/speckit-analyze` (optional) then `/speckit-implement`.
+  `data/generated/` needs no re-extract (no extractor change). Nothing is running.
 - **Resume checklist (2026-11-02, 10:18 AM EST; superseded by the 017 note above for the branch state).** Session goal: continue the expectimax2 speed work. `main` f67ff1e is checked out,
   in sync with `origin/main`; nothing is running; no feature branch yet. Health check on `main` this morning: Node suite
   334/334 (139 s), `node sim/bench.mjs --policy expectimax2-v2` digest `db6d20cf…`, 1.019 gauntlets/s, 12.4 ms/decision.
