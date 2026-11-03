@@ -328,7 +328,7 @@ and v2 on request; without it, the docs record the negative result.
   specs/018-expectimax2-v4/scripts/equal_levels.py specs/018-expectimax2-v4/validation-log.md` plus any doc touched),
   message `feat(018): expectimax2-v4 is the default player (gate passed)` or `docs(018): v4 not adopted; results
   recorded`, push
-- [ ] T037 Merge gate (after the user's hands-on testing and go, nothing else running, background): `uv run pytest -q
+- [X] T037 Merge gate (after the user's hands-on testing and go, nothing else running, background): `uv run pytest -q
   --durations=25 > runs/018-evidence/full.log 2>&1` (about 1 h; the strength test now runs v4 at full size); record the
   summary line, exit code and Eastern start/end in the log and RUN-STATE. Do not merge; report to the user
 

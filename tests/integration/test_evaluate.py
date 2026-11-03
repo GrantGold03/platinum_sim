@@ -19,6 +19,8 @@ import time
 
 import pytest
 
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
+
 from platsim import pins
 from platsim.legality.validator import validate
 
@@ -71,7 +73,7 @@ def test_determinism_fast(tmp_path):
     _same_json(tmp_path / "a", tmp_path / "b")
     r = json.loads((tmp_path / "a" / "result.json").read_text())
     assert r["n_runs"] == int(n) and r["budget_preset"] == "quick" and not r["qualified"]
-    assert r["player_policy"] == "expectimax2-v2" and r["opponent_policy"] == "decomp-ai"
+    assert r["player_policy"] == DEFAULT_PLAYER_POLICY and r["opponent_policy"] == "decomp-ai"
     # Code version (platsim/version.py): which code produced the result; equal across worker counts
     # (the byte-identical check above covers them).
     from platsim import version

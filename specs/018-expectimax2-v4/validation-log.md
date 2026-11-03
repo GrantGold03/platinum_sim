@@ -282,3 +282,20 @@ three follow-ups), `sim/policy/expectimax2.mjs` header (VERSIONS entry: default 
 - Fast mode, rerun 1:01:30 to 1:11:21 PM EST: **535 passed, 28 deselected, 4 xfailed, 1 warning, exit 0**, 588.3 s
   (`runs/018-evidence/fast.log`; battle split clean). Commit 5 below. T037 (full suite, about 1 h; the strength test
   now runs v4 at 2,000 paired) waits for the user's hands-on testing and go.
+
+## T037 Merge gate: full pytest suite (user's go "go ahead with the full suite and merge if it passes")
+
+- First run 1:13:20 to 2:08:14 PM EST, alone on the machine, HEAD 0edba14: `uv run pytest -q --durations=25 >
+  runs/018-evidence/full.log 2>&1` gave **2 failed, 561 passed, 4 xfailed, 1 warning in 3,286.8 s (54 min 46 s), exit 1**
+  (`runs/018-evidence/full.log`, `full.start`). Both failures were `battle_sim` tests outside the fast set that pinned the
+  old default literal `expectimax2-v2` for the report's `player_policy` (and the optimizer's `policy_per_stage.confirm`):
+  `tests/integration/test_evaluate.py::test_determinism_fast` and
+  `tests/integration/test_optimize_small.py::test_optimize_quick_deterministic_and_legal`. Same class as the T036 bench-test
+  pin; no product behaviour involved (the reports correctly said `expectimax2-v4`). Fix: both compare against
+  `DEFAULT_PLAYER_POLICY` (docstring updated). Slowest: quick optimize 1,248 s, strength test (v4 at 2,000 paired) 743 s,
+  V7 evaluate 401 s, extract 224 s.
+- Rerun of the two fixed tests 2:09:02 to 2:31:33 PM EST, alone: **2 passed in 1,349.6 s (22 min 29 s), exit 0**
+  (`runs/018-evidence/full-rerun.log`). The code (`src/`, `sim/`) is unchanged between the two runs; only the two test files
+  changed, so the full set of 563 tests has passed on this code (561 + 2), 4 xfailed.
+- Merge per the user's instruction: fast-forward `main` to this branch (hash recorded in RUN-STATE).
+
