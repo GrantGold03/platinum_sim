@@ -55,10 +55,10 @@ table per team with the spread against the 8 to 15 points seen at n 100.
 - [X] T005 [P] [US1] Add the table part of the CLI to `specs/020-lead-spike/scripts/lead_analysis.py`: `--evidence-dir`, `--teams`, `--out`; per team load the six recordings, `check_paired` each against lead 0, build the six `LeadRow`s, print the table (lead, species, cleared/2000, clear rate [ci], per-trainer rates, Cynthia conditional, expected final levels, lead gain) and the spread line (best, worst, points, "vs 12 / 8 / 15 at n 100")
 - [X] T006 [US1] Smoke the recorder alone: `uv run python specs/020-lead-spike/scripts/lead_runs.py --team b2main --leads 0,1 --runs 20 --out-dir runs/020-evidence/smoke` then `lead_analysis.py --evidence-dir runs/020-evidence/smoke --teams b2main` on those two files (the analysis must accept a partial lead set for the table and skip the split-sample block when fewer than six leads exist); log the output; delete the smoke directory afterwards
 - [X] T007 [US1] Commit 1: `feat(020): lead recorder and analysis with tests` (scripts, test, log); push
-- [ ] T008 [US1] Record `b2main`, alone (about 17 min): `uv run python specs/020-lead-spike/scripts/lead_runs.py --team b2main`; log Eastern start/end, the six summary lines, wall and gauntlets/s
-- [ ] T009 [US1] Record `b2branch`, alone: same command with `--team b2branch`; log as T008
-- [ ] T010 [US1] Record `b2v2`, alone: same command with `--team b2v2`; log as T008
-- [ ] T011 [US1] Run `uv run python specs/020-lead-spike/scripts/lead_analysis.py --out runs/020-evidence/lead_analysis.json > runs/020-evidence/lead_analysis.txt`; copy the three tables into the validation log with the spreads (SC-001); copy `lead_analysis.json`, `lead_analysis.txt` and the eighteen header lines into `specs/020-lead-spike/evidence/`
+- [X] T008 [US1] Record `b2main`, alone (about 17 min): `uv run python specs/020-lead-spike/scripts/lead_runs.py --team b2main`; log Eastern start/end, the six summary lines, wall and gauntlets/s
+- [X] T009 [US1] Record `b2branch`, alone: same command with `--team b2branch`; log as T008
+- [X] T010 [US1] Record `b2v2`, alone: same command with `--team b2v2`; log as T008
+- [X] T011 [US1] Run `uv run python specs/020-lead-spike/scripts/lead_analysis.py --out runs/020-evidence/lead_analysis.json > runs/020-evidence/lead_analysis.txt`; copy the three tables into the validation log with the spreads (SC-001); copy `lead_analysis.json`, `lead_analysis.txt` and the eighteen header lines into `specs/020-lead-spike/evidence/`
 
 **Checkpoint**: question (1) answered with three tables.
 
@@ -72,9 +72,9 @@ selection-biased, the pairing control, and the chosen lead's gain versus the oth
 **Independent Test**: the split-sample block prints for every team with control discordant 0; on the real
 recordings the verdicts decide the go / no-go.
 
-- [ ] T012 [US2] Add the split-sample block to the CLI in `specs/020-lead-spike/scripts/lead_analysis.py`: per team `choose_best(recs, 1000)` (tie reported), `held_out`, `naive` (printed with the label "selection-biased"), `control`, `first_listed_already_best` handling (0 discordant, counts as no supported gain), `level_gains`; write all of it into the JSON (SplitSampleResult per data-model.md)
-- [ ] T013 [US2] Re-run the analysis on the eighteen recordings (seconds; no new battles); copy the three split-sample blocks into the validation log; state per team whether the held-out gain is supported (verdict `A`, p < 0.05) and the naive p beside it (SC-002, SC-003)
-- [ ] T014 [US2] Commit 2: `feat(020): split-sample lead test on three optimizer-built teams` (script, evidence, log); push
+- [X] T012 [US2] Add the split-sample block to the CLI in `specs/020-lead-spike/scripts/lead_analysis.py`: per team `choose_best(recs, 1000)` (tie reported), `held_out`, `naive` (printed with the label "selection-biased"), `control`, `first_listed_already_best` handling (0 discordant, counts as no supported gain), `level_gains`; write all of it into the JSON (SplitSampleResult per data-model.md)
+- [X] T013 [US2] Re-run the analysis on the eighteen recordings (seconds; no new battles); copy the three split-sample blocks into the validation log; state per team whether the held-out gain is supported (verdict `A`, p < 0.05) and the naive p beside it (SC-002, SC-003)
+- [X] T014 [US2] Commit 2: `feat(020): split-sample lead test on three optimizer-built teams` (script, evidence, log); push
 
 **Checkpoint**: question (2) answered; the go / no-go rule for the confirmation-stage check can be applied.
 
@@ -87,15 +87,15 @@ recordings the verdicts decide the go / no-go.
 **Independent Test**: the screening block prints for every team; FUTURE-FEATURES section 8 carries the record with
 every number.
 
-- [ ] T015 [US3] Add the screening block to the CLI in `specs/020-lead-spike/scripts/lead_analysis.py` (`screening(recs)`: choices at 200, 400, 1000 and agreement flags) and the closing summary (per team supported_gain; go / no-go for the confirmation-stage check = any team supported); re-run and copy the block into the log (SC-004)
-- [ ] T016 [US3] Write the record in `FUTURE-FEATURES.md` section 8 under the lead bullet: per team the spread, the chosen lead with held-out counts and p, the naive p (selection-biased), control 0, the 200/400-pair agreement, the chosen lead's gain versus the others; the go / no-go for the confirmation-stage check by question (2)'s rule and the standing go for the reporting follow-on; the same as the closing section of the validation log (FR-010, SC-005)
-- [ ] T017 [US3] Commit 3: `feat(020): screening check and the lead decision record` (script, evidence, FUTURE-FEATURES, log); push
+- [X] T015 [US3] Add the screening block to the CLI in `specs/020-lead-spike/scripts/lead_analysis.py` (`screening(recs)`: choices at 200, 400, 1000 and agreement flags) and the closing summary (per team supported_gain; go / no-go for the confirmation-stage check = any team supported); re-run and copy the block into the log (SC-004)
+- [X] T016 [US3] Write the record in `FUTURE-FEATURES.md` section 8 under the lead bullet: per team the spread, the chosen lead with held-out counts and p, the naive p (selection-biased), control 0, the 200/400-pair agreement, the chosen lead's gain versus the others; the go / no-go for the confirmation-stage check by question (2)'s rule and the standing go for the reporting follow-on; the same as the closing section of the validation log (FR-010, SC-005)
+- [X] T017 [US3] Commit 3: `feat(020): screening check and the lead decision record` (script, evidence, FUTURE-FEATURES, log); push
 
 ---
 
 ## Phase 6: Polish, gates and merge
 
-- [ ] T018 [P] Record the feature in `README.md` (one paragraph after the 019 block: what was measured, the numbers, the decision; no behaviour change) and `RUN-STATE.md` START HERE
+- [X] T018 [P] Record the feature in `README.md` (one paragraph after the 019 block: what was measured, the numbers, the decision; no behaviour change) and `RUN-STATE.md` START HERE
 - [ ] T019 Gates, in order, nothing else running: (a) the code hashes equal the T001 before-hashes; (b) `git diff --stat main -- sim src/platsim` empty; (c) `(cd sim && node --test test/*.test.mjs)` green; (d) `uv run pytest -q -m "not battle_sim"` green with the battle split clean; log each output with Eastern times and the sentence that the full suite is skipped because (a) and (b) hold (FR-012, SC-006)
 - [ ] T020 Commit 4: `docs(020): README, RUN-STATE, gates recorded`; push; report to the user with the decision and the numbers. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 020-lead-spike && git push`)
 

@@ -1,0 +1,1198 @@
+{
+ "summary": {
+  "supported_gain": {
+   "b2main": false,
+   "b2branch": false,
+   "b2v2": false
+  },
+  "not_judged": [],
+  "confirmation_stage_check": "no-go (reporting follow-on only)"
+ },
+ "teams": [
+  {
+   "team": "b2main",
+   "builds": [
+    [
+     "garchomp",
+     52
+    ],
+    [
+     "infernape",
+     54
+    ],
+    [
+     "staraptor",
+     53
+    ],
+    [
+     "rotom",
+     55
+    ],
+    [
+     "floatzel",
+     55
+    ],
+    [
+     "weavile",
+     53
+    ]
+   ],
+   "leads_present": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "rows": {
+    "0": {
+     "lead_index": 0,
+     "lead_species": "garchomp",
+     "n": 2000,
+     "cleared": 1827,
+     "clear_rate": 0.9135,
+     "ci95": [
+      0.9003740477452268,
+      0.9250405541531769
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.9975
+      },
+      "flint": {
+       "battles": 1995,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1995,
+       "rate": 0.9929824561403509
+      },
+      "cynthia": {
+       "battles": 1981,
+       "rate": 0.9222614840989399
+      }
+     },
+     "cynthia_rate": 0.9222614840989399,
+     "expected_final_levels": [
+      53.734537493158186,
+      54.70607553366174,
+      53.065134099616856,
+      55.09031198686371,
+      55.55555555555556,
+      53.139573070607554
+     ],
+     "lead_gain": 1.7345374931581858,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    },
+    "1": {
+     "lead_index": 1,
+     "lead_species": "infernape",
+     "n": 2000,
+     "cleared": 1727,
+     "clear_rate": 0.8635,
+     "ci95": [
+      0.8477551087562559,
+      0.8778511978702731
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.9985
+      },
+      "flint": {
+       "battles": 1997,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1997,
+       "rate": 0.9744616925388082
+      },
+      "cynthia": {
+       "battles": 1946,
+       "rate": 0.8874614594039054
+      }
+     },
+     "cynthia_rate": 0.8874614594039054,
+     "expected_final_levels": [
+      52.972785176606834,
+      55.31557614360162,
+      53.138390272148236,
+      55.035900405327155,
+      55.54545454545455,
+      53.272148233931674
+     ],
+     "lead_gain": 1.3155761436016178,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    },
+    "2": {
+     "lead_index": 2,
+     "lead_species": "staraptor",
+     "n": 2000,
+     "cleared": 1859,
+     "clear_rate": 0.9295,
+     "ci95": [
+      0.9174382310555769,
+      0.9399150253298267
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.9995
+      },
+      "bertha": {
+       "battles": 1999,
+       "rate": 0.9974987493746873
+      },
+      "flint": {
+       "battles": 1994,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1994,
+       "rate": 0.9854563691073219
+      },
+      "cynthia": {
+       "battles": 1965,
+       "rate": 0.9460559796437659
+      }
+     },
+     "cynthia_rate": 0.9460559796437659,
+     "expected_final_levels": [
+      52.90102205486821,
+      54.5045723507262,
+      53.9585798816568,
+      55.18558364712211,
+      55.53523399677246,
+      53.11995696611081
+     ],
+     "lead_gain": 0.958579881656803,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    },
+    "3": {
+     "lead_index": 3,
+     "lead_species": "rotom",
+     "n": 2000,
+     "cleared": 1716,
+     "clear_rate": 0.858,
+     "ci95": [
+      0.8420154493218232,
+      0.8726119448247996
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.998
+      },
+      "flint": {
+       "battles": 1996,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1996,
+       "rate": 0.9624248496993988
+      },
+      "cynthia": {
+       "battles": 1921,
+       "rate": 0.8932847475273296
+      }
+     },
+     "cynthia_rate": 0.8932847475273296,
+     "expected_final_levels": [
+      52.9539627039627,
+      54.68356643356643,
+      53.07925407925408,
+      55.91491841491842,
+      55.54545454545455,
+      53.23659673659674
+     ],
+     "lead_gain": 0.914918414918418,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    },
+    "4": {
+     "lead_index": 4,
+     "lead_species": "floatzel",
+     "n": 2000,
+     "cleared": 1676,
+     "clear_rate": 0.838,
+     "ci95": [
+      0.8212067437991746,
+      0.8534973322386983
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.9975
+      },
+      "flint": {
+       "battles": 1995,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1995,
+       "rate": 0.9694235588972431
+      },
+      "cynthia": {
+       "battles": 1934,
+       "rate": 0.8665977249224406
+      }
+     },
+     "cynthia_rate": 0.8665977249224406,
+     "expected_final_levels": [
+      52.93854415274463,
+      54.61694510739857,
+      53.065035799522676,
+      55.18854415274463,
+      56.13245823389021,
+      53.32159904534606
+     ],
+     "lead_gain": 1.1324582338902118,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    },
+    "5": {
+     "lead_index": 5,
+     "lead_species": "weavile",
+     "n": 2000,
+     "cleared": 1748,
+     "clear_rate": 0.874,
+     "ci95": [
+      0.8587356201177461,
+      0.8878304285158767
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.997
+      },
+      "flint": {
+       "battles": 1994,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1994,
+       "rate": 0.9679037111334002
+      },
+      "cynthia": {
+       "battles": 1930,
+       "rate": 0.9056994818652849
+      }
+     },
+     "cynthia_rate": 0.9056994818652849,
+     "expected_final_levels": [
+      52.994279176201374,
+      54.587528604118994,
+      53.07151029748284,
+      55.15903890160183,
+      55.64187643020595,
+      53.90217391304348
+     ],
+     "lead_gain": 0.9021739130434767,
+     "start_levels": [
+      52,
+      54,
+      53,
+      55,
+      55,
+      53
+     ]
+    }
+   },
+   "best": 2,
+   "worst": 4,
+   "spread_points": 9.150000000000002,
+   "spreads_n100": [
+    12,
+    8,
+    15
+   ],
+   "split_sample": {
+    "chosen_lead": 2,
+    "chosen_species": "staraptor",
+    "tied": false,
+    "first_listed_already_best": false,
+    "held_out": {
+     "n": 1000,
+     "a_rate": 0.926,
+     "b_rate": 0.906,
+     "only_chosen": 85,
+     "only_first": 65,
+     "p": 0.12052916970948838,
+     "verdict": "indistinguishable"
+    },
+    "naive_selection_biased": {
+     "n": 2000,
+     "a_rate": 0.9295,
+     "b_rate": 0.9135,
+     "only_chosen": 162,
+     "only_first": 130,
+     "p": 0.06947367878148156,
+     "verdict": "indistinguishable"
+    },
+    "control_discordant": 0,
+    "supported_gain": false,
+    "level_gains": {
+     "chosen_gain": 0.958579881656803,
+     "others_mean_gain": 1.199932839722382,
+     "difference": -0.2413529580655791
+    }
+   },
+   "screening": {
+    "choices": {
+     "200": 2,
+     "400": 0,
+     "1000": 2
+    },
+    "agree": {
+     "200": true,
+     "400": false
+    }
+   }
+  },
+  {
+   "team": "b2branch",
+   "builds": [
+    [
+     "garchomp",
+     51
+    ],
+    [
+     "infernape",
+     53
+    ],
+    [
+     "staraptor",
+     53
+    ],
+    [
+     "rotom",
+     53
+    ],
+    [
+     "floatzel",
+     53
+    ],
+    [
+     "weavile",
+     54
+    ]
+   ],
+   "leads_present": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "rows": {
+    "0": {
+     "lead_index": 0,
+     "lead_species": "garchomp",
+     "n": 2000,
+     "cleared": 1586,
+     "clear_rate": 0.793,
+     "ci95": [
+      0.7746900452495411,
+      0.8101865650436446
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "flint": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 2000,
+       "rate": 0.997
+      },
+      "cynthia": {
+       "battles": 1994,
+       "rate": 0.7953861584754263
+      }
+     },
+     "cynthia_rate": 0.7953861584754263,
+     "expected_final_levels": [
+      52.99495586380832,
+      53.15699873896595,
+      53.35498108448928,
+      53.03026481715006,
+      53.100252206809586,
+      54.42622950819672
+     ],
+     "lead_gain": 1.9949558638083218,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "1": {
+     "lead_index": 1,
+     "lead_species": "infernape",
+     "n": 2000,
+     "cleared": 1471,
+     "clear_rate": 0.7355,
+     "ci95": [
+      0.7157315552920356,
+      0.7543655154384943
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.9985
+      },
+      "flint": {
+       "battles": 1997,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1997,
+       "rate": 0.9789684526790186
+      },
+      "cynthia": {
+       "battles": 1955,
+       "rate": 0.7524296675191816
+      }
+     },
+     "cynthia_rate": 0.7524296675191816,
+     "expected_final_levels": [
+      52.008837525492865,
+      54.46770904146839,
+      53.156356220258324,
+      53.04214819850442,
+      53.16995241332427,
+      54.43983684568321
+     ],
+     "lead_gain": 1.4677090414683889,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "2": {
+     "lead_index": 2,
+     "lead_species": "staraptor",
+     "n": 2000,
+     "cleared": 1444,
+     "clear_rate": 0.722,
+     "ci95": [
+      0.7019539368073737,
+      0.7411948941997499
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.9975
+      },
+      "bertha": {
+       "battles": 1995,
+       "rate": 0.9994987468671679
+      },
+      "flint": {
+       "battles": 1994,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1994,
+       "rate": 0.9879638916750251
+      },
+      "cynthia": {
+       "battles": 1970,
+       "rate": 0.732994923857868
+      }
+     },
+     "cynthia_rate": 0.732994923857868,
+     "expected_final_levels": [
+      51.9286703601108,
+      53.63919667590028,
+      54.007617728531855,
+      53.3303324099723,
+      53.254847645429365,
+      54.43282548476454
+     ],
+     "lead_gain": 1.007617728531855,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "3": {
+     "lead_index": 3,
+     "lead_species": "rotom",
+     "n": 2000,
+     "cleared": 1383,
+     "clear_rate": 0.6915,
+     "ci95": [
+      0.6709068092999975,
+      0.7113589615912825
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.9975
+      },
+      "flint": {
+       "battles": 1995,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1995,
+       "rate": 0.9724310776942355
+      },
+      "cynthia": {
+       "battles": 1940,
+       "rate": 0.7128865979381444
+      }
+     },
+     "cynthia_rate": 0.7128865979381444,
+     "expected_final_levels": [
+      51.98047722342733,
+      53.90166305133767,
+      53.11135213304411,
+      53.92118582791034,
+      53.197396963123644,
+      54.4295010845987
+     ],
+     "lead_gain": 0.9211858279103424,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "4": {
+     "lead_index": 4,
+     "lead_species": "floatzel",
+     "n": 2000,
+     "cleared": 1477,
+     "clear_rate": 0.7385,
+     "ci95": [
+      0.718796358480818,
+      0.7572892099660243
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.9995
+      },
+      "bertha": {
+       "battles": 1999,
+       "rate": 0.9989994997498749
+      },
+      "flint": {
+       "battles": 1997,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1997,
+       "rate": 0.971957936905358
+      },
+      "cynthia": {
+       "battles": 1941,
+       "rate": 0.7609479649665121
+      }
+     },
+     "cynthia_rate": 0.7609479649665121,
+     "expected_final_levels": [
+      51.97562626946513,
+      53.51861882193636,
+      53.175355450236964,
+      53.17874069058903,
+      54.262694651320245,
+      54.396073121191606
+     ],
+     "lead_gain": 1.2626946513202455,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "5": {
+     "lead_index": 5,
+     "lead_species": "weavile",
+     "n": 2000,
+     "cleared": 1419,
+     "clear_rate": 0.7095,
+     "ci95": [
+      0.6892166423617804,
+      0.7289801148273746
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.9995
+      },
+      "bertha": {
+       "battles": 1999,
+       "rate": 0.9979989994997499
+      },
+      "flint": {
+       "battles": 1995,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1995,
+       "rate": 0.9774436090225563
+      },
+      "cynthia": {
+       "battles": 1950,
+       "rate": 0.7276923076923076
+      }
+     },
+     "cynthia_rate": 0.7276923076923076,
+     "expected_final_levels": [
+      51.97956307258633,
+      53.75264270613108,
+      53.1092318534179,
+      53.268498942917546,
+      53.32487667371388,
+      55.04510218463707
+     ],
+     "lead_gain": 1.0451021846370665,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    }
+   },
+   "best": 0,
+   "worst": 3,
+   "spread_points": 10.150000000000004,
+   "spreads_n100": [
+    12,
+    8,
+    15
+   ],
+   "split_sample": {
+    "chosen_lead": 0,
+    "chosen_species": "garchomp",
+    "tied": false,
+    "first_listed_already_best": true,
+    "held_out": {
+     "n": 1000,
+     "a_rate": 0.803,
+     "b_rate": 0.803,
+     "only_chosen": 0,
+     "only_first": 0,
+     "p": 1.0,
+     "verdict": "indistinguishable"
+    },
+    "naive_selection_biased": {
+     "n": 2000,
+     "a_rate": 0.793,
+     "b_rate": 0.793,
+     "only_chosen": 0,
+     "only_first": 0,
+     "p": 1.0,
+     "verdict": "indistinguishable"
+    },
+    "control_discordant": 0,
+    "supported_gain": false,
+    "level_gains": {
+     "chosen_gain": 1.9949558638083218,
+     "others_mean_gain": 1.1408618867735796,
+     "difference": 0.8540939770347422
+    }
+   },
+   "screening": {
+    "choices": {
+     "200": 0,
+     "400": 0,
+     "1000": 0
+    },
+    "agree": {
+     "200": true,
+     "400": true
+    }
+   }
+  },
+  {
+   "team": "b2v2",
+   "builds": [
+    [
+     "garchomp",
+     51
+    ],
+    [
+     "infernape",
+     53
+    ],
+    [
+     "staraptor",
+     53
+    ],
+    [
+     "rotom",
+     53
+    ],
+    [
+     "floatzel",
+     53
+    ],
+    [
+     "weavile",
+     54
+    ]
+   ],
+   "leads_present": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "rows": {
+    "0": {
+     "lead_index": 0,
+     "lead_species": "garchomp",
+     "n": 2000,
+     "cleared": 1542,
+     "clear_rate": 0.771,
+     "ci95": [
+      0.7520755392260747,
+      0.7888854211474863
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "flint": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 2000,
+       "rate": 0.996
+      },
+      "cynthia": {
+       "battles": 1992,
+       "rate": 0.7740963855421686
+      }
+     },
+     "cynthia_rate": 0.7740963855421686,
+     "expected_final_levels": [
+      53.00129701686122,
+      53.16472114137484,
+      53.35992217898833,
+      53.03112840466926,
+      53.092736705577174,
+      54.42671854734112
+     ],
+     "lead_gain": 2.0012970168612227,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "1": {
+     "lead_index": 1,
+     "lead_species": "infernape",
+     "n": 2000,
+     "cleared": 1482,
+     "clear_rate": 0.741,
+     "ci95": [
+      0.7213512449052788,
+      0.7597247383051573
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.999
+      },
+      "bertha": {
+       "battles": 1998,
+       "rate": 0.9984984984984985
+      },
+      "flint": {
+       "battles": 1995,
+       "rate": 0.9994987468671679
+      },
+      "lucian": {
+       "battles": 1994,
+       "rate": 0.981444332998997
+      },
+      "cynthia": {
+       "battles": 1957,
+       "rate": 0.7572815533980582
+      }
+     },
+     "cynthia_rate": 0.7572815533980582,
+     "expected_final_levels": [
+      52.00674763832659,
+      54.470985155195685,
+      53.16464237516869,
+      53.04588394062078,
+      53.176788124156545,
+      54.44601889338731
+     ],
+     "lead_gain": 1.4709851551956845,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "2": {
+     "lead_index": 2,
+     "lead_species": "staraptor",
+     "n": 2000,
+     "cleared": 1483,
+     "clear_rate": 0.7415,
+     "ci95": [
+      0.7218623193188707,
+      0.7602117468442842
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.9995
+      },
+      "bertha": {
+       "battles": 1999,
+       "rate": 0.9994997498749375
+      },
+      "flint": {
+       "battles": 1998,
+       "rate": 0.9994994994994995
+      },
+      "lucian": {
+       "battles": 1997,
+       "rate": 0.9844767150726089
+      },
+      "cynthia": {
+       "battles": 1966,
+       "rate": 0.754323499491353
+      }
+     },
+     "cynthia_rate": 0.754323499491353,
+     "expected_final_levels": [
+      51.92784895482131,
+      53.66284558327714,
+      54.00134861766689,
+      53.32703978422117,
+      53.23668240053945,
+      54.455832771409305
+     ],
+     "lead_gain": 1.001348617666892,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "3": {
+     "lead_index": 3,
+     "lead_species": "rotom",
+     "n": 2000,
+     "cleared": 1369,
+     "clear_rate": 0.6845,
+     "ci95": [
+      0.6637961167698946,
+      0.7044964927833229
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 1.0
+      },
+      "bertha": {
+       "battles": 2000,
+       "rate": 0.998
+      },
+      "flint": {
+       "battles": 1996,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1996,
+       "rate": 0.9764529058116233
+      },
+      "cynthia": {
+       "battles": 1949,
+       "rate": 0.7024114930733709
+      }
+     },
+     "cynthia_rate": 0.7024114930733709,
+     "expected_final_levels": [
+      51.98027757487217,
+      53.91307523739956,
+      53.10664718772827,
+      53.92695398100803,
+      53.195032870708545,
+      54.388604821037255
+     ],
+     "lead_gain": 0.9269539810080332,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "4": {
+     "lead_index": 4,
+     "lead_species": "floatzel",
+     "n": 2000,
+     "cleared": 1479,
+     "clear_rate": 0.7395,
+     "ci95": [
+      0.7198182161636315,
+      0.7582635181886483
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.999
+      },
+      "bertha": {
+       "battles": 1998,
+       "rate": 0.9964964964964965
+      },
+      "flint": {
+       "battles": 1991,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1991,
+       "rate": 0.9804118533400301
+      },
+      "cynthia": {
+       "battles": 1952,
+       "rate": 0.7576844262295082
+      }
+     },
+     "cynthia_rate": 0.7576844262295082,
+     "expected_final_levels": [
+      51.9709263015551,
+      53.55848546315078,
+      53.16159567275186,
+      53.177822853279245,
+      54.24340770791075,
+      54.42663962136579
+     ],
+     "lead_gain": 1.2434077079107482,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    },
+    "5": {
+     "lead_index": 5,
+     "lead_species": "weavile",
+     "n": 2000,
+     "cleared": 1432,
+     "clear_rate": 0.716,
+     "ci95": [
+      0.6958377146680282,
+      0.7353341209064704
+     ],
+     "per_trainer": {
+      "aaron": {
+       "battles": 2000,
+       "rate": 0.999
+      },
+      "bertha": {
+       "battles": 1998,
+       "rate": 0.998998998998999
+      },
+      "flint": {
+       "battles": 1996,
+       "rate": 1.0
+      },
+      "lucian": {
+       "battles": 1996,
+       "rate": 0.9734468937875751
+      },
+      "cynthia": {
+       "battles": 1943,
+       "rate": 0.737004632012352
+      }
+     },
+     "cynthia_rate": 0.737004632012352,
+     "expected_final_levels": [
+      51.99650837988827,
+      53.73463687150838,
+      53.1054469273743,
+      53.27653631284916,
+      53.32821229050279,
+      55.04399441340782
+     ],
+     "lead_gain": 1.0439944134078232,
+     "start_levels": [
+      51,
+      53,
+      53,
+      53,
+      53,
+      54
+     ]
+    }
+   },
+   "best": 0,
+   "worst": 3,
+   "spread_points": 8.650000000000002,
+   "spreads_n100": [
+    12,
+    8,
+    15
+   ],
+   "split_sample": {
+    "chosen_lead": 0,
+    "chosen_species": "garchomp",
+    "tied": false,
+    "first_listed_already_best": true,
+    "held_out": {
+     "n": 1000,
+     "a_rate": 0.777,
+     "b_rate": 0.777,
+     "only_chosen": 0,
+     "only_first": 0,
+     "p": 1.0,
+     "verdict": "indistinguishable"
+    },
+    "naive_selection_biased": {
+     "n": 2000,
+     "a_rate": 0.771,
+     "b_rate": 0.771,
+     "only_chosen": 0,
+     "only_first": 0,
+     "p": 1.0,
+     "verdict": "indistinguishable"
+    },
+    "control_discordant": 0,
+    "supported_gain": false,
+    "level_gains": {
+     "chosen_gain": 2.0012970168612227,
+     "others_mean_gain": 1.1373379750378363,
+     "difference": 0.8639590418233865
+    }
+   },
+   "screening": {
+    "choices": {
+     "200": 0,
+     "400": 0,
+     "1000": 0
+    },
+    "agree": {
+     "200": true,
+     "400": true
+    }
+   }
+  }
+ ]
+}

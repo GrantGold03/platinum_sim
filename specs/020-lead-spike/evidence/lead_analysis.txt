@@ -1,0 +1,49 @@
+== team b2main  builds [['garchomp', 52], ['infernape', 54], ['staraptor', 53], ['rotom', 55], ['floatzel', 55], ['weavile', 53]]
+lead species       cleared  clear [ci95]             aaron  bertha   flint  lucian  cynthi   expected final levels (member order)   lead gain
+   0 garchomp     1827/2000  0.9135 [0.9004, 0.9250]   1.000   0.998   1.000   0.993   0.922   [53.73, 54.71, 53.07, 55.09, 55.56, 53.14]   1.73
+   1 infernape    1727/2000  0.8635 [0.8478, 0.8779]   1.000   0.999   1.000   0.974   0.887   [52.97, 55.32, 53.14, 55.04, 55.55, 53.27]   1.32
+   2 staraptor    1859/2000  0.9295 [0.9174, 0.9399]   1.000   0.997   1.000   0.985   0.946   [52.90, 54.50, 53.96, 55.19, 55.54, 53.12]   0.96
+   3 rotom        1716/2000  0.8580 [0.8420, 0.8726]   1.000   0.998   1.000   0.962   0.893   [52.95, 54.68, 53.08, 55.91, 55.55, 53.24]   0.91
+   4 floatzel     1676/2000  0.8380 [0.8212, 0.8535]   1.000   0.998   1.000   0.969   0.867   [52.94, 54.62, 53.07, 55.19, 56.13, 53.32]   1.13
+   5 weavile      1748/2000  0.8740 [0.8587, 0.8878]   1.000   0.997   1.000   0.968   0.906   [52.99, 54.59, 53.07, 55.16, 55.64, 53.90]   0.90
+spread: best lead 2 (staraptor) 0.9295, worst lead 4 (floatzel) 0.8380: 9.2 points (vs (12, 8, 15) at n 100)
+split-sample: chosen on pairs 0..999 = lead 2 (staraptor)
+  held-out pairs 1000..1999: chosen 0.9260 vs first-listed 0.9060; only-chosen 85 only-first 65; p 0.121; verdict indistinguishable; supported gain: False
+  naive all 2,000 pairs [selection-biased]: chosen 0.9295 vs first 0.9135; only-chosen 162 only-first 130; p 0.0695; verdict indistinguishable
+  control (first-listed vs itself): discordant 0
+  level gains: chosen lead 0.96 vs others' mean 1.20 (difference -0.24)
+screening: chosen at 200 = 2, at 400 = 0, at 1000 = 2; agree 200 True, 400 False
+
+== team b2branch  builds [['garchomp', 51], ['infernape', 53], ['staraptor', 53], ['rotom', 53], ['floatzel', 53], ['weavile', 54]]
+lead species       cleared  clear [ci95]             aaron  bertha   flint  lucian  cynthi   expected final levels (member order)   lead gain
+   0 garchomp     1586/2000  0.7930 [0.7747, 0.8102]   1.000   1.000   1.000   0.997   0.795   [52.99, 53.16, 53.35, 53.03, 53.10, 54.43]   1.99
+   1 infernape    1471/2000  0.7355 [0.7157, 0.7544]   1.000   0.999   1.000   0.979   0.752   [52.01, 54.47, 53.16, 53.04, 53.17, 54.44]   1.47
+   2 staraptor    1444/2000  0.7220 [0.7020, 0.7412]   0.998   0.999   1.000   0.988   0.733   [51.93, 53.64, 54.01, 53.33, 53.25, 54.43]   1.01
+   3 rotom        1383/2000  0.6915 [0.6709, 0.7114]   1.000   0.998   1.000   0.972   0.713   [51.98, 53.90, 53.11, 53.92, 53.20, 54.43]   0.92
+   4 floatzel     1477/2000  0.7385 [0.7188, 0.7573]   1.000   0.999   1.000   0.972   0.761   [51.98, 53.52, 53.18, 53.18, 54.26, 54.40]   1.26
+   5 weavile      1419/2000  0.7095 [0.6892, 0.7290]   1.000   0.998   1.000   0.977   0.728   [51.98, 53.75, 53.11, 53.27, 53.32, 55.05]   1.05
+spread: best lead 0 (garchomp) 0.7930, worst lead 3 (rotom) 0.6915: 10.2 points (vs (12, 8, 15) at n 100)
+split-sample: chosen on pairs 0..999 = lead 0 (garchomp); first-listed already best (0 discordant; no gain)
+  held-out pairs 1000..1999: chosen 0.8030 vs first-listed 0.8030; only-chosen 0 only-first 0; p 1; verdict indistinguishable; supported gain: False
+  naive all 2,000 pairs [selection-biased]: chosen 0.7930 vs first 0.7930; only-chosen 0 only-first 0; p 1; verdict indistinguishable
+  control (first-listed vs itself): discordant 0
+  level gains: chosen lead 1.99 vs others' mean 1.14 (difference +0.85)
+screening: chosen at 200 = 0, at 400 = 0, at 1000 = 0; agree 200 True, 400 True
+
+== team b2v2  builds [['garchomp', 51], ['infernape', 53], ['staraptor', 53], ['rotom', 53], ['floatzel', 53], ['weavile', 54]]
+lead species       cleared  clear [ci95]             aaron  bertha   flint  lucian  cynthi   expected final levels (member order)   lead gain
+   0 garchomp     1542/2000  0.7710 [0.7521, 0.7889]   1.000   1.000   1.000   0.996   0.774   [53.00, 53.16, 53.36, 53.03, 53.09, 54.43]   2.00
+   1 infernape    1482/2000  0.7410 [0.7214, 0.7597]   0.999   0.998   0.999   0.981   0.757   [52.01, 54.47, 53.16, 53.05, 53.18, 54.45]   1.47
+   2 staraptor    1483/2000  0.7415 [0.7219, 0.7602]   1.000   0.999   0.999   0.984   0.754   [51.93, 53.66, 54.00, 53.33, 53.24, 54.46]   1.00
+   3 rotom        1369/2000  0.6845 [0.6638, 0.7045]   1.000   0.998   1.000   0.976   0.702   [51.98, 53.91, 53.11, 53.93, 53.20, 54.39]   0.93
+   4 floatzel     1479/2000  0.7395 [0.7198, 0.7583]   0.999   0.996   1.000   0.980   0.758   [51.97, 53.56, 53.16, 53.18, 54.24, 54.43]   1.24
+   5 weavile      1432/2000  0.7160 [0.6958, 0.7353]   0.999   0.999   1.000   0.973   0.737   [52.00, 53.73, 53.11, 53.28, 53.33, 55.04]   1.04
+spread: best lead 0 (garchomp) 0.7710, worst lead 3 (rotom) 0.6845: 8.7 points (vs (12, 8, 15) at n 100)
+split-sample: chosen on pairs 0..999 = lead 0 (garchomp); first-listed already best (0 discordant; no gain)
+  held-out pairs 1000..1999: chosen 0.7770 vs first-listed 0.7770; only-chosen 0 only-first 0; p 1; verdict indistinguishable; supported gain: False
+  naive all 2,000 pairs [selection-biased]: chosen 0.7710 vs first 0.7710; only-chosen 0 only-first 0; p 1; verdict indistinguishable
+  control (first-listed vs itself): discordant 0
+  level gains: chosen lead 2.00 vs others' mean 1.14 (difference +0.86)
+screening: chosen at 200 = 0, at 400 = 0, at 1000 = 0; agree 200 True, 400 True
+
+{"supported_gain": {"b2main": false, "b2branch": false, "b2v2": false}, "not_judged": [], "confirmation_stage_check": "no-go (reporting follow-on only)"}
