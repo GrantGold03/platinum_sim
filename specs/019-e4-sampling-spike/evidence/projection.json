@@ -1,0 +1,173 @@
+{
+ "evaluate_reference": {
+  "inputs": {
+   "w_full_s": 0.12765235293998559,
+   "w_cyn_s": 0.035758169820912566,
+   "cpu_s_per_gauntlet": 1.7501664106200001,
+   "cynthia_s_per_battle": 0.4902592571500001,
+   "n": 2000
+  },
+  "floors": {
+   "0.98": {
+    "switched_orders": 200,
+    "baseline_model_s": 255.44773855925484,
+    "topup_today": 4,
+    "projection": {
+     "p5": {
+      "k": 189,
+      "projected_s": 88.88434025132993
+     },
+     "median": {
+      "k": 189,
+      "projected_s": 88.88434025132993
+     },
+     "p95": {
+      "k": 280,
+      "projected_s": 97.24671091516558
+     }
+    },
+    "ratio_model": {
+     "p5": 2.8739341242444865,
+     "median": 2.8739341242444865,
+     "p95": 2.6268008054493275
+    }
+   },
+   "0.99": {
+    "switched_orders": 200,
+    "baseline_model_s": 255.44773855925484,
+    "topup_today": 4,
+    "projection": {
+     "p5": {
+      "k": 381,
+      "projected_s": 106.52802341019195
+     },
+     "median": {
+      "k": 381,
+      "projected_s": 106.52802341019195
+     },
+     "p95": {
+      "k": 726,
+      "projected_s": 138.23151658627214
+     }
+    },
+    "ratio_model": {
+     "p5": 2.3979393438629706,
+     "median": 2.3979393438629706,
+     "p95": 1.847970310011223
+    }
+   },
+   "0.995": {
+    "switched_orders": 200,
+    "baseline_model_s": 255.44773855925484,
+    "topup_today": 4,
+    "projection": {
+     "p5": {
+      "k": 765,
+      "projected_s": 141.815389727916
+     },
+     "median": {
+      "k": 1131,
+      "projected_s": 175.44866074949672
+     },
+     "p95": {
+      "k": 1455,
+      "projected_s": 205.22237608007637
+     }
+    },
+    "ratio_model": {
+     "p5": 1.8012695170062394,
+     "median": 1.4559685862976164,
+     "p95": 1.2447362877212809
+    }
+   }
+  }
+ },
+ "b2_quick_bracket": {
+  "strong_ref": {
+   "0.98": {
+    "median_k": 189,
+    "runs": [
+     50,
+     100,
+     200,
+     500
+    ],
+    "full_runs": 528,
+    "cynthia_only_runs": 322,
+    "ratio_model": 1.379348393706214
+   },
+   "0.99": {
+    "median_k": 381,
+    "runs": [
+     50,
+     100,
+     200,
+     500
+    ],
+    "full_runs": 731,
+    "cynthia_only_runs": 119,
+    "ratio_model": 1.113136804489086
+   },
+   "0.995": {
+    "median_k": 1131,
+    "runs": [
+     50,
+     100,
+     200,
+     500
+    ],
+    "full_runs": 850,
+    "cynthia_only_runs": 0,
+    "ratio_model": 1.0
+   }
+  },
+  "lucian_heavy_b3": {
+   "0.98": {
+    "saving_fraction": 0.0,
+    "note": "floor never reached"
+   },
+   "0.99": {
+    "saving_fraction": 0.0,
+    "note": "floor never reached"
+   },
+   "0.995": {
+    "saving_fraction": 0.0,
+    "note": "floor never reached"
+   }
+  }
+ },
+ "decision_figure": {
+  "0.98": {
+   "ratio_model_p5_to_p95": [
+    2.6268008054493275,
+    2.8739341242444865
+   ],
+   "projected_s_median": 88.88434025132993,
+   "baseline_model_s": 255.44773855925484,
+   "against_769s": 8.651692725912918
+  },
+  "0.99": {
+   "ratio_model_p5_to_p95": [
+    1.847970310011223,
+    2.3979393438629706
+   ],
+   "projected_s_median": 106.52802341019195,
+   "baseline_model_s": 255.44773855925484,
+   "against_769s": 7.218757800836346
+  },
+  "0.995": {
+   "ratio_model_p5_to_p95": [
+    1.2447362877212809,
+    1.8012695170062394
+   ],
+   "projected_s_median": 175.44866074949672,
+   "baseline_model_s": 255.44773855925484,
+   "against_769s": 4.383048560843494
+  }
+ },
+ "baselines": {
+  "evaluate_reference_s": 769.0,
+  "b2_quick_s": 350.0
+ },
+ "note": "B2 quick is a bracket between the strong and Lucian-heavy replays, not a measurement."
+}

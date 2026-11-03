@@ -481,6 +481,14 @@ replay-fixture entry (`node sim/bench.mjs --policy expectimax2-v4` prints `diges
 seed, and beats `greedy-v1` on the benchmark team (p 2.7e-70 at 400 paired). v1 and v2 are byte-identical to before.
 `platsim optimize` gained `--player-policy`; a checkpoint made with another strong player is never resumed.
 
+Feature 019 (2026-11-03, `specs/019-e4-sampling-spike/`, measurement only, no behaviour change): a spike on adaptive Elite Four
+sampling (run full gauntlets until every Elite Four member's pass rate is proven, then Cynthia-only battles from banked post-Lucian
+states, clear rate = Elite Four pass rate x Cynthia's conditional rate). Measured on the pool with stop-on-loss: the Elite Four
+is 72 to 75% of battle time; on the reference team the rule would make 81 to 91% of a 2,000-run evaluation Cynthia-only (floors 0.99
+and 0.98) with the verdict unchanged, a projected 1.9 to 2.9x; on a Lucian-heavy team it never switches. The composite estimate
+matches the ten stored evaluations, but the conservative product interval chosen for the spike turns four threshold teams borderline,
+so the follow-on waits on a decision about the interval (details: the feature's validation log and FUTURE-FEATURES section 8).
+
 Measured run times:
 
 | Run | Wall time |

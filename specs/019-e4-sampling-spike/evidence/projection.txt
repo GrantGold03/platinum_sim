@@ -1,0 +1,10 @@
+{"inputs": {"w_full_s": 0.12765235293998559, "w_cyn_s": 0.035758169820912566, "cpu_s_per_gauntlet": 1.7501664106200001, "cynthia_s_per_battle": 0.4902592571500001, "n": 2000}}
+evaluate reference, floor 0.98: model ratio (p95 of k .. p5 of k) 2.63 .. 2.87; projected median 89 s vs model baseline 255 s; vs README 769 s: 8.65x
+evaluate reference, floor 0.99: model ratio (p95 of k .. p5 of k) 1.85 .. 2.40; projected median 107 s vs model baseline 255 s; vs README 769 s: 7.22x
+evaluate reference, floor 0.995: model ratio (p95 of k .. p5 of k) 1.24 .. 1.80; projected median 175 s vs model baseline 255 s; vs README 769 s: 4.38x
+B2 quick bracket, strong_ref, floor 0.98: model ratio 1.38 (median k 189)  [bracket, not a measurement]
+B2 quick bracket, strong_ref, floor 0.99: model ratio 1.11 (median k 381)  [bracket, not a measurement]
+B2 quick bracket, strong_ref, floor 0.995: model ratio 1.00 (median k 1131)  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.98: floor never reached  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.99: floor never reached  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.995: floor never reached  [bracket, not a measurement]

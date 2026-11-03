@@ -1,0 +1,1 @@
+ref batch 5: digests equal True; wall plain 3.8s hooked 3.9s; E4 share of battle time 0.808, of wall x workers 0.088; overhead 3.4s; cleared 5/5; battles recorded 25; aaron 0.522s/14.6t/15.4d; bertha 0.225s/9.8t/10.0d; flint 0.176s/10.8t/11.0d; lucian 0.159s/10.6t/10.6d; cynthia 0.258s/18.8t/20.4d

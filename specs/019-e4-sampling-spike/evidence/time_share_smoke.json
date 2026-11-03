@@ -1,0 +1,75 @@
+{
+ "start": "2026-11-03 4:24:36 PM EST",
+ "workers": 16,
+ "sim_code_hash": "sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b",
+ "platsim_code_hash": "sha256:e01c1cfd882af6859226bcf65e3327a259f1860c2796f8fe8d500f3400ee50c3",
+ "measurements": [
+  {
+   "team": "ref",
+   "batch_size": 5,
+   "digest_plain": "4f2a2392841bd98dc2be48c045799e5574c5f00c18964af7c7d4b50a6efab59a",
+   "digest_hooked": "4f2a2392841bd98dc2be48c045799e5574c5f00c18964af7c7d4b50a6efab59a",
+   "digests_equal": true,
+   "wall_plain_s": 3.7675678709929343,
+   "wall_hooked_s": 3.8542535540036624,
+   "cleared": 5,
+   "per_trainer": {
+    "aaron": {
+     "battles": 5,
+     "turns": 73,
+     "decisions": 77,
+     "battle_s": 2.610764756,
+     "s_per_battle": 0.5221529512,
+     "turns_per_battle": 14.6,
+     "decisions_per_battle": 15.4
+    },
+    "bertha": {
+     "battles": 5,
+     "turns": 49,
+     "decisions": 50,
+     "battle_s": 1.124020248,
+     "s_per_battle": 0.22480404960000003,
+     "turns_per_battle": 9.8,
+     "decisions_per_battle": 10.0
+    },
+    "flint": {
+     "battles": 5,
+     "turns": 54,
+     "decisions": 55,
+     "battle_s": 0.8816961139999999,
+     "s_per_battle": 0.17633922279999997,
+     "turns_per_battle": 10.8,
+     "decisions_per_battle": 11.0
+    },
+    "lucian": {
+     "battles": 5,
+     "turns": 53,
+     "decisions": 53,
+     "battle_s": 0.79598898,
+     "s_per_battle": 0.159197796,
+     "turns_per_battle": 10.6,
+     "decisions_per_battle": 10.6
+    },
+    "cynthia": {
+     "battles": 5,
+     "turns": 94,
+     "decisions": 102,
+     "battle_s": 1.289674132,
+     "s_per_battle": 0.2579348264,
+     "turns_per_battle": 18.8,
+     "decisions_per_battle": 20.4
+    }
+   },
+   "battle_s_total": 6.70214423,
+   "e4_share_battle": 0.8075729068576013,
+   "e4_share_wall": 0.08776780675822621,
+   "overhead_s": 3.4353695396286623,
+   "wall_per_gauntlet_s": 0.7708507108007325,
+   "cpu_s_per_gauntlet": 1.340428846,
+   "cynthia_s_per_battle": 0.2579348264,
+   "battles_recorded": 25,
+   "kill_flag": false
+  }
+ ],
+ "end": "2026-11-03 4:24:44 PM EST"
+}

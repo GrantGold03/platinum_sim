@@ -1,0 +1,603 @@
+{
+ "start": "2026-11-03 4:24:55 PM EST",
+ "workers": 16,
+ "sim_code_hash": "sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b",
+ "platsim_code_hash": "sha256:e01c1cfd882af6859226bcf65e3327a259f1860c2796f8fe8d500f3400ee50c3",
+ "measurements": [
+  {
+   "team": "ref",
+   "batch_size": 50,
+   "digest_plain": "6154df706f859184d6fa92e6c86a2fcffe5d0633ba1e4d6303da7c4f2e775ce4",
+   "digest_hooked": "6154df706f859184d6fa92e6c86a2fcffe5d0633ba1e4d6303da7c4f2e775ce4",
+   "digests_equal": true,
+   "wall_plain_s": 10.288304774992866,
+   "wall_hooked_s": 10.440336969986674,
+   "cleared": 47,
+   "per_trainer": {
+    "aaron": {
+     "battles": 50,
+     "turns": 671,
+     "decisions": 690,
+     "battle_s": 36.210403965999994,
+     "s_per_battle": 0.7242080793199999,
+     "turns_per_battle": 13.42,
+     "decisions_per_battle": 13.8
+    },
+    "bertha": {
+     "battles": 50,
+     "turns": 497,
+     "decisions": 514,
+     "battle_s": 20.83283828900001,
+     "s_per_battle": 0.41665676578000016,
+     "turns_per_battle": 9.94,
+     "decisions_per_battle": 10.28
+    },
+    "flint": {
+     "battles": 50,
+     "turns": 567,
+     "decisions": 584,
+     "battle_s": 17.722454339,
+     "s_per_battle": 0.35444908678,
+     "turns_per_battle": 11.34,
+     "decisions_per_battle": 11.68
+    },
+    "lucian": {
+     "battles": 50,
+     "turns": 563,
+     "decisions": 578,
+     "battle_s": 17.736307217,
+     "s_per_battle": 0.35472614434,
+     "turns_per_battle": 11.26,
+     "decisions_per_battle": 11.56
+    },
+    "cynthia": {
+     "battles": 50,
+     "turns": 951,
+     "decisions": 1050,
+     "battle_s": 27.377996623,
+     "s_per_battle": 0.54755993246,
+     "turns_per_battle": 19.02,
+     "decisions_per_battle": 21.0
+    }
+   },
+   "battle_s_total": 119.88000043400001,
+   "e4_share_battle": 0.7716216506182533,
+   "e4_share_wall": 0.5537537011312461,
+   "overhead_s": 2.9478369428616737,
+   "wall_per_gauntlet_s": 0.2088067393997335,
+   "cpu_s_per_gauntlet": 2.39760000868,
+   "cynthia_s_per_battle": 0.54755993246,
+   "battles_recorded": 250,
+   "kill_flag": false
+  },
+  {
+   "team": "ref",
+   "batch_size": 100,
+   "digest_plain": "1d9936e9383b02100105ae135ca19b73132082644b4630021c3557dd224a38c9",
+   "digest_hooked": "1d9936e9383b02100105ae135ca19b73132082644b4630021c3557dd224a38c9",
+   "digests_equal": true,
+   "wall_plain_s": 14.88439925199782,
+   "wall_hooked_s": 15.228415275996667,
+   "cleared": 95,
+   "per_trainer": {
+    "aaron": {
+     "battles": 100,
+     "turns": 1289,
+     "decisions": 1333,
+     "battle_s": 52.058325155000006,
+     "s_per_battle": 0.5205832515500001,
+     "turns_per_battle": 12.89,
+     "decisions_per_battle": 13.33
+    },
+    "bertha": {
+     "battles": 100,
+     "turns": 995,
+     "decisions": 1027,
+     "battle_s": 33.733989024999985,
+     "s_per_battle": 0.33733989024999983,
+     "turns_per_battle": 9.95,
+     "decisions_per_battle": 10.27
+    },
+    "flint": {
+     "battles": 100,
+     "turns": 1122,
+     "decisions": 1160,
+     "battle_s": 29.724697841,
+     "s_per_battle": 0.29724697841000003,
+     "turns_per_battle": 11.22,
+     "decisions_per_battle": 11.6
+    },
+    "lucian": {
+     "battles": 100,
+     "turns": 1124,
+     "decisions": 1154,
+     "battle_s": 30.442549827000004,
+     "s_per_battle": 0.30442549827000004,
+     "turns_per_battle": 11.24,
+     "decisions_per_battle": 11.54
+    },
+    "cynthia": {
+     "battles": 100,
+     "turns": 1884,
+     "decisions": 2055,
+     "battle_s": 49.07716869499999,
+     "s_per_battle": 0.4907716869499999,
+     "turns_per_battle": 18.84,
+     "decisions_per_battle": 20.55
+    }
+   },
+   "battle_s_total": 195.03673054299998,
+   "e4_share_battle": 0.7483696093635046,
+   "e4_share_wall": 0.5990428058446123,
+   "overhead_s": 3.038619617059169,
+   "wall_per_gauntlet_s": 0.15228415275996668,
+   "cpu_s_per_gauntlet": 1.9503673054299997,
+   "cynthia_s_per_battle": 0.4907716869499999,
+   "battles_recorded": 500,
+   "kill_flag": false
+  },
+  {
+   "team": "ref",
+   "batch_size": 200,
+   "digest_plain": "7e56b3888e84f27f4c9e486b57ad89e98b6256156f140cb614c904397a17fd9c",
+   "digest_hooked": "7e56b3888e84f27f4c9e486b57ad89e98b6256156f140cb614c904397a17fd9c",
+   "digests_equal": true,
+   "wall_plain_s": 24.209939085994847,
+   "wall_hooked_s": 25.530470587997115,
+   "cleared": 189,
+   "per_trainer": {
+    "aaron": {
+     "battles": 200,
+     "turns": 2613,
+     "decisions": 2720,
+     "battle_s": 88.05731861500003,
+     "s_per_battle": 0.4402865930750001,
+     "turns_per_battle": 13.065,
+     "decisions_per_battle": 13.6
+    },
+    "bertha": {
+     "battles": 200,
+     "turns": 2023,
+     "decisions": 2097,
+     "battle_s": 59.54638009699996,
+     "s_per_battle": 0.2977319004849998,
+     "turns_per_battle": 10.115,
+     "decisions_per_battle": 10.485
+    },
+    "flint": {
+     "battles": 200,
+     "turns": 2246,
+     "decisions": 2324,
+     "battle_s": 51.26956065700002,
+     "s_per_battle": 0.2563478032850001,
+     "turns_per_battle": 11.23,
+     "decisions_per_battle": 11.62
+    },
+    "lucian": {
+     "battles": 200,
+     "turns": 2249,
+     "decisions": 2310,
+     "battle_s": 53.108171324999994,
+     "s_per_battle": 0.265540856625,
+     "turns_per_battle": 11.245,
+     "decisions_per_battle": 11.55
+    },
+    "cynthia": {
+     "battles": 200,
+     "turns": 3804,
+     "decisions": 4168,
+     "battle_s": 98.05185143000003,
+     "s_per_battle": 0.4902592571500001,
+     "turns_per_battle": 19.02,
+     "decisions_per_battle": 20.84
+    }
+   },
+   "battle_s_total": 350.03328212400004,
+   "e4_share_battle": 0.7198784903109158,
+   "e4_share_wall": 0.61686443906675,
+   "overhead_s": 3.653390455247113,
+   "wall_per_gauntlet_s": 0.12765235293998559,
+   "cpu_s_per_gauntlet": 1.7501664106200001,
+   "cynthia_s_per_battle": 0.4902592571500001,
+   "battles_recorded": 1000,
+   "kill_flag": false
+  },
+  {
+   "team": "b3",
+   "batch_size": 50,
+   "digest_plain": "80b6c48e34fed5cade2c1a0179b30eefa75b056511f25c9c59ed7f5b22c54b8e",
+   "digest_hooked": "80b6c48e34fed5cade2c1a0179b30eefa75b056511f25c9c59ed7f5b22c54b8e",
+   "digests_equal": true,
+   "wall_plain_s": 9.94733248600096,
+   "wall_hooked_s": 10.009209134004777,
+   "cleared": 39,
+   "per_trainer": {
+    "aaron": {
+     "battles": 50,
+     "turns": 401,
+     "decisions": 402,
+     "battle_s": 31.574539658000003,
+     "s_per_battle": 0.63149079316,
+     "turns_per_battle": 8.02,
+     "decisions_per_battle": 8.04
+    },
+    "bertha": {
+     "battles": 50,
+     "turns": 540,
+     "decisions": 547,
+     "battle_s": 24.569659623,
+     "s_per_battle": 0.49139319246,
+     "turns_per_battle": 10.8,
+     "decisions_per_battle": 10.94
+    },
+    "flint": {
+     "battles": 50,
+     "turns": 315,
+     "decisions": 315,
+     "battle_s": 11.784723559999998,
+     "s_per_battle": 0.23569447119999995,
+     "turns_per_battle": 6.3,
+     "decisions_per_battle": 6.3
+    },
+    "lucian": {
+     "battles": 50,
+     "turns": 738,
+     "decisions": 815,
+     "battle_s": 24.998337902000003,
+     "s_per_battle": 0.49996675804000007,
+     "turns_per_battle": 14.76,
+     "decisions_per_battle": 16.3
+    },
+    "cynthia": {
+     "battles": 43,
+     "turns": 776,
+     "decisions": 881,
+     "battle_s": 22.103763750000006,
+     "s_per_battle": 0.5140410174418606,
+     "turns_per_battle": 18.046511627906977,
+     "decisions_per_battle": 20.488372093023255
+    }
+   },
+   "battle_s_total": 115.031024493,
+   "e4_share_battle": 0.8078451978722916,
+   "e4_share_wall": 0.5802610095043228,
+   "overhead_s": 2.819770103192277,
+   "wall_per_gauntlet_s": 0.20018418268009555,
+   "cpu_s_per_gauntlet": 2.30062048986,
+   "cynthia_s_per_battle": 0.5140410174418606,
+   "battles_recorded": 243,
+   "kill_flag": false
+  },
+  {
+   "team": "b3",
+   "batch_size": 100,
+   "digest_plain": "209889e1a39906624d3b422f8826407a15ebee5ac8ffd9b2142a653e27076503",
+   "digest_hooked": "209889e1a39906624d3b422f8826407a15ebee5ac8ffd9b2142a653e27076503",
+   "digests_equal": true,
+   "wall_plain_s": 15.002227942008176,
+   "wall_hooked_s": 15.189694325992605,
+   "cleared": 77,
+   "per_trainer": {
+    "aaron": {
+     "battles": 100,
+     "turns": 808,
+     "decisions": 809,
+     "battle_s": 45.86506763300002,
+     "s_per_battle": 0.4586506763300002,
+     "turns_per_battle": 8.08,
+     "decisions_per_battle": 8.09
+    },
+    "bertha": {
+     "battles": 100,
+     "turns": 1100,
+     "decisions": 1117,
+     "battle_s": 37.63122826500001,
+     "s_per_battle": 0.3763122826500001,
+     "turns_per_battle": 11.0,
+     "decisions_per_battle": 11.17
+    },
+    "flint": {
+     "battles": 100,
+     "turns": 648,
+     "decisions": 648,
+     "battle_s": 19.766851746000004,
+     "s_per_battle": 0.19766851746000003,
+     "turns_per_battle": 6.48,
+     "decisions_per_battle": 6.48
+    },
+    "lucian": {
+     "battles": 100,
+     "turns": 1436,
+     "decisions": 1577,
+     "battle_s": 40.78835014,
+     "s_per_battle": 0.40788350139999996,
+     "turns_per_battle": 14.36,
+     "decisions_per_battle": 15.77
+    },
+    "cynthia": {
+     "battles": 92,
+     "turns": 1707,
+     "decisions": 1945,
+     "battle_s": 46.550458207999995,
+     "s_per_battle": 0.5059832413913042,
+     "turns_per_battle": 18.554347826086957,
+     "decisions_per_battle": 21.141304347826086
+    }
+   },
+   "battle_s_total": 190.60195599200003,
+   "e4_share_battle": 0.7557713510035866,
+   "e4_share_wall": 0.5927188802011436,
+   "overhead_s": 3.277072076492603,
+   "wall_per_gauntlet_s": 0.15189694325992606,
+   "cpu_s_per_gauntlet": 1.9060195599200003,
+   "cynthia_s_per_battle": 0.5059832413913042,
+   "battles_recorded": 492,
+   "kill_flag": false
+  },
+  {
+   "team": "b3",
+   "batch_size": 200,
+   "digest_plain": "89775cd2347789f9d40a8202cda82bf15989883814c6df9ed5feed3efc3f844b",
+   "digest_hooked": "89775cd2347789f9d40a8202cda82bf15989883814c6df9ed5feed3efc3f844b",
+   "digests_equal": true,
+   "wall_plain_s": 23.639883962998283,
+   "wall_hooked_s": 24.8259257680038,
+   "cleared": 143,
+   "per_trainer": {
+    "aaron": {
+     "battles": 200,
+     "turns": 1633,
+     "decisions": 1637,
+     "battle_s": 75.09221162300003,
+     "s_per_battle": 0.37546105811500013,
+     "turns_per_battle": 8.165,
+     "decisions_per_battle": 8.185
+    },
+    "bertha": {
+     "battles": 200,
+     "turns": 2201,
+     "decisions": 2237,
+     "battle_s": 66.79104687100005,
+     "s_per_battle": 0.33395523435500024,
+     "turns_per_battle": 11.005,
+     "decisions_per_battle": 11.185
+    },
+    "flint": {
+     "battles": 200,
+     "turns": 1296,
+     "decisions": 1296,
+     "battle_s": 37.90184246800001,
+     "s_per_battle": 0.18950921234000007,
+     "turns_per_battle": 6.48,
+     "decisions_per_battle": 6.48
+    },
+    "lucian": {
+     "battles": 200,
+     "turns": 2937,
+     "decisions": 3261,
+     "battle_s": 73.75051939500003,
+     "s_per_battle": 0.3687525969750001,
+     "turns_per_battle": 14.685,
+     "decisions_per_battle": 16.305
+    },
+    "cynthia": {
+     "battles": 175,
+     "turns": 3269,
+     "decisions": 3732,
+     "battle_s": 83.408593355,
+     "s_per_battle": 0.47662053345714284,
+     "turns_per_battle": 18.68,
+     "decisions_per_battle": 21.325714285714287
+    }
+   },
+   "battle_s_total": 336.9442137120001,
+   "e4_share_battle": 0.7524557776608899,
+   "e4_share_wall": 0.6382833985887105,
+   "overhead_s": 3.766912411003794,
+   "wall_per_gauntlet_s": 0.12412962884001899,
+   "cpu_s_per_gauntlet": 1.6847210685600005,
+   "cynthia_s_per_battle": 0.47662053345714284,
+   "battles_recorded": 975,
+   "kill_flag": false
+  },
+  {
+   "team": "b2v2",
+   "batch_size": 50,
+   "digest_plain": "648ee3e7e2643f6ad98499d468c334cc78ebaef7d564fcc4e585c6d86181b031",
+   "digest_hooked": "648ee3e7e2643f6ad98499d468c334cc78ebaef7d564fcc4e585c6d86181b031",
+   "digests_equal": true,
+   "wall_plain_s": 9.643654347004485,
+   "wall_hooked_s": 10.084689658004208,
+   "cleared": 36,
+   "per_trainer": {
+    "aaron": {
+     "battles": 50,
+     "turns": 420,
+     "decisions": 429,
+     "battle_s": 29.058564213999997,
+     "s_per_battle": 0.58117128428,
+     "turns_per_battle": 8.4,
+     "decisions_per_battle": 8.58
+    },
+    "bertha": {
+     "battles": 50,
+     "turns": 457,
+     "decisions": 465,
+     "battle_s": 23.96135667999999,
+     "s_per_battle": 0.4792271335999998,
+     "turns_per_battle": 9.14,
+     "decisions_per_battle": 9.3
+    },
+    "flint": {
+     "battles": 50,
+     "turns": 321,
+     "decisions": 325,
+     "battle_s": 15.291912717999997,
+     "s_per_battle": 0.30583825435999995,
+     "turns_per_battle": 6.42,
+     "decisions_per_battle": 6.5
+    },
+    "lucian": {
+     "battles": 50,
+     "turns": 572,
+     "decisions": 618,
+     "battle_s": 21.592886876000005,
+     "s_per_battle": 0.4318577375200001,
+     "turns_per_battle": 11.44,
+     "decisions_per_battle": 12.36
+    },
+    "cynthia": {
+     "battles": 50,
+     "turns": 827,
+     "decisions": 973,
+     "battle_s": 25.461042565,
+     "s_per_battle": 0.5092208512999999,
+     "turns_per_battle": 16.54,
+     "decisions_per_battle": 19.46
+    }
+   },
+   "battle_s_total": 115.365763053,
+   "e4_share_battle": 0.7793015718770656,
+   "e4_share_wall": 0.5571857162743892,
+   "overhead_s": 2.874329467191709,
+   "wall_per_gauntlet_s": 0.20169379316008418,
+   "cpu_s_per_gauntlet": 2.30731526106,
+   "cynthia_s_per_battle": 0.5092208512999999,
+   "battles_recorded": 250,
+   "kill_flag": false
+  },
+  {
+   "team": "b2v2",
+   "batch_size": 100,
+   "digest_plain": "dfc17bfa8e8eaf44ef542a5e8a540d8c498a4e748cfa53653d5bb784a4a26c82",
+   "digest_hooked": "dfc17bfa8e8eaf44ef542a5e8a540d8c498a4e748cfa53653d5bb784a4a26c82",
+   "digests_equal": true,
+   "wall_plain_s": 14.682770290004555,
+   "wall_hooked_s": 14.921123448002618,
+   "cleared": 78,
+   "per_trainer": {
+    "aaron": {
+     "battles": 100,
+     "turns": 853,
+     "decisions": 871,
+     "battle_s": 42.095040982,
+     "s_per_battle": 0.42095040982,
+     "turns_per_battle": 8.53,
+     "decisions_per_battle": 8.71
+    },
+    "bertha": {
+     "battles": 100,
+     "turns": 907,
+     "decisions": 922,
+     "battle_s": 34.07512732699998,
+     "s_per_battle": 0.3407512732699998,
+     "turns_per_battle": 9.07,
+     "decisions_per_battle": 9.22
+    },
+    "flint": {
+     "battles": 100,
+     "turns": 639,
+     "decisions": 643,
+     "battle_s": 26.770796986000008,
+     "s_per_battle": 0.26770796986000006,
+     "turns_per_battle": 6.39,
+     "decisions_per_battle": 6.43
+    },
+    "lucian": {
+     "battles": 100,
+     "turns": 1148,
+     "decisions": 1233,
+     "battle_s": 36.162483065,
+     "s_per_battle": 0.36162483065000006,
+     "turns_per_battle": 11.48,
+     "decisions_per_battle": 12.33
+    },
+    "cynthia": {
+     "battles": 100,
+     "turns": 1670,
+     "decisions": 1949,
+     "battle_s": 46.80881474800001,
+     "s_per_battle": 0.4680881474800001,
+     "turns_per_battle": 16.7,
+     "decisions_per_battle": 19.49
+    }
+   },
+   "battle_s_total": 185.912263108,
+   "e4_share_battle": 0.7482209405368387,
+   "e4_share_wall": 0.5826615906501194,
+   "overhead_s": 3.3016070037526184,
+   "wall_per_gauntlet_s": 0.14921123448002618,
+   "cpu_s_per_gauntlet": 1.85912263108,
+   "cynthia_s_per_battle": 0.4680881474800001,
+   "battles_recorded": 500,
+   "kill_flag": false
+  },
+  {
+   "team": "b2v2",
+   "batch_size": 200,
+   "digest_plain": "402088e3141a8a58a0dfb52531ab7c670054628a5f4d5deb53dd0f077a5f38cd",
+   "digest_hooked": "402088e3141a8a58a0dfb52531ab7c670054628a5f4d5deb53dd0f077a5f38cd",
+   "digests_equal": true,
+   "wall_plain_s": 22.969097502995282,
+   "wall_hooked_s": 22.87961938799708,
+   "cleared": 159,
+   "per_trainer": {
+    "aaron": {
+     "battles": 200,
+     "turns": 1712,
+     "decisions": 1745,
+     "battle_s": 61.79911362700005,
+     "s_per_battle": 0.30899556813500023,
+     "turns_per_battle": 8.56,
+     "decisions_per_battle": 8.725
+    },
+    "bertha": {
+     "battles": 200,
+     "turns": 1827,
+     "decisions": 1858,
+     "battle_s": 57.256722625999984,
+     "s_per_battle": 0.28628361312999995,
+     "turns_per_battle": 9.135,
+     "decisions_per_battle": 9.29
+    },
+    "flint": {
+     "battles": 200,
+     "turns": 1279,
+     "decisions": 1286,
+     "battle_s": 42.746203654999995,
+     "s_per_battle": 0.21373101827499996,
+     "turns_per_battle": 6.395,
+     "decisions_per_battle": 6.43
+    },
+    "lucian": {
+     "battles": 200,
+     "turns": 2337,
+     "decisions": 2522,
+     "battle_s": 61.75704402500001,
+     "s_per_battle": 0.3087852201250001,
+     "turns_per_battle": 11.685,
+     "decisions_per_battle": 12.61
+    },
+    "cynthia": {
+     "battles": 200,
+     "turns": 3351,
+     "decisions": 3902,
+     "battle_s": 84.38012612200008,
+     "s_per_battle": 0.4219006306100004,
+     "turns_per_battle": 16.755,
+     "decisions_per_battle": 19.51
+    }
+   },
+   "battle_s_total": 307.9392100550001,
+   "e4_share_battle": 0.7259844691199631,
+   "e4_share_wall": 0.6106938454204623,
+   "overhead_s": 3.633418759559575,
+   "wall_per_gauntlet_s": 0.11439809693998541,
+   "cpu_s_per_gauntlet": 1.5396960502750006,
+   "cynthia_s_per_battle": 0.4219006306100004,
+   "battles_recorded": 1000,
+   "kill_flag": false
+  }
+ ],
+ "end": "2026-11-03 4:29:50 PM EST"
+}

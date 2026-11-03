@@ -1,4 +1,16 @@
-# START HERE (updated 2026-11-03, 2:35 PM EST, feature 018 merged to `main`; v4 is the default player)
+# START HERE (updated 2026-11-03, 4:35 PM EST, feature 019 spike done on its branch; decision pending)
+
+- **Feature 019 `019-e4-sampling-spike` implemented 2026-11-03 on its branch (from `main` 1ca9bb3), measurement only: no file under
+  `sim/` or `src/platsim` changed (hashes `sha256:299b1b…` / `sha256:e01c1c…` unchanged).** Three questions answered: (1) the composite
+  estimator reproduces the ten stored point estimates but its Bonferroni interval makes four threshold teams borderline (FAIL as
+  specified; the delta interval agrees on all ten); (2) the replay on two fresh 2,000-run recordings passes (reference: 81 to 91%
+  Cynthia-only at floors 0.99 / 0.98, verdict unchanged; B3: never switches); (3) Elite Four 0.72 of battle time on the pool, harness
+  proven by identical digests. Projection 1.85 to 2.87x on a reference evaluation. **Verdict: no-go as specified, conditional go:
+  the owner decides whether 021 adopts the delta-method interval** (then go) or keeps Bonferroni (then not built). Evidence
+  `runs/019-evidence/` (local, gitignored) with summaries under `specs/019-e4-sampling-spike/evidence/`; log
+  `specs/019-e4-sampling-spike/validation-log.md`. Merge gate per clarification: fast-mode pytest + Node suite + hash check (full
+  suite skipped on that evidence). Merge on the user's go. Next: the user's decision on the interval, then 020 (lead spike).
+- (previous) feature 018 merged to `main` 2026-11-03; v4 is the default player.
 
 - **Feature 018 merged to `main` 2026-11-03 (user's go "merge if it passes").** T037 full suite on 0edba14: 561 passed, 4
   xfailed, 2 failed in 54 min 46 s; the two failures were `battle_sim` tests pinning the literal `expectimax2-v2` as the

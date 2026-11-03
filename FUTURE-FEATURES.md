@@ -235,6 +235,17 @@ confirmed by the research stage:
   B2 quick end to end at equal levels. Fallbacks if the spike fails: a cheaper player for Aaron / Bertha / Flint only
   (ceiling about 1.6x, needs greedy-v1's per-trainer rates measured first), else nothing, with the numbers recorded.
   Two product questions left for `/speckit-clarify`: wall time the only goal; a team-dependent saving acceptable.
+  **Feature 019 spike result (2026-11-03, `specs/019-e4-sampling-spike/`, no behaviour change): no-go as specified, conditional go.**
+  (1) Estimator vs the ten stored evaluations: point estimates agree within 0.004 on all ten and every interval contains the stored
+  rate, but the plan's Bonferroni product interval (two 97.5% Wilson factors; 1.3 to 1.6x wider than the binomial) makes the four
+  teams within two points of 0.75 (bench-010 B2, B3, t076/v8, job-2d8f18) borderline where the stored verdict is above: FAIL on the
+  threshold verdict; the standard delta-method interval agrees on all ten. (2) Replay on two fresh 2,000-run recordings: on the
+  reference team the rule switches to Cynthia-only in every order at every floor (share 0.91 / 0.81 / 0.43 at floors 0.98 / 0.99 /
+  0.995 after 189 / 381 / 1,131 full runs) with the verdict unchanged in 100% of orders; on B3 Lucian never clears any floor: PASS.
+  (3) In-stage share on the pool (stop-on-loss, batches 50 to 200, harness proven by identical digests): Elite Four 0.72 to 0.75 of
+  battle time: PASS. Projection: 2.63 to 2.87x at floor 0.98, 1.85 to 2.40x at 0.99 on a reference-team evaluation (model baseline
+  255 s with v4); B2 quick bracket 1.00 to 1.38x. **Decision needed**: amend 021's interval to the delta method (then go: every
+  criterion met) or keep Bonferroni (then threshold teams need 2,700 to 5,600 full runs to resolve, and the method is not built).
 - **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
   version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),
   the Elite Four room scripts release control after each win, the party menu's Switch reorders, and the battle lead is

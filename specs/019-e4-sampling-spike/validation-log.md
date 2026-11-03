@@ -110,3 +110,73 @@ states at the switch equal k (every state distinct). Cynthia battle 18.5 turns v
 **SC-004 (B3): PASS.** Lucian never clears any floor in any order; Cynthia-only share 0; estimate 0.7430 equals the full clear rate. Side
 finding: at its recorded levels under v4 the B3 team clears 0.7430 [0.7234, 0.7617] (borderline), below the stored v2 result 0.7715; the
 near-threshold v4 caveat (018) again. Composite interval at the full gauntlet [0.7109, 0.7724].
+
+## T016-T018 Timing harness and smoke (4:24:36 to 4:24:44 PM EST)
+
+`scripts/hooks/register.mjs` + `hooks/hooks.mjs`: a `load` hook rewrites `sim/gauntlet.mjs` in memory (three patterns, each must match exactly once,
+else the worker fails at start): hrtime around each battle's turn loop, a counter on the player's `choose`, one JSON line per battle to
+`$PLATSIM_TIMING_DIR/<pid>.jsonl`. Loaded into the pool's workers through `NODE_OPTIONS=--import=<abs>/register.mjs` (`scripts/time_share.py`);
+the worker's stdout response is untouched. Smoke `time_share.py --teams ref --batches 5` exit 0: digests equal True, 25 battles recorded,
+side files removed, wall 3.8 s plain vs 3.9 s hooked (`runs/019-evidence/time_share_smoke.txt`).
+
+## T019 Question (3): in-stage time share (4:24:55 to 4:29:50 PM EST, alone, 16 workers, stop_on_loss on)
+
+`uv run python specs/019-e4-sampling-spike/scripts/time_share.py --out runs/019-evidence/time_share.json` exit 0 (`runs/019-evidence/time_share.txt`, copied to `evidence/`).
+```
+ref batch 50: digests equal True; wall plain 10.3s hooked 10.4s; E4 share of battle time 0.772, of wall x workers 0.554; overhead 2.9s; cleared 47/50; battles recorded 250; aaron 0.724s/13.4t/13.8d; bertha 0.417s/9.9t/10.3d; flint 0.354s/11.3t/11.7d; lucian 0.355s/11.3t/11.6d; cynthia 0.548s/19.0t/21.0d
+ref batch 100: digests equal True; wall plain 14.9s hooked 15.2s; E4 share of battle time 0.748, of wall x workers 0.599; overhead 3.0s; cleared 95/100; battles recorded 500; aaron 0.521s/12.9t/13.3d; bertha 0.337s/9.9t/10.3d; flint 0.297s/11.2t/11.6d; lucian 0.304s/11.2t/11.5d; cynthia 0.491s/18.8t/20.6d
+ref batch 200: digests equal True; wall plain 24.2s hooked 25.5s; E4 share of battle time 0.720, of wall x workers 0.617; overhead 3.7s; cleared 189/200; battles recorded 1000; aaron 0.440s/13.1t/13.6d; bertha 0.298s/10.1t/10.5d; flint 0.256s/11.2t/11.6d; lucian 0.266s/11.2t/11.6d; cynthia 0.490s/19.0t/20.8d
+b3 batch 50: digests equal True; wall plain 9.9s hooked 10.0s; E4 share of battle time 0.808, of wall x workers 0.580; overhead 2.8s; cleared 39/50; battles recorded 243; aaron 0.631s/8.0t/8.0d; bertha 0.491s/10.8t/10.9d; flint 0.236s/6.3t/6.3d; lucian 0.500s/14.8t/16.3d; cynthia 0.514s/18.0t/20.5d
+b3 batch 100: digests equal True; wall plain 15.0s hooked 15.2s; E4 share of battle time 0.756, of wall x workers 0.593; overhead 3.3s; cleared 77/100; battles recorded 492; aaron 0.459s/8.1t/8.1d; bertha 0.376s/11.0t/11.2d; flint 0.198s/6.5t/6.5d; lucian 0.408s/14.4t/15.8d; cynthia 0.506s/18.6t/21.1d
+b3 batch 200: digests equal True; wall plain 23.6s hooked 24.8s; E4 share of battle time 0.752, of wall x workers 0.638; overhead 3.8s; cleared 143/200; battles recorded 975; aaron 0.375s/8.2t/8.2d; bertha 0.334s/11.0t/11.2d; flint 0.190s/6.5t/6.5d; lucian 0.369s/14.7t/16.3d; cynthia 0.477s/18.7t/21.3d
+b2v2 batch 50: digests equal True; wall plain 9.6s hooked 10.1s; E4 share of battle time 0.779, of wall x workers 0.557; overhead 2.9s; cleared 36/50; battles recorded 250; aaron 0.581s/8.4t/8.6d; bertha 0.479s/9.1t/9.3d; flint 0.306s/6.4t/6.5d; lucian 0.432s/11.4t/12.4d; cynthia 0.509s/16.5t/19.5d
+b2v2 batch 100: digests equal True; wall plain 14.7s hooked 14.9s; E4 share of battle time 0.748, of wall x workers 0.583; overhead 3.3s; cleared 78/100; battles recorded 500; aaron 0.421s/8.5t/8.7d; bertha 0.341s/9.1t/9.2d; flint 0.268s/6.4t/6.4d; lucian 0.362s/11.5t/12.3d; cynthia 0.468s/16.7t/19.5d
+b2v2 batch 200: digests equal True; wall plain 23.0s hooked 22.9s; E4 share of battle time 0.726, of wall x workers 0.611; overhead 3.6s; cleared 159/200; battles recorded 1000; aaron 0.309s/8.6t/8.7d; bertha 0.286s/9.1t/9.3d; flint 0.214s/6.4t/6.4d; lucian 0.309s/11.7t/12.6d; cynthia 0.422s/16.8t/19.5d
+```
+
+**SC-005: PASS.** `digests_equal` True for all nine team x batch runs (the harness changes nothing but timing). Elite Four share of
+battle time at batch 200: reference 0.720, B3 0.752, B2 (018 v2 team) 0.726; at batch 50 (JIT warm-up inside the batch) 0.77 to 0.81.
+Share of wall x workers 0.55 to 0.64 (pool start and idle slots: overhead 2.8 to 3.8 s per batch). **Kill flag: not raised** (0.720 >= 0.40).
+Cynthia 0.42 to 0.51 s per battle vs 1.46 to 1.75 CPU s per full gauntlet; decisions per battle: Cynthia 19.5 to 21.3, Elite Four 6.4 to 16.3.
+
+## T020-T021 Projection (4:29:50 PM EST)
+
+`uv run python specs/019-e4-sampling-spike/scripts/projection.py --out runs/019-evidence/projection.json` exit 0 (`projection.txt`). Model (R6): w_full 0.1277 s per full gauntlet at the pool
+(reference, batch 200), w_cyn 0.0358 s per Cynthia-only battle (w_full x 0.490 / 1.750 CPU s); n 2,000; top-ups from the count rule.
+```
+{"inputs": {"w_full_s": 0.12765235293998559, "w_cyn_s": 0.035758169820912566, "cpu_s_per_gauntlet": 1.7501664106200001, "cynthia_s_per_battle": 0.4902592571500001, "n": 2000}}
+evaluate reference, floor 0.98: model ratio (p95 of k .. p5 of k) 2.63 .. 2.87; projected median 89 s vs model baseline 255 s; vs README 769 s: 8.65x
+evaluate reference, floor 0.99: model ratio (p95 of k .. p5 of k) 1.85 .. 2.40; projected median 107 s vs model baseline 255 s; vs README 769 s: 7.22x
+evaluate reference, floor 0.995: model ratio (p95 of k .. p5 of k) 1.24 .. 1.80; projected median 175 s vs model baseline 255 s; vs README 769 s: 4.38x
+B2 quick bracket, strong_ref, floor 0.98: model ratio 1.38 (median k 189)  [bracket, not a measurement]
+B2 quick bracket, strong_ref, floor 0.99: model ratio 1.11 (median k 381)  [bracket, not a measurement]
+B2 quick bracket, strong_ref, floor 0.995: model ratio 1.00 (median k 1131)  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.98: floor never reached  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.99: floor never reached  [bracket, not a measurement]
+B2 quick bracket, lucian_heavy_b3, floor 0.995: floor never reached  [bracket, not a measurement]
+```
+
+**SC-006.** Deciding figure (reference-team evaluation, model ratio over p95..p5 of the switch point): **2.63 to 2.87x at floor 0.98, 1.85 to
+2.40x at 0.99, 1.24 to 1.80x at 0.995**; projected median 89 / 107 / 175 s against a model baseline of 255 s. The README's 769 s is not
+comparable (v2 player, top-up and loss-cause replays included) and the 'vs 769 s' column is reported only as such. B2 quick bracket
+(not a measurement): 1.00x on the Lucian-heavy stand-in (floor never reached) to 1.38x on the strong stand-in at floor 0.98 (1.11x at 0.99).
+
+## T022 Go / no-go for feature 021 (the clarified rule, FR-013)
+
+| Question | Criterion | Result |
+|---|---|---|
+| (1) estimator vs ten stored verdicts | threshold verdict agrees on all ten | **FAIL as specified**: 6 of 10; B2, B3, v8 and job-2d8f18 become borderline under the Bonferroni interval (1.3 to 1.6x wider); point estimates agree within 0.004 on all ten; the delta-method interval agrees on all ten |
+| (2) replay on recordings | reference >= 50% Cynthia-only with the verdict unchanged in 100% and containment >= 95%; B3 never switches | **PASS**: 0.91 / 0.81 / 0.43 at floors 0.98 / 0.99 / 0.995, 100% / 100%; B3 0 switches, estimate = full |
+| (3) in-stage share | reported; kill if < 0.40 on the strong team | **PASS**: 0.720 at batch 200 (B3 0.752, B2 0.726); digests identical |
+| projection | reference evaluation >= 1.5x | **PASS at floors 0.98 and 0.99**: 2.63 to 2.87x and 1.85 to 2.40x (model); B2 quick 1.00 to 1.38x reported, not deciding |
+
+**Verdict: no-go as specified, conditional go.** By the rule's letter the method is not built, because question (1) fails. The failure is
+attributable to the plan's interval choice (R1: two 97.5% Wilson factors multiplied, joint coverage >= 95%), not to the estimator: the
+composite point estimates equal or sit within 0.004 of the stored clear rates, every interval contains them, and the standard delta-method
+interval reproduces the threshold verdict on all ten. Keeping the Bonferroni interval would cost threshold teams (where the level search
+sits and where the rule never switches, so nothing is saved) 2,700 to 5,600 full runs instead of 2,000 to resolve the verdict. **If the
+owner amends feature 021's interval to the delta method (or any interval no wider than about 1.1x the binomial at 2,000 runs) through a
+clarification on its spec, every criterion is met and the verdict is go**, with the projected 1.85 to 2.87x on evaluations of strong teams
+and no change on threshold teams. Otherwise the fallback order from the concept note applies: a cheaper player for Aaron, Bertha and Flint
+only after its per-trainer rates are measured; else nothing. Side findings for the record: B3 at its stored levels clears 0.7430 under v4
+(borderline) against 0.7715 under v2; the reference team 0.9345 under v4 against 0.9445 under v2.
