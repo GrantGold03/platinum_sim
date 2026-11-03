@@ -20,8 +20,16 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   applied at runtime.
 - **Opponents use the game's own trainer AI.** The decomp's AI script (`trainer_ai/script.s`) is run
   by an interpreter (`decomp-ai`), and that includes Cynthia's 4× Full Restore.
-- **The player uses a named look-ahead policy**, `expectimax2-v2` (the default everywhere since
-  2026-10-08). It replaced `expectimax2-v1`, which lost to `greedy-v1` on some optimizer teams because
+- **The player uses a named look-ahead policy**, `expectimax2-v4` (the default everywhere since
+  2026-11-03, feature 018): `expectimax2-v2`'s model, leaf and horizon with a smaller search budget (4 root
+  samples instead of 8, 1 second-ply sample instead of 2, first-ply branches below weight 0.05 valued by the
+  leaf), 1.64x faster single process. It was validated reference-first against v2 on 2,000 paired runs per team
+  on four fixed teams (no statistically supported drop at 0.80 to 0.95 clear rate) and adopted on that gate; a
+  follow-up check near the 0.75 qualification threshold found v4 about 2 to 3 points weaker (p 0.006 on 2,000
+  pairs, p 0.007 on 4,000), which cost one start level on five of six members in a quick B2 optimization, so
+  for the lowest possible levels name `--player-policy expectimax2-v2` (the reference, still registered).
+  Details and every number: `specs/018-expectimax2-v4/validation-log.md`. v2 (the default from 2026-10-08)
+  replaced `expectimax2-v1`, which lost to `greedy-v1` on some optimizer teams because
   its search rewarded delaying KOs and its leaf weights were mis-scaled (research R7 – v2 correction).
   In 600 fresh paired runs v2 beat greedy on the reference team (568 vs 442, p = 1.8e-23) and was at
   parity on the team where v1 had lost. `expectimax2-v1` stays registered for comparison.
@@ -142,11 +150,11 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
 | `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules), `--require-hm` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v2`), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm` |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm` |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
-| `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture; since feature 017 the single-process half also reports the trainer-AI interpreter step count) | `--policy` (default `expectimax2-v2`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
+| `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture; since feature 017 the single-process half also reports the trainer-AI interpreter step count) | `--policy` (default `expectimax2-v4`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
 - **Resume and `--force-new`:** rerunning `optimize` with the same `--out` resumes from `state.json`.
@@ -451,6 +459,28 @@ kept reference, the replay test, and `PLATSIM_AI_CHECK=1`, which now also recomp
 structs and the speed pair. `node sim/bench.mjs` and `platsim bench` report the interpreter step count
 (`interp_steps`, `interp_dispatches`). Details: `specs/017-exact-dispatch-speedups/validation-log.md`.
 
+Feature 018 (2026-11-02/03, same fixed set and tool): a NEW policy, `expectimax2-v4`, with a smaller search budget; its
+decisions differ from v2's by design, so the comparison is paired (same seeds and opponents) and reference-first:
+
+| Setup, same 40 gauntlets, same session | `expectimax2-v2` | `expectimax2-v4` | ratio |
+|---|---|---|---|
+| single process | 1.279 gauntlets/s, 9.6 ms/decision, 44.7 AI calls/decision | 2.097 gauntlets/s, 5.3 ms/decision, 17.8 AI calls/decision | 1.64x |
+| 16 workers (40 jobs, tail-bound) | 4.85 gauntlets/s (8.3 s) | 6.56 gauntlets/s (6.1 s) | 1.35x |
+| B2 `optimize --budget quick` end to end (16 workers) | 407 s | 350 s | 0.86 |
+
+Validation (`specs/018-expectimax2-v4/validation-log.md`): each budget knob alone and then the combination, 2,000
+paired gauntlets against v2 on four fixed teams (the two policy fixtures and the two feature-014 B2 results), McNemar
+exact at alpha 0.05, with a pairing control. Switch beam 1 was worse on one team and was dropped; the adopted set (root
+samples 4, second-ply samples 1, floor 0.05) showed no statistically supported drop on any team (deficits 0.3 to 1.05
+points, p 0.33 to 0.71). A follow-up check at the qualification threshold (the v2 B2 team at its own levels, clear rate
+near 0.79) found v4 weaker by 2 to 3 points with p 0.006, pooled p 0.007 over 4,000 pairs, and the quick B2
+optimization with v4 settled one start level higher on five of six members (expected average final level 54.30 vs
+53.34; the same species, moves and items). v4 was adopted as the default on the user's decision, with this cost on
+record; `--player-policy expectimax2-v2` gives the reference player wherever a policy can be named. v4 has its own
+replay-fixture entry (`node sim/bench.mjs --policy expectimax2-v4` prints `digest_full 05fa8cb1…`), is deterministic per
+seed, and beats `greedy-v1` on the benchmark team (p 2.7e-70 at 400 paired). v1 and v2 are byte-identical to before.
+`platsim optimize` gained `--player-policy`; a checkpoint made with another strong player is never resumed.
+
 Measured run times:
 
 | Run | Wall time |
@@ -533,7 +563,7 @@ src/platsim/          Python: everything that is not battle-time
   budget.py stats.py evaluate.py explain.py extract.py cli.py
 sim/                  Node: Showdown worker, gauntlet, exp/level-up, damage port
   ai/                 decomp trainer-AI parser + interpreter
-  policy/             greedy-v1, expectimax2-v1, expectimax2-v2 (default)
+  policy/             greedy-v1, expectimax2-v1, expectimax2-v2 (the reference), expectimax2-v4 (default since 018)
   spikes/  test/
 data/divergences.json divergence ledger;  data/generated/ (git-ignored, from `extract`)
 tests/                pytest unit/, integration/, browser/ (Playwright), fixtures/
@@ -573,13 +603,14 @@ gauntlets) and two `quick` optimizes.
   worker start, an unmarked test that starts the worker fails at its teardown, and an unmarked test using a
   fixture that started it, a start outside any test, or a marked test that never reached the worker fail the
   session. The "battle split" section at the end of each run lists the counts and each marked test's route.
-  On 2026-11-01 the fast mode gave 528 passed, 28 deselected, 4 xfailed in 591 s (10 min); its slowest test
+  On 2026-11-02 the fast mode gave 535 passed, 28 deselected, 4 xfailed in 612 s (10 min; 528 before feature 018); its slowest test
   is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s). The battle set is 28 tests
   (26 before features 015 and 016 added the bench tests).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on 2026-11-02 it gave **347 pass, 0 fail, exit 0 in about 2 min** (334 before feature 017, 314
-  before features 015 and 016; the replay test alone takes 25-45 s on 16 worker threads). Known flake, not a regression:
+- **Node suite:** on 2026-11-02 it gave **351 pass, 0 fail, exit 0 in about 2.5 min** (347 before feature 018, 334
+  before 017, 314 before 015 and 016; the replay test now covers three policies, 120 gauntlets, 20-45 s on 16 worker
+  threads). Known flake, not a regression:
   `sim/test/seeds.test.mjs` compares two raw battle logs including their `|t:|` timestamp lines and fails when
   the two battles straddle a second boundary (seen once on 2026-10-31; a rerun passes). With
   `PLATSIM_AI_FREEZE=1` the cached AI structs are frozen and `PLATSIM_AI_CHECK=1` recomputes every memoised AI

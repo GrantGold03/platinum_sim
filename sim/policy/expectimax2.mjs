@@ -12,7 +12,11 @@
 //                   reference-first against v2: 2,000 paired gauntlets on four fixed teams, no statistically
 //                   supported drop (bench 0.8505 vs 0.8595, ref 0.9430 vs 0.9460, 014 B2 main 0.9110 vs 0.9150,
 //                   014 B2 branch 0.7845 vs 0.7950; p 0.33 to 0.71), about 1.55x faster in the pool
-//                   (specs/018-expectimax2-v4/validation-log.md). v1 and v2 are unchanged.
+//                   (specs/018-expectimax2-v4/validation-log.md). The default player since 2026-11-03 on the
+//                   user's decision. Caveat on record: near the 0.75 qualification threshold (the v2 B2 team at
+//                   its own levels) v4 is 2 to 3 points weaker with p 0.006 (pooled p 0.007 over 4,000 pairs),
+//                   and a quick B2 optimization settled one level higher; v2 stays the reference by name.
+//                   v1 and v2 are unchanged.
 //   expectimax2-v2  koStop (see HORIZON), W_ALIVE 0.25, W_FR 0.10. Why: on a quick-run screening
 //                   finalist (L58 Infernape/Staraptor/Luxray/Garchomp/Gyarados/Gardevoir with plates
 //                   and Sitrus Berries) v1 cleared 109/400 vs greedy-v1 348/400 (McNemar p = 4e-60),

@@ -310,19 +310,19 @@ validator's pass on the v4 result, both wall times.
 **Independent Test**: with the switch, `evaluate`, `optimize`, `bench` and the web report `expectimax2-v4` by default
 and v2 on request; without it, the docs record the negative result.
 
-- [ ] T033 [US4] Decide the gate from the log: FR-005 (T021 passing set) AND FR-007 (T032 verdict not `B`, mean final
+- [X] T033 [US4] Decide the gate from the log: FR-005 (T021 passing set) AND FR-007 (T032 verdict not `B`, mean final
   level not higher) AND v4 faster than v2 (T027). Write the one-line verdict in the log
-- [ ] T034 [US4] If the gate passed: `src/platsim/evaluate.py` `DEFAULT_PLAYER_POLICY = "expectimax2-v4"`; `uv run platsim
+- [X] T034 [US4] If the gate passed: `src/platsim/evaluate.py` `DEFAULT_PLAYER_POLICY = "expectimax2-v4"`; `uv run platsim
   evaluate tests/fixtures/reference_team.json --runs 50 --out runs/018-evidence/eval-default` shows `player
   expectimax2-v4` in its summary and report; `uv run platsim bench --no-single --workers 16 --n 2` reports v4; `uv run
   platsim evaluate … --player-policy expectimax2-v2 --runs 50` shows v2 (by name); unit tests from T011 still pass (they
   compare against the constant). If the gate failed: no code change; record
-- [ ] T035 [P] [US4] Docs: `README.md` (the default-player sentence at line 23 and the command table rows for
+- [X] T035 [P] [US4] Docs: `README.md` (the default-player sentence at line 23 and the command table rows for
   `evaluate`, `optimize --player-policy`, `bench`; the speed table gains the v2-vs-v4 row with the 1.5x target; the
   "Node suite" count; the `sim_code_hash` note; if not adopted, a paragraph with the negative result);
   `FUTURE-FEATURES.md` section 7 (018 done or not adopted with the ladder's numbers; 019+ = D, F, E, H);
   `RUN-STATE.md` START HERE (state, commits, numbers, what is left: user testing, full suite, merge)
-- [ ] T036 Gates (SC-007, FR-011): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0; full Node suite exit 0
+- [X] T036 Gates (SC-007, FR-011): `git diff --stat main HEAD -- pokemon-showdown` empty, exit 0; full Node suite exit 0
   → `runs/018-evidence/node-suite.log`; `uv run pytest -q -m "not battle_sim"` exit 0 → `runs/018-evidence/fast.log`;
   record; commit 5 by path (`src/platsim/evaluate.py README.md FUTURE-FEATURES.md RUN-STATE.md
   specs/018-expectimax2-v4/scripts/equal_levels.py specs/018-expectimax2-v4/validation-log.md` plus any doc touched),

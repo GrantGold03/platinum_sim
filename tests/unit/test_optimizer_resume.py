@@ -133,10 +133,10 @@ def test_checkpoint_records_player_policy_and_another_policy_is_a_different_job(
     R.run_optimization(_req(out))
     st = json.loads((out / "state.json").read_text())
     assert "player_policy" not in st["fingerprint"], "the default player leaves the fingerprint unchanged (006 precedent)"
+    other = "expectimax2-v2" if DEFAULT_PLAYER_POLICY == "expectimax2-v4" else "expectimax2-v4"  # a non-default strong player
     with pytest.raises(InvalidRequest, match="different optimize job"):
-        R.run_optimization(_req(out, player_policy="expectimax2-v4"))
+        R.run_optimization(_req(out, player_policy=other))
     assert len(stubbed) == 1
     out2 = tmp_path / "o2"
-    R.run_optimization(_req(out2, player_policy="expectimax2-v4"))
-    assert json.loads((out2 / "state.json").read_text())["fingerprint"]["player_policy"] == "expectimax2-v4"
-    assert DEFAULT_PLAYER_POLICY != "expectimax2-v4" or True  # the constant is imported for the message above
+    R.run_optimization(_req(out2, player_policy=other))
+    assert json.loads((out2 / "state.json").read_text())["fingerprint"]["player_policy"] == other

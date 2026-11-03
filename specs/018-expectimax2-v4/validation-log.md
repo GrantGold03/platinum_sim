@@ -245,3 +245,40 @@ mechanism behind the B2 result one level higher (T030-T031): v4 at the v2 team's
 0.75 threshold for the level search's margin, so it stops one level up. FR-005's letter (per team, 2,000 pairs) passed;
 Principle VI's rule ("adopt only if not worse by a statistically supported margin") is not met on the team that matters
 most once the extra sample is counted. Decision referred to the user (T033).
+
+## T033 Gate verdict (2026-11-03, user's decision)
+
+FR-005 passed by its letter (every ladder team "not worse" at 2,000 pairs); FR-007 passed by its letter (equal-levels
+tie, though degenerate: identical teams); v4 is faster than v2 (FR-006). The near-threshold diagnostic (above) shows
+v4 measurably weaker at the qualification threshold (p 0.006; pooled p 0.007) with a one-level cost on B2 quick. The
+user was asked (options: a milder set first, keep v2, flip) and chose **"Flip to v4 per the gate"** with the finding
+and the level cost documented. Verdict: v4 becomes the default; the caveat is in README, FUTURE-FEATURES, the policy
+header and this log.
+
+## T034 Default switch and verification (12:46:44 to 12:48:28 PM EST)
+
+`src/platsim/evaluate.py`: `DEFAULT_PLAYER_POLICY = "expectimax2-v4"`. Test-side follow-ups: the resume test's
+"different job" case now uses whichever strong player is not the default; `test_bench_cli.py`'s default assertion
+now compares against the constant (it pinned the literal `expectimax2-v2`; caught by the first fast-mode run below).
+Verification (16 workers, quick budget, 50 runs): `uv run platsim evaluate tests/fixtures/reference_team.json …`
+prints `player expectimax2-v4` and `result.json.player_policy == "expectimax2-v4"`; with `--player-policy
+expectimax2-v2` the report says `expectimax2-v2`; `uv run platsim bench --no-single --n 2` reports policy
+`expectimax2-v4` (`runs/018-evidence/eval-default/`, `eval-v2/`, `bench-default.json`).
+
+## T035 Docs
+
+`README.md` (the default-player bullet with the caveat and the `--player-policy expectimax2-v2` escape hatch; the
+`evaluate`, `optimize` and `bench` command rows; a feature-018 speed and validation block after 017's; the policy
+directory line; the Node-suite and fast-mode counts), `FUTURE-FEATURES.md` section 7 (018 done with the caveat and
+three follow-ups), `sim/policy/expectimax2.mjs` header (VERSIONS entry: default since 2026-11-03, caveat),
+`RUN-STATE.md` START HERE.
+
+## T036 Gates (12:48:28 PM EST onward)
+
+- `git diff --stat main HEAD -- pokemon-showdown`: **empty, exit 0** (`runs/018-evidence/showdown-diff.txt`, FR-011).
+- Full Node suite 12:48:28 to 12:50:53 PM EST: **351 pass, 0 fail, exit 0**, 144.6 s (`node-suite.log`).
+- Fast mode, first run 12:50:53 to 1:00:44 PM EST: 534 passed, **1 failed** (`test_bench_defaults_match_the_contract`
+  pinned the literal `expectimax2-v2`; fixed to the constant), 588.9 s. Rerun recorded below.
+- Fast mode, rerun 1:01:30 to 1:11:21 PM EST: **535 passed, 28 deselected, 4 xfailed, 1 warning, exit 0**, 588.3 s
+  (`runs/018-evidence/fast.log`; battle split clean). Commit 5 below. T037 (full suite, about 1 h; the strength test
+  now runs v4 at 2,000 paired) waits for the user's hands-on testing and go.

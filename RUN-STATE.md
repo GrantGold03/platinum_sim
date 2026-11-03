@@ -1,16 +1,20 @@
-# START HERE (updated 2026-11-02, 4:14 PM EST, feature 018 IN PROGRESS: the ladder is running)
+# START HERE (updated 2026-11-03, 12:46 PM EST, feature 018: v4 adopted as default; gates and full suite open)
 
-- **Feature 018 in progress (2026-11-02, 4:14 PM EST).** Branch `018-expectimax2-v4` in the main checkout. Commits so far:
-  `518fe1f` (US1: v4 with the per-version search budget, candidate names; v1/v2 byte-identical, Node 351/351),
-  `412783d` (US3 code half: `DEFAULT_PLAYER_POLICY` single source, `optimize --player-policy`, fast mode 535 passed).
-  **A ladder run may be in flight**: `runs/018-evidence/ladder.status` has the step timestamps and exit codes;
-  `runs/018-evidence/pairs/` holds the cached sides and `summary.json`; `pgrep -a -x node` shows the pool. Never start
-  another pool, bench or suite while it runs, and never edit `sim/` until the ladder is done (the pairs cache is keyed by
-  `sim_code_hash`). Remaining: T018-T023 (ladder: control, five single knobs, combinations; each row goes in
-  `specs/018-expectimax2-v4/validation-log.md`), T024-T028 (final `V4_OPTS`, fixture entry, strength tests, bench),
-  T029-T032 (B2 optimize with v2 and v4, equal levels), T033-T036 (gated default switch, docs, gates), T037 (full suite
-  on the user's go). The ladder script: `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py --a <candidate>
-  --b expectimax2-v2 --runs 2000 --workers 16` (v2 sides cached after the first run).
+- **Feature 018 `018-expectimax2-v4` implemented 2026-11-02/03 (T001-T035 done; T036 gates in progress, T037 full suite
+  and the merge wait for the user).** Branch from `main` 7a88ae6, main checkout, pushed. Code commits `518fe1f` (US1: v4,
+  per-version budget, candidate names), `412783d` (US3 plumbing: `DEFAULT_PLAYER_POLICY`, `optimize --player-policy`),
+  `6e00512` (ladder script + ladder), `718002f` (final `V4_OPTS` 4/1/2/0.05, fixture entry `05fa8cb1…`, strength tests);
+  then the docs/B2 commits and commit 5 (default flipped to v4 on the user's decision, 12:46 PM EST). Numbers: v4 1.64x single
+  process, 1.35x pool; ladder: beam 1 dropped (worse on b2main), the rest passed; **caveat**: near the 0.75 threshold v4 is
+  2-3 points weaker (p 0.006; pooled 0.007) and B2 quick settled +1 level on 5 of 6 members (407 → 350 s). Evidence
+  `runs/018-evidence/` (pairs cache, b2-*, bench/pool JSON), log `specs/018-expectimax2-v4/validation-log.md`.
+  Remaining: T036 gates (Showdown diff, Node suite, fast mode) then commit 5; T037 `uv run pytest -q --durations=25 >
+  runs/018-evidence/full.log 2>&1` (about 1 h; the strength test now runs v4 at 2,000) on the user's go; merge on the
+  user's second go (`git checkout main && git merge --ff-only 018-expectimax2-v4 && git push`). `sim_code_hash` and
+  `platsim_code_hash` changed (checkpoints before 018 will not resume; the job fingerprint adds `player_policy` only when
+  it differs from the default). `data/generated/` unaffected. Hand checks: `node sim/bench.mjs` (now v4 by default) prints
+  `digest_full 05fa8cb1…`; `--policy expectimax2-v2` prints `db6d20cf…`. Next feature: FUTURE-FEATURES section 7
+  follow-ups (a milder v4 set near the threshold) or the exact items D, F, E, H as 019+, user's choice.
 - **Feature 018 `018-expectimax2-v4` specified 2026-11-02, 1:53 PM EST (`/speckit-specify`, user's go).** Branch from `main`
   7a88ae6, main checkout; `specs/018-expectimax2-v4/spec.md` + `checklists/requirements.md` (all items pass, 0
   clarification markers). Four stories: US1 the new policy by name (v1/v2 unchanged, determinism, own replay entry),

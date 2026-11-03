@@ -1,6 +1,7 @@
 """Feature 015: `platsim bench` option parsing (no worker is started here; contracts/bench-tool.md)."""
 
 import hashlib
+from platsim.evaluate import DEFAULT_PLAYER_POLICY
 
 import pytest
 
@@ -17,7 +18,7 @@ VECTOR_LINE = "prof-a-bench-0|1|50,51,52,53,54,55|aaron:win:12:sha256:aa;bertha:
 def test_bench_defaults_match_the_contract():
     a = build_parser().parse_args(["bench"])
     assert (a.policy, a.n, a.block, a.teams, a.trainers, a.workers, a.no_single, a.json) == \
-        ("expectimax2-v2", 20, "a", ["bench", "ref"], None, None, False, False)
+        (DEFAULT_PLAYER_POLICY, 20, "a", ["bench", "ref"], None, None, False, False)  # 018: the one default constant
     b = build_parser().parse_args(["bench", "--policy", "x", "--no-single", "--teams", "ref", "--trainers", "aaron,flint",
                                    "--workers", "3", "--n", "2", "--block", "b", "--json"])
     assert (b.policy, b.n, b.block, b.teams, b.trainers, b.workers, b.no_single, b.json) == \

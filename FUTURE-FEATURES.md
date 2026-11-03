@@ -194,14 +194,15 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
 - **Killed by the 015 profile (do not retry without new evidence).** Cloning / copy-on-write (0.7% of time);
   better prediction-cache keys (0.35% hit rate; coarse-key bound 11.6% of ply-2 calls); the end-state merge
   (collapses 0.5% of branches).
-- **Feature 018 = `expectimax2-v4` approximations (user's choice 2026-11-02, ahead of the exact items D, F, E, H;
-  never `-v3`, archived 007's name).** Sized in memory on the fixed set on 2026-11-02 (`REPORT4.md` appendix; the
-  decisions change, so these are candidates, not results): K_PLY2 2 → 1 gives 1.25x, switch beam 2 → 1 1.22x, K_ROOT
-  8 → 4 1.08x, a branch-probability floor that values first-ply branches below 0.02 by the leaf 1.07x (9.3% of
-  second-ply subtrees, 0.48% of the mass; 0.05: 1.20x, 20.7% / 2.2%), K_PLY2 1 + beam 1 1.49x, all four 1.75x (2.24
-  gauntlets/s). Root samples agree only 52% of the time and second-ply samples 71%, so accuracy is the risk.
-  Reference-first (Principle VI): each knob alone, then the combination; v4 = the fastest combination not worse than
-  v2 on paired runs (benchmark team, reference team, the two 014 B2 final teams; 2,000 paired, McNemar exact) plus the
-  B2 optimizer end to end at equal levels (the 010 rule); only then the default player. v1 and v2 stay unchanged.
-  Specify draft: `runs/017-evidence/scratchpad/prof4/specify_018_v4.txt`. The exact round four (D, F, E) and H follow
-  as 019+.
+- **Feature 018 = `expectimax2-v4` (done 2026-11-02/03; `specs/018-expectimax2-v4/`).** The ladder (each knob alone,
+  then the combination; 2,000 paired gauntlets vs v2 on four fixed teams, McNemar exact): switch beam 1 worse on the 014
+  B2 main team (p 0.0065), dropped; kRoot 4, kPly2 1, floor 0.02 and 0.05 passed alone; the combination 4 / 1 / 2 / 0.05
+  passed on all four teams (deficits 0.3 to 1.05 points, p 0.33 to 0.71). Speed 1.64x single process, 1.35x on the pool,
+  B2 quick optimize 407 → 350 s. **Caveat on record**: near the 0.75 threshold (the v2 B2 team at its own levels) v4 is
+  2 to 3 points weaker with p 0.006 (pooled p 0.007 over 4,000 pairs) and the quick B2 optimization settled one level
+  higher on five of six members; the user adopted v4 as the default on the gate's letter with that cost documented;
+  `--player-policy expectimax2-v2` keeps the reference. **Follow-ups**: (a) a milder set near the threshold (kRoot 4 +
+  floor 0.05 without the second-ply cut, or kRoot 4 alone: both had no measurable deficit alone) tested on the
+  near-threshold team with `paired_policies.py --teams file:<team.json>`; (b) the exact items D, F, E, H (above) are
+  019+; (c) the ladder's four teams sat at 0.80 to 0.95 clear rate, so any future player comparison should include a
+  team at the qualification threshold.
