@@ -1,0 +1,22 @@
+dir | kind | n | stored clear [ci] | composite [bonferroni] | [delta] | hw ratio | contains | stored tv/full | composite tv/full | kind | runs_needed | note
+runs/t076/v7-w16 | fullrun | 2000 | 0.9445 [0.9344, 0.9546] | 0.9445 [0.9292, 0.9553] | [0.9345, 0.9546] | 1.30 | True | above/qualified | above/qualified | agree | - | 
+runs/t076/v7-w16 | topup | 2000 | 0.9445 [0.9344, 0.9546] | 0.9446 [0.9293, 0.9553] | [0.9346, 0.9546] | 1.29 | True | above/qualified | above/qualified | agree | - | 
+runs/final-defaults | fullrun | 2000 | 0.8645 [0.8495, 0.8795] | 0.8645 [0.8425, 0.8827] | [0.8496, 0.8796] | 1.34 | True | above/qualified | above/not_qualified | half-width only | 2022 | 
+runs/final-defaults | topup | 2000 | 0.8645 [0.8495, 0.8795] | 0.8632 [0.8412, 0.8814] | [0.8483, 0.8784] | 1.34 | True | above/qualified | above/not_qualified | half-width only | 2026 | 
+runs/bench-007-baseline/B5 | fullrun | 2000 | 0.8485 [0.8328, 0.8642] | 0.8485 [0.8264, 0.8668] | [0.8329, 0.8644] | 1.29 | True | above/qualified | above/not_qualified | half-width only | 2039 | 
+runs/bench-007-baseline/B5 | topup | 2000 | 0.8485 [0.8328, 0.8642] | 0.8484 [0.8264, 0.8667] | [0.8329, 0.8643] | 1.28 | True | above/qualified | above/not_qualified | half-width only | 2034 | 
+runs/bench-010/B1 | fullrun | 2150 | 0.7995 [0.7826, 0.8165] | 0.7995 [0.7742, 0.8218] | [0.7828, 0.8166] | 1.41 | True | above/qualified | above/not_qualified | half-width only | 3050 | 
+runs/bench-010/B1 | topup | 2150 | 0.7995 [0.7826, 0.8165] | 0.7991 [0.7739, 0.8213] | [0.7825, 0.8161] | 1.40 | True | above/qualified | above/not_qualified | half-width only | 3012 | 
+runs/bench-010/B2 | fullrun | 2000 | 0.7730 [0.7547, 0.7913] | 0.7730 [0.7442, 0.7988] | [0.7549, 0.7916] | 1.49 | True | above/qualified | borderline/borderline | threshold | 3141 | 
+runs/bench-010/B2 | topup | 2000 | 0.7730 [0.7547, 0.7913] | 0.7695 [0.7410, 0.7950] | [0.7515, 0.7878] | 1.47 | True | above/qualified | borderline/borderline | threshold | 4288 | 
+runs/bench-010/B3 | fullrun | 2000 | 0.7715 [0.7531, 0.7899] | 0.7715 [0.7404, 0.7996] | [0.7533, 0.7901] | 1.61 | True | above/qualified | borderline/borderline | threshold | 4175 | 
+runs/bench-010/B3 | topup | 2000 | 0.7715 [0.7531, 0.7899] | 0.7756 [0.7456, 0.8027] | [0.7581, 0.7935] | 1.55 | True | above/qualified | borderline/borderline | threshold | 2743 | 
+runs/bench-010/B4 | fullrun | 2345 | 0.8081 [0.7922, 0.8240] | 0.8081 [0.7830, 0.8304] | [0.7923, 0.8242] | 1.49 | True | above/qualified | above/not_qualified | half-width only | 3285 | 
+runs/bench-010/B4 | topup | 2345 | 0.8081 [0.7922, 0.8240] | 0.8074 [0.7826, 0.8294] | [0.7918, 0.8233] | 1.47 | True | above/qualified | above/not_qualified | half-width only | 3218 | 
+runs/bench-010/B5 | fullrun | 2000 | 0.7785 [0.7603, 0.7967] | 0.7785 [0.7537, 0.8000] | [0.7605, 0.7969] | 1.27 | True | above/qualified | above/not_qualified | half-width only | 2679 | 
+runs/bench-010/B5 | topup | 2000 | 0.7785 [0.7603, 0.7967] | 0.7784 [0.7537, 0.7999] | [0.7604, 0.7968] | 1.27 | True | above/qualified | above/not_qualified | half-width only | 2671 | 
+runs/t076/v8 | fullrun | 2796 | 0.7661 [0.7504, 0.7818] | 0.7661 [0.7418, 0.7883] | [0.7506, 0.7819] | 1.48 | True | above/qualified | borderline/borderline | threshold | 6384 | 
+runs/t076/v8 | topup | 2796 | 0.7661 [0.7504, 0.7818] | 0.7669 [0.7430, 0.7888] | [0.7517, 0.7825] | 1.46 | True | above/qualified | borderline/borderline | threshold | 5585 | 
+runs/job-20261008T235244Z-2d8f18 | fullrun | 2000 | 0.7735 [0.7552, 0.7918] | 0.7735 [0.7466, 0.7973] | [0.7554, 0.7921] | 1.38 | True | above/qualified | borderline/borderline | threshold | 2612 | 
+runs/job-20261008T235244Z-2d8f18 | topup | 2000 | 0.7735 [0.7552, 0.7918] | 0.7720 [0.7452, 0.7956] | [0.7539, 0.7904] | 1.37 | True | above/qualified | borderline/borderline | threshold | 2962 | 
+{"judged": 10, "pass": false, "fullrun_identity_ok": true, "failures": ["runs/bench-010/B2", "runs/bench-010/B3", "runs/t076/v8", "runs/job-20261008T235244Z-2d8f18"], "half_width_only": [["runs/final-defaults", 2026], ["runs/bench-007-baseline/B5", 2034], ["runs/bench-010/B1", 3012], ["runs/bench-010/B4", 3218], ["runs/bench-010/B5", 2671]], "threshold_runs_to_clear": [["runs/bench-010/B2", 4288], ["runs/bench-010/B3", 2743], ["runs/t076/v8", 5585], ["runs/job-20261008T235244Z-2d8f18", 2962]], "max_half_width_ratio": 1.5523720180726903}

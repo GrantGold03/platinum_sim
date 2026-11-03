@@ -1,0 +1,836 @@
+{
+ "summary": {
+  "judged": 10,
+  "pass": false,
+  "fullrun_identity_ok": true,
+  "failures": [
+   "runs/bench-010/B2",
+   "runs/bench-010/B3",
+   "runs/t076/v8",
+   "runs/job-20261008T235244Z-2d8f18"
+  ],
+  "half_width_only": [
+   [
+    "runs/final-defaults",
+    2026
+   ],
+   [
+    "runs/bench-007-baseline/B5",
+    2034
+   ],
+   [
+    "runs/bench-010/B1",
+    3012
+   ],
+   [
+    "runs/bench-010/B4",
+    3218
+   ],
+   [
+    "runs/bench-010/B5",
+    2671
+   ]
+  ],
+  "threshold_runs_to_clear": [
+   [
+    "runs/bench-010/B2",
+    4288
+   ],
+   [
+    "runs/bench-010/B3",
+    2743
+   ],
+   [
+    "runs/t076/v8",
+    5585
+   ],
+   [
+    "runs/job-20261008T235244Z-2d8f18",
+    2962
+   ]
+  ],
+  "max_half_width_ratio": 1.5523720180726903
+ },
+ "rows": [
+  {
+   "dir": "runs/t076/v7-w16",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.9995,
+   "e4_bounds": [
+    0.9965695507519011,
+    0.9999273058513031
+   ],
+   "cyn_rate": 0.9449724862431216,
+   "cyn_battles": 1999,
+   "cyn_bounds": [
+    0.9323852012661874,
+    0.95532876874271
+   ],
+   "estimate": 0.9445000000000001,
+   "interval_bonferroni": [
+    0.9291867011535653,
+    0.9552593219311406
+   ],
+   "interval_delta": [
+    0.9345189625254725,
+    0.9545876389594231
+   ],
+   "half_width": 0.013036310388787664,
+   "stored_clear_rate": 0.9445,
+   "stored_half_width": 0.010060678929667888,
+   "half_width_ratio": 1.2957684545865937,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "qualified",
+   "agreement": true,
+   "disagreement_kind": "agree",
+   "runs_needed": null,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/t076/v7-w16",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.9995,
+   "e4_bounds": [
+    0.9965695507519011,
+    0.9999273058513031
+   ],
+   "cyn_rate": 0.9450274862568716,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.932452283498993,
+    0.9553736353563407
+   ],
+   "estimate": 0.9445549725137432,
+   "interval_bonferroni": [
+    0.9292535532641758,
+    0.9553041852832309
+   ],
+   "interval_delta": [
+    0.9345834795515656,
+    0.9546328558349099
+   ],
+   "half_width": 0.013025316009527554,
+   "stored_clear_rate": 0.9445,
+   "stored_half_width": 0.010060678929667888,
+   "half_width_ratio": 1.2946756476958292,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "qualified",
+   "agreement": true,
+   "disagreement_kind": "agree",
+   "runs_needed": null,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/final-defaults",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.995,
+   "e4_bounds": [
+    0.990017520020308,
+    0.9975018874243088
+   ],
+   "cyn_rate": 0.8688442211055276,
+   "cyn_battles": 1990,
+   "cyn_bounds": [
+    0.8509500619852957,
+    0.8848807268908672
+   ],
+   "estimate": 0.8644999999999999,
+   "interval_bonferroni": [
+    0.8424554700278097,
+    0.8826701952190343
+   ],
+   "interval_delta": [
+    0.8496295879563626,
+    0.8796306774080762
+   ],
+   "half_width": 0.0201073625956123,
+   "stored_clear_rate": 0.8645,
+   "stored_half_width": 0.015001690238773957,
+   "half_width_ratio": 1.3403398067533765,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2022,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/final-defaults",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.995,
+   "e4_bounds": [
+    0.990017520020308,
+    0.9975018874243088
+   ],
+   "cyn_rate": 0.8675662168915542,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.8496577292837704,
+    0.8836336388443575
+   ],
+   "estimate": 0.8632283858070965,
+   "interval_bonferroni": [
+    0.8411760380116046,
+    0.8814262225388566
+   ],
+   "interval_delta": [
+    0.8483394910977199,
+    0.8783785900370049
+   ],
+   "half_width": 0.02012509226362602,
+   "stored_clear_rate": 0.8645,
+   "stored_half_width": 0.015001690238773957,
+   "half_width_ratio": 1.3415216514476427,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2026,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-007-baseline/B5",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.9975,
+   "e4_bounds": [
+    0.9934601664050924,
+    0.9990467127942952
+   ],
+   "cyn_rate": 0.8506265664160401,
+   "cyn_battles": 1995,
+   "cyn_bounds": [
+    0.8318589024220066,
+    0.8676327434837537
+   ],
+   "estimate": 0.8485,
+   "interval_bonferroni": [
+    0.8264186836257241,
+    0.8668056402901402
+   ],
+   "interval_delta": [
+    0.8329313761294282,
+    0.8643596226925271
+   ],
+   "half_width": 0.020193478332208026,
+   "stored_clear_rate": 0.8485,
+   "stored_half_width": 0.01571236647367036,
+   "half_width_ratio": 1.285196495769545,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2039,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-007-baseline/B5",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.9975,
+   "e4_bounds": [
+    0.9934601664050924,
+    0.9990467127942952
+   ],
+   "cyn_rate": 0.8505747126436781,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.8318341047218011,
+    0.8675593619564882
+   ],
+   "estimate": 0.848448275862069,
+   "interval_bonferroni": [
+    0.8263940480983516,
+    0.8667323287165457
+   ],
+   "interval_delta": [
+    0.8329003197110595,
+    0.8642864695538175
+   ],
+   "half_width": 0.020169140309097056,
+   "stored_clear_rate": 0.8485,
+   "stored_half_width": 0.01571236647367036,
+   "half_width_ratio": 1.2836475232992455,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2034,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B1",
+   "kind": "fullrun",
+   "n_runs": 2150,
+   "e4_pass": 0.9827906976744186,
+   "e4_bounds": [
+    0.9752858989789658,
+    0.9880444906775848
+   ],
+   "cyn_rate": 0.8135352579271179,
+   "cyn_battles": 2113,
+   "cyn_bounds": [
+    0.7938081381651859,
+    0.831774986105028
+   ],
+   "estimate": 0.7995348837209303,
+   "interval_bonferroni": [
+    0.7741898836472524,
+    0.8218306925044976
+   ],
+   "interval_delta": [
+    0.7827901193643857,
+    0.8166378374904734
+   ],
+   "half_width": 0.0238204044286226,
+   "stored_clear_rate": 0.7995348837209302,
+   "stored_half_width": 0.01691593580066164,
+   "half_width_ratio": 1.4081635630049447,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 3050,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B1",
+   "kind": "topup",
+   "n_runs": 2150,
+   "e4_pass": 0.9827906976744186,
+   "e4_bounds": [
+    0.9752858989789658,
+    0.9880444906775848
+   ],
+   "cyn_rate": 0.8131101813110181,
+   "cyn_battles": 2151,
+   "cyn_bounds": [
+    0.793549000833876,
+    0.8312121665305624
+   ],
+   "estimate": 0.7991171223768285,
+   "interval_bonferroni": [
+    0.7739371506621269,
+    0.8212746017247013
+   ],
+   "interval_delta": [
+    0.7824963624356104,
+    0.8160909186697605
+   ],
+   "half_width": 0.023668725531287238,
+   "stored_clear_rate": 0.7995348837209302,
+   "stored_half_width": 0.01691593580066164,
+   "half_width_ratio": 1.3991969353750724,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 3012,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B2",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.9605,
+   "e4_bounds": [
+    0.9495280494395474,
+    0.9691642477892325
+   ],
+   "cyn_rate": 0.8047891723060906,
+   "cyn_battles": 1921,
+   "cyn_bounds": [
+    0.7837352119764305,
+    0.8242530940866204
+   ],
+   "estimate": 0.773,
+   "interval_bonferroni": [
+    0.7441785671050702,
+    0.798836629918407
+   ],
+   "interval_delta": [
+    0.7548578474018682,
+    0.7915781786685061
+   ],
+   "half_width": 0.02732903140666837,
+   "stored_clear_rate": 0.773,
+   "stored_half_width": 0.018348299725084227,
+   "half_width_ratio": 1.4894585229227781,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 3141,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B2",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.9605,
+   "e4_bounds": [
+    0.9495280494395474,
+    0.9691642477892325
+   ],
+   "cyn_rate": 0.8010994502748626,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.7803549411314323,
+    0.8203358125017386
+   ],
+   "estimate": 0.7694560219890055,
+   "interval_bonferroni": [
+    0.7409689051230418,
+    0.7950401406578164
+   ],
+   "interval_delta": [
+    0.7515305264529867,
+    0.7878090761921731
+   ],
+   "half_width": 0.027035617767387277,
+   "stored_clear_rate": 0.773,
+   "stored_half_width": 0.018348299725084227,
+   "half_width_ratio": 1.4734671970954611,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 4288,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B3",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.8945,
+   "e4_bounds": [
+    0.878102609618167,
+    0.9089204332846639
+   ],
+   "cyn_rate": 0.8624930128563443,
+   "cyn_battles": 1789,
+   "cyn_bounds": [
+    0.8432255632176827,
+    0.8797302513542195
+   ],
+   "estimate": 0.7715,
+   "interval_bonferroni": [
+    0.7404385675581958,
+    0.7996048012345034
+   ],
+   "interval_delta": [
+    0.753316593141404,
+    0.7901223143352074
+   ],
+   "half_width": 0.02958311683815379,
+   "stored_clear_rate": 0.7715,
+   "stored_half_width": 0.018390836021095924,
+   "half_width_ratio": 1.6085792295803911,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 4175,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B3",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.8945,
+   "e4_bounds": [
+    0.878102609618167,
+    0.9089204332846639
+   ],
+   "cyn_rate": 0.8670664667666167,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.8491322581767191,
+    0.883162112849943
+   ],
+   "estimate": 0.7755909545227386,
+   "interval_bonferroni": [
+    0.7456252518159442,
+    0.8027240902721694
+   ],
+   "interval_delta": [
+    0.7580905277530695,
+    0.7934953764960259
+   ],
+   "half_width": 0.028549419228112605,
+   "stored_clear_rate": 0.7715,
+   "stored_half_width": 0.018390836021095924,
+   "half_width_ratio": 1.5523720180726903,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 2743,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B4",
+   "kind": "fullrun",
+   "n_runs": 2345,
+   "e4_pass": 0.9688699360341151,
+   "e4_bounds": [
+    0.9597754329076844,
+    0.9759597368176172
+   ],
+   "cyn_rate": 0.8340669014084507,
+   "cyn_battles": 2272,
+   "cyn_bounds": [
+    0.815839867391421,
+    0.8508198058813806
+   ],
+   "estimate": 0.8081023454157783,
+   "interval_bonferroni": [
+    0.7830230619089489,
+    0.8303658738272084
+   ],
+   "interval_delta": [
+    0.792320096961386,
+    0.8241989609640149
+   ],
+   "half_width": 0.023671405959129754,
+   "stored_clear_rate": 0.8081023454157783,
+   "stored_half_width": 0.01593332970167316,
+   "half_width_ratio": 1.4856534322919344,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 3285,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B4",
+   "kind": "topup",
+   "n_runs": 2345,
+   "e4_pass": 0.9688699360341151,
+   "e4_bounds": [
+    0.9597754329076844,
+    0.9759597368176172
+   ],
+   "cyn_rate": 0.8333333333333334,
+   "cyn_battles": 2346,
+   "cyn_bounds": [
+    0.8153787027823314,
+    0.8498633686354791
+   ],
+   "estimate": 0.8073916133617626,
+   "interval_bonferroni": [
+    0.7825804474466183,
+    0.8294324295844157
+   ],
+   "interval_delta": [
+    0.7918025420197989,
+    0.8232876035785822
+   ],
+   "half_width": 0.0234259910688987,
+   "stored_clear_rate": 0.8081023454157783,
+   "stored_half_width": 0.01593332970167316,
+   "half_width_ratio": 1.4702508206077436,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 3218,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B5",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.9965,
+   "e4_bounds": [
+    0.9920486489288204,
+    0.9984632415686588
+   ],
+   "cyn_rate": 0.7812343201204215,
+   "cyn_battles": 1993,
+   "cyn_bounds": [
+    0.759785095010703,
+    0.8012692586182337
+   ],
+   "estimate": 0.7785000000000001,
+   "interval_bonferroni": [
+    0.7537437769816233,
+    0.8000379013292777
+   ],
+   "interval_delta": [
+    0.7605119998311012,
+    0.7969134611085661
+   ],
+   "half_width": 0.02314706217382717,
+   "stored_clear_rate": 0.7785,
+   "stored_half_width": 0.01818945756592505,
+   "half_width_ratio": 1.2725537355874414,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2679,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/bench-010/B5",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.9965,
+   "e4_bounds": [
+    0.9920486489288204,
+    0.9984632415686588
+   ],
+   "cyn_rate": 0.7811094452773614,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.7597005651115951,
+    0.801110304462942
+   ],
+   "estimate": 0.7783755622188906,
+   "interval_bonferroni": [
+    0.7536599192094193,
+    0.7998791914481242
+   ],
+   "interval_delta": [
+    0.7604191668926205,
+    0.7967559764904365
+   ],
+   "half_width": 0.02310963611935246,
+   "stored_clear_rate": 0.7785,
+   "stored_half_width": 0.01818945756592505,
+   "half_width_ratio": 1.2704961671119075,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "above",
+   "full_verdict": "not_qualified",
+   "agreement": true,
+   "disagreement_kind": "half-width only",
+   "runs_needed": 2671,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/t076/v8",
+   "kind": "fullrun",
+   "n_runs": 2796,
+   "e4_pass": 0.9606580829756796,
+   "e4_bounds": [
+    0.9515572034243647,
+    0.9681064998032389
+   ],
+   "cyn_rate": 0.7974683544303798,
+   "cyn_battles": 2686,
+   "cyn_bounds": [
+    0.7795395506877952,
+    0.814286467803654
+   ],
+   "estimate": 0.7660944206008584,
+   "interval_bonferroni": [
+    0.7417764748111642,
+    0.7883160221825383
+   ],
+   "interval_delta": [
+    0.7505633616090707,
+    0.781946856581911
+   ],
+   "half_width": 0.023269773685687056,
+   "stored_clear_rate": 0.7660944206008584,
+   "stored_half_width": 0.015684132537086892,
+   "half_width_ratio": 1.4836506660896331,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 6384,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/t076/v8",
+   "kind": "topup",
+   "n_runs": 2796,
+   "e4_pass": 0.9606580829756796,
+   "e4_bounds": [
+    0.9515572034243647,
+    0.9681064998032389
+   ],
+   "cyn_rate": 0.7983553807651055,
+   "cyn_battles": 2797,
+   "cyn_bounds": [
+    0.7808227274632291,
+    0.8148181620478847
+   ],
+   "estimate": 0.766946549619125,
+   "interval_bonferroni": [
+    0.7429974909150951,
+    0.788830758836286
+   ],
+   "interval_delta": [
+    0.7517007616565219,
+    0.7825015484571947
+   ],
+   "half_width": 0.0229166339605954,
+   "stored_clear_rate": 0.7660944206008584,
+   "stored_half_width": 0.015684132537086892,
+   "half_width_ratio": 1.4611349340747055,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 5585,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/job-20261008T235244Z-2d8f18",
+   "kind": "fullrun",
+   "n_runs": 2000,
+   "e4_pass": 0.9845,
+   "e4_bounds": [
+    0.9769844781153114,
+    0.989587547959268
+   ],
+   "cyn_rate": 0.7856780091416963,
+   "cyn_battles": 1969,
+   "cyn_bounds": [
+    0.7642368129013115,
+    0.8056651056478386
+   ],
+   "estimate": 0.7735,
+   "interval_bonferroni": [
+    0.7466475038088968,
+    0.7972761563743891
+   ],
+   "interval_delta": [
+    0.7553716732166282,
+    0.7920633923856669
+   ],
+   "half_width": 0.025314326282746158,
+   "stored_clear_rate": 0.7735,
+   "stored_half_width": 0.018334046848551333,
+   "half_width_ratio": 1.3807276970466764,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 2612,
+   "not_estimable": null,
+   "duplicate_of": null
+  },
+  {
+   "dir": "runs/job-20261008T235244Z-2d8f18",
+   "kind": "topup",
+   "n_runs": 2000,
+   "e4_pass": 0.9845,
+   "e4_bounds": [
+    0.9769844781153114,
+    0.989587547959268
+   ],
+   "cyn_rate": 0.7841079460269865,
+   "cyn_battles": 2001,
+   "cyn_bounds": [
+    0.7627940527067111,
+    0.803998799476621
+   ],
+   "estimate": 0.7719542728635682,
+   "interval_bonferroni": [
+    0.7452379494931295,
+    0.7956272005362646
+   ],
+   "interval_delta": [
+    0.7539197749713067,
+    0.7904201735721816
+   ],
+   "half_width": 0.025194625521567537,
+   "stored_clear_rate": 0.7735,
+   "stored_half_width": 0.018334046848551333,
+   "half_width_ratio": 1.374198818716245,
+   "contains_stored": true,
+   "stored_threshold_verdict": "above",
+   "stored_full_verdict": "qualified",
+   "threshold_verdict": "borderline",
+   "full_verdict": "borderline",
+   "agreement": false,
+   "disagreement_kind": "threshold",
+   "runs_needed": 2962,
+   "not_estimable": null,
+   "duplicate_of": null
+  }
+ ]
+}

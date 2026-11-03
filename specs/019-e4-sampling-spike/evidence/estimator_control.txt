@@ -1,0 +1,3 @@
+dir | kind | n | stored clear [ci] | composite [bonferroni] | [delta] | hw ratio | contains | stored tv/full | composite tv/full | kind | runs_needed | note
+<control> | topup | 2000 | 0.6650 [0.6443, 0.6857] | 0.6650 [0.6346, 0.6934] | [0.6451, 0.6855] | 1.42 | True | below/not_qualified | below/not_qualified | agree | - | 
+control: composite threshold verdict 'below' (Cynthia-only would be 'above'): ok
