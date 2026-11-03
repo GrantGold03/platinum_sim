@@ -235,8 +235,20 @@ confirmed by the research stage:
   B2 quick end to end at equal levels. Fallbacks if the spike fails: a cheaper player for Aaron / Bertha / Flint only
   (ceiling about 1.6x, needs greedy-v1's per-trainer rates measured first), else nothing, with the numbers recorded.
   Two product questions left for `/speckit-clarify`: wall time the only goal; a team-dependent saving acceptable.
-- **Lead per fight** (idea 2, suggested slug `lead-per-fight`): the first party slot leads every battle today
-  (`sim/gauntlet.mjs` builds the party in team order). In the game the party can be reordered between the Elite Four
-  rooms, so a different lead per trainer is legal play. To research: the decomp's menu access between rooms;
-  whether the optimizer or the player policy should choose the lead (6 leads × 5 trainers); the exp participation
-  mask (the lead earns exp), so the choice also moves the levels later fights are played at.
+- **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
+  version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),
+  the Elite Four room scripts release control after each win, the party menu's Switch reorders, and the battle lead is
+  the first living non-egg slot (`battle_controller_player.c:4097`). Today the lead is the first species in the optimize
+  request (`OptimizeRequest.species` order = team order) and nothing reports it. Measured (100 paired gauntlets per lead,
+  v4, `measurement/`): the six fixed leads span **12, 8 and 15 points of clear rate** on the bench, reference and 018 B2
+  teams, almost all at Cynthia (Aaron and Flint 100/100 under every lead); best fixed lead vs slot 1: +6, +2, 0 (not
+  significant at n 100; B2's first-listed Garchomp was already best). **A per-fight lead adds under one point over the
+  best fixed lead** on all three teams (per-trainer best-lead product 0.921 / 0.980 / 0.830 vs best fixed 0.92 / 0.98 /
+  0.83), so the idea as stated is closed with its numbers (reopen only on a team with a per-trainer lead conflict).
+  **Going forward as "choose and report the lead"**, small features in order: (1) spike: six leads × 2,000 paired
+  gauntlets on the two optimizer-built 014 B2 teams, McNemar best vs first-listed, plus a 400-pair subset to size a
+  screening check; (2) the lead named in every output (team.txt, result.json, xlsx/csv, web) and the rule documented,
+  no behaviour change; (3) only if the spike shows a supported gain: a paired six-lead check in the optimizer's
+  confirmation stage (screening-sized, best lead confirmed at full size, team written with it first), `evaluate
+  --lead-check`, the no-check path kept as the reference; B2 quick at equal levels with the lead's own exp gain (0.7 to
+  1.4 levels) reported separately. Cheapest after e4-scope's Cynthia-only phase exists, but independent of it.
