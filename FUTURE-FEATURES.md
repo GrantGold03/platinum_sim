@@ -206,3 +206,24 @@ replay test (`sim/test/replay.test.mjs`) green if exact, or be a new policy name
   near-threshold team with `paired_policies.py --teams file:<team.json>`; (b) the exact items D, F, E, H (above) are
   019+; (c) the ladder's four teams sat at 0.80 to 0.95 clear rate, so any future player comparison should include a
   team at the qualification threshold.
+
+## 8. Ideas under assessment (user, 2026-11-03)
+
+Raw ideas, not yet decided. Each goes through the Spec Kit `assess` extension (`.specify/assessments/<slug>/`: intake →
+research → define → shape → decide) before any `/speckit-specify`. First-glance facts from the code and reports, to be
+confirmed by the research stage:
+
+- **E4 scope** (two ideas, one assessment, suggested slug `e4-scope`): (1) do not model XP gains during the Elite Four;
+  (3) drop the four Elite Four battles and evaluate Cynthia only, since she is almost always the deciding fight.
+  Evidence already on record: the README's own evaluations give gauntlet clear rate 0.9445 against Cynthia P(win |
+  reached) 0.9450, and 0.8645 against 0.8676, so the Elite Four decides well under 1% of runs on those teams (the
+  per-trainer clear rates and loss causes in every report say the same per trainer). Trade-off to shape: the sim
+  ports the game's exp, participation and mid-battle level-up rules (`sim/exp.mjs`, decomp-cited), so the levels and
+  PP Cynthia is fought at depend on the four earlier battles; dropping them means either fighting her at the starting
+  levels (pessimistic) or estimating the Elite Four's exp deterministically. Potential gain: four of the five battles
+  per gauntlet (their share of wall time is unmeasured) in evaluate, the level search and the confirmation stage.
+- **Lead per fight** (idea 2, suggested slug `lead-per-fight`): the first party slot leads every battle today
+  (`sim/gauntlet.mjs` builds the party in team order). In the game the party can be reordered between the Elite Four
+  rooms, so a different lead per trainer is legal play. To research: the decomp's menu access between rooms;
+  whether the optimizer or the player policy should choose the lead (6 leads × 5 trainers); the exp participation
+  mask (the lead earns exp), so the choice also moves the levels later fights are played at.
