@@ -211,3 +211,7 @@ The full pytest suite is skipped for this merge because (a) and (b) hold (clarif
 Commits on the branch: 7ee2957 (US1), 7f08f27 (US2), f9c717c (US3 + docs), then this one (gates). Merge to `main` only on the user's go:
 `git checkout main && git merge --ff-only 019-e4-sampling-spike && git push`. The decision the feature leaves open is recorded in T022 and
 FUTURE-FEATURES section 8: whether feature 021 adopts the delta-method interval.
+
+## Decision (user, 2026-11-03, 4:50 PM EST)
+
+Adopt the delta-method interval for feature 021: the conditional go becomes **go**. Feature 019 merged to `main` on the user's go.

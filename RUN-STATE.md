@@ -6,7 +6,7 @@
   specified; the delta interval agrees on all ten); (2) the replay on two fresh 2,000-run recordings passes (reference: 81 to 91%
   Cynthia-only at floors 0.99 / 0.98, verdict unchanged; B3: never switches); (3) Elite Four 0.72 of battle time on the pool, harness
   proven by identical digests. Projection 1.85 to 2.87x on a reference evaluation. **Verdict: no-go as specified, conditional go:
-  the owner decides whether 021 adopts the delta-method interval** (then go) or keeps Bonferroni (then not built). Evidence
+  the owner decided (4:50 PM EST) to adopt the delta-method interval: 021 is go**; 019 merged to `main`. Evidence
   `runs/019-evidence/` (local, gitignored) with summaries under `specs/019-e4-sampling-spike/evidence/`; log
   `specs/019-e4-sampling-spike/validation-log.md`. Merge gate per clarification: fast-mode pytest + Node suite + hash check (full
   suite skipped on that evidence). Merge on the user's go. Next: the user's decision on the interval, then 020 (lead spike).

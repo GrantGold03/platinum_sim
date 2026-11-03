@@ -246,6 +246,8 @@ confirmed by the research stage:
   battle time: PASS. Projection: 2.63 to 2.87x at floor 0.98, 1.85 to 2.40x at 0.99 on a reference-team evaluation (model baseline
   255 s with v4); B2 quick bracket 1.00 to 1.38x. **Decision needed**: amend 021's interval to the delta method (then go: every
   criterion met) or keep Bonferroni (then threshold teams need 2,700 to 5,600 full runs to resolve, and the method is not built).
+  **User decision 2026-11-03: adopt the delta-method interval for feature 021 → go.** 021 (adaptive sampling in `evaluate`) is
+  specified with the delta interval as the method's interval; its paired acceptance against the full gauntlet checks it on real runs.
 - **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
   version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),
   the Elite Four room scripts release control after each win, the party menu's Switch reorders, and the battle lead is
