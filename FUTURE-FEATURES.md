@@ -213,15 +213,28 @@ Raw ideas, not yet decided. Each goes through the Spec Kit `assess` extension (`
 research → define → shape → decide) before any `/speckit-specify`. First-glance facts from the code and reports, to be
 confirmed by the research stage:
 
-- **E4 scope** (two ideas, one assessment, suggested slug `e4-scope`): (1) do not model XP gains during the Elite Four;
-  (3) drop the four Elite Four battles and evaluate Cynthia only, since she is almost always the deciding fight.
-  Evidence already on record: the README's own evaluations give gauntlet clear rate 0.9445 against Cynthia P(win |
-  reached) 0.9450, and 0.8645 against 0.8676, so the Elite Four decides well under 1% of runs on those teams (the
-  per-trainer clear rates and loss causes in every report say the same per trainer). Trade-off to shape: the sim
-  ports the game's exp, participation and mid-battle level-up rules (`sim/exp.mjs`, decomp-cited), so the levels and
-  PP Cynthia is fought at depend on the four earlier battles; dropping them means either fighting her at the starting
-  levels (pessimistic) or estimating the Elite Four's exp deterministically. Potential gain: four of the five battles
-  per gauntlet (their share of wall time is unmeasured) in evaluate, the level search and the confirmation stage.
+- **E4 scope** (ideas 1 and 3; assessed 2026-11-03, `.specify/assessments/e4-scope/`, verdict **go** for a reshaped
+  version). Research (stored 2,000-run reports, `scan_results.py`; one read-only timing run, `e4_time.mjs`): the four
+  Elite Four battles are **70% of player decision time** (Cynthia 30%, though hers is the longest battle at 18.6 turns);
+  Aaron, Bertha and Flint are at 0.996 or better in every stored run; **Lucian is the only Elite Four member who decides
+  runs**, and on teams at 0.77 to 0.81 clear rate he decides 7 to 46% of the losses (bench-010 B3: Lucian 0.8945,
+  gauntlet 0.7715, Cynthia conditional 0.8625, so a Cynthia-only rate would pass a failing team). Members arrive at
+  Cynthia 0 to 2 levels above their start levels with PP spent and berries eaten. **Closed**: "drop the Elite Four,
+  Cynthia only from the start levels" (wrong statistic, wrong state) and "ignore Elite Four exp" (no measurable time
+  saving, lower fidelity; a Principle I divergence). **Going forward as Option C**: adaptive Elite Four sampling that
+  generalises the Cynthia top-up: full gauntlets run until each Elite Four member's pass rate is proven (Wilson
+  lower-bound floor), banking real post-Lucian states; the remaining runs are Cynthia-only from banked states; the
+  gauntlet clear rate becomes Elite Four pass rate × Cynthia conditional rate with a conservative combined interval;
+  Lucian-heavy teams degrade to the full gauntlet by construction. Ceiling 2 to 3x on strong teams against a 1.5x bar
+  (baselines: `evaluate` reference 2,000 runs 769 s; B2 quick optimize 350 s). Three small features in order:
+  (1) **spike, no behaviour change**: replay the composite estimate offline against the ten stored 2,000-run evaluations
+  (must reproduce clear rate within the interval and the qualified / borderline verdict on every team, B3 included) and
+  measure the Elite Four share inside one real level-search stage; kill criteria written in `decision.md`;
+  (2) `evaluate` with adaptive sampling, paired against the full gauntlet on the four 018 ladder teams plus one
+  Lucian-heavy team, full gauntlet kept behind a flag as the reference; (3) the optimizer stages on the same estimator,
+  B2 quick end to end at equal levels. Fallbacks if the spike fails: a cheaper player for Aaron / Bertha / Flint only
+  (ceiling about 1.6x, needs greedy-v1's per-trainer rates measured first), else nothing, with the numbers recorded.
+  Two product questions left for `/speckit-clarify`: wall time the only goal; a team-dependent saving acceptable.
 - **Lead per fight** (idea 2, suggested slug `lead-per-fight`): the first party slot leads every battle today
   (`sim/gauntlet.mjs` builds the party in team order). In the game the party can be reordered between the Elite Four
   rooms, so a different lead per trainer is legal play. To research: the decomp's menu access between rooms;
