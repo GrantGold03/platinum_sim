@@ -4,7 +4,7 @@
   xfailed, 2 failed in 54 min 46 s; the two failures were `battle_sim` tests pinning the literal `expectimax2-v2` as the
   report's player (`test_evaluate.py::test_determinism_fast`, `test_optimize_small.py::test_optimize_quick_deterministic_and_legal`),
   fixed to `DEFAULT_PLAYER_POLICY` and rerun green (2 passed, 22 min 29 s). Code unchanged between runs. Fast-forward
-  0edba14 + test fix + docs → MERGE_HASH. Nothing is running. **Trap**: any test asserting the default player must use
+  0edba14 + test fix + docs → e2bbf2a. Nothing is running. **Trap**: any test asserting the default player must use
   `platsim.evaluate.DEFAULT_PLAYER_POLICY`, never the literal; the fast set does not reach the `battle_sim` ones. Next
   feature: the user's choice from FUTURE-FEATURES (section 7 follow-up (a) milder v4 set near the threshold; exact items
   D, F, E, H as 019+; section 3 Shift; section 4 plain-language output; section 0 H4+ item groups).
