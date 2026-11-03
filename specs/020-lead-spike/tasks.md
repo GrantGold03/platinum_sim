@@ -96,8 +96,8 @@ every number.
 ## Phase 6: Polish, gates and merge
 
 - [X] T018 [P] Record the feature in `README.md` (one paragraph after the 019 block: what was measured, the numbers, the decision; no behaviour change) and `RUN-STATE.md` START HERE
-- [ ] T019 Gates, in order, nothing else running: (a) the code hashes equal the T001 before-hashes; (b) `git diff --stat main -- sim src/platsim` empty; (c) `(cd sim && node --test test/*.test.mjs)` green; (d) `uv run pytest -q -m "not battle_sim"` green with the battle split clean; log each output with Eastern times and the sentence that the full suite is skipped because (a) and (b) hold (FR-012, SC-006)
-- [ ] T020 Commit 4: `docs(020): README, RUN-STATE, gates recorded`; push; report to the user with the decision and the numbers. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 020-lead-spike && git push`)
+- [X] T019 Gates, in order, nothing else running: (a) the code hashes equal the T001 before-hashes; (b) `git diff --stat main -- sim src/platsim` empty; (c) `(cd sim && node --test test/*.test.mjs)` green; (d) `uv run pytest -q -m "not battle_sim"` green with the battle split clean; log each output with Eastern times and the sentence that the full suite is skipped because (a) and (b) hold (FR-012, SC-006)
+- [X] T020 Commit 4: `docs(020): README, RUN-STATE, gates recorded`; push; report to the user with the decision and the numbers. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 020-lead-spike && git push`)
 
 ---
 

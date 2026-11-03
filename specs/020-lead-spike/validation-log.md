@@ -133,3 +133,31 @@ agreed on the other two. Level gains: chosen lead versus the others' mean -0.24 
 **Verdict for the confirmation-stage check: no-go** (question 2's rule); the reporting follow-on (the lead named in every output) stands.
 Note for the follow-on: on all three optimizer-built teams (the same six species at different levels) Garchomp first was the best or within
 the noise of the best lead, and Garchomp leading also levels the most; a lead choice bundles matchup and exp (research R6).
+
+## T019 Gates (6:15:34 to 6:28:02 PM EST, nothing else running)
+
+```
+=== gates start 6:15:34 PM EST
+sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b sha256:e01c1cfd882af6859226bcf65e3327a259f1860c2796f8fe8d500f3400ee50c3
+diff main -- sim src/platsim lines=0
+node exit=0
+# tests 351
+# pass 351
+# fail 0
+# duration_ms 146432.689156
+fast start 6:18:01 PM EST
+fast exit=0
+================================= battle split =================================
+0 battle worker starts; 0 marked tests reached it; under-marked 0, started outside a test 0, over-marked 0
+554 passed, 28 deselected, 4 xfailed, 1 warning in 598.35s (0:09:58)
+=== gates end 6:28:02 PM EST
+```
+
+(a) Code hashes equal the T001 before-hashes. (b) `git diff --stat main -- sim src/platsim`: empty. (c) Node suite 351 pass, 0 fail, 146.4 s.
+(d) Fast-mode pytest 554 passed, 28 deselected, 4 xfailed, exit 0, 598.4 s (547 after 019; the 7 new tests are the lead-spike tests); battle
+split clean. The full pytest suite is skipped for this merge because (a) and (b) hold (FR-012, SC-006).
+
+## T020 Close
+
+Commits on the branch: 45ca503 (scripts and tests), abb375c (recordings and the split-sample test), 14d047d (records and docs), then this
+one (gates). Merge to `main` only on the user's go: `git checkout main && git merge --ff-only 020-lead-spike && git push`.
