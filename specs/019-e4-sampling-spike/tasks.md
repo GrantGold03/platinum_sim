@@ -110,8 +110,8 @@ section 8 carries the go / no-go with its numbers.
 ## Phase 6: Polish, gates and merge
 
 - [X] T024 [P] Record the feature in `README.md` (one paragraph after the 018 block: what was measured, the three numbers, the decision; no behaviour change) and `RUN-STATE.md` START HERE (state, hashes, next feature)
-- [ ] T025 Gates, in order, nothing else running: (a) `uv run python -c "from platsim import version; print(version.sim_code_hash(), version.platsim_code_hash())"` equals the T001 before-hashes; (b) `git diff --stat main -- sim src/platsim` is empty; (c) `(cd sim && node --test test/*.test.mjs)` green (replay fixture and determinism tests included); (d) `uv run pytest -q -m "not battle_sim"` green with the battle split clean; log each output with Eastern times and the sentence that the full suite is skipped because (a) and (b) hold (clarification 3, SC-007)
-- [ ] T026 Commit 4: `docs(019): README, RUN-STATE, gates recorded`; push; report to the user with the go / no-go and the numbers. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 019-e4-sampling-spike && git push`)
+- [X] T025 Gates, in order, nothing else running: (a) `uv run python -c "from platsim import version; print(version.sim_code_hash(), version.platsim_code_hash())"` equals the T001 before-hashes; (b) `git diff --stat main -- sim src/platsim` is empty; (c) `(cd sim && node --test test/*.test.mjs)` green (replay fixture and determinism tests included); (d) `uv run pytest -q -m "not battle_sim"` green with the battle split clean; log each output with Eastern times and the sentence that the full suite is skipped because (a) and (b) hold (clarification 3, SC-007)
+- [X] T026 Commit 4: `docs(019): README, RUN-STATE, gates recorded`; push; report to the user with the go / no-go and the numbers. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 019-e4-sampling-spike && git push`)
 
 ---
 

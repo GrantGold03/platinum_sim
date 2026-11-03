@@ -180,3 +180,34 @@ clarification on its spec, every criterion is met and the verdict is go**, with 
 and no change on threshold teams. Otherwise the fallback order from the concept note applies: a cheaper player for Aaron, Bertha and Flint
 only after its per-trainer rates are measured; else nothing. Side findings for the record: B3 at its stored levels clears 0.7430 under v4
 (borderline) against 0.7715 under v2; the reference team 0.9345 under v4 against 0.9445 under v2.
+
+## T025 Gates (4:31:55 to 4:45:37 PM EST, nothing else running)
+
+```
+=== gates start 4:31:55 PM EST
+sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b sha256:e01c1cfd882af6859226bcf65e3327a259f1860c2796f8fe8d500f3400ee50c3
+diff main -- sim src/platsim:
+diff exit=0 lines=0
+node exit=0
+# tests 351
+# pass 351
+# fail 0
+# duration_ms 171569.878316
+fast start 4:34:47 PM EST
+fast exit=0
+================================= battle split =================================
+0 battle worker starts; 0 marked tests reached it; under-marked 0, started outside a test 0, over-marked 0
+547 passed, 28 deselected, 4 xfailed, 1 warning in 646.89s (0:10:46)
+=== gates end 4:45:37 PM EST
+```
+
+(a) Code hashes equal the T001 before-hashes (sim `299b1b55…`, platsim `e01c1cfd…`). (b) `git diff --stat main -- sim src/platsim`: empty, exit 0.
+(c) Node suite: 351 pass, 0 fail, exit 0, 171.6 s (replay fixture and determinism tests included). (d) Fast-mode pytest: 547 passed, 28 deselected,
+4 xfailed, 1 warning, exit 0, 646.9 s; battle split clean (535 before this feature; the 12 new tests are the estimator and replay tests).
+The full pytest suite is skipped for this merge because (a) and (b) hold (clarification 3, SC-007); the fast suite and the Node suite are the gate.
+
+## T026 Close
+
+Commits on the branch: 7ee2957 (US1), 7f08f27 (US2), f9c717c (US3 + docs), then this one (gates). Merge to `main` only on the user's go:
+`git checkout main && git merge --ff-only 019-e4-sampling-spike && git push`. The decision the feature leaves open is recorded in T022 and
+FUTURE-FEATURES section 8: whether feature 021 adopts the delta-method interval.
