@@ -1,4 +1,14 @@
-# START HERE (updated 2026-11-03, 4:35 PM EST, feature 019 spike done on its branch; decision pending)
+# START HERE (updated 2026-11-03, 6:20 PM EST, feature 020 spike done on its branch; merge on the user's go)
+
+- **Feature 020 `020-lead-spike` implemented 2026-11-03 on its branch (from `main` ade9f9d), measurement only: no file under `sim/` or
+  `src/platsim` changed.** Six leads × 2,000 paired gauntlets (v4) on three optimizer-built teams (014 b2-main, 014 b2-branch, 018 v2
+  B2): spreads 9.2 / 10.2 / 8.7 points; split-sample test (best lead on pairs 0..999, McNemar on 1000..1999): no supported gain on any
+  team (b2main Staraptor +2.0 points p 0.121; the other two already Garchomp-first best); control 0 discordant. **Verdict: no-go for a
+  confirmation-stage lead check; the "lead named in every output" follow-on stands (go, small).** Evidence `runs/020-evidence/` (local)
+  with summaries under `specs/020-lead-spike/evidence/`; log `specs/020-lead-spike/validation-log.md`. Gate: fast-mode pytest + Node
+  suite + hash check. Merge on the user's go. Next: 021 (adaptive Elite Four sampling in `evaluate`, delta-method interval, go) or the
+  lead-reporting follow-on, user's choice.
+- (previous) feature 019 merged to `main` 2026-11-03 (user decision: delta-method interval; 021 is go).
 
 - **Feature 019 `019-e4-sampling-spike` implemented 2026-11-03 on its branch (from `main` 1ca9bb3), measurement only: no file under
   `sim/` or `src/platsim` changed (hashes `sha256:299b1b…` / `sha256:e01c1c…` unchanged).** Three questions answered: (1) the composite

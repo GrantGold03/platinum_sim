@@ -489,6 +489,13 @@ and 0.98) with the verdict unchanged, a projected 1.9 to 2.9x; on a Lucian-heavy
 matches the ten stored evaluations, but the conservative product interval chosen for the spike turns four threshold teams borderline,
 so the follow-on waits on a decision about the interval (details: the feature's validation log and FUTURE-FEATURES section 8).
 
+Feature 020 (2026-11-03, `specs/020-lead-spike/`, measurement only, no behaviour change): a spike on choosing the lead (the
+first party slot). Six leads × 2,000 paired gauntlets on three optimizer-built teams: the six fixed leads span 8.7 to 10.2 points of
+clear rate, almost all at Cynthia. The best lead chosen on the first 1,000 pairs and tested on the second 1,000 beat the first-listed
+lead on no team with statistical support (b2main +2.0 points, p 0.12; on the other two the first-listed Garchomp was already best), so
+the optimizer gets no lead search for now; naming the lead in every output is the follow-on that stands. Today the lead is the first
+species listed in the optimize request.
+
 Measured run times:
 
 | Run | Wall time |

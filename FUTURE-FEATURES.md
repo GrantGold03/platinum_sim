@@ -265,3 +265,13 @@ confirmed by the research stage:
   confirmation stage (screening-sized, best lead confirmed at full size, team written with it first), `evaluate
   --lead-check`, the no-check path kept as the reference; B2 quick at equal levels with the lead's own exp gain (0.7 to
   1.4 levels) reported separately. Cheapest after e4-scope's Cynthia-only phase exists, but independent of it.
+  **Feature 020 spike result (2026-11-03, `specs/020-lead-spike/`, no behaviour change): no-go for the confirmation-stage check;
+  the reporting follow-on stands.** Six leads × 2,000 paired gauntlets (v4) on three optimizer-built teams: spreads 9.2 / 10.2 / 8.7
+  points (b2main, b2branch, 018 v2 B2), almost all at Cynthia (up to 8 points) with Lucian up to 3.5. Best lead chosen on the first
+  1,000 pairs and tested on the second 1,000 (McNemar exact, so the best-of-six selection never touches the test): b2main chose
+  Staraptor, held-out +2.0 points, only-chosen 85 / only-first 65, p 0.121 (naive 2,000-pair p 0.0695, selection-biased); b2branch and
+  b2v2: the first-listed Garchomp was already best (0 discordant). Pairing control 0 discordant on all three. Screening: 200 pairs
+  picked the 1,000-pair lead on all three teams, 400 pairs missed on b2main. Exp coupling: the lead gains 0.9 to 2.0 levels, Garchomp
+  leading the most (+0.85 over the others' mean). **Follow-ons**: (a) the lead named in every output and the rule documented (go,
+  small); (b) no confirmation-stage lead check now; reopen if a future optimizer-built team shows a held-out gain, e.g. by adding a
+  cheap first-half-of-confirmation lead screen as a report-only column.
