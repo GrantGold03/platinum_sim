@@ -65,3 +65,49 @@ platsim evaluate [adaptive]: Elite Four proven after 35 full runs (floor 0.9); 3
 sampling_detail: floor 0.9, full 35 / Cynthia-only 45, switch 35, discarded 29 (one 64-run chunk overshoot, the price of batch independence),
 banked 35, Elite Four pass 1.0 [0.901, 1.0], Cynthia 0.9625 over 80 battles, composite [0.9218, 1.0]; 3 loss causes (Cynthia-only losses
 replayed). The full path's own determinism test (`test_evaluate.py -k determinism_fast`) still passes (135 s). Copies in `evidence/hand/`.
+
+## T013-T016 Acceptance script and controls
+
+`scripts/acceptance.py` (paired full then adaptive per team on one pool, same master seed `021-acc`, the table, the floor-0.98 alternative
+for teams whose switch run at 0.99 is above 1,000 or absent, `--control`); its pure helpers are tested in `tests/unit/test_sampling.py`.
+**Deviation from FR-012 (six teams):** the policy benchmark fixture (`tests/fixtures/policy_benchmark_team.json`) cannot be evaluated
+through `evaluate` at all: its builds carry placeholder sources (`reference-fixture`) that the report writer refuses
+(`report/sources.py`), and it fails in-game legality (15 violations). It exists for the simulator-side benchmark tools, which never
+write reports. A bypass was tried (8:20 PM EST, `bench-smoke`) and failed in the report writer, so the acceptance runs on the five
+legal teams. **Second finding:** the 018 v2 B2 team (`runs/018-evidence/b2-expectimax2-v2`) is the same team at the same levels as the
+014 `b2-branch` result (the 018 run reproduced it), so its rows are identical to b2branch's on the same seed: four distinct teams.
+
+Controls (8:21:28 PM EST, reference team, 200 runs, quick, exit 0):
+```
+control 1: adaptive floor 1.0 vs full, identical after removing the sampling keys: True; switch_run None
+control 2: Cynthia-only sampling 159/165 = 0.9636363636363636 vs top-up 154/165 = 0.9333333333333333; z 1.2451748631284518; within noise: True
+```
+Control 1 (floor 1.0 never switches, identical to full after removing the four sampling keys): **PASS**. Control 2 (165 Cynthia-only
+sampling runs, seed index 98, vs 165 top-up draws, index 99, on the same bank: 0.9636 vs 0.9333, z 1.25): **within noise, PASS**. A first
+attempt compared against a top-up that stopped after one battle (its rules were already met); the control now draws explicitly.
+
+## T017 Acceptance (8:22:59 to 8:50:19 PM EST, alone, 16 workers, standard budget, 2,000 runs, master `021-acc`; exit 0)
+
+```
+ref       floor 0.99  full 0.9360 [0.9244, 0.9459] n 2000  adaptive 0.9343 [0.9232, 0.9456] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.04  switch 563  full/cyn 563/1437 (share 0.719)  discarded 77  ext {'full': 0, 'cynthia_only': 0}  wall 142s/73s = 1.94x
+b2main    floor 0.99  full 0.9055 [0.8919, 0.9176] n 2000  adaptive 0.9055 [0.8919, 0.9176] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.00  switch None  full/cyn 2000/0 (share 0.000)  discarded 0  ext {'full': 0, 'cynthia_only': 0}  wall 124s/123s = 1.00x
+  alt: b2main    floor 0.98  full 0.9055 [0.8919, 0.9176] n 2000  adaptive 0.8998 [0.8857, 0.9142] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.11  switch 650  full/cyn 650/1350 (share 0.675)  discarded 118  ext {'full': 0, 'cynthia_only': 0}  wall 124s/73s = 1.70x
+b2branch  floor 0.99  full 0.7785 [0.7598, 0.7962] n 2000  adaptive 0.7785 [0.7598, 0.7962] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.00  switch None  full/cyn 2000/0 (share 0.000)  discarded 0  ext {'full': 0, 'cynthia_only': 0}  wall 128s/128s = 1.00x
+  alt: b2branch  floor 0.98  full 0.7785 [0.7598, 0.7962] n 2000  adaptive 0.7901 [0.7717, 0.8088] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.02  switch 280  full/cyn 280/1720 (share 0.860)  discarded 104  ext {'full': 0, 'cynthia_only': 0}  wall 128s/62s = 2.06x
+b2v2      floor 0.99  full 0.7785 [0.7598, 0.7962] n 2000  adaptive 0.7785 [0.7598, 0.7962] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.00  switch None  full/cyn 2000/0 (share 0.000)  discarded 0  ext {'full': 0, 'cynthia_only': 0}  wall 127s/128s = 1.00x
+  alt: b2v2      floor 0.98  full 0.7785 [0.7598, 0.7962] n 2000  adaptive 0.7901 [0.7717, 0.8088] n 2000  contained True  verdicts qualified/qualified agree True  hw x1.02  switch 280  full/cyn 280/1720 (share 0.860)  discarded 104  ext {'full': 0, 'cynthia_only': 0}  wall 127s/62s = 2.05x
+b3        floor 0.99  full 0.7550 [0.7357, 0.7733] n 2000  adaptive 0.7550 [0.7357, 0.7733] n 2000  contained True  verdicts borderline/borderline agree True  hw x1.00  switch None  full/cyn 2000/0 (share 0.000)  discarded 0  ext {'full': 0, 'cynthia_only': 0}  wall 143s/146s = 0.98x
+  alt: b3        floor 0.98  full 0.7550 [0.7357, 0.7733] n 2000  adaptive 0.7550 [0.7357, 0.7733] n 2000  contained True  verdicts borderline/borderline agree True  hw x1.00  switch None  full/cyn 2000/0 (share 0.000)  discarded 0  ext {'full': 0, 'cynthia_only': 0}  wall 143s/140s = 1.02x
+{"all_contained": true, "all_agree": true, "ratios": {"ref": 1.9408592057993932, "b2main": 1.0047402828731713, "b2branch": 0.9998131745000735, "b2v2": 0.997305579999281, "b3": 0.9829747021553404}, "start": "2026-11-03 8:22:59 PM EST", "end": "2026-11-03 8:50:18 PM EST", "sim_code_hash": "sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b", "platsim_code_hash": "sha256:d7fe0dfb6553b78648793c63933d970d01cb8ab5ee61cf367df3aafac9288732"}
+```
+
+**SC-001: PASS** on all five teams (adaptive estimate inside the full run's 95% interval; verdicts agree, including B3 borderline on
+both sides). **SC-002:** reference team **1.94x** at floor 0.99 (switch after 563 full runs, 72% Cynthia-only, 77 discarded); the three B2
+teams never reach 0.99 (Lucian about 0.99 on them) and sit at 1.00x; at the 0.98 alternative they switch after 650 / 280 / 280 full runs for
+**1.70x / 2.06x / 2.05x** with containment and agreement intact (b2main 0.8998 vs 0.9055; b2branch 0.7901 vs 0.7785); B3 never switches at
+either floor (0.98 to 1.02x). Half-width ratio 1.00 to 1.11. No extension runs were needed on any team. Code hashes: sim
+`299b1b55…` (unchanged), platsim `d7fe0dfb…`. Copies under `evidence/acceptance/` (table, controls, thirteen result.json files).
+
+**Observation for the default decision:** the floor 0.99 is the safe choice on threshold-band teams (no switch, nothing lost) but gives
+the saving only on teams whose Elite Four members are at or above about 0.995; 0.98 gives the saving on teams at about 0.99 as well, with
+the composite still inside the full interval here. The choice of default floor is part of the default decision (T021).

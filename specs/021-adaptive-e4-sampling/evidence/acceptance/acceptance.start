@@ -1,0 +1,12 @@
+T016 control start 8:17:19 PM EST
+control exit=0
+T017 acceptance start 8:18:48 PM EST
+acceptance exit=1
+T017 acceptance end 8:19:28 PM EST
+bench smoke start 8:20:20 PM EST
+bench smoke exit=1
+T016 control (rerun) start 8:21:28 PM EST
+control exit=0
+T017 acceptance start 8:22:59 PM EST
+acceptance exit=0
+T017 acceptance end 8:50:19 PM EST

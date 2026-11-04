@@ -1,6 +1,6 @@
 """Feature 021 acceptance (research R11): adaptive against full, paired on the same seeds, on six teams; two controls.
 
-usage: uv run python specs/021-adaptive-e4-sampling/scripts/acceptance.py [--teams bench,ref,b2main,b2branch,b2v2,b3]
+usage: uv run python specs/021-adaptive-e4-sampling/scripts/acceptance.py [--teams ref,b2main,b2branch,b2v2,b3]
          [--runs 2000] [--workers 16] [--floor 0.99] [--alt-floor 0.98] [--budget standard] [--out FILE]
        uv run python specs/021-adaptive-e4-sampling/scripts/acceptance.py --control [--workers 16]
 """
@@ -81,6 +81,10 @@ def fmt_row(r: dict) -> str:
 # ---- team loading ----
 
 def load_team_candidate(name: str):
+    """(TeamCandidate, ledger) through the same loader `evaluate` uses. The policy benchmark fixture (`bench`) cannot be
+    evaluated this way: its builds carry placeholder sources ("reference-fixture") that the report writer refuses
+    (`report/sources.py`), and it fails in-game legality (15 violations); it exists for the simulator-side benchmark
+    tools, which never write reports. It is therefore not in the default team list."""
     from platsim.evaluate import load_and_validate
 
     rel, key = TEAMS[name]
@@ -109,7 +113,8 @@ def run_one(team, led, pool, *, runs: int, seed: str, budget: str, sampling: str
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--teams", default="bench,ref,b2main,b2branch,b2v2,b3")
+    ap.add_argument("--teams", default="ref,b2main,b2branch,b2v2,b3",
+                    help="bench (the policy benchmark fixture) is excluded: not evaluable through the report writers")
     ap.add_argument("--runs", type=int, default=2000)
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--floor", type=float, default=0.99)
@@ -174,10 +179,19 @@ def control(a) -> int:
         n_s = len(cyn)
         w_s = sum(bool(r["battles"][0]["won"]) for r in cyn)
         wteam = worker_team(team, led)
-        topup = champion_topup(pool, wteam, ev.results, master_seed="021-ctl", budget="quick", max_topup=n_s)
-        # force the same number of top-up battles as sampling runs: the top-up stops early when its rules are met, so
-        # compare on whatever it ran, at least 64
-        n_t, w_t = topup.topup_battles, topup.topup_wins
+        # the top-up's own draws (seed index 99, its start_index rule) on the same bank, at the same count
+        from platsim.sim.champion import CHAMPION, TOPUP_BATTLE_INDEX, _start_index
+        from platsim.sim.seeds import derive_seed
+
+        bank = [b["state_before"] for r in ev.results for b in r["battles"] if b["trainer"] == CHAMPION]
+        reqs = [{"op": "gauntlet", "team": wteam, "seed": derive_seed("021-ctl", k, TOPUP_BATTLE_INDEX),
+                 "player_policy": ev.results[0]["player_policy"], "opponent_policy": ev.results[0]["opponent_policy"],
+                 "trainers": [CHAMPION], "start_state": bank[_start_index("021-ctl", k, len(bank))],
+                 "stop_on_loss": True, "log": "none"} for k in range(n_s)]
+        resps = pool.map(reqs)
+        n_t = len(resps)
+        w_t = sum(bool(r["battles"][0]["won"]) for r in resps)
+        del champion_topup  # not used; the explicit draws above are the control
         p_s = w_s / n_s if n_s else None
         p_t = w_t / n_t if n_t else None
         if p_s is not None and p_t is not None:
