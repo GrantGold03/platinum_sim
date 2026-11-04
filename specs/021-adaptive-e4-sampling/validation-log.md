@@ -119,3 +119,37 @@ was presented to the user with three options (adaptive at 0.99, adaptive at 0.98
 evaluate's default at floor 0.98.** Applied: `platsim.sampling.DEFAULT_FLOOR = 0.98`, `DEFAULT_SAMPLING = "adaptive"`; the CLI
 `--sampling` default and `evaluate()`'s default are adaptive; `evaluate_team` keeps `"full"` so the optimizer's stages are unchanged
 (a unit test pins all three). The existing full-path evaluate tests now pass `--sampling full` explicitly (their meaning is unchanged).
+
+## T022 Gates (10:55:26 to 11:54:24 PM EST, nothing else running, on the flipped default)
+
+```
+=== gates start 10:55:26 PM EST
+sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b sha256:f9128d6b68f493ce5d1beeb3d4f15053e5b6936e411b9cfbce5ef8215e6748c8
+diff main -- sim lines=0
+node exit=0
+# tests 351
+# pass 351
+# fail 0
+# duration_ms 144724.205914
+full start 10:57:51 PM EST
+full exit=1
+=========================== short test summary info ============================
+FAILED tests/integration/test_web_result_view.py::test_result_view - Assertio...
+1 failed, 599 passed, 4 xfailed, 1 warning in 3389.89s (0:56:29)
+FAILED tests/integration/test_web_result_view.py::test_result_view - Assertio...
+=== gates end 11:54:24 PM EST
+```
+
+(a) `sim_code_hash` `299b1b55…` unchanged (platsim hash `f9128d6b…`); `git diff --stat main -- sim`: empty. (b) Node suite 351 pass, 0 fail, 144.7 s.
+(c) Full pytest suite 10:57:51 to 11:54:20 PM EST: **599 passed, 4 xfailed, 1 failed in 3,389.9 s (56 min 30 s)**. The failure,
+`tests/integration/test_web_result_view.py::test_result_view`, pinned the result view's exact summary key set; the two new keys
+(`sampling`, `sampling_detail`) are the FR-007 web fields. The pinned set now includes them and the frozen fixture is asserted to read as
+`full` / None; rerun: `4 passed, 1 warning in 38.08s`. No file under `src/` or `sim/` changed between the two runs, so the whole
+set of 604 tests has passed on this code. Slowest: quick optimize 1,194 s, strength test 734 s, V7 evaluate (full path) 382 s, the new
+adaptive integration test 201 s.
+
+## T023 Close
+
+Commits on the branch: 728c914 (method behind the flag), 20ed8a3 (acceptance script), 1a04009 (acceptance), 516d0bc (default flip,
+user's go), then this one (gates). Merge to `main` only on the user's go: `git checkout main && git merge --ff-only 021-adaptive-e4-sampling && git push`.
+Follow-on recorded in FUTURE-FEATURES section 8: the optimizer's stages on the same method.
