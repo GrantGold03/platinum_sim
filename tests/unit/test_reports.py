@@ -426,3 +426,14 @@ def test_battle_style_round_trip_old_json_reads_as_set_and_the_sheet_and_summary
     ws = load_workbook(tmp_path / "s.xlsx")["Evaluation"]
     rows = {row[0].value: row[1].value for row in ws.iter_rows(min_col=1, max_col=2)}
     assert rows["Battle style"] == "shift"
+
+
+def test_style_of_reads_an_absent_key_as_set_whatever_the_default():
+    # 023: the worker echoes battle_style only under Shift; a response without it was played under Set even when
+    # the Python default is Shift (the bug found when the default flipped: the fallback must not follow the default)
+    from platsim.battle_style import DEFAULT_BATTLE_STYLE, style_of
+
+    assert style_of({}) == "set"
+    assert style_of({"battle_style": "shift"}) == "shift"
+    assert DEFAULT_BATTLE_STYLE in ("set", "shift")
+

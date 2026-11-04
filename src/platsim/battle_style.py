@@ -21,9 +21,12 @@ def check_style(style: str, flag: str = "battle_style") -> str:
     return style
 
 
+WORKER_ABSENT_STYLE = "set"  # the worker echoes the field only under Shift; this never follows DEFAULT_BATTLE_STYLE
+
+
 def style_of(response: dict) -> str:
-    """The style a worker response was played under (absent means ``set``)."""
-    return response.get("battle_style", DEFAULT_BATTLE_STYLE)
+    """The style a worker response was played under (absent means ``set``, whatever the Python default)."""
+    return response.get("battle_style", WORKER_ABSENT_STYLE)
 
 
 def request_fields(style: str) -> dict:

@@ -138,3 +138,17 @@ absent-field default stays `set` (Python always sends the field; raw requests fr
 report dataclass's parse default stays `set` (a result without the key predates the style). Commit:
 `feat(023): shift is the default battle style (user's go)`.
 
+
+## T022 follow-up: a bug found by the flip (5:35 to 5:45 PM EST)
+
+The flip commit 58406ea went in with `tests/integration/test_evaluate_shift.py` failing: the chain piped pytest into
+`tail`, which hid the exit code (the CLAUDE.md rule; not repeated below). Cause: `battle_style.style_of` fell back to
+`DEFAULT_BATTLE_STYLE` for a worker response without the key, so once the default became `shift` a Set run's responses
+read as Shift ("worker played shift, requested set"). The worker echoes the key only under Shift, so an absent key means
+Set whatever the Python default: `style_of` now uses a fixed `WORKER_ABSENT_STYLE = "set"`, pinned by
+`test_style_of_reads_an_absent_key_as_set_whatever_the_default`. Reruns with exit codes kept:
+
+```
+uv run pytest -q tests/unit/test_reports.py: exit 0, 17 passed
+uv run pytest -q tests/integration/test_evaluate_shift.py: exit 0, 2 passed in 234.88s (default equals --battle-style shift; set names set)
+```
