@@ -1,4 +1,11 @@
-# START HERE (updated 2026-11-04, 1:40 PM EST, feature 022 built on its branch; default kept full; full-suite gate pending)
+# START HERE (updated 2026-11-04, 3:10 PM EST, feature 022 closed on its branch, all gates green; merge waits for the user's go)
+
+- **Feature 022 `022-confirm-adaptive-sampling` closed on its branch 2026-11-04 (from `main` 93ac7c8; `main` has not moved).
+  Gates (T021, 1:36 to 3:06 PM EST): sim hash unchanged, `diff main -- sim` empty, Node 351 pass, full pytest 610 passed + 4 xfailed
+  in 1 h 28 min. Nothing is running.** Merge on the user's go: `git checkout main && git merge --ff-only 022-confirm-adaptive-sampling
+  && git push`. Next feature after the merge: the user's choice from the FUTURE-FEATURES suggested order (lead named in every output
+  is the small go item; v4 retune near the threshold; Shift). Traps: never amend or force-push (classifier denies both); `discarded`
+  counts are logged only, never in result.json (chunk-size dependent); any test asserting a default uses the constant, not a literal.
 
 - **Feature 022 `022-confirm-adaptive-sampling` built 2026-11-04 on its branch (from `main` 93ac7c8): `optimize --sampling adaptive`
   (+ `--floor`) for the confirmation stage, the runner-up paired by kind and seed, the borderline extension in `run_adaptive`, provenance

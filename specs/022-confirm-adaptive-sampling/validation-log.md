@@ -96,3 +96,25 @@ README (optimize command row, the 022 block), FUTURE-FEATURES section 8, RUN-STA
 the user with three options (keep full; adaptive at 0.98; adaptive at 0.99). **User decision: keep `full` as the optimizer's default;
 adaptive stays behind `optimize --sampling adaptive`.** No code change; the fingerprint rule and the defaults are as built. A
 standard-budget end-to-end comparison (hours) could earn the flip later (recorded in FUTURE-FEATURES).
+
+## T021 Gates (1:36:03 PM to 3:06:33 PM EST, nothing else running)
+
+Run on the final code (b5cbcfb; the default stays `full`, so no flip commit). Outputs in `runs/022-evidence/gates.txt` (copy
+`evidence/gates.txt`) and `runs/022-evidence/full.log` (slowest-25 table copied to `evidence/full-durations.txt`).
+
+```
+sim_code_hash sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b  (equals the T001 before-hash)
+git diff --stat main -- sim: 0 lines
+node --test test/*.test.mjs: 351 tests, 351 pass, 0 fail, 147 s (exit 0)
+full pytest (uv run pytest -q --durations=25), 1:38:30 PM to 3:06:33 PM EST:
+610 passed, 4 xfailed, 1 warning in 5279.89s (1:27:59)   exit 0
+```
+
+Slowest: `test_optimize_adaptive` 1,548 s (the new test), `test_optimize_small` 1,379 s, `test_policy_strength` 835 s,
+`test_v7_reference_team_2000_runs` 402 s. The suite grew from 599 to 610 passed since 021 (the 022 unit and integration tests).
+**All three gates green; the feature is closed on its branch. Merge on the user's go.**
+
+## T022 Closing commit (3:10 PM EST)
+
+`docs(022): gates recorded; feature closed on its branch` (validation log, evidence copies, tasks T021/T022 ticked, RUN-STATE).
+

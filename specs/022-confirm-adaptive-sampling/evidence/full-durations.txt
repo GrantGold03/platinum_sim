@@ -1,0 +1,27 @@
+============================= slowest 25 durations =============================
+1548.40s call     tests/integration/test_optimize_adaptive.py::test_quick_optimize_with_adaptive_confirmation_is_deterministic_and_records_the_mix
+1378.50s call     tests/integration/test_optimize_small.py::test_optimize_quick_deterministic_and_legal
+835.13s call     tests/integration/test_policy_strength.py::test_expectimax2_beats_greedy_paired
+402.44s call     tests/integration/test_evaluate.py::test_v7_reference_team_2000_runs
+224.36s call     tests/integration/test_extract.py::test_extract_twice_identical_check_and_corruption
+205.09s call     tests/integration/test_evaluate_adaptive.py::test_adaptive_sampling_switches_is_deterministic_and_equals_full_at_floor_1
+97.29s call     tests/integration/test_evaluate.py::test_determinism_fast
+95.02s call     tests/integration/test_extract.py::test_real_default_dir_is_current
+90.59s call     tests/integration/test_policy_strength.py::test_expectimax2_v2_not_worse_than_greedy_on_reversal_team
+58.19s call     tests/integration/test_web_process_determinism.py::test_child_process_matches_in_process
+47.33s call     tests/integration/test_extract.py::test_known_values_in_output
+39.20s call     tests/integration/test_evaluate.py::test_egg_move_team_exits_2_without_the_flag
+38.80s setup    tests/browser/test_page.py::test_page_walkthrough
+38.57s call     tests/unit/test_validator.py::test_validator_does_not_import_optimizer
+38.44s call     tests/integration/test_evaluate.py::test_illegal_fixture_exits_2
+20.87s call     tests/browser/test_page.py::test_page_walkthrough
+11.62s call     tests/integration/test_web.py::test_full_name_search_returns_that_pokemon_first
+8.05s call     tests/integration/test_pool.py::test_64_gauntlets_on_4_workers_match_single_worker
+7.45s call     tests/integration/test_champion_topup.py::test_deterministic_for_fixed_seed
+7.00s setup    tests/integration/test_final_levels.py::test_final_levels_match_worker
+6.98s call     tests/unit/test_optimizer_candidates.py::test_member_candidates_and_full_team_validate
+4.62s call     tests/integration/test_ability_screen.py::test_real_screen_quick_preset
+4.58s setup    tests/unit/test_story_rank.py::test_controls[MAP_HEADER_TWINLEAF_TOWN-0]
+4.23s call     tests/integration/test_final_levels.py::test_exp_items_variant
+4.14s setup    tests/integration/test_champion_topup.py::test_counts_meet_rule_on_real_run
+610 passed, 4 xfailed, 1 warning in 5279.89s (1:27:59)
