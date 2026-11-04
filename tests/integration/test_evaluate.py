@@ -30,7 +30,8 @@ ILLEGAL = FIX / "illegal_trade_evo.json"
 
 
 def _evaluate(out, *args: str) -> tuple[subprocess.CompletedProcess, float]:
-    cmd = [sys.executable, "-m", "platsim.cli", "evaluate", *args, "--out", str(out)]
+    # 021: these tests cover the full-gauntlet path (the reference); evaluate's default is adaptive since 021
+    cmd = [sys.executable, "-m", "platsim.cli", "evaluate", *args, "--sampling", "full", "--out", str(out)]
     t0 = time.perf_counter()
     p = subprocess.run(cmd, cwd=pins.REPO_ROOT, capture_output=True, text=True)
     return p, time.perf_counter() - t0

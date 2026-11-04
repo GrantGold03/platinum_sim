@@ -1,4 +1,14 @@
-# START HERE (updated 2026-11-03, 6:35 PM EST, features 019 and 020 merged to `main`; next feature is the user's choice)
+# START HERE (updated 2026-11-03, 9:00 PM EST, feature 021 built on its branch; default decided; full-suite gate pending)
+
+- **Feature 021 `021-adaptive-e4-sampling` built 2026-11-03 on its branch (from `main` c7cb162): `evaluate --sampling adaptive`
+  (+ `--floor`), new `src/platsim/sampling.py`, reports and web view carry the run mix, the top-up starts from the sampling runs;
+  `full` unchanged and the default; `sim/` untouched (sim hash `299b1b…` unchanged).** Acceptance (T017, 8:22 to 8:50 PM EST): all
+  five legal teams contained and agreeing; ref 1.94x at floor 0.99, B2 teams 1.70 to 2.06x at floor 0.98 (never switch at 0.99), B3
+  1.0x. Controls pass. **User decision (T021, 9:00 PM EST): adaptive is evaluate's default at floor 0.98** (`evaluate_team` keeps full for
+  the optimizer). **Pending: the full-suite gate (T022, about 1 h) and commit 4; merge on the user's go.** Commits 728c914, 20ed8a3, 1a04009. Evidence
+  `runs/021-evidence/` (local) with copies under `specs/021-adaptive-e4-sampling/evidence/`. Trap: the policy benchmark fixture
+  cannot go through `evaluate` (placeholder sources); the 018 v2 B2 team equals 014 b2-branch.
+- (previous) features 019 and 020 merged to `main` 2026-11-03.
 
 - **Feature 020 `020-lead-spike` implemented 2026-11-03 on its branch (from `main` ade9f9d), measurement only: no file under `sim/` or
   `src/platsim` changed.** Six leads × 2,000 paired gauntlets (v4) on three optimizer-built teams (014 b2-main, 014 b2-branch, 018 v2

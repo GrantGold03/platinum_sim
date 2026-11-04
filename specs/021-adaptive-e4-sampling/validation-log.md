@@ -111,3 +111,11 @@ either floor (0.98 to 1.02x). Half-width ratio 1.00 to 1.11. No extension runs w
 **Observation for the default decision:** the floor 0.99 is the safe choice on threshold-band teams (no switch, nothing lost) but gives
 the saving only on teams whose Elite Four members are at or above about 0.995; 0.98 gives the saving on teams at about 0.99 as well, with
 the composite still inside the full interval here. The choice of default floor is part of the default decision (T021).
+
+## T020-T021 Docs and the default decision (9:00 PM EST)
+
+README (command row, the 021 block), FUTURE-FEATURES section 8, RUN-STATE written for the acceptance result. The acceptance table
+was presented to the user with three options (adaptive at 0.99, adaptive at 0.98, keep full). **User decision: adaptive is
+evaluate's default at floor 0.98.** Applied: `platsim.sampling.DEFAULT_FLOOR = 0.98`, `DEFAULT_SAMPLING = "adaptive"`; the CLI
+`--sampling` default and `evaluate()`'s default are adaptive; `evaluate_team` keeps `"full"` so the optimizer's stages are unchanged
+(a unit test pins all three). The existing full-path evaluate tests now pass `--sampling full` explicitly (their meaning is unchanged).

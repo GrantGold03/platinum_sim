@@ -172,3 +172,15 @@ def test_acceptance_helpers_containment_agreement_and_key_stripping():
     d = {"a": 1, "sampling": "adaptive", "sampling_detail": {"x": 1}, "provenance": {"sampling": {}, "k": 2},
          "seeds": {"cynthia_only_seed": "s", "master": "m"}}
     assert mod.strip_sampling_keys(d) == {"a": 1, "provenance": {"k": 2}, "seeds": {"master": "m"}}
+
+
+def test_defaults_after_the_user_decision_cli_adaptive_at_0_98_and_evaluate_team_full():
+    import inspect
+
+    from platsim.cli import build_parser
+    from platsim.evaluate import evaluate, evaluate_team
+
+    args = build_parser().parse_args(["evaluate", "x.json"])
+    assert args.sampling == "adaptive" and args.floor == 0.98 == S.DEFAULT_FLOOR
+    assert inspect.signature(evaluate).parameters["sampling"].default == "adaptive"
+    assert inspect.signature(evaluate_team).parameters["sampling"].default == "full"  # the optimizer's stages are untouched

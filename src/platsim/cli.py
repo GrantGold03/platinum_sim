@@ -145,11 +145,11 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--min-clear", type=float, default=0.75, help="qualification threshold (default 0.75, FR-015)")
     p.add_argument("--max-runs", type=int, default=20000, help="cap on runs when extending to the CI target")
     p.add_argument("--out", type=Path, default=None, help="output directory (default runs/evaluate-<time>-<hash>/)")
-    from platsim.sampling import DEFAULT_FLOOR
+    from platsim.sampling import DEFAULT_FLOOR, DEFAULT_SAMPLING
 
-    p.add_argument("--sampling", choices=("full", "adaptive"), default="full",
-                   help="full (default; every run a full gauntlet, the reference) or adaptive (feature 021: full "
-                        "gauntlets until the Elite Four is proven, then Cynthia-only runs from banked states)")
+    p.add_argument("--sampling", choices=("full", "adaptive"), default=DEFAULT_SAMPLING,
+                   help=f"adaptive (default since feature 021: full gauntlets until the Elite Four is proven, then "
+                        f"Cynthia-only runs from banked states) or full (every run a full gauntlet, the reference); default {DEFAULT_SAMPLING}")
     p.add_argument("--floor", type=float, default=DEFAULT_FLOOR,
                    help=f"adaptive only: Wilson 95%% lower bound each Elite Four member must reach (default {DEFAULT_FLOOR}; 0.9 to 1.0)")
     _add_legality_flags(p)

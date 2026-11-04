@@ -22,7 +22,8 @@ E4 = ("aaron", "bertha", "flint", "lucian")
 CHAMPION = "cynthia"
 CYNTHIA_ONLY_BATTLE_INDEX = 98  # reserved in seeds.py; the top-up uses 99
 MIN_BATCH = 64
-DEFAULT_FLOOR = 0.99
+DEFAULT_FLOOR = 0.98  # user decision 2026-11-03 after the 021 acceptance (0.99 switched only on the strongest team)
+DEFAULT_SAMPLING = "adaptive"  # evaluate's default since 021 (user's go); evaluate_team keeps "full" for the optimizer's stages
 FLOOR_MIN, FLOOR_MAX = 0.9, 1.0
 
 
@@ -293,6 +294,6 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
     return AdaptiveRuns(full, cyn, switch, discarded, bank, extension, target_met, discarded_cyn)
 
 
-__all__ = ["AdaptiveRuns", "CHAMPION", "CYNTHIA_ONLY_BATTLE_INDEX", "CompositeEstimate", "DEFAULT_FLOOR", "E4",
+__all__ = ["AdaptiveRuns", "CHAMPION", "CYNTHIA_ONLY_BATTLE_INDEX", "CompositeEstimate", "DEFAULT_FLOOR", "DEFAULT_SAMPLING", "E4",
            "FLOOR_MAX", "FLOOR_MIN", "composite_estimate", "cynthia_battle", "cynthia_only_request",
            "delta_interval", "e4_pass_stats", "extension_kind", "run_adaptive", "start_index", "switch_index"]

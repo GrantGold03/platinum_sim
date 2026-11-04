@@ -47,8 +47,8 @@ from pathlib import Path
 from platsim import pins
 from platsim.budget import get_preset
 from platsim.report.json_report import BattleStat, DivergenceEntry, EvaluationReport
-from platsim.sampling import (CYNTHIA_ONLY_BATTLE_INDEX, DEFAULT_FLOOR, FLOOR_MAX, FLOOR_MIN, composite_estimate,
-                              cynthia_battle, e4_pass_stats, run_adaptive)
+from platsim.sampling import (CYNTHIA_ONLY_BATTLE_INDEX, DEFAULT_FLOOR, DEFAULT_SAMPLING, FLOOR_MAX, FLOOR_MIN,
+                              composite_estimate, cynthia_battle, e4_pass_stats, run_adaptive)
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import runs_needed, wilson_ci, wilson_half_width
 
@@ -259,11 +259,12 @@ def default_out_dir(team_path: Path, master: str, runs: int, policy: str) -> Pat
 def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", workers: int | None = None,
              player_policy: str = DEFAULT_PLAYER_POLICY, budget: str = "standard", threshold: float = 0.75,
              max_runs: int = DEFAULT_MAX_RUNS, out_dir: Path | None = None, pool=None,
-             legality=None, required_hms=(), sampling: str = "full", floor: float = DEFAULT_FLOOR) -> tuple[EvaluationReport, dict]:
+             legality=None, required_hms=(), sampling: str = DEFAULT_SAMPLING, floor: float = DEFAULT_FLOOR) -> tuple[EvaluationReport, dict]:
     """Run the evaluation and write the reports. Returns (report, {kind: path}). `legality`
-    (models.LegalityOptions, default both off) selects egg moves / trade evolutions. `sampling` is "full" (the
-    reference, every run a full gauntlet) or "adaptive" (feature 021: Cynthia-only runs from banked states once the
-    Elite Four is proven at `floor`)."""
+    (models.LegalityOptions, default both off) selects egg moves / trade evolutions. `sampling` is "adaptive" (the
+    default since feature 021 on the user's decision: Cynthia-only runs from banked states once the Elite Four is
+    proven at `floor`) or "full" (the reference, every run a full gauntlet). `evaluate_team` keeps "full" as its own
+    default, so the optimizer's stages are unchanged."""
     from platsim.legality.validator import showdown_name
     from platsim.report import write_all
     from platsim.sim.pool import WorkerPool

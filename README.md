@@ -150,7 +150,7 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
 | `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules), `--require-hm` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm` |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (default `adaptive` since feature 021 on the user's decision; `full` is the reference), `--floor` (adaptive only, default 0.98) |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
 | `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
@@ -495,6 +495,22 @@ clear rate, almost all at Cynthia. The best lead chosen on the first 1,000 pairs
 lead on no team with statistical support (b2main +2.0 points, p 0.12; on the other two the first-listed Garchomp was already best), so
 the optimizer gets no lead search for now; naming the lead in every output is the follow-on that stands. Today the lead is the first
 species listed in the optimize request.
+
+Feature 021 (2026-11-03, `specs/021-adaptive-e4-sampling/`): **adaptive Elite Four sampling** in `platsim evaluate`, the
+default since the user's decision after its acceptance (`--sampling full` gives the reference). Full gauntlets run in request-seed order until every Elite Four member's Wilson 95% lower bound reaches
+`--floor` (default 0.98; 0.99 was the spike's assumption and switches only on the strongest teams); every full run that reaches Cynthia banks her starting state; the remaining runs are Cynthia-only
+battles from banked states, drawn deterministically with reserved seed index 98 (the top-up keeps 99). The clear rate is then the
+Elite Four pass rate times Cynthia's conditional win rate over all her battles, with a log-scale delta-method 95% interval, and
+the threshold, half-width and borderline rules apply to that interval; when the floor is never reached every run is full and the
+report keeps the full method's statistics. Results computed past the switch are discarded so result.json is independent of
+worker count and batch size (`sampling_detail.discarded` counts them). Reports carry `sampling` and `sampling_detail` (full and
+Cynthia-only runs, switch run, banked states, the Elite Four pass rate and both intervals); per-trainer rates come from the
+full runs; loss causes include Cynthia-only losses. `--sampling full` is the reference; the user chose adaptive at floor 0.98 as the default on the acceptance below. Acceptance (paired on
+the same seeds, 2,000 runs, standard budget, `specs/021-adaptive-e4-sampling/validation-log.md` T017): on all five legal
+acceptance teams the adaptive estimate lies inside the full run's interval and the verdict agrees; the reference team ran 1.94x
+faster at floor 0.99 (switch after 563 full runs); the B2 teams do not reach 0.99 (Lucian about 0.99 on them) and ran 1.70 to
+2.06x faster at floor 0.98; bench-010 B3 never switches and costs nothing. The policy benchmark fixture cannot be evaluated this
+way (placeholder sources). The optimizer's stages keep full gauntlets.
 
 Measured run times:
 
