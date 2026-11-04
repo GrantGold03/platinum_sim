@@ -523,8 +523,8 @@ both sides extended to 4,000 runs); the pairing control reproduced the full meth
 a run killed during the confirmation and resumed gives byte-identical result.json (the provenance's stage records are now written
 in canonical key order, which also fixes a pre-existing key-order difference after any resume). The B2 quick end-to-end comparison
 failed the clarified containment rule by 0.002: at the quick count of 500 runs the full method's first attempt was borderline and
-bumped a level while the adaptive attempt passed one level lower, the same team at equal levels (0 discordant pairs). The default
-stays `full` until the user's decision.
+bumped a level while the adaptive attempt passed one level lower, the same team at equal levels (0 discordant pairs). The user kept
+`full` as the optimizer's default (2026-11-04); adaptive is available with `--sampling adaptive`.
 
 Measured run times:
 

@@ -89,3 +89,10 @@ player v2, both teams at the adaptive result's levels): identical team, 0 discor
 standard errors at n 500); the quick count cannot resolve a team this close to the threshold, and the adaptive run settled one level
 lower. Wall: confirm stage 98.7 s vs 51.3 s (1.92x); whole run 355 s vs 307 s (1.16x). Note: the quick preset never qualifies, so the
 flip changes a quick result's levels, not a qualification.
+
+## T019-T020 Docs and the default decision (1:40 PM EST)
+
+README (optimize command row, the 022 block), FUTURE-FEATURES section 8, RUN-STATE written. The acceptance table was presented to
+the user with three options (keep full; adaptive at 0.98; adaptive at 0.99). **User decision: keep `full` as the optimizer's default;
+adaptive stays behind `optimize --sampling adaptive`.** No code change; the fingerprint rule and the defaults are as built. A
+standard-budget end-to-end comparison (hours) could earn the flip later (recorded in FUTURE-FEATURES).

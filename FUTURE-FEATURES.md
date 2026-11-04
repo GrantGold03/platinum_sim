@@ -276,7 +276,8 @@ confirmed by the research stage:
   agree), 1.00x on B3 (never switches; borderline extension to 4,000 on both sides, identical); pairing control exact; resume control
   byte-identical after a canonical key order fix for the provenance's stage records. The B2 quick end to end failed the containment
   rule by 0.002 at the quick count (full borderline at the level search's levels and bumped; adaptive passed one level lower; the
-  same team at equal levels, 0 discordant). Default decision pending. Remaining follow-on: the level search and the setup check on
+  same team at equal levels, 0 discordant). **User decision 2026-11-04: keep `full` as the optimizer's default; adaptive stays
+  behind the flag** (a standard-budget end-to-end comparison, hours, could earn the flip later). Remaining follow-on: the level search and the setup check on
   adaptive sampling only if a measurement earns it (their batches sit at or below the switch point).
 - **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
   version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),

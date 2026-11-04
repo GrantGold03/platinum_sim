@@ -1,12 +1,12 @@
-# START HERE (updated 2026-11-04, 1:35 PM EST, feature 022 built on its branch; default decision and full-suite gate pending)
+# START HERE (updated 2026-11-04, 1:40 PM EST, feature 022 built on its branch; default kept full; full-suite gate pending)
 
 - **Feature 022 `022-confirm-adaptive-sampling` built 2026-11-04 on its branch (from `main` 93ac7c8): `optimize --sampling adaptive`
   (+ `--floor`) for the confirmation stage, the runner-up paired by kind and seed, the borderline extension in `run_adaptive`, provenance
   `sampling_per_stage`, canonical key order for the provenance's stage records; `full` the default; `sim/` untouched.** Acceptance (T017):
   confirm alone 2.33x on b2-main / 1.00x on B3 (contained, agree); pairing control exact; resume control byte-identical; B2 quick end to
   end failed containment by 0.002 at the quick count (full borderline and bumped, adaptive passed one level lower, same team at equal
-  levels). **Pending: the user's default decision (T020), then the full-suite gate (T021, about 1 h 20 min) and the closing commit;
-  merge on the user's go.** Commits 851c9cb (code + tests), then the acceptance commit. Evidence `runs/022-evidence/` (local) with copies
+  levels). **User decision (T020, 1:40 PM EST): keep `full` as the optimizer's default; adaptive behind the flag.** Pending: the
+  full-suite gate (T021, about 1 h 20 min) and the closing commit; merge on the user's go. Commits 851c9cb (code + tests), then the acceptance commit. Evidence `runs/022-evidence/` (local) with copies
   under `specs/022-confirm-adaptive-sampling/evidence/`. Correction to 021 found here: `discarded` depended on the chunk size and is
   now logged, not written to result.json.
 - (previous) feature 021 merged to `main` 2026-11-04; adaptive sampling is evaluate's default.
