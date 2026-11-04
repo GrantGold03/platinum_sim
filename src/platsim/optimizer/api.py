@@ -39,8 +39,9 @@ class OptimizeRequest:
     sampling: str = "full"
     floor: float = DEFAULT_FLOOR
     # 023: the battle style of every stage's battles ("set": Showdown's behaviour; "shift": the game's default).
-    # In the fingerprint only when non-default; named in the result's provenance.
-    battle_style: str = "set"
+    # In the fingerprint only when non-default; named in the result's provenance. Default shift since the user's
+    # decision of 2026-11-04 (specs/023-shift-battle-style/validation-log.md T022).
+    battle_style: str = "shift"
 
     def __post_init__(self) -> None:
         if self.battle_style not in ("set", "shift"):

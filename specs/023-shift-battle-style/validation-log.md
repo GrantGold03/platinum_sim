@@ -128,3 +128,13 @@ lower under Shift (expected average final level 54.30 -> 52.79) with the same bu
 README: the command rows (`--battle-style` on `evaluate` and `optimize`), a known-limitations bullet, the feature-023
 block with the table above; FUTURE-FEATURES section 3: outcome; RUN-STATE. **Commit 3**: `feat(023): acceptance ...`.
 
+## T022 Default decision (5:25 PM EST)
+
+The acceptance table was presented to the user with two options (Shift as the default; keep Set). **User decision:
+Shift is the default battle style**; Set stays available as the reference behind `--battle-style set`. Flip:
+`battle_style.DEFAULT_BATTLE_STYLE = "shift"`, `OptimizeRequest.battle_style = "shift"` (the CLI defaults read from
+these), the integration test pins the default as Shift, README and FUTURE-FEATURES record the decision. The worker's
+absent-field default stays `set` (Python always sends the field; raw requests from older scripts keep playing Set). The
+report dataclass's parse default stays `set` (a result without the key predates the style). Commit:
+`feat(023): shift is the default battle style (user's go)`.
+

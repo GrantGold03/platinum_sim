@@ -2,8 +2,8 @@
 
 - Shift at a small count on the reference team with 8 and 3 workers: byte-identical result.json; the style is in the
   report, its provenance and the summary line.
-- The same request with `--battle-style set` equals the same request without the flag (the default is Set until the
-  owner's decision).
+- The request without the flag equals `--battle-style shift` (the default since the owner's decision of 2026-11-04);
+  `--battle-style set` names Set.
 """
 
 from __future__ import annotations
@@ -42,12 +42,15 @@ def test_shift_is_deterministic_across_worker_counts_and_named_in_the_report(tmp
     assert r["n_runs"] == 40 and r["opponent_policy"] == "decomp-ai"
 
 
-def test_set_flag_equals_the_default_and_names_set(tmp_path):
-    p1 = _evaluate(tmp_path / "s", "--battle-style", "set", "--workers", "8")
+def test_default_is_shift_and_the_set_flag_names_set(tmp_path):
+    p1 = _evaluate(tmp_path / "d", "--workers", "8")
     assert p1.returncode == 0, p1.stderr[-3000:]
-    p2 = _evaluate(tmp_path / "d", "--workers", "8")
+    p2 = _evaluate(tmp_path / "s2", "--battle-style", "shift", "--workers", "8")
     assert p2.returncode == 0, p2.stderr[-3000:]
-    assert _result(tmp_path / "s") == _result(tmp_path / "d")
+    assert _result(tmp_path / "d") == _result(tmp_path / "s2"), "the default must equal --battle-style shift"
+    p3 = _evaluate(tmp_path / "s", "--battle-style", "set", "--workers", "8")
+    assert p3.returncode == 0, p3.stderr[-3000:]
     r = json.loads(_result(tmp_path / "s"))
     assert r["battle_style"] == "set" and r["provenance"]["battle_style"] == "set"
-    assert any(line.startswith("runs ") and "style set" in line for line in p1.stdout.splitlines())
+    assert any(line.startswith("runs ") and "style set" in line for line in p3.stdout.splitlines())
+    assert json.loads(_result(tmp_path / "d"))["battle_style"] == "shift"

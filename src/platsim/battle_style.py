@@ -3,15 +3,16 @@
 ``set`` is Showdown's behaviour (only the side whose Pokemon fainted replaces it); ``shift`` is Platinum's
 default (after the trainer's active faints and the player's does not, the trainer's replacement is named and
 the player may switch for free before it enters; sim/gauntlet.mjs implements it through the engine's own
-switch flag and instant-switch path). The default here stays ``set`` until the owner's decision after the
-feature's acceptance table. The worker echoes ``battle_style`` only under Shift, so a response without the
+switch flag and instant-switch path). The default is ``shift`` since the owner's decision of 2026-11-04 on the
+feature's acceptance table (Shift better on all four teams, p down to 1e-111); ``set`` stays available as the
+reference. The worker echoes ``battle_style`` only under Shift, so a response without the
 key reads as ``set`` (``style_of``) and Set results are byte-identical to before the feature.
 """
 
 from __future__ import annotations
 
 BATTLE_STYLES = ("set", "shift")
-DEFAULT_BATTLE_STYLE = "set"
+DEFAULT_BATTLE_STYLE = "shift"
 
 
 def check_style(style: str, flag: str = "battle_style") -> str:

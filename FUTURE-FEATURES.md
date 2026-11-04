@@ -119,7 +119,8 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   existing scoring, two ledger entries, Set byte-identical. Acceptance (2,000 paired gauntlets, v4): Shift better on all
   four teams (ref 0.951 -> 0.974, b2-main 0.912 -> 0.987, b2-branch 0.776 -> 0.979, bench-010 B3 0.761 -> 0.985; p down
   to 1e-111), about 21 offers per gauntlet, two thirds taken, wall within 10%; B2 quick settles about two levels lower.
-  Default decision: see the validation log (T022).
+  **Default decision (user, 2026-11-04): Shift is the default; Set stays the reference behind the flag.** Every stored
+  result before this date is a Set result.
 
 ## 4. Plain-language user-facing output (added 2026-10-19)
 
