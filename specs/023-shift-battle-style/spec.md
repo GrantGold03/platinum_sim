@@ -42,6 +42,13 @@ and 022.
 - A player-only faint in a trainer battle is a forced replacement with no prompt. Set differs from Shift only in the
   absence of the prompt.
 
+## Clarifications
+
+### Session 2026-11-04
+
+- Q: Should the expectimax player's lookahead model the Shift rule inside its search (valuing a knockout higher because a free switch follows), or should only the prompt be answered while the search's model of future turns stays as it is today? → A: Answer the prompt only; the search's model of future turns stays Set.
+- Q: Where should the offer and switch counts from Shift battles appear: in every evaluation report as an aggregate, or only in the acceptance script's table? → A: Per-battle records only (the battle log and per-run result); the acceptance script aggregates them; standard reports carry only the style name.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The rule in the battle, behind a style option (Priority: P1)
@@ -178,10 +185,17 @@ times.
 - **FR-007**: Each player policy (greedy-v1, expectimax2 v1, v2, v4) MUST answer the offer with stay or a bench member
   using its existing matchup scoring with the announced foe as the opponent, deterministically under the same seed
   scheme, never an item, never a fainted or the active member; the answer and its reason MUST be in the battle log.
+- **FR-007a**: The policies' lookahead MUST NOT model the Shift rule inside the search: the search's model of future
+  turns stays as it is today (a knockout is valued as under Set), and the Shift decision uses the existing position
+  value with the announced foe on the field. Modelling the free switch inside the search is a separate feature with
+  its own paired ladder.
 - **FR-008**: The trainer AI's replacement choice and every other trainer behaviour MUST be unchanged.
 - **FR-009**: The style MUST be echoed in every battle result, named in the evaluation summary and provenance of every
   report, enter the optimizer's job fingerprint only when it differs from the default, and be part of the code change
   that refuses pre-feature checkpoints on resume.
+- **FR-009a**: Offer and switch counts MUST be recorded per battle (the battle log and the per-run result, present
+  only under Shift) and MUST NOT be aggregated into the standard evaluation report, summary, xlsx or web view; the
+  acceptance script aggregates them from the per-run records. Standard reports carry only the style name.
 - **FR-010**: The divergence ledger MUST gain two entries in the mechanics area with decomp and engine references and a
   stated resolution: the Shift prompt itself, and the entry-ability ordering after a double entry.
 - **FR-011**: Unit tests MUST pin the gate (no offer when both faint, when only the player's faints, when the player has
@@ -202,7 +216,8 @@ times.
 - **Battle style**: `shift` or `set`; a request field, a result field, a provenance field, a fingerprint field when
   non-default.
 - **Free-switch offer**: the moment between turns when the trainer's replacement is named and the player may switch;
-  carries the announced species and the player's answer (stay or member) with its reason; appears in the battle log.
+  carries the announced species and the player's answer (stay or member) with its reason; appears in the battle log
+  and, as counts per battle, in the per-run result under Shift only (never aggregated in the standard report).
 - **Divergence entries**: `mech-shift-prompt` and `mech-shift-entry-order` (names indicative), area mechanics, with
   decomp and engine references and a resolution.
 - **Acceptance table**: per team and style the clear rate with interval, paired p-value, per-trainer rates, offer and
