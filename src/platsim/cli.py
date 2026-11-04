@@ -152,6 +152,11 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
                         f"Cynthia-only runs from banked states) or full (every run a full gauntlet, the reference); default {DEFAULT_SAMPLING}")
     p.add_argument("--floor", type=float, default=DEFAULT_FLOOR,
                    help=f"adaptive only: Wilson 95%% lower bound each Elite Four member must reach (default {DEFAULT_FLOOR}; 0.9 to 1.0)")
+    from platsim.battle_style import BATTLE_STYLES, DEFAULT_BATTLE_STYLE
+
+    p.add_argument("--battle-style", choices=BATTLE_STYLES, default=DEFAULT_BATTLE_STYLE,
+                   help=f"shift (the game's default: after a KO the trainer's next Pokemon is named and the player may switch "
+                        f"for free) or set (Showdown's behaviour); default {DEFAULT_BATTLE_STYLE} (feature 023)")
     _add_legality_flags(p)
     _add_hm_flags(p)
 
@@ -166,7 +171,8 @@ def _add_evaluate(sub: argparse._SubParsersAction) -> None:
             report, paths = evaluate(args.team, runs=args.runs, seed=args.seed, workers=args.workers,
                                      player_policy=args.player_policy, budget=args.budget, threshold=args.min_clear,
                                      max_runs=args.max_runs, out_dir=args.out, legality=_legality(args),
-                                     required_hms=tuple(args.require_hm), sampling=args.sampling, floor=args.floor)
+                                     required_hms=tuple(args.require_hm), sampling=args.sampling, floor=args.floor,
+                                     battle_style=args.battle_style)
         except InvalidTeamInput as e:
             if e.violations:
                 print(format_violations(e.violations), file=sys.stderr)
@@ -211,6 +217,9 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--player-policy", default=DEFAULT_PLAYER_POLICY,
                    help=f"strong player for the level search, setup check and confirmation (default {DEFAULT_PLAYER_POLICY}); "
                         "the screening stages keep greedy-v1 (018)")
+    p.add_argument("--battle-style", choices=("set", "shift"), default=_OR.battle_style,
+                   help=f"battle style of every stage's battles (feature 023): shift (the game's default) or set "
+                        f"(Showdown's behaviour); default {_OR.battle_style}")
     _add_legality_flags(p)
     _add_hm_flags(p)
 
@@ -255,7 +264,7 @@ def optimize_request(args: argparse.Namespace):
                           budget=args.budget, workers=args.workers, out_dir=args.out,
                           force_new=args.force_new, legality=_legality(args),
                           required_hms=tuple(args.require_hm), player_policy=args.player_policy,
-                          sampling=args.sampling, floor=args.floor)
+                          sampling=args.sampling, floor=args.floor, battle_style=args.battle_style)
 
 
 # serve, explain and report are appended below, each after its _add_* function.

@@ -44,7 +44,8 @@ class ScreenResult:
         return cls(list(d["order"]), {int(k): tuple(v) for k, v in d["scores"].items()}, list(d["rounds"]))
 
 
-def successive_halving(pool, teams: list[list[dict]], *, seed: str, rounds: tuple[int, ...], progress=None) -> ScreenResult:
+def successive_halving(pool, teams: list[list[dict]], *, seed: str, rounds: tuple[int, ...], progress=None,
+                       battle_style: str = "set") -> ScreenResult:
     """`teams`: worker teams (evaluate.worker_team output), one per candidate."""
     master = f"{seed}|screen"
     alive = list(range(len(teams)))
@@ -56,15 +57,16 @@ def successive_halving(pool, teams: list[list[dict]], *, seed: str, rounds: tupl
     for r, n in enumerate(rounds):
         idx = range(start, start + n)
         reqs = [{"op": "gauntlet", "team": teams[c], "seed": derive_seed(master, i, 0), "player_policy": SCREEN_POLICY,
-                 "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none"} for c in alive for i in idx]
+                 "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none", "battle_style": battle_style}
+                for c in alive for i in idx]
         res = pool.map(reqs)
         for k, c in enumerate(alive):
             chunk = res[k * n:(k + 1) * n]
             for x in chunk:
                 if not x.get("ok"):
                     raise RuntimeError(f"screen gauntlet failed: {x.get('error')}")
-                if (x["player_policy"], x["opponent_policy"]) != (SCREEN_POLICY, OPPONENT_POLICY):
-                    raise RuntimeError(f"worker ran {x['player_policy']}/{x['opponent_policy']}")
+                if (x["player_policy"], x["opponent_policy"], x.get("battle_style", "set")) != (SCREEN_POLICY, OPPONENT_POLICY, battle_style):
+                    raise RuntimeError(f"worker ran {x['player_policy']}/{x['opponent_policy']}/{x.get('battle_style', 'set')}")
             cl = sum(bool(x["cleared"]) for x in chunk)
             bw = sum(sum(bool(b["won"]) for b in x["battles"]) for x in chunk)
             s = scores[c]

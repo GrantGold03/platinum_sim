@@ -43,7 +43,7 @@ def load_team(name: str) -> list[dict]:
 
 
 def bench_requests(*, block: str = "a", n: int = 20, teams=("bench", "ref"), trainers=None,
-                   policy: str = DEFAULT_POLICY) -> list[dict]:
+                   policy: str = DEFAULT_POLICY, battle_style: str = "set") -> list[dict]:
     """The fixed set, as worker requests: same seeds and teams as `benchRequests` in sim/bench.mjs."""
     out = []
     for tn in teams:
@@ -53,6 +53,8 @@ def bench_requests(*, block: str = "a", n: int = 20, teams=("bench", "ref"), tra
                    "opponent_policy": "decomp-ai", "stop_on_loss": False}
             if trainers:
                 req["trainers"] = list(trainers)
+            if battle_style != "set":  # 023: the Set requests are unchanged
+                req["battle_style"] = battle_style
             out.append(req)
     return out
 

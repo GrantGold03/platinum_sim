@@ -239,6 +239,7 @@ class EvaluationReport:
     provenance: dict[str, Any] = field(default_factory=dict)
     sampling: str = "full"  # 021: "full" (the reference) or "adaptive"
     sampling_detail: dict[str, Any] | None = None  # 021: run mix and the composite's parts; None for full
+    battle_style: str = "set"  # 023: "set" (Showdown's behaviour) or "shift" (the game's default); absent reads as set
 
     def __post_init__(self) -> None:
         if self.budget_preset not in BUDGET_PRESETS:
@@ -310,6 +311,7 @@ class EvaluationReport:
             "provenance": dict(self.provenance),
             "sampling": self.sampling,
             "sampling_detail": dict(self.sampling_detail) if self.sampling_detail is not None else None,
+            "battle_style": self.battle_style,
         }
 
     @classmethod
@@ -356,6 +358,7 @@ class EvaluationReport:
             provenance=dict(d.get("provenance", {})),
             sampling=d.get("sampling", "full"),
             sampling_detail=dict(d["sampling_detail"]) if d.get("sampling_detail") else None,
+            battle_style=d.get("battle_style", "set"),
         )
 
     def to_json(self, **kwargs: Any) -> str:

@@ -129,7 +129,7 @@ def _summarise_full(full_results: list[dict]):
 
 def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_seed: str | int,
                    budget: str, max_topup: int = MAX_TOPUP_BATTLES,
-                   extra_cynthia: tuple[int, int] = (0, 0)) -> ChampionResult:
+                   extra_cynthia: tuple[int, int] = (0, 0), battle_style: str = "set") -> ChampionResult:
     """Run the Cynthia top-up for one candidate. `pool` is a `WorkerPool` (anything with `map`).
     `extra_cynthia` = (battles, wins) of Cynthia battles already played outside the full runs (feature 021's
     Cynthia-only sampling runs): the count and half-width rules start from them, so top-ups are added only when
@@ -162,7 +162,7 @@ def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_s
         return {"op": "gauntlet", "team": team, "seed": derive_seed(master, k, TOPUP_BATTLE_INDEX),
                 "player_policy": player_policy, "opponent_policy": opponent_policy,
                 "trainers": [CHAMPION], "start_state": states[_start_index(master, k, len(states))],
-                "stop_on_loss": True, "log": "none"}
+                "stop_on_loss": True, "log": "none", "battle_style": battle_style}
 
     n, w, k = reached + extra_battles, full_wins + extra_wins, 0
     ci_ok, count_ok = rules(w, n)
@@ -182,6 +182,8 @@ def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_s
                 raise ChampionTopupError(f"top-up {k} ran with policies {resp.get('player_policy')!r}/"
                                          f"{resp.get('opponent_policy')!r}, full runs used "
                                          f"{player_policy!r}/{opponent_policy!r}")
+            if resp.get("battle_style", "set") != battle_style:  # 023
+                raise ChampionTopupError(f"top-up {k} played {resp.get('battle_style', 'set')!r}, requested {battle_style!r}")
             (b,) = resp["battles"]
             if b["trainer"] != CHAMPION:
                 raise ChampionTopupError(f"top-up {k} fought {b['trainer']!r}, not {CHAMPION}")

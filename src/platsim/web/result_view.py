@@ -72,6 +72,7 @@ def build_result_view(job: dict) -> dict | None:
         "n_runs": d.get("n_runs"),
         "sampling": d.get("sampling", "full"),  # 021
         "sampling_detail": d.get("sampling_detail"),  # 021: full / Cynthia-only counts, switch run; None for full
+        "battle_style": d.get("battle_style", "set"),  # 023
         "avg_final_level": d.get("expected_avg_final_level"),
         "level_gap": d.get("final_level_gap_max"),
         "threshold": d.get("threshold"),

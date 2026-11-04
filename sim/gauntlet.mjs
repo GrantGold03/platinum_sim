@@ -21,8 +21,16 @@
 // in every result (`player_policy`, `opponent_policy`) so no result produced with it can be
 // mistaken for a real evaluation. Policies register with registerPlayerPolicy /
 // registerOpponentPolicy.
-//   policy = { name, choose(ctx) -> Showdown choice string, afterTurn?(ctx) }
+//   policy = { name, choose(ctx) -> Showdown choice string, afterTurn?(ctx), shiftChoice?(ctx, incoming) }
 //   ctx = { gd, battle, side, request, trainer, bag (opponent bag items, mutable), members }
+// 023 Shift battle style (`battle_style: 'shift'`; `'set'`, the default, is Showdown's behaviour):
+// after a turn in which the trainer's active fainted and the player's did not, the trainer AI's
+// replacement (chosen first, against the player's current active, as in the game) is named to
+// the player policy through `shiftChoice(ctx, incoming) -> { choice: null | 'switch N', reason }`;
+// on a switch the player's standing Pokemon gets Showdown's switchFlag before the switch request
+// is rebuilt, so both sides switch instantly with no move between and one turn end, through the
+// engine's own choice path (research R1). Policies without the hook stay. Under `set` no line of
+// this path runs: results, log hashes and the replay digests are byte-identical to before 023.
 import { createHash } from 'node:crypto';
 import { deriveSeed } from './seeds.mjs';
 import { ExpTracker } from './exp.mjs';
@@ -82,6 +90,7 @@ export function playerPolicyFor(name) {
 }
 registerOpponentPolicy(decompAI); // `decomp-ai`: the game's trainer AI (T045-T047, sim/ai/opponent.mjs)
 
+export const BATTLE_STYLES = ['set', 'shift']; // 023
 export const DEFAULT_TURN_LIMIT = 1000; // Showdown's own hard limit (pokemon-showdown/sim/battle.ts:1843)
 
 export class RequestError extends Error {
@@ -122,6 +131,43 @@ function collect(gd, battle, party) {
   }
 }
 
+// 023: the Shift offer. Called when the trainer must replace a fainted Pokemon and the player
+// need not (`!p1.requestState && p2.requestState === 'switch'`), with the trainer's choice `c2`
+// already made (the game's order: the AI picks against the player's current active, then the
+// prompt). Returns p1's choice string: '' to stay (today's path exactly) or 'switch N' after the
+// engine was told to expect it (switchFlag set BEFORE makeRequest, sim/side.ts:1118-1125). The
+// game's gate (battle_controller_player.c:4144-4160): the player's active is standing and the
+// player has a replacement with HP; the trainer having another Pokemon is implied by its request.
+export const shiftWanted = (p1, p2) => !p1.requestState && p2.requestState === 'switch';
+export function shiftOffer(battle, playerPolicy, ctx, c2, trainer, rec) {
+  const [p1, p2] = battle.sides;
+  const m = /^switch (\d+)$/.exec(c2);
+  if (!m) return '';
+  const incoming = p2.pokemon[Number(m[1]) - 1];
+  const active = p1.active[0];
+  if (!incoming || !active || active.hp <= 0) return '';
+  const bench = p1.pokemon.filter((p) => !p.isActive && p.hp > 0);
+  if (bench.length === 0) return '';
+  rec.offers += 1;
+  const ans = playerPolicy.shiftChoice?.(ctx, incoming) ?? { choice: null, reason: 'no hook' };
+  const choice = ans.choice ?? null;
+  const reason = String(ans.reason ?? '');
+  let target = null;
+  if (choice !== null) {
+    const sm = /^switch (\d+)$/.exec(String(choice));
+    target = sm ? p1.pokemon[Number(sm[1]) - 1] : null;
+    if (!target || target.isActive || target.hp <= 0) throw new Error(`shiftChoice: illegal answer ${choice} from ${playerPolicy.name}`);
+  }
+  const answer = target ? `switches to ${target.species.name}` : 'stays';
+  battle.add('-message', `shift: ${trainer.name} is about to send in ${incoming.species.name}; player ${answer} (${reason})`);
+  rec.events.push({ turn: battle.turn, incoming: incoming.species.name, answer: target ? target.species.name : 'stay', reason });
+  if (!target) return '';
+  rec.switches += 1;
+  active.switchFlag = true;
+  battle.makeRequest('switch');
+  return choice;
+}
+
 export function runGauntlet(gd, req) {
   const playerPolicy = playerPolicyFor(req.player_policy ?? PLACEHOLDER); // 018: registered names and v4 candidates
   const oppPolicy = OPPONENT_POLICIES.get(req.opponent_policy ?? 'decomp-ai'); // default: the game's AI (spec FR-010)
@@ -136,6 +182,9 @@ export function runGauntlet(gd, req) {
   const stopOnLoss = req.stop_on_loss ?? true;
   const turnLimit = req.turn_limit ?? DEFAULT_TURN_LIMIT;
   const ppRestore = gd.availability?.pp_restore_between_battles === true;
+  const battleStyle = req.battle_style ?? 'set';
+  if (!BATTLE_STYLES.includes(battleStyle)) throw new RequestError('internal', `unknown battle_style ${req.battle_style}`);
+  const shift = battleStyle === 'shift';
 
   const ss = req.start_state;
   let party;
@@ -168,11 +217,15 @@ export function runGauntlet(gd, req) {
       members: side === battle.sides[0] ? party : opponent });
 
     let end = null;
+    const shiftRec = shift ? { offers: 0, switches: 0, events: [] } : null;
     while (!battle.ended) {
       if (battle.turn > turnLimit) { end = 'turn_limit'; break; }
       const [p1, p2] = battle.sides;
-      const c1 = p1.requestState ? playerPolicy.choose(ctxFor(p1)) : '';
+      let c1 = p1.requestState ? playerPolicy.choose(ctxFor(p1)) : '';
       const c2 = p2.requestState ? oppPolicy.choose(ctxFor(p2)) : '';
+      if (shift && shiftWanted(p1, p2)) {
+        c1 = shiftOffer(battle, playerPolicy, ctxFor(p1), c2, trainer, shiftRec);
+      }
       battle.makeChoices(c1, c2);
       playerPolicy.afterTurn?.(ctxFor(p1));
       oppPolicy.afterTurn?.(ctxFor(p2));
@@ -182,6 +235,7 @@ export function runGauntlet(gd, req) {
     collect(gd, battle, party);
     const rec = { trainer: trainer.name.toLowerCase(), won, end, turns: battle.turn, seed, log_hash: hashLog(battle.log) };
     if (logMode === 'summary' || logMode === 'full') rec.state_before = before;
+    if (shiftRec) rec.shift = shiftRec; // 023: only under Shift (Set results stay byte-identical)
     battles.push(rec);
     if (logMode === 'full') fullLogs.push(stripTimestamps(battle.log));
     if (!won) {
@@ -203,5 +257,6 @@ export function runGauntlet(gd, req) {
     opponent_policy: oppPolicy.name,
     pp_restore_between_battles: ppRestore,
     turn_limit: turnLimit,
+    ...(shift ? { battle_style: 'shift' } : {}), // 023: echoed only under Shift
   };
 }

@@ -38,7 +38,8 @@ WORKER_SCRIPT = pins.REPO_ROOT / "sim" / "worker.mjs"
 # on disk reports a different hash and is refused, so one run never mixes sim code versions.
 _PROVENANCE = ("showdown_commit", "decomp_commit", "sim_code_hash", "node_version", "decomp_data_hash",
                "divergence_ledger_version",
-               "divergence_patches_applied", "policies", "opponent_policies", "pp_restore_between_battles")
+               "divergence_patches_applied", "policies", "opponent_policies", "pp_restore_between_battles",
+               "battle_styles")  # 023
 
 
 class PoolError(RuntimeError):

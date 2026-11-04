@@ -38,8 +38,14 @@ class OptimizeRequest:
     # The level search and the setup check keep full gauntlets. In the fingerprint only when non-default.
     sampling: str = "full"
     floor: float = DEFAULT_FLOOR
+    # 023: the battle style of every stage's battles ("set": Showdown's behaviour; "shift": the game's default).
+    # In the fingerprint only when non-default; named in the result's provenance.
+    battle_style: str = "set"
 
     def __post_init__(self) -> None:
+        if self.battle_style not in ("set", "shift"):
+            raise InvalidRequest(f"battle_style must be set or shift, got {self.battle_style!r}",
+                                 {"battle_style": self.battle_style})
         if self.sampling not in ("full", "adaptive"):
             raise InvalidRequest(f"sampling must be full or adaptive, got {self.sampling!r}", {"sampling": self.sampling})
         if not FLOOR_MIN <= self.floor <= FLOOR_MAX:

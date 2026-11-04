@@ -13,7 +13,7 @@
 // Env: PLATSIM_GENERATED_DIR / PLATSIM_DIVERGENCES override the data paths (tests).
 import { createInterface } from 'node:readline';
 import { DIVERGENCES_PATH, GENERATED_DIR, loadGameData, showdownCommit } from './gamedata.mjs';
-import { OPPONENT_POLICIES, PLAYER_POLICIES, runGauntlet } from './gauntlet.mjs';
+import { BATTLE_STYLES, OPPONENT_POLICIES, PLAYER_POLICIES, runGauntlet } from './gauntlet.mjs';
 import { simCodeHash } from './version.mjs';
 
 // Code fingerprint, computed once at start (sim/version.mjs): every result names the sim code that
@@ -38,6 +38,7 @@ function hello() {
     policies: [...PLAYER_POLICIES.keys()],
     opponent_policies: [...OPPONENT_POLICIES.keys()],
     pp_restore_between_battles: gd.availability?.pp_restore_between_battles === true,
+    battle_styles: [...BATTLE_STYLES], // 023: Shift or Set
   };
 }
 

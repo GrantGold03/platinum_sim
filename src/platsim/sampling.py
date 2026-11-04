@@ -116,11 +116,11 @@ def extension_kind(reached: int, full_runs: int, cyn_wins: int, cyn_battles: int
 
 
 def cynthia_only_request(team: list[dict], master: str, k: int, bank: list[dict], player_policy: str,
-                         opponent_policy: str) -> dict:
+                         opponent_policy: str, battle_style: str = "set") -> dict:
     return {"op": "gauntlet", "team": team, "seed": derive_seed(master, k, CYNTHIA_ONLY_BATTLE_INDEX),
             "player_policy": player_policy, "opponent_policy": opponent_policy, "trainers": [CHAMPION],
             "start_state": bank[start_index(master, k, CYNTHIA_ONLY_BATTLE_INDEX, len(bank))],
-            "stop_on_loss": True, "log": "summary"}
+            "stop_on_loss": True, "log": "summary", "battle_style": battle_style}
 
 
 # ---- pool-driving ---------------------------------------------------------------------------------------------
@@ -149,7 +149,8 @@ def _log(msg: str) -> None:
 
 def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs: int, target: float | None,
                  player_policy: str, floor: float, opponent_policy: str = "decomp-ai", on_batch=None,
-                 borderline_threshold: float | None = None, borderline_max_runs: int | None = None) -> AdaptiveRuns:
+                 borderline_threshold: float | None = None, borderline_max_runs: int | None = None,
+                 battle_style: str = "set") -> AdaptiveRuns:
     """The adaptive run loop (021 research R3, R5). `pool` needs `.map(requests)` and `.size`. Feature 022:
     `borderline_threshold` adds runs while the interval straddles it (the optimizer's confirm stage), up to
     `min(max_runs, borderline_max_runs)`, choosing each batch's kind by the extension rule and stopping at the first run
@@ -171,11 +172,13 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
 
     def full_req(i: int) -> dict:
         return {"op": "gauntlet", "team": team, "seed": derive_seed(master, i, 0), "player_policy": player_policy,
-                "opponent_policy": opponent_policy, "stop_on_loss": True, "log": "summary"}
+                "opponent_policy": opponent_policy, "stop_on_loss": True, "log": "summary", "battle_style": battle_style}
 
     def check(r: dict, what: str) -> None:
         if not r.get("ok"):
             raise RuntimeError(f"{what} failed: {r.get('error')}")
+        if r.get("battle_style", "set") != battle_style:  # 023
+            raise RuntimeError(f"worker played {r.get('battle_style', 'set')}, requested {battle_style}")
         if (r["player_policy"], r["opponent_policy"]) != (player_policy, opponent_policy):
             raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}, requested "
                                f"{player_policy}/{opponent_policy}")
@@ -243,7 +246,7 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
     def run_cyn(count: int, stop_when_target_met: bool) -> int:
         """Request `count` Cynthia-only runs in order; returns the number counted."""
         nonlocal next_cyn, discarded_cyn
-        rs = pool.map([cynthia_only_request(team, master, next_cyn + j, bank, player_policy, opponent_policy)
+        rs = pool.map([cynthia_only_request(team, master, next_cyn + j, bank, player_policy, opponent_policy, battle_style)
                        for j in range(count)])
         counted = 0
         done = False
@@ -326,7 +329,7 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
             _log(f"interval [{lo:.4f}, {hi:.4f}] straddles the threshold {borderline_threshold} at n={total}: "
                  f"adding up to {size} {'Cynthia-only runs' if kind == 'cynthia_only' else 'full gauntlets'}")
             if kind == "cynthia_only":
-                rs = pool.map([cynthia_only_request(team, master, next_cyn + j, bank, player_policy, opponent_policy)
+                rs = pool.map([cynthia_only_request(team, master, next_cyn + j, bank, player_policy, opponent_policy, battle_style)
                                for j in range(size)])
                 done = False
                 for r in rs:

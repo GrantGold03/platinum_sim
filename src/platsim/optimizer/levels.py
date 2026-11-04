@@ -97,9 +97,11 @@ class LevelSearch:
     new point (checkpoint + progress)."""
 
     def __init__(self, pool, build, floors: list[int], *, seed: str, budget: str, threshold: float, margin: float,
-                 key: str, memo: dict, on_point=None, on_batch=None, policy: str = DEFAULT_PLAYER_POLICY):
+                 key: str, memo: dict, on_point=None, on_batch=None, policy: str = DEFAULT_PLAYER_POLICY,
+                 battle_style: str = "set"):
         self.pool, self.build, self.floors = pool, build, list(floors)
         self.policy = policy  # 018: the strong player for every level point
+        self.battle_style = battle_style  # 023
         self.master = f"{seed}|levels"
         self.n0, self.cap = LEVEL_RUNS[budget]
         self.threshold, self.margin, self.key = threshold, margin, key
@@ -138,13 +140,13 @@ class LevelSearch:
             decision = None
             while decision is None:
                 reqs = [{"op": "gauntlet", "team": team, "seed": derive_seed(self.master, i, 0), "player_policy": self.policy,
-                         "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none"}
-                        for i in range(len(results), n_target)]
+                         "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none",
+                         "battle_style": self.battle_style} for i in range(len(results), n_target)]
                 for r in self.pool.map(reqs):
                     if not r.get("ok"):
                         raise RuntimeError(f"level-search gauntlet failed: {r.get('error')}")
-                    if (r["player_policy"], r["opponent_policy"]) != (self.policy, OPPONENT_POLICY):
-                        raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}")
+                    if (r["player_policy"], r["opponent_policy"], r.get("battle_style", "set")) != (self.policy, OPPONENT_POLICY, self.battle_style):
+                        raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}/{r.get('battle_style', 'set')}")
                     results.append(r)
                 w = sum(bool(r["cleared"]) for r in results)
                 cleared = [r["final_levels"] for r in results if r["cleared"]]

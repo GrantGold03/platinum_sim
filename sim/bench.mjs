@@ -92,6 +92,7 @@ export function runRecorded(gd, req) {
       return c;
     },
     afterTurn: player.afterTurn ? (ctx) => player.afterTurn(ctx) : undefined,
+    shiftChoice: player.shiftChoice ? (ctx, inc) => player.shiftChoice(ctx, inc) : undefined, // 023
   };
   const ow = {
     name: opp.name,

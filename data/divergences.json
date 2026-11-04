@@ -1,5 +1,5 @@
 {
- "version": "sha256:8fc3728d461fba56",
+ "version": "sha256:baeaf406c676c665",
  "entries": [
   {
    "id": "data-move-assist-target",
@@ -774,6 +774,26 @@
    "resolution": "accepted",
    "impact": "None on the estimates: results are win-rate distributions over seeded runs (Constitution IV), reproducible from the project seed, not from the cartridge.",
    "test_id": "sim/test/seeds.test.mjs (seed derivation is deterministic)"
+  },
+  {
+   "id": "mech-shift-prompt",
+   "area": "mechanics",
+   "description": "Shift battle style (the game's default). After a turn in which the trainer's active fainted and the player's did not, in a single non-link, non-Frontier battle with a usable replacement on the player's side, the game names the trainer's next Pokemon (chosen by the trainer AI before the prompt, against the player's current active) and offers the player a free switch before it enters; the switch is a normal switch with no move used before the next command selection. Showdown only asks the side whose Pokemon fainted (Set style).",
+   "decomp_ref": "pokeplatinum/src/battle/battle_controller_player.c:4144-4160 (the gate; default Shift at src/game_options.c:31); pokeplatinum/res/battle/scripts/subscripts/subscript_replace_fainted.s:29-38 (the AI picks, then the prompt)",
+   "showdown_ref": "pokemon-showdown/sim/battle.ts:1427-1436 (switch requests only for Pokemon with switchFlag)",
+   "resolution": "corrected",
+   "impact": "Under battle_style=shift the game layer (sim/gauntlet.mjs) offers the free switch at the game's gate and applies it through Showdown's switch flag and instant-switch path; battle_style=set keeps Showdown's behaviour by choice (feature 023).",
+   "test_id": "sim/test/shift.test.mjs (the gate's four exclusions, the hand-walked battle)"
+  },
+  {
+   "id": "mech-shift-entry-order",
+   "area": "mechanics",
+   "description": "After a Shift switch, the game sends in the player's Pokemon first, then the trainer's, applies entry hazards in that order, and then runs entry abilities by category (weather, Trace, Intimidate, Download, ...) and speed order. Showdown orders the two instant switches by the outgoing Pokemon's speed (seeded tie shuffle) and runs each entering Pokemon's hazards and switch-in abilities after both have entered, in the entering Pokemon's speed order.",
+   "decomp_ref": "pokeplatinum/src/battle/battle_lib.c:3649 (BattleSystem_TriggerEffectOnSwitch, by category then speed); pokeplatinum/src/battle/battle_controller_player.c:1844-1859 (turn end order)",
+   "showdown_ref": "pokemon-showdown/sim/battle-queue.ts:177 (instaswitch order 3, speed-sorted); pokemon-showdown/data/mods/gen4/scripts.ts:18-53 (runSwitch per Pokemon)",
+   "resolution": "accepted",
+   "impact": "Only when both entering Pokemon carry entry effects that interact (two Intimidates, hazards on both sides, competing weather abilities); the entering Pokemon and the absence of a move between are the same. Recorded, not corrected (feature 023).",
+   "test_id": "sim/test/shift.test.mjs (documents the entry order; does not assert player-first)"
   }
  ]
 }

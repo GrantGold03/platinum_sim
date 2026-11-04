@@ -119,7 +119,8 @@ def replay_requests(team: list[dict], results: Sequence[dict], lost: Sequence[Lo
         reqs.append({"op": "gauntlet", "team": team, "trainers": [b["trainer"]], "seeds": [b["seed"]],
                      "start_state": b["state_before"], "player_policy": r["player_policy"],
                      "opponent_policy": r["opponent_policy"], "stop_on_loss": True, "log": "full",
-                     **({"turn_limit": r["turn_limit"]} if "turn_limit" in r else {})})
+                     **({"turn_limit": r["turn_limit"]} if "turn_limit" in r else {}),
+                     **({"battle_style": r["battle_style"]} if "battle_style" in r else {})})  # 023: echoed only under Shift
     return reqs
 
 

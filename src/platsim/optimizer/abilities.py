@@ -297,7 +297,7 @@ def screen_master(seed: str, slot: int) -> str:
 
 
 def choose_ability(pool, team_builds, slot: int, *, seed: str, budget: str = "standard",
-                   runs: int | None = None, ledger=None, alpha: float = ALPHA) -> AbilityChoice:
+                   runs: int | None = None, ledger=None, alpha: float = ALPHA, battle_style: str = "set") -> AbilityChoice:
     """Pick the ability of team_builds[slot] (FR-008c). `pool` (sim.pool.WorkerPool) is used only when
     both abilities have a battle effect. `runs` overrides the preset's ability_screen count (tests)."""
     from platsim.budget import get_preset
@@ -345,13 +345,14 @@ def choose_ability(pool, team_builds, slot: int, *, seed: str, budget: str = "st
         team[slot]["ability"] = ab
         team = _worker_team(team, ledger)
         reqs = [{"op": "gauntlet", "team": team, "seed": s, "player_policy": SCREEN_PLAYER_POLICY,
-                 "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none"} for s in seeds]
+                 "opponent_policy": OPPONENT_POLICY, "stop_on_loss": True, "log": "none", "battle_style": battle_style}
+                for s in seeds]
         res = pool.map(reqs)
         for r in res:
             if not r.get("ok"):
                 raise RuntimeError(f"ability screen gauntlet failed: {r.get('error')}")
-            if (r.get("player_policy"), r.get("opponent_policy")) != (SCREEN_PLAYER_POLICY, OPPONENT_POLICY):
-                raise RuntimeError(f"worker ran {r.get('player_policy')}/{r.get('opponent_policy')}")
+            if (r.get("player_policy"), r.get("opponent_policy"), r.get("battle_style", "set")) != (SCREEN_PLAYER_POLICY, OPPONENT_POLICY, battle_style):
+                raise RuntimeError(f"worker ran {r.get('player_policy')}/{r.get('opponent_policy')}/{r.get('battle_style', 'set')}")
         outcomes[ab] = [bool(r["cleared"]) for r in res]
 
     cmp = mcnemar_exact(outcomes[a1], outcomes[a2], alpha=alpha)

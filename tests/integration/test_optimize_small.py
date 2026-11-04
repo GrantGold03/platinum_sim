@@ -32,7 +32,8 @@ pytestmark = pytest.mark.battle_sim  # 012: every test here starts the battle wo
 SPECIES = ["infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"]
 PROVENANCE = ("n_runs", "clear_rate", "clear_ci95", "per_battle", "champion_rate", "champion_ci95", "champion_battles",
               "opponent_policy", "player_policy", "seeds", "decomp_commit", "showdown_commit",
-              "divergence_ledger_version", "budget_preset", "threshold", "objective", "qualified", "borderline")
+              "divergence_ledger_version", "budget_preset", "threshold", "objective", "qualified", "borderline",
+              "battle_style")  # 023
 
 
 def _optimize(out, workers: str) -> tuple[subprocess.CompletedProcess, float]:

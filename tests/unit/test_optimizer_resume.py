@@ -18,7 +18,8 @@ from platsim.evaluate import DEFAULT_PLAYER_POLICY
 SPECIES = ("infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir")
 HELLO = {"sim_code_hash": "sha256:" + "a" * 64, "node_version": "v22.0.0", "decomp_commit": "d", "showdown_commit": "s",
          "decomp_data_hash": "sha256:x", "divergence_ledger_version": "v1", "divergence_patches_applied": 5,
-         "pp_restore_between_battles": False, "policies": [], "opponent_policies": []}
+         "pp_restore_between_battles": False, "policies": [], "opponent_policies": [],
+         "battle_styles": ["set", "shift"]}  # 023
 
 
 class StubPool:
@@ -171,3 +172,35 @@ def test_optimize_cli_defaults_match_the_request_defaults():
     assert req.sampling == OR.sampling and req.floor == DEFAULT_FLOOR
     with pytest.raises(InvalidRequest):
         optimize_request(build_parser().parse_args(["optimize", *["garchomp"] * 6, "--floor", "0.5"]))
+
+
+def test_battle_style_enters_the_fingerprint_only_when_non_default(tmp_path, stubbed):
+    # 023: the battle style follows the 006/018/022 rule
+    from platsim.optimizer.api import OptimizeRequest as OR
+
+    out = tmp_path / "o"
+    R.run_optimization(_req(out))
+    st = json.loads((out / "state.json").read_text())
+    assert "battle_style" not in st["fingerprint"]
+    other = "shift" if OR.battle_style == "set" else "set"
+    with pytest.raises(InvalidRequest, match="different optimize job"):
+        R.run_optimization(_req(out, battle_style=other))
+    out2 = tmp_path / "o2"
+    R.run_optimization(_req(out2, battle_style=other))
+    res = json.loads((out2 / "state.json").read_text())
+    assert res["fingerprint"]["battle_style"] == other
+    with pytest.raises(InvalidRequest, match="battle_style"):
+        _req(tmp_path / "o3", battle_style="shuffle")
+
+
+def test_optimize_cli_battle_style_default_matches_the_request_default():
+    from platsim.cli import build_parser, optimize_request
+    from platsim.optimizer.api import OptimizeRequest as OR
+
+    args = build_parser().parse_args(["optimize", *["garchomp"] * 6])
+    assert args.battle_style == OR.battle_style
+    assert optimize_request(args).battle_style == OR.battle_style
+    req = optimize_request(build_parser().parse_args(["optimize", *["garchomp"] * 6, "--battle-style", "shift"]))
+    assert req.battle_style == "shift"
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["optimize", *["garchomp"] * 6, "--battle-style", "shuffle"])

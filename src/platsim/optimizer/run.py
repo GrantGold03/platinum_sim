@@ -96,6 +96,8 @@ def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
         fp["sampling"] = req.sampling
     if req.floor != OptimizeRequest.floor:
         fp["floor"] = req.floor
+    if req.battle_style != OptimizeRequest.battle_style:  # 023: same rule
+        fp["battle_style"] = req.battle_style
     return fp
 
 
@@ -246,14 +248,14 @@ def _check(results: list[dict]) -> None:
             raise RuntimeError(f"gauntlet failed: {r.get('error')}")
 
 
-def _paired(pool, team: list[dict], master: str, n: int, policy: str) -> list[bool]:
+def _paired(pool, team: list[dict], master: str, n: int, policy: str, battle_style: str = "set") -> list[bool]:
     reqs = [{"op": "gauntlet", "team": team, "seed": derive_seed(master, i, 0), "player_policy": policy,
-             "opponent_policy": OPPONENT, "stop_on_loss": True, "log": "none"} for i in range(n)]
+             "opponent_policy": OPPONENT, "stop_on_loss": True, "log": "none", "battle_style": battle_style} for i in range(n)]
     rs = pool.map(reqs)
     _check(rs)
     for r in rs:
-        if (r["player_policy"], r["opponent_policy"]) != (policy, OPPONENT):
-            raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}")
+        if (r["player_policy"], r["opponent_policy"], r.get("battle_style", "set")) != (policy, OPPONENT, battle_style):
+            raise RuntimeError(f"worker ran {r['player_policy']}/{r['opponent_policy']}/{r.get('battle_style', 'set')}")
     return [bool(r["cleared"]) for r in rs]
 
 
@@ -314,6 +316,8 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     for need, key in ((req.player_policy, "policies"), (SCREEN_POLICY, "policies"), (OPPONENT, "opponent_policies")):
         if need not in hello[key]:
             raise RuntimeError(f"worker does not offer {need!r} ({key}: {hello[key]})")
+    if req.battle_style not in hello.get("battle_styles", ("set",)):  # 023
+        raise RuntimeError(f"worker does not offer battle style {req.battle_style!r} ({hello.get('battle_styles')})")
 
     def wteam(specs, levels):
         r = R.realize(specs, levels, led, required_hms=req.required_hms)
@@ -339,7 +343,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
         def rate(u: int) -> float:
             levels = [max(u, f) for f in floors_a]
             team = wteam(base_a, levels)
-            res = _paired(pool, team, f"{seed}|calibrate", n_cal, SCREEN_POLICY)
+            res = _paired(pool, team, f"{seed}|calibrate", n_cal, SCREEN_POLICY, req.battle_style)
             points[str(u)] = {"levels": levels, "runs": n_cal, "cleared": sum(res)}
             prog("calibrate", runs_done=len(points) * n_cal, detail=f"greedy-v1 at U={u}: {sum(res)}/{n_cal} cleared")
             return sum(res) / n_cal
@@ -380,7 +384,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
         team = R.realize(baseline, screen_levels, led, required_hms=req.required_hms).team
         for slot, s in enumerate(baseline):
             prog("ability_screen", runs_done=slot, runs_planned=6, detail=f"slot {slot + 1} {C.display_name(s.species)}")
-            ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led)
+            ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led, battle_style=req.battle_style)
             abilities[f"{slot}|{s.variant}"] = {"ability": ch.ability, "reason": ch.reason, "stats": ch.stats,
                                                 "tested_on": "pass-B baseline at the screening levels"}
         state.done("ability_screen", abilities, time.perf_counter() - t0)
@@ -434,7 +438,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             teams_specs.append(specs)
         prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels}")
         wteams = [worker_team(R.realize(s, screen_levels, led, required_hms=req.required_hms).team, led) for s in teams_specs]
-        res = successive_halving(pool, wteams, seed=seed, rounds=preset.screening_rounds,
+        res = successive_halving(pool, wteams, seed=seed, rounds=preset.screening_rounds, battle_style=req.battle_style,
                                  progress=lambda d, p, best, sc, r: prog(
                                      "screen", runs_done=d, runs_planned=p,
                                      best={"candidate": best, "cleared": sc[0], "runs": sc[2]},
@@ -453,7 +457,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             k = f"{slot}|{s.variant}"
             if k not in abilities:
                 team = R.realize(specs, screen_levels, led, required_hms=req.required_hms).team
-                ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led)
+                ch = choose_ability(pool, team.builds, slot, seed=seed, budget=preset.name, ledger=led, battle_style=req.battle_style)
                 abilities[k] = {"ability": ch.ability, "reason": ch.reason, "stats": ch.stats,
                                 "tested_on": f"finalist {fi + 1} at the screening levels"}
                 state.done("ability_screen", abilities)
@@ -474,7 +478,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
                  detail=f"levels {p.levels}: {p.wins}/{p.n} cleared -> {p.decision}"
                         + (f", avg final {p.avg_final:.2f}" if p.avg_final else ""))
 
-        return LevelSearch(pool, lambda lv: wteam(specs, lv), floors, seed=seed, budget=preset.name, threshold=thr, policy=req.player_policy,
+        return LevelSearch(pool, lambda lv: wteam(specs, lv), floors, seed=seed, budget=preset.name, threshold=thr, policy=req.player_policy, battle_style=req.battle_style,
                            margin=margin, key=team_key(R.spec_to_json(specs)), memo=memo, on_point=on_point,
                            on_batch=lambda lv, n, w: prog("level_search", runs_done=n,
                                                           detail=f"levels {lv}: {w}/{n} so far"))
@@ -496,7 +500,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
         setup = []
         n_set = preset.ability_screen
         cur_team = wteam(winner, levels)
-        cur = _paired(pool, cur_team, f"{seed}|setup", n_set, req.player_policy)
+        cur = _paired(pool, cur_team, f"{seed}|setup", n_set, req.player_policy, req.battle_style)
         for slot, s in enumerate(winner):
             mc = cands[slot].get(s.variant)
             if mc is None or not mc.setup_moveset or s.moves == mc.setup_moveset:
@@ -511,7 +515,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
                 setup.append(entry)
                 continue
             prog("setup_check", detail=f"slot {slot + 1}: {alt[slot].label()} vs current ({n_set} paired runs)")
-            alt_res = _paired(pool, alt_team, f"{seed}|setup", n_set, req.player_policy)
+            alt_res = _paired(pool, alt_team, f"{seed}|setup", n_set, req.player_policy, req.battle_style)
             cmp = mcnemar_exact(alt_res, cur)
             entry.update({"n_paired": cmp.n, "clear_rate_setup": cmp.a_rate, "clear_rate_current": cmp.b_rate,
                           "setup_only": cmp.a_only, "current_only": cmp.b_only, "p_value": cmp.p_value,
@@ -604,6 +608,7 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
         rep, ev = evaluate_team(real.team, led, pool, runs=preset.confirm_min, seed=master, player_policy=req.player_policy,
                                 budget=preset.name, threshold=thr, max_runs=max_runs, extend_borderline=extend,
                                 borderline_max_runs=preset.borderline_max_runs, sampling=req.sampling, floor=req.floor,
+                                battle_style=req.battle_style,
                                 on_batch=lambda n, w: prog("confirm", runs_done=n, runs_planned=preset.confirm_min,
                                                            best={"levels": lv, "clear_rate": round(w / max(n, 1), 4)},
                                                            detail=f"{w}/{n} cleared"))
@@ -647,14 +652,16 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
 
                 prog("confirm", detail=f"runner-up at levels {ru_lv}, {rep.n_runs} runs (adaptive, paired by kind and seed)")
                 ru_runs = run_adaptive(pool, worker_team(ru_real.team, led), master=master, min_runs=rep.n_runs,
-                                       max_runs=rep.n_runs, target=None, player_policy=req.player_policy, floor=req.floor)
+                                       max_runs=rep.n_runs, target=None, player_policy=req.player_policy, floor=req.floor,
+                                       battle_style=req.battle_style)
                 paired = paired_outcomes(ev.results, ev.cynthia_only_results, ru_runs.full_results, ru_runs.cynthia_only_results)
                 reuse = {"sampling": "adaptive", "floor": req.floor, "adaptive_runs": ru_runs}
                 full2 = None
             else:
                 prog("confirm", detail=f"runner-up at levels {ru_lv}, {len(ev.results)} paired runs")
                 full2 = run_full_gauntlets(pool, worker_team(ru_real.team, led), master=master, min_runs=len(ev.results),
-                                           max_runs=len(ev.results), target=None, player_policy=req.player_policy)
+                                           max_runs=len(ev.results), target=None, player_policy=req.player_policy,
+                                           battle_style=req.battle_style)
                 paired = paired_outcomes_full(ev.results, full2.results)
                 reuse = {"full": full2}
             cmp = mcnemar_exact(paired.a_flags, paired.b_flags) if paired.pairs else None
@@ -662,7 +669,7 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
                           "levels_winner": lv, "levels_runner_up": ru_lv, **_comparison_record(cmp, paired)}
             if cmp is not None and cmp.verdict == "B":
                 rep2, _ = evaluate_team(ru_real.team, led, pool, runs=rep.n_runs, seed=master, player_policy=req.player_policy,
-                                        budget=preset.name, threshold=thr, max_runs=rep.n_runs, **reuse)
+                                        budget=preset.name, threshold=thr, max_runs=rep.n_runs, battle_style=req.battle_style, **reuse)
                 if _confirm_ok(rep2, preset, thr):
                     chosen, chosen_real, chosen_rep = ru, ru_real, rep2
                     comparison["switched_to_runner_up"] = True
@@ -689,7 +696,8 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
                      "and final gap <= 10 (FR-016)",
         "request": {"species": state.data["fingerprint"]["species"], "min_clear": req.min_clear,
                     "seed": str(req.seed), "budget": preset.name, "legality_options": req.legality.to_dict(),
-                    **({"required_hms": list(req.required_hms)} if req.required_hms else {})},
+                    **({"required_hms": list(req.required_hms)} if req.required_hms else {}),
+                    "battle_style": req.battle_style},  # 023
         "budget_preset": {"name": preset.name, "screening_rounds": list(preset.screening_rounds),
                           "ability_screen": preset.ability_screen, "confirm_min": preset.confirm_min,
                           "ci_half_width": preset.ci_half_width, "qualifying": preset.qualifying},
@@ -758,7 +766,7 @@ def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, spe
         champion_ci95=None, champion_battles=0, budget_preset=preset.name, expected_final_levels=[],
         expected_avg_final_level=best.avg_final, final_level_gap_max=best.gap, loss_causes=[],
         threshold=float(req.min_clear), qualified=False, borderline=False, player_policy=req.player_policy,
-        opponent_policy=OPPONENT, seeds={"master": str(req.seed), "scheme": SCHEME},
+        opponent_policy=OPPONENT, seeds={"master": str(req.seed), "scheme": SCHEME}, battle_style=req.battle_style,
         decomp_commit=hello["decomp_commit"], showdown_commit=hello["showdown_commit"],
         divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
         divergences=divs, no_qualifying=nq,

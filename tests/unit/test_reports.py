@@ -401,3 +401,28 @@ def test_xlsx_evaluation_sheet_shows_the_sampling_rows_when_adaptive(tmp_path):
     ws2 = load_workbook(tmp_path / "f.xlsx")["Evaluation"]
     keys2 = [row[0].value for row in ws2.iter_rows(min_col=1, max_col=1)]
     assert "Sampling method" in keys2 and "Cynthia-only runs" not in keys2
+
+
+# ---- feature 023: battle style ----
+
+def test_battle_style_round_trip_old_json_reads_as_set_and_the_sheet_and_summary_name_it(tmp_path):
+    from openpyxl import load_workbook
+
+    from platsim.evaluate import summary_text
+    from platsim.report.json_report import EvaluationReport
+    from platsim.report.xlsx import write_xlsx
+
+    r = _report()
+    d = r.to_dict()
+    assert d["battle_style"] == "set"
+    back = EvaluationReport.from_dict(dict(d, battle_style="shift"))
+    assert back.battle_style == "shift"
+    assert EvaluationReport.from_dict(back.to_dict()).to_dict() == back.to_dict()
+    legacy = EvaluationReport.from_dict({k: v for k, v in d.items() if k != "battle_style"})
+    assert legacy.battle_style == "set"
+    assert "style shift" in summary_text(back).splitlines()[0]
+    assert "style set" in summary_text(r).splitlines()[0]
+    write_xlsx(back, tmp_path / "s.xlsx")
+    ws = load_workbook(tmp_path / "s.xlsx")["Evaluation"]
+    rows = {row[0].value: row[1].value for row in ws.iter_rows(min_col=1, max_col=2)}
+    assert rows["Battle style"] == "shift"

@@ -61,6 +61,7 @@ function instrument(name) {
       return c;
     },
     afterTurn: inner.afterTurn,
+    shiftChoice: inner.shiftChoice, // 023: forwarded so a Shift run keeps the policy's answer
   };
   registerPlayerPolicy(wrapped);
   return { wrapped, rec };
