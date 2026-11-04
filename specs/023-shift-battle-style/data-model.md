@@ -29,9 +29,9 @@ HP that is not active and not an egg. Exclusions: both replacing; only p1 replac
 
 ## Policy hook
 
-`shiftChoice(ctx, incoming) -> null | "switch N"`: optional on a player policy; `ctx` as `choose` receives it (p1's
-request is a wait); `incoming` the Showdown Pokemon object `p2.pokemon[N-1]`; `N` 1-based in p1's party order; `null`
-means stay. Policies without it stay. expectimax2: argmax over stay and bench candidates of `valuePly2` on the cloned
+`shiftChoice(ctx, incoming) -> {choice: null | "switch N", reason: string}`: optional on a player policy; `ctx` as
+`choose` receives it (p1's request is a wait); `incoming` the Showdown Pokemon object `p2.pokemon[N-1]`; `N` 1-based in
+p1's party order; `choice: null` means stay; `reason` goes into the log line and the event. Policies without it stay. expectimax2: argmax over stay and bench candidates of `valuePly2` on the cloned
 root with our member placed then the foe; ties stay. greedy: best bench `memberScore` against `incoming` strictly above
 the active's.
 

@@ -70,12 +70,13 @@ selection; the same battle under Set shows no prompt and the identical log to to
 
 **Acceptance Scenarios**:
 
-1. **Given** Shift, a single battle, the foe faints and the trainer has another Pokemon, the player's active Pokemon
-   is standing and the player has a bench member with HP, **When** the turn ends, **Then** the player is offered the
-   free switch with the incoming Pokemon's name, before it enters.
+1. **Given** Shift, a single battle, the foe's active faints by any cause and the trainer has another Pokemon, the
+   player's active Pokemon is standing and the player has a bench member with HP, **When** the turn ends, **Then** the
+   player is offered the free switch with the incoming Pokemon's name, before it enters.
 2. **Given** Shift and the player accepts, **When** the switch is applied, **Then** the player's new Pokemon enters
-   first with reset stat stages and cleared volatile effects, the announced Pokemon enters second, no move is used by
-   either side before the next command selection, and the battle log records the announcement and the decision.
+   with reset stat stages and cleared volatile effects, the announced Pokemon enters in the same exchange, no move is
+   used by either side before the next command selection, and the battle log records the announcement and the
+   decision.
 3. **Given** Shift, **When** both active Pokemon faint in the same turn, or only the player's faints, or the player has
    no usable replacement, or the fainted foe was the trainer's last, **Then** there is no prompt and the battle proceeds
    as under Set.
@@ -157,8 +158,9 @@ times.
   switch under the game's rules at that moment (trapped) is not a case here, since the prompt happens between turns
   with the trapping foe fainted.
 - Pursuit on the free switch: cannot trigger in the game; the simulator must not apply it.
-- Entry abilities after the double entry (for example Intimidate on both sides): the game orders them by category and
-  speed, the engine by entry; the difference is recorded in the ledger with a stated resolution.
+- Entry order and entry effects after the double entry (hazards, Intimidate on both sides): the game enters the
+  player's Pokemon first and orders abilities by category then speed, the engine orders both by speed with seeded ties;
+  the difference is recorded in the ledger as accepted.
 - A result file without a style field (written before this feature) reads as Set.
 - A request naming an unknown style is refused with a clear error.
 
@@ -169,15 +171,17 @@ times.
 - **FR-001**: Every evaluate and optimize request MUST carry a battle style, `shift` or `set`, settable with
   `--battle-style` on both commands; an unknown value MUST be refused. The default is `set` until the owner's decision
   (User Story 3), then whichever the owner chooses, set in its own commit.
-- **FR-002**: Under Shift, after a turn in which the player's active Pokemon knocked out a foe, the simulator MUST
-  offer the player a free switch if and only if the game's gate holds: a single trainer battle, the trainer has
-  another Pokemon, the player's active Pokemon did not faint in the same turn, and the player has a usable replacement
-  (species, not an egg, HP above 0, not the active slot).
+- **FR-002**: Under Shift, after a turn in which the foe's active Pokemon fainted (by any cause: a hit, poison,
+  recoil) and the player's did not, the simulator MUST offer the player a free switch if and only if the game's gate
+  holds: a single trainer battle, the trainer has another Pokemon, and the player has a usable replacement (species, not
+  an egg, HP above 0, not the active slot).
 - **FR-003**: The offer MUST name the trainer's actual replacement, chosen by the trainer AI before the offer against the
   player's current active Pokemon, and that Pokemon MUST be the one that enters.
-- **FR-004**: A accepted switch MUST be applied as a normal switch (stat stages reset, volatile effects cleared, Natural
-  Cure applied, no Pursuit), with the player's Pokemon entering before the trainer's, hazards in that order, and no move
-  used by either side before the next command selection.
+- **FR-004**: An accepted switch MUST be applied as a normal switch (stat stages reset, volatile effects cleared,
+  Natural Cure applied, no Pursuit) with no move used by either side before the next command selection; the engine's
+  turn counter advances once, as it does for a normal replacement. The order in which the two Pokemon enter and their
+  entry effects run follows the engine (speed order with seeded ties) and is recorded as an accepted divergence from the
+  game's player-first order (FR-010); it is not a requirement on the simulator.
 - **FR-005**: Under Set, and whenever the gate does not hold, battles MUST proceed exactly as before this feature: the
   recorded replay fixtures for the v1, v2 and v4 players (digest_full and digest_logs), the determinism tests and every
   stored result MUST be byte-identical; any new result field MUST appear only under Shift.
@@ -190,18 +194,19 @@ times.
   value with the announced foe on the field. Modelling the free switch inside the search is a separate feature with
   its own paired ladder.
 - **FR-008**: The trainer AI's replacement choice and every other trainer behaviour MUST be unchanged.
-- **FR-009**: The style MUST be echoed in every battle result, named in the evaluation summary and provenance of every
-  report, enter the optimizer's job fingerprint only when it differs from the default, and be part of the code change
-  that refuses pre-feature checkpoints on resume.
+- **FR-009**: The style MUST be echoed in the worker's run response under Shift (absent reads as Set, so Set results
+  stay byte-identical per FR-005), named in every report, its evaluation summary and its provenance, enter the
+  optimizer's job fingerprint only when it differs from the default, and be part of the code change that refuses
+  pre-feature checkpoints on resume.
 - **FR-009a**: Offer and switch counts MUST be recorded per battle (the battle log and the per-run result, present
   only under Shift) and MUST NOT be aggregated into the standard evaluation report, summary, xlsx or web view; the
   acceptance script aggregates them from the per-run records. Standard reports carry only the style name.
 - **FR-010**: The divergence ledger MUST gain two entries in the mechanics area with decomp and engine references and a
   stated resolution: the Shift prompt itself, and the entry-ability ordering after a double entry.
 - **FR-011**: Unit tests MUST pin the gate (no offer when both faint, when only the player's faints, when the player has
-  no replacement, when the foe's last Pokemon faints) and a hand-walked battle (no turn cost, the player's Pokemon
-  enters first, stat stages reset on the way out, the announced species enters), plus the two policy control positions
-  (must switch, must stay) for every player policy.
+  no replacement, when the foe's last Pokemon faints) and a hand-walked battle (no move between the offer and the next
+  command selection, both Pokemon entered, stat stages reset on the way out, the announced species enters), plus the two
+  policy control positions (must switch, must stay) for every player policy.
 - **FR-012**: Acceptance MUST run 2,000 paired gauntlets Shift against Set with the v4 player, the same seeds and
   opponents, 16 workers, on the reference fixture team, 014 b2-main, 014 b2-branch and bench-010 B3, and report per team:
   clear rate and interval under each style, the exact paired p-value and verdict, per-trainer pass rates, the number of
