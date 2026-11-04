@@ -99,6 +99,21 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   4. Acceptance: paired Shift vs Set runs on a few benchmark teams, then the user decides the default.
 - **Order.** Independent of the 007 work (reverted 2026-10-20); it can land on `main` as is. Land it alone, so a level change is attributable to Shift alone. It changes
   every result, so it lands on its own.
+- **Research (2026-11-04, decomp c248fb3f and the worker, read only).** Confirmed from code, not a trace. Default is Shift
+  (`src/game_options.c:31`); the engine reads the option in one place, the gate in `BattleControllerPlayer_ReplaceFainted`
+  (`src/battle/battle_controller_player.c:4144-4160`): not doubles/link/Frontier, style Shift, not both sides replacing, the player
+  has a replacement (`battle_lib.c:3125-3181`). The trainer AI picks its replacement BEFORE the prompt, scored against the player's
+  current active (`BattleAI_SwitchedSlot` `battle_lib.c:8091`, `BattleAI_PostKOSwitchIn` `battle_lib.c:7923-8089`); the prompt shows
+  only trainer class, name and the incoming mon's name (`res/battle/scripts/subscripts/subscript_replace_fainted.s:29-38`,
+  `res/text/battle_strings.json:5721-5727`). On yes: the player's mon enters first (normal switch: stat stages reset, volatiles
+  cleared, Natural Cure; Pursuit cannot trigger), then the foe; hazards in that order; entry abilities afterwards by category then
+  speed order (`battle_lib.c:3649ff`), not by entry order. No turn cost (inside end-of-turn, `battle_controller_player.c:1844-1859`).
+  Both faint the same turn: no prompt, both replace, player first. Player-only faint in a trainer battle: forced menu, no prompt.
+  Elite Four and Champion are ordinary singles: the prompt applies. Set differs only in the absence of the prompt. Worker side:
+  the trainer's choice is already computed before `makeChoices` (`sim/gauntlet.mjs:174-176`); Showdown has the free-switch
+  machinery (`switchFlag` + `instaswitch`, `battle.ts:1431-1433, 2765-2780`), so no edit to the vendored tree; `digest_full`
+  hashes the whole gauntlet result, so any new result field must appear only under Shift to keep the Set fixtures byte-identical;
+  no "shift" exists in `sim/` or `src/` today. Spec drafted for 023 (user's go, 2026-11-04).
 
 ## 4. Plain-language user-facing output (added 2026-10-19)
 
