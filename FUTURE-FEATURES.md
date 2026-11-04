@@ -114,6 +114,12 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   machinery (`switchFlag` + `instaswitch`, `battle.ts:1431-1433, 2765-2780`), so no edit to the vendored tree; `digest_full`
   hashes the whole gauntlet result, so any new result field must appear only under Shift to keep the Set fixtures byte-identical;
   no "shift" exists in `sim/` or `src/` today. Spec drafted for 023 (user's go, 2026-11-04).
+- **Built as feature 023 (2026-11-04, `specs/023-shift-battle-style/`)**: `--battle-style {set,shift}` on `evaluate` and
+  `optimize`, the offer in the worker through the engine's switch flag, the four player policies answering with their
+  existing scoring, two ledger entries, Set byte-identical. Acceptance (2,000 paired gauntlets, v4): Shift better on all
+  four teams (ref 0.951 -> 0.974, b2-main 0.912 -> 0.987, b2-branch 0.776 -> 0.979, bench-010 B3 0.761 -> 0.985; p down
+  to 1e-111), about 21 offers per gauntlet, two thirds taken, wall within 10%; B2 quick settles about two levels lower.
+  Default decision: see the validation log (T022).
 
 ## 4. Plain-language user-facing output (added 2026-10-19)
 

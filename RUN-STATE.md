@@ -1,12 +1,16 @@
-# START HERE (updated 2026-11-04, 3:50 PM EST, feature 023 `023-shift-battle-style` specified on its branch from `main` 581e836; clarify next)
+# START HERE (updated 2026-11-04, 5:20 PM EST, feature 023 built on its branch, acceptance done; the default decision waits for the user)
 
-- **Feature 023 `023-shift-battle-style` specified 2026-11-04 (`/speckit-specify`, user's paste), branch from `main` 581e836 in the
-  main checkout.** `specs/023-shift-battle-style/spec.md` + `checklists/requirements.md` (all pass, 0 markers). Three stories: US1
-  the rule in the worker behind `--battle-style shift|set` (default `set` until the owner decides; Set byte-identical), US2 the
-  player policies answer the prompt with their existing scoring, US3 paired Shift vs Set acceptance on four teams + B2 quick under
-  each style, then the default decision. Research (decomp citations, worker hooks) is in FUTURE-FEATURES section 3. Next:
-  `/speckit-clarify` (user runs it). Nothing is running.
-
+- **Feature 023 `023-shift-battle-style` built 2026-11-04 on its branch (from `main` 581e836): `--battle-style {set,shift}`
+  on evaluate and optimize, the Shift offer in `sim/gauntlet.mjs` through Showdown's switch flag (no engine edit), `shiftChoice`
+  on greedy-v1 and expectimax2 v1/v2/v4, two ledger entries, the field through every request builder, report, provenance,
+  fingerprint-when-non-default; Set byte-identical (replay fixtures unchanged).** Commits b565099 (US1), 78102b9 (US2), then
+  the acceptance commit. Gates so far: Node 372 pass; fast pytest 583 pass; `test_evaluate_shift` 2 pass. Acceptance (T020,
+  4:39 to 5:14 PM EST): Shift better on all four teams (b2-branch 0.776 -> 0.979, B3 0.761 -> 0.985, ref 0.951 -> 0.974,
+  b2-main 0.912 -> 0.987), control 0 discordant, B2 quick two levels lower. **Pending: the user's default decision (T022),
+  then the full-suite gate (T023, about 1 h 30 min) and the closing commit; merge on the user's go.** Evidence
+  `runs/023-evidence/` (local) with copies under `specs/023-shift-battle-style/evidence/`. Traps: Scizor/Bronzong are
+  Steel (poison immune) in fixtures; set `switchFlag` before `makeRequest`; a measurement must not overlap a sim edit
+  (the version test hashes `sim/`).
 - **Feature 022 `022-confirm-adaptive-sampling` closed on its branch 2026-11-04 (from `main` 93ac7c8; `main` has not moved).
   Gates (T021, 1:36 to 3:06 PM EST): sim hash unchanged, `diff main -- sim` empty, Node 351 pass, full pytest 610 passed + 4 xfailed
   in 1 h 28 min. **Merged to `main` 2026-11-04, 3:15 PM EST on the user's go (fast-forward to a989b62, pushed).** Nothing is running. Next feature: the user's choice from the FUTURE-FEATURES suggested order (lead named in every output

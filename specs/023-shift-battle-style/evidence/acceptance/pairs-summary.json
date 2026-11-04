@@ -1,0 +1,420 @@
+[
+ {
+  "team": "ref",
+  "a": "shift",
+  "b": "set",
+  "policy": "expectimax2-v4",
+  "n": 2000,
+  "a_cleared": 1948,
+  "b_cleared": 1902,
+  "a_rate": 0.974,
+  "b_rate": 0.951,
+  "a_ci95": [
+   0.9661,
+   0.9801
+  ],
+  "b_ci95": [
+   0.9406,
+   0.9596
+  ],
+  "a_only": 93,
+  "b_only": 47,
+  "p_value": 0.00012562947340398633,
+  "verdict": "A",
+  "a_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 1999,
+    "rate": 0.9995
+   },
+   "bertha": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "flint": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "cynthia": {
+    "battles": 1999,
+    "won": 1948,
+    "rate": 0.9745
+   }
+  },
+  "b_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 1999,
+    "rate": 0.9995
+   },
+   "bertha": {
+    "battles": 1999,
+    "won": 1998,
+    "rate": 0.9995
+   },
+   "flint": {
+    "battles": 1998,
+    "won": 1998,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1998,
+    "won": 1997,
+    "rate": 0.9995
+   },
+   "cynthia": {
+    "battles": 1997,
+    "won": 1902,
+    "rate": 0.9524
+   }
+  },
+  "a_offers": 41718,
+  "a_switches": 28821,
+  "a_prompted_battles": 9995,
+  "a_prompted_battles_won": 9944,
+  "a_gauntlets_per_s": 12.7353,
+  "b_gauntlets_per_s": 13.188,
+  "wall_ratio_a_over_b": 1.036,
+  "master": "023-pairs|ref",
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "date": "2026-11-04 4:45:23 PM EST"
+ },
+ {
+  "team": "b2main",
+  "a": "shift",
+  "b": "set",
+  "policy": "expectimax2-v4",
+  "n": 2000,
+  "a_cleared": 1974,
+  "b_cleared": 1824,
+  "a_rate": 0.987,
+  "b_rate": 0.912,
+  "a_ci95": [
+   0.981,
+   0.9911
+  ],
+  "b_ci95": [
+   0.8988,
+   0.9236
+  ],
+  "a_only": 170,
+  "b_only": 20,
+  "p_value": 7.905290080352722e-31,
+  "verdict": "A",
+  "a_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "bertha": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "flint": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 2000,
+    "won": 1997,
+    "rate": 0.9985
+   },
+   "cynthia": {
+    "battles": 1997,
+    "won": 1974,
+    "rate": 0.9885
+   }
+  },
+  "b_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "bertha": {
+    "battles": 2000,
+    "won": 1994,
+    "rate": 0.997
+   },
+   "flint": {
+    "battles": 1994,
+    "won": 1994,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1994,
+    "won": 1980,
+    "rate": 0.993
+   },
+   "cynthia": {
+    "battles": 1980,
+    "won": 1824,
+    "rate": 0.9212
+   }
+  },
+  "a_offers": 42528,
+  "a_switches": 27354,
+  "a_prompted_battles": 9997,
+  "a_prompted_battles_won": 9971,
+  "a_gauntlets_per_s": 14.1757,
+  "b_gauntlets_per_s": 15.1142,
+  "wall_ratio_a_over_b": 1.066,
+  "master": "023-pairs|b2main",
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "date": "2026-11-04 4:49:57 PM EST"
+ },
+ {
+  "team": "b2branch",
+  "a": "shift",
+  "b": "set",
+  "policy": "expectimax2-v4",
+  "n": 2000,
+  "a_cleared": 1957,
+  "b_cleared": 1551,
+  "a_rate": 0.9785,
+  "b_rate": 0.7755,
+  "a_ci95": [
+   0.9712,
+   0.984
+  ],
+  "b_ci95": [
+   0.7567,
+   0.7932
+  ],
+  "a_only": 433,
+  "b_only": 27,
+  "p_value": 2.3691493773167006e-95,
+  "verdict": "A",
+  "a_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 1999,
+    "rate": 0.9995
+   },
+   "bertha": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "flint": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1999,
+    "won": 1998,
+    "rate": 0.9995
+   },
+   "cynthia": {
+    "battles": 1998,
+    "won": 1957,
+    "rate": 0.9795
+   }
+  },
+  "b_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 1996,
+    "rate": 0.998
+   },
+   "bertha": {
+    "battles": 1996,
+    "won": 1995,
+    "rate": 0.9995
+   },
+   "flint": {
+    "battles": 1995,
+    "won": 1995,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1995,
+    "won": 1984,
+    "rate": 0.9945
+   },
+   "cynthia": {
+    "battles": 1984,
+    "won": 1551,
+    "rate": 0.7818
+   }
+  },
+  "a_offers": 42008,
+  "a_switches": 26340,
+  "a_prompted_battles": 9995,
+  "a_prompted_battles_won": 9952,
+  "a_gauntlets_per_s": 16.8254,
+  "b_gauntlets_per_s": 16.1949,
+  "wall_ratio_a_over_b": 0.963,
+  "master": "023-pairs|b2branch",
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "date": "2026-11-04 4:53:59 PM EST"
+ },
+ {
+  "team": "b3",
+  "a": "shift",
+  "b": "set",
+  "policy": "expectimax2-v4",
+  "n": 2000,
+  "a_cleared": 1970,
+  "b_cleared": 1521,
+  "a_rate": 0.985,
+  "b_rate": 0.7605,
+  "a_ci95": [
+   0.9787,
+   0.9895
+  ],
+  "b_ci95": [
+   0.7413,
+   0.7787
+  ],
+  "a_only": 471,
+  "b_only": 22,
+  "p_value": 7.929958599302597e-111,
+  "verdict": "A",
+  "a_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "bertha": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "flint": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 2000,
+    "won": 1997,
+    "rate": 0.9985
+   },
+   "cynthia": {
+    "battles": 1997,
+    "won": 1970,
+    "rate": 0.9865
+   }
+  },
+  "b_per_trainer": {
+   "aaron": {
+    "battles": 2000,
+    "won": 2000,
+    "rate": 1.0
+   },
+   "bertha": {
+    "battles": 2000,
+    "won": 1999,
+    "rate": 0.9995
+   },
+   "flint": {
+    "battles": 1999,
+    "won": 1999,
+    "rate": 1.0
+   },
+   "lucian": {
+    "battles": 1999,
+    "won": 1771,
+    "rate": 0.8859
+   },
+   "cynthia": {
+    "battles": 1771,
+    "won": 1521,
+    "rate": 0.8588
+   }
+  },
+  "a_offers": 41916,
+  "a_switches": 27517,
+  "a_prompted_battles": 9997,
+  "a_prompted_battles_won": 9967,
+  "a_gauntlets_per_s": 16.8409,
+  "b_gauntlets_per_s": 15.3197,
+  "wall_ratio_a_over_b": 0.91,
+  "master": "023-pairs|b3",
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "date": "2026-11-04 4:58:09 PM EST"
+ },
+ {
+  "team": "ref",
+  "control": "shift-vs-shift",
+  "discordant": 0,
+  "ok": true
+ },
+ {
+  "b2quick": {
+   "shift": {
+    "species": [
+     "garchomp",
+     "infernape",
+     "staraptor",
+     "rotom",
+     "floatzel",
+     "weavile"
+    ],
+    "levels": [
+     51,
+     52,
+     52,
+     53,
+     52,
+     53
+    ],
+    "clear_rate": 0.93,
+    "clear_ci95": [
+     0.9042028101480832,
+     0.949240257054982
+    ],
+    "n_runs": 500,
+    "qualified": false,
+    "borderline": false,
+    "expected_avg_final_level": 52.79139784946236,
+    "confirm_attempts": 2,
+    "wall_s": 416.2,
+    "battle_style": "shift"
+   },
+   "set": {
+    "species": [
+     "garchomp",
+     "infernape",
+     "staraptor",
+     "rotom",
+     "floatzel",
+     "weavile"
+    ],
+    "levels": [
+     54,
+     52,
+     54,
+     54,
+     54,
+     55
+    ],
+    "clear_rate": 0.886,
+    "clear_ci95": [
+     0.8551509101576845,
+     0.9109630990059973
+    ],
+    "n_runs": 500,
+    "qualified": false,
+    "borderline": false,
+    "expected_avg_final_level": 54.29683972911964,
+    "confirm_attempts": 2,
+    "wall_s": 407.4,
+    "battle_style": "set"
+   }
+  }
+ }
+]

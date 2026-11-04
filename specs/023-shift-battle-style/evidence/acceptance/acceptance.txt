@@ -1,0 +1,21 @@
+start 2026-11-04 4:39:33 PM EST
+ref: n 2000  shift 0.9740 [0.9661, 0.9801]  set 0.9510 [0.9406, 0.9596]  only shift 93 / only set 47  p 0.000126  verdict A
+    per trainer shift: aar 1.000 ber 1.000 fli 1.000 luc 1.000 cyn 0.975
+    per trainer set:   aar 1.000 ber 1.000 fli 1.000 luc 1.000 cyn 0.952
+    offers 41718, switches 28821, prompted battles 9995 (won 9944); speed shift 12.74 / set 13.19 gauntlets/s, wall ratio shift/set 1.036
+b2main: n 2000  shift 0.9870 [0.9810, 0.9911]  set 0.9120 [0.8988, 0.9236]  only shift 170 / only set 20  p 7.91e-31  verdict A
+    per trainer shift: aar 1.000 ber 1.000 fli 1.000 luc 0.999 cyn 0.989
+    per trainer set:   aar 1.000 ber 0.997 fli 1.000 luc 0.993 cyn 0.921
+    offers 42528, switches 27354, prompted battles 9997 (won 9971); speed shift 14.18 / set 15.11 gauntlets/s, wall ratio shift/set 1.066
+b2branch: n 2000  shift 0.9785 [0.9712, 0.9840]  set 0.7755 [0.7567, 0.7932]  only shift 433 / only set 27  p 2.37e-95  verdict A
+    per trainer shift: aar 1.000 ber 1.000 fli 1.000 luc 1.000 cyn 0.980
+    per trainer set:   aar 0.998 ber 1.000 fli 1.000 luc 0.995 cyn 0.782
+    offers 42008, switches 26340, prompted battles 9995 (won 9952); speed shift 16.83 / set 16.19 gauntlets/s, wall ratio shift/set 0.963
+b3: n 2000  shift 0.9850 [0.9787, 0.9895]  set 0.7605 [0.7413, 0.7787]  only shift 471 / only set 22  p 7.93e-111  verdict A
+    per trainer shift: aar 1.000 ber 1.000 fli 1.000 luc 0.999 cyn 0.987
+    per trainer set:   aar 1.000 ber 1.000 fli 1.000 luc 0.886 cyn 0.859
+    offers 41916, switches 27517, prompted battles 9997 (won 9967); speed shift 16.84 / set 15.32 gauntlets/s, wall ratio shift/set 0.91
+pairing control (ref, shift twice): 0 discordant pairs, OK
+b2quick shift: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [51, 52, 52, 53, 52, 53] clear 0.9300 [0.9042, 0.9492] n 500 attempts 2 wall 416 s
+b2quick set: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [54, 52, 54, 54, 54, 55] clear 0.8860 [0.8552, 0.911] n 500 attempts 2 wall 407 s
+end 2026-11-04 5:14:04 PM EST

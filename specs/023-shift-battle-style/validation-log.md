@@ -97,3 +97,34 @@ Node suite, 4:36:19 to 4:39:09 PM EST: tests 372, pass 372, fail 0  (replay fixt
 ```
 
 **Commit 2**: `feat(023): player policies answer the Shift offer ...`.
+
+## T019-T020 Acceptance (4:39:33 to 5:14:05 PM EST, alone, exit 0)
+
+`uv run python specs/023-shift-battle-style/scripts/paired_styles.py --teams ref,b2main,b2branch,b3 --runs 2000 --workers 16
+--self --b2quick --out runs/023-evidence/pairs` (evidence under `runs/023-evidence/`, copies in `evidence/acceptance/`).
+Player expectimax2-v4, decomp-ai, stop_on_loss, the same seeds under both styles (`023-pairs|<team>`), sim hash
+`c07be275...`. Pairing control (ref, Shift twice): **0 discordant pairs**.
+
+| team | Set clear rate [95% CI] | Shift clear rate [95% CI] | only Shift / only Set | p (exact) | Cynthia Set -> Shift | Lucian Set -> Shift | offers / gauntlet | switch share | prompted battles won | wall Shift/Set |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ref | 0.9510 [0.9406, 0.9596] | 0.9740 [0.9661, 0.9801] | 93 / 47 | 0.000126 | 0.952 -> 0.975 | 1.000 -> 1.000 | 20.9 | 0.69 | 9944/9995 | 1.04x |
+| b2main | 0.9120 [0.8988, 0.9236] | 0.9870 [0.9810, 0.9911] | 170 / 20 | 7.91e-31 | 0.921 -> 0.989 | 0.993 -> 0.999 | 21.3 | 0.64 | 9971/9997 | 1.07x |
+| b2branch | 0.7755 [0.7567, 0.7932] | 0.9785 [0.9712, 0.9840] | 433 / 27 | 2.37e-95 | 0.782 -> 0.980 | 0.995 -> 1.000 | 21.0 | 0.63 | 9952/9995 | 0.96x |
+| b3 | 0.7605 [0.7413, 0.7787] | 0.9850 [0.9787, 0.9895] | 471 / 22 | 7.93e-111 | 0.859 -> 0.987 | 0.886 -> 0.999 | 21.0 | 0.66 | 9967/9997 | 0.91x |
+
+B2 quick (`--seed 014-b2`, 16 workers): Set winner levels [54, 52, 54, 54, 54, 55] clear 0.8860 [0.8552, 0.911] (n 500, 2 confirm attempts, wall 407 s); Shift winner levels [51, 52, 52, 53, 52, 53] clear 0.9300 [0.9042, 0.9492] (n 500, 2 attempts, wall 416 s); same species, moves and items; expected average final level 54.30 (Set) vs 52.79 (Shift).
+
+**Reading.** Shift is better for the player on every team, with statistical support far beyond the threshold (p from
+1e-4 to 1e-111): the free switch lets the player counter-pick before each incoming Pokemon, so the losses that decided
+Set results, Cynthia on every team and Lucian on bench-010 B3, mostly disappear (B3's Lucian pass rate 0.886 -> 0.999,
+Cynthia 0.859 -> 0.987). The offer fires about 21 times per gauntlet (nearly every foe faint) and the v4 policy takes it
+on about two thirds of them. Wall cost is within 10% either way (the extra valuations are offset by shorter battles).
+The direction matches the spec's expectation (Shift never worse); the magnitude means the Set numbers in every stored
+result and the README understate what the game's default rule allows. The B2 quick optimizer settles about two levels
+lower under Shift (expected average final level 54.30 -> 52.79) with the same build. Not gated.
+
+## T021 Docs (5:20 PM EST)
+
+README: the command rows (`--battle-style` on `evaluate` and `optimize`), a known-limitations bullet, the feature-023
+block with the table above; FUTURE-FEATURES section 3: outcome; RUN-STATE. **Commit 3**: `feat(023): acceptance ...`.
+

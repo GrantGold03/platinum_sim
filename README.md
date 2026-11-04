@@ -150,10 +150,10 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `extract` | Regenerates `data/generated/` from the pinned decomp | `--check`, `--out` |
 | `divergences` | Compares Showdown gen4 data with the decomp and writes `data/divergences.json` | `--check`, `--out`, `--dump`, `--ledger` |
 | `validate TEAM` | Legality check only (TEAM is JSON or a Showdown export) | `--json`, the five `--allow-...` rule flags (see Ground rules), `--require-hm` |
-| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (default `adaptive` since feature 021 on the user's decision; `full` is the reference), `--floor` (adaptive only, default 0.98) |
+| `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (default `adaptive` since feature 021 on the user's decision; `full` is the reference), `--floor` (adaptive only, default 0.98), `--battle-style {set,shift}` (feature 023: `shift` is the game's default, a free switch after a KO; default `set`) |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (the confirmation stage's sampling, feature 022; default `full`), `--floor` (adaptive only, default 0.98) |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (the confirmation stage's sampling, feature 022; default `full`), `--floor` (adaptive only, default 0.98), `--battle-style {set,shift}` (every stage's battles, feature 023; default `set`) |
 | `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture; since feature 017 the single-process half also reports the trainer-AI interpreter step count) | `--policy` (default `expectimax2-v4`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
@@ -526,6 +526,30 @@ failed the clarified containment rule by 0.002: at the quick count of 500 runs t
 bumped a level while the adaptive attempt passed one level lower, the same team at equal levels (0 discordant pairs). The user kept
 `full` as the optimizer's default (2026-11-04); adaptive is available with `--sampling adaptive`.
 
+Feature 023 (2026-11-04, `specs/023-shift-battle-style/`): the **Shift battle style**, the game's default, behind
+`--battle-style shift` on `evaluate` and `optimize` (default `set`, Showdown's behaviour, until the owner's decision
+below). Game rule (decomp `battle_controller_player.c:4144-4160`): after a turn in which the trainer's active Pokemon
+fainted and the player's did not, in a single battle with a usable replacement on the player's side, the trainer's next
+Pokemon (chosen by the trainer AI before the prompt, against the player's current active) is named and the player may
+switch for free before it enters; the switch is a normal switch (stat stages reset, no Pursuit) and no move is used before
+the next command selection. The worker drives it through the engine's own switch flag and instant-switch path (no edit to
+the vendored tree); the player policies answer with their existing scoring (expectimax2 values stay against each bench
+switch with the announced foe on the field; greedy compares its member scores); the trainer AI is unchanged. Under `set`
+nothing changes (the replay fixtures and every stored result are byte-identical); under `shift` the style is echoed in the
+result, named in the summary, provenance, xlsx and web view, and in the optimizer's fingerprint when non-default. Two ledger
+entries: `mech-shift-prompt` (corrected) and `mech-shift-entry-order` (accepted: the engine orders the two entries and their
+entry effects by speed, the game puts the player first and runs abilities by category). Acceptance
+(`specs/023-shift-battle-style/validation-log.md` T020; 2,000 paired gauntlets per team, v4, same seeds; control 0 discordant):
+
+| team | Set clear rate [95% CI] | Shift clear rate [95% CI] | only Shift / only Set | p (exact) | Cynthia Set -> Shift | Lucian Set -> Shift | offers / gauntlet | switch share | prompted battles won | wall Shift/Set |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ref | 0.9510 [0.9406, 0.9596] | 0.9740 [0.9661, 0.9801] | 93 / 47 | 0.000126 | 0.952 -> 0.975 | 1.000 -> 1.000 | 20.9 | 0.69 | 9944/9995 | 1.04x |
+| b2main | 0.9120 [0.8988, 0.9236] | 0.9870 [0.9810, 0.9911] | 170 / 20 | 7.91e-31 | 0.921 -> 0.989 | 0.993 -> 0.999 | 21.3 | 0.64 | 9971/9997 | 1.07x |
+| b2branch | 0.7755 [0.7567, 0.7932] | 0.9785 [0.9712, 0.9840] | 433 / 27 | 2.37e-95 | 0.782 -> 0.980 | 0.995 -> 1.000 | 21.0 | 0.63 | 9952/9995 | 0.96x |
+| b3 | 0.7605 [0.7413, 0.7787] | 0.9850 [0.9787, 0.9895] | 471 / 22 | 7.93e-111 | 0.859 -> 0.987 | 0.886 -> 0.999 | 21.0 | 0.66 | 9967/9997 | 0.91x |
+
+B2 quick (`--seed 014-b2`, 16 workers): Set winner levels [54, 52, 54, 54, 54, 55] clear 0.8860 [0.8552, 0.911] (n 500, 2 confirm attempts, wall 407 s); Shift winner levels [51, 52, 52, 53, 52, 53] clear 0.9300 [0.9042, 0.9492] (n 500, 2 attempts, wall 416 s); same species, moves and items; expected average final level 54.30 (Set) vs 52.79 (Shift).
+
 Measured run times:
 
 | Run | Wall time |
@@ -562,6 +586,11 @@ Measured run times:
 
 ## Known limitations and UNVERIFIED items
 
+- **Battle style defaults to Set.** Platinum's default is Shift (after the trainer's Pokemon faints and yours
+  does not, the trainer's next Pokemon is named and you may switch for free before it enters). Feature 023 models
+  it behind `--battle-style shift` on `evaluate` and `optimize`; the default stays `set` (Showdown's behaviour)
+  until the owner's decision recorded below. Under Shift the order of the two entries and their entry effects
+  follows the engine (speed order), an accepted ledger divergence (`mech-shift-entry-order`).
 - **No comparison against a real cartridge or emulator.** Fidelity rests on the decomp, unit tests,
   golden positions computed by hand from the AI script, and an independent Python recomputation of
   exp and levels.
