@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-03, 6:20 PM EST, feature 020 spike done on its branch; merge on the user's go)
+# START HERE (updated 2026-11-03, 6:35 PM EST, features 019 and 020 merged to `main`; next feature is the user's choice)
 
 - **Feature 020 `020-lead-spike` implemented 2026-11-03 on its branch (from `main` ade9f9d), measurement only: no file under `sim/` or
   `src/platsim` changed.** Six leads × 2,000 paired gauntlets (v4) on three optimizer-built teams (014 b2-main, 014 b2-branch, 018 v2
@@ -6,7 +6,7 @@
   team (b2main Staraptor +2.0 points p 0.121; the other two already Garchomp-first best); control 0 discordant. **Verdict: no-go for a
   confirmation-stage lead check; the "lead named in every output" follow-on stands (go, small).** Evidence `runs/020-evidence/` (local)
   with summaries under `specs/020-lead-spike/evidence/`; log `specs/020-lead-spike/validation-log.md`. Gate: fast-mode pytest + Node
-  suite + hash check. Merge on the user's go. Next: 021 (adaptive Elite Four sampling in `evaluate`, delta-method interval, go) or the
+  suite + hash check. **Merged to `main` 2026-11-03 (0564c7d) on the user's go.** Next: 021 (adaptive Elite Four sampling in `evaluate`, delta-method interval, go) or the
   lead-reporting follow-on, user's choice.
 - (previous) feature 019 merged to `main` 2026-11-03 (user decision: delta-method interval; 021 is go).
 
