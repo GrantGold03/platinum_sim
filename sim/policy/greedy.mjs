@@ -63,9 +63,10 @@ export function moveScores(gd, battle, side, request) {
   return request.active[0].moves.map((m) => (m.disabled ? -1 : expectedDamage(gd, battle, mon, foe, m.id)));
 }
 
-/** Best expected damage of a (benched) party member against the current foe. */
-export function memberScore(gd, battle, side, pokemon) {
-  const foe = foeOf(battle, side);
+/** Best expected damage of a (benched) party member against the current foe (or `foe`: 023, the
+ * announced Shift replacement, a benched Showdown Pokemon; field abilities are read from the standing
+ * Pokemon, so a benched foe's weather or Cloud Nine is not seen: a known limit of this control player). */
+export function memberScore(gd, battle, side, pokemon, foe = foeOf(battle, side)) {
   let best = 0;
   for (const s of pokemon.moveSlots) {
     if (s.pp <= 0 || s.disabled) continue;
@@ -94,5 +95,20 @@ export const greedy = {
     }
     const scores = moveScores(gd, battle, side, request);
     return `move ${argmax(scores) + 1}`;
+  },
+  // 023 Shift: switch when a bench member's best expected damage on the announced foe strictly beats
+  // the active's (the same scale as the forced-switch pick); ties stay.
+  shiftChoice({ gd, battle, side }, incoming) {
+    const cur = memberScore(gd, battle, side, side.active[0], incoming);
+    let best = -1, bs = -Infinity;
+    side.pokemon.forEach((p, i) => {
+      if (p.isActive || p.fainted || p.hp <= 0) return;
+      const s = memberScore(gd, battle, side, p, incoming);
+      if (s > bs) { bs = s; best = i; }
+    });
+    if (best >= 0 && bs > cur) {
+      return { choice: `switch ${best + 1}`, reason: `active ${cur.toFixed(1)} < ${side.pokemon[best].species.name} ${bs.toFixed(1)} vs ${incoming.species.name}` };
+    }
+    return { choice: null, reason: `active ${cur.toFixed(1)} >= best bench ${best >= 0 ? bs.toFixed(1) : 'none'} vs ${incoming.species.name}` };
   },
 };

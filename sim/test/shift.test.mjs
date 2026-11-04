@@ -154,3 +154,58 @@ test('through runGauntlet: Set never calls the hook and matches a hookless run; 
   assert.ok(shift.battles.some((b) => b.shift.events.some((e) => e.answer !== 'stay' && e.reason === 'probe')));
   assert.throws(() => runGauntlet(gd, req('greedy-v1', 'shuffle')), /unknown battle_style/);
 });
+
+// ---- part 2 (US2): the real policies' answers ----
+import { STATS } from '../policy/expectimax2.mjs';
+
+const POLICIES = ['greedy-v1', 'expectimax2-v1', 'expectimax2-v2', 'expectimax2-v4'];
+// Must switch: Roserade's Poison moves cannot touch Cynthia's Lucario (Steel); Infernape on the bench hits it 2x.
+const ROSERADE_POISON = B('roserade', 60, ['sludge_bomb', 'poison_jab', 'toxic', 'synthesis'], 'ABILITY_NATURAL_CURE');
+const INFERNAPE = B('infernape', 60, ['flare_blitz', 'close_combat', 'mach_punch', 'u_turn'], 'ABILITY_BLAZE');
+// Must stay: Infernape's Flare Blitz knocks Cynthia's Roserade out and outspeeds it; Blissey has no attack.
+const BLISSEY = B('blissey', 60, ['softboiled', 'toxic', 'thunder_wave', 'protect'], 'ABILITY_NATURAL_CURE');
+
+// Cynthia's lead Spiritomb at 1 HP is knocked out by our move 1; the offer moment follows (p2 replacing, p1 not).
+function cynthiaOffer(builds) {
+  const x = leagueBattle('champion_cynthia', builds);
+  setHP(x.p2.active[0], 1);
+  x.battle.makeChoices('move 1', 'move 1');
+  assert.ok(shiftWanted(x.p1, x.p2), `expected the offer moment (p1 ${x.p1.requestState}, p2 ${x.p2.requestState})`);
+  return x;
+}
+const foeNamed = (x, name) => x.p2.pokemon.find((m) => m.species.name === name);
+const ctx1 = (x) => ({ gd, battle: x.battle, side: x.p1, request: x.p1.activeRequest, trainer: x.trainer, bag: [], members: [] });
+
+for (const pol of POLICIES) {
+  test(`${pol}: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)`, () => {
+    const x = cynthiaOffer([ROSERADE_POISON, INFERNAPE]);
+    const a = PLAYER_POLICIES.get(pol).shiftChoice(ctx1(x), foeNamed(x, 'Lucario'));
+    assert.equal(a.choice, 'switch 2', `${pol}: ${a.reason}`);
+    assert.ok(typeof a.reason === 'string' && a.reason.length > 0);
+  });
+  test(`${pol}: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)`, () => {
+    const x = cynthiaOffer([INFERNAPE, BLISSEY]);
+    const a = PLAYER_POLICIES.get(pol).shiftChoice(ctx1(x), foeNamed(x, 'Roserade'));
+    assert.equal(a.choice, null, `${pol}: ${a.reason}`);
+    assert.ok(typeof a.reason === 'string' && a.reason.length > 0);
+  });
+  test(`${pol}: the same position twice gives the same answer and the same draw count`, () => {
+    const run = () => {
+      const x = cynthiaOffer([ROSERADE_POISON, INFERNAPE]);
+      const d0 = STATS.aiDraws;
+      const a = PLAYER_POLICIES.get(pol).shiftChoice(ctx1(x), foeNamed(x, 'Garchomp'));
+      return [a.choice, a.reason, STATS.aiDraws - d0];
+    };
+    assert.deepEqual(run(), run());
+  });
+}
+
+test('a one-trainer gauntlet under Shift with v4 records at least one offer with a reason', () => {
+  const r = runGauntlet(gd, { team: loadTeam('ref'), seed: 'shift-test-1', player_policy: 'expectimax2-v4', opponent_policy: 'decomp-ai',
+    stop_on_loss: false, trainers: ['aaron'], log: 'summary', battle_style: 'shift' });
+  const b = r.battles[0];
+  assert.ok(b.shift.offers >= 1, JSON.stringify(b.shift));
+  assert.ok(b.shift.events.every((e) => typeof e.reason === 'string' && e.reason.length > 0 && e.incoming));
+  assert.equal(b.shift.events.length, b.shift.offers);
+  assert.equal(b.shift.switches, b.shift.events.filter((e) => e.answer !== 'stay').length);
+});

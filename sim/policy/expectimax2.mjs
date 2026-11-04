@@ -3,6 +3,12 @@
 // two versions; they differ only in the options listed under VERSIONS. Everything below describes
 // both unless it says otherwise.
 //
+// 023 Shift battle style: every version answers the free-switch offer through `shiftChoice` (see
+//   scoreShift below): stay against each bench switch by the forced-switch branch's one-ply valuation with
+//   the announced foe placed on the field. Two approximations, recorded: our incoming member's Intimidate
+//   on the new foe is not modelled, and the search's model of later turns stays Set (a KO is not valued
+//   higher for the free switch that follows): answering the prompt is the whole change (spec FR-007a).
+//
 // VERSIONS (V1_OPTS / V2_OPTS):
 //   expectimax2-v1  W_ALIVE 1.0, W_FR 0.45, no koStop. Kept registered, unchanged, so recorded
 //                   results (T056, the T058 / US1 optimizer runs) stay reproducible.
@@ -1264,8 +1270,32 @@ export function scoreActions(ctx, opts = V1_OPTS, name = EXPECTIMAX2) {
   return { X, acts, scores, opp };
 }
 
+/** 023 Shift: values of staying and of each bench switch once the announced foe (p2 party index
+ * `foeIdx`) is on the field, by the forced-switch branch's valuation (`valuePly2` on the cloned root).
+ * Our member is placed first, then the foe (the game's entry order), so the foe's Intimidate hits our
+ * incoming member in the model; our member's Intimidate on the new foe is not modelled (doSwitch only
+ * hits a standing foe). The search's model of later turns is unchanged: the rule is answered here, not
+ * modelled inside the lookahead (spec clarification 1). Samples: kPly2 per valuation, seeded statelessly
+ * per state signature, so no other decision's draws move. Exported for sim/test/shift.test.mjs. */
+export function scoreShift(ctx, opts, name, foeIdx) {
+  const X = makeContext(ctx, opts, name);
+  const S = X.root;
+  const stayT = cloneState(S);
+  doSwitch(X, stayT, 1, foeIdx);
+  const stay = valuePly2(X, stayT);
+  const candidates = [];
+  ctx.side.pokemon.forEach((p, i) => {
+    if (p.isActive || p.fainted || p.hp <= 0) return;
+    const T = cloneState(S);
+    doSwitch(X, T, 0, i);
+    doSwitch(X, T, 1, foeIdx);
+    candidates.push({ idx: i, v: valuePly2(X, T) });
+  });
+  return { X, stay, candidates };
+}
+
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {
@@ -1283,6 +1313,22 @@ export function makeExpectimax2(name, opts) {
       let bi = 0;
       for (let i = 1; i < scores.length; i++) if (scores[i] > scores[bi]) bi = i;
       return acts[bi].choice;
+    },
+    // 023 Shift: switch when the best bench value strictly beats staying (ties stay, party order).
+    shiftChoice(ctx, incoming) {
+      const foeIdx = ctx.battle.sides[1].pokemon.indexOf(incoming);
+      if (foeIdx < 0) return { choice: null, reason: 'unknown foe' };
+      const t0 = performance.now();
+      const { stay, candidates } = scoreShift(ctx, opts, name, foeIdx);
+      STATS.decisions++;
+      STATS.ms += performance.now() - t0;
+      let best = null;
+      for (const c of candidates) if (!best || c.v > best.v) best = c;
+      const who = (i) => ctx.side.pokemon[i].species.name;
+      if (best && best.v > stay) {
+        return { choice: `switch ${best.idx + 1}`, reason: `stay ${stay.toFixed(3)} < ${who(best.idx)} ${best.v.toFixed(3)} vs ${incoming.species.name}` };
+      }
+      return { choice: null, reason: `stay ${stay.toFixed(3)} >= best switch ${best ? best.v.toFixed(3) : 'none'} vs ${incoming.species.name}` };
     },
   };
 }

@@ -75,3 +75,25 @@ report and its provenance. Note: at this point no real policy answers the offer 
 and the result equals Set's except for the echo; the offers are recorded in the worker's per-battle records.
 
 **Commit 1**: `feat(023): Shift battle style behind --battle-style ...`.
+
+## T015-T018 The policies' answer (4:35 to 4:39 PM EST)
+
+`sim/policy/expectimax2.mjs`: `scoreShift(ctx, opts, name, foeIdx)` (stay: the announced foe placed on the cloned root
+and `valuePly2`; each bench candidate: our member placed first, then the foe, `valuePly2`); `shiftChoice` on every
+`makeExpectimax2` policy (v1, v2, v4) switches only when the best candidate strictly beats staying; the header records the
+two approximations (our incoming Intimidate on the new foe not modelled; the lookahead's model of later turns stays Set).
+`sim/policy/greedy.mjs`: `memberScore(..., foe)` and `shiftChoice` on the same scale as the forced-switch pick.
+
+`sim/test/shift.test.mjs` part 2 (13 tests): for each of greedy-v1, expectimax2-v1, -v2, -v4 on Cynthia battles at the
+offer moment (Spiritomb at 1 HP KO'd by move 1): must switch (Roserade with only Poison moves against the announced
+Lucario, Infernape on the bench) -> `switch 2`; must stay (Infernape with Flare Blitz against the announced Roserade,
+Blissey with no attack on the bench) -> stay; the same position twice gives the same answer, reason and `aiDraws`
+delta; a one-trainer Aaron gauntlet under Shift with v4 records offers with reasons, events == offers, switches == non-stay
+events.
+
+```
+node --test test/shift.test.mjs: pass 21, fail 0
+Node suite, 4:36:19 to 4:39:09 PM EST: tests 372, pass 372, fail 0  (replay fixtures still match: the hook is never called under Set)
+```
+
+**Commit 2**: `feat(023): player policies answer the Shift offer ...`.
