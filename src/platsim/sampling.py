@@ -135,6 +135,7 @@ class AdaptiveRuns:
     extension: dict = field(default_factory=lambda: {"full": 0, "cynthia_only": 0})
     target_met: bool | None = None
     discarded_cynthia_only: int = 0
+    borderline_extended: bool = False  # 022: runs were added while the interval straddled the threshold
 
     @property
     def n_runs(self) -> int:
@@ -147,8 +148,12 @@ def _log(msg: str) -> None:
 
 
 def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs: int, target: float | None,
-                 player_policy: str, floor: float, opponent_policy: str = "decomp-ai", on_batch=None) -> AdaptiveRuns:
-    """The adaptive run loop (research R3, R5). `pool` needs `.map(requests)` and `.size`."""
+                 player_policy: str, floor: float, opponent_policy: str = "decomp-ai", on_batch=None,
+                 borderline_threshold: float | None = None, borderline_max_runs: int | None = None) -> AdaptiveRuns:
+    """The adaptive run loop (021 research R3, R5). `pool` needs `.map(requests)` and `.size`. Feature 022:
+    `borderline_threshold` adds runs while the interval straddles it (the optimizer's confirm stage), up to
+    `min(max_runs, borderline_max_runs)`, choosing each batch's kind by the extension rule and stopping at the first run
+    after which the interval no longer straddles (the rest discarded)."""
     if not FLOOR_MIN <= floor <= FLOOR_MAX:
         raise ValueError(f"floor must be in [{FLOOR_MIN}, {FLOOR_MAX}], got {floor}")
     chunk = max(MIN_BATCH, getattr(pool, "size", 1) * 8)
@@ -200,13 +205,22 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
         battles = sum(1 for r in full if cynthia_battle(r) is not None) + len(cyn)
         return wins, battles
 
-    def current_hw() -> float:
+    def current_stats() -> tuple[float, float, float]:
+        """(estimate, lower, upper) of the current interval: Wilson before a switch, the composite after."""
         if switch is None:
             wins = sum(bool(r["cleared"]) for r in full)
-            return wilson_half_width(wins, len(full)) if full else 1.0
+            if not full:
+                return 0.0, 0.0, 1.0
+            lo, hi = wilson_ci(wins, len(full))
+            return wins / len(full), lo, hi
         reached, n_full = e4_pass_stats(full)
         w, b = cyn_stats()
-        return composite_estimate(reached, n_full, w, b).half_width
+        c = composite_estimate(reached, n_full, w, b)
+        return c.estimate, c.ci95[0], c.ci95[1]
+
+    def current_hw() -> float:
+        est, lo, hi = current_stats()
+        return (hi - lo) / 2
 
     # Phase A: full gauntlets until the switch or min_runs
     while switch is None and len(full) < min_runs:
@@ -290,8 +304,64 @@ def run_adaptive(pool, team: list[dict], *, master: str, min_runs: int, max_runs
                         done = True
             if on_batch:
                 on_batch(len(full) + len(cyn), sum(bool(r["cleared"]) for r in full))
+    # Borderline extension (022): while the interval straddles the threshold, up to the cap
+    borderline_extended = False
+    if borderline_threshold is not None:
+        cap = max_runs if borderline_max_runs is None else min(max_runs, borderline_max_runs)
+
+        def straddles() -> bool:
+            _, lo, hi = current_stats()
+            return lo < borderline_threshold <= hi
+
+        while straddles() and len(full) + len(cyn) < cap:
+            borderline_extended = True
+            est, lo, hi = current_stats()
+            reached, n_full = e4_pass_stats(full)
+            w, b = cyn_stats()
+            # the half-width that would stop the straddle: the estimate's distance from the threshold
+            needed = max(abs(est - borderline_threshold), 1e-6)
+            kind = extension_kind(reached, n_full, w, b, needed, switch is not None)
+            total = len(full) + len(cyn)
+            size = min(max(total // 2, MIN_BATCH), cap - total)
+            _log(f"interval [{lo:.4f}, {hi:.4f}] straddles the threshold {borderline_threshold} at n={total}: "
+                 f"adding up to {size} {'Cynthia-only runs' if kind == 'cynthia_only' else 'full gauntlets'}")
+            if kind == "cynthia_only":
+                rs = pool.map([cynthia_only_request(team, master, next_cyn + j, bank, player_policy, opponent_policy)
+                               for j in range(size)])
+                done = False
+                for r in rs:
+                    check(r, "Cynthia-only run")
+                    if done:
+                        discarded_cyn += 1
+                        continue
+                    cyn.append(r)
+                    next_cyn += 1
+                    extension["cynthia_only"] += 1
+                    if not straddles():
+                        done = True
+            else:
+                rs = pool.map([full_req(i) for i in range(next_full, next_full + size)])
+                done = False
+                for r in rs:
+                    check(r, "gauntlet")
+                    if done:
+                        discarded += 1
+                        continue
+                    consume_full(r)
+                    extension["full"] += 1
+                    if switch is None and proven():
+                        switch = len(full)
+                        _log(f"Elite Four proven after {switch} full runs during the borderline extension")
+                        done = True
+                    elif not straddles():
+                        done = True
+            if on_batch:
+                on_batch(len(full) + len(cyn), sum(bool(r["cleared"]) for r in full))
+        if straddles():
+            _log(f"interval still straddles the threshold {borderline_threshold} at the cap n={len(full) + len(cyn)}: "
+                 "borderline (not qualified)")
     target_met = None if target is None else current_hw() <= target
-    return AdaptiveRuns(full, cyn, switch, discarded, bank, extension, target_met, discarded_cyn)
+    return AdaptiveRuns(full, cyn, switch, discarded, bank, extension, target_met, discarded_cyn, borderline_extended)
 
 
 __all__ = ["AdaptiveRuns", "CHAMPION", "CYNTHIA_ONLY_BATTLE_INDEX", "CompositeEstimate", "DEFAULT_FLOOR", "DEFAULT_SAMPLING", "E4",

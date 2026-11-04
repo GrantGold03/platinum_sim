@@ -91,6 +91,11 @@ def job_fingerprint(consts: list[str], req: OptimizeRequest) -> dict:
         fp["player_policy"] = req.player_policy
     if req.required_hms:  # 006 FR-009: only when set, so default fingerprints (and resume) are unchanged
         fp["required_hms"] = list(req.required_hms)
+    # 022: the confirmation's sampling and floor, only when non-default (same rule)
+    if req.sampling != OptimizeRequest.sampling:
+        fp["sampling"] = req.sampling
+    if req.floor != OptimizeRequest.floor:
+        fp["floor"] = req.floor
     return fp
 
 
@@ -542,6 +547,34 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
                     hello, wteam)
 
 
+def _run_mix(rep) -> dict:
+    """022: the confirmation attempt's run mix from the report's sampling fields (zeros/None for full)."""
+    d = rep.sampling_detail or {}
+    return {"sampling": rep.sampling, "full_runs": d.get("full_runs", rep.n_runs if rep.sampling == "full" else None),
+            "cynthia_only_runs": d.get("cynthia_only_runs", 0), "switch_run": d.get("switch_run"),
+            "banked_states": d.get("banked_states"), "extension": d.get("extension")}
+
+
+def paired_outcomes_full(a_results, b_results):
+    """The full method's pairing (by run index) in the 022 record shape."""
+    from platsim.optimizer.pairing import paired_outcomes
+
+    return paired_outcomes(list(a_results), [], list(b_results), [])
+
+
+def _comparison_record(cmp, paired) -> dict:
+    """022: the comparison record; `cmp` is None when no same-kind pair exists."""
+    base = {"n_paired": paired.pairs, "pairs": paired.pairs, "full_pairs": paired.full_pairs,
+            "cynthia_only_pairs": paired.cynthia_only_pairs, "excluded": paired.excluded,
+            "test": "McNemar exact (two-sided), alpha 0.05, paired by run kind and seed (optimizer/pairing.py)"}
+    if cmp is None:
+        return {**base, "clear_rate_winner": None, "clear_rate_runner_up": None, "winner_only": 0, "runner_up_only": 0,
+                "p_value": None, "verdict": "no same-kind pairs"}
+    return {**base, "clear_rate_winner": cmp.a_rate, "clear_rate_runner_up": cmp.b_rate,
+            "winner_only": cmp.a_only, "runner_up_only": cmp.b_only, "p_value": cmp.p_value,
+            "verdict": {"A": "winner better", "B": "runner-up better"}.get(cmp.verdict, "indistinguishable")}
+
+
 def _confirm_ok(rep, preset, thr) -> bool:
     if rep.no_qualifying is not None or rep.n_runs == 0:
         return False
@@ -566,17 +599,19 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
         real = R.realize(winner, lv, led, required_hms=req.required_hms)
         if isinstance(real, R.Refusal):
             raise RuntimeError(f"winner not buildable at {lv}: {real.reason}")
-        prog("confirm", runs_planned=preset.confirm_min, detail=f"winner at levels {lv} ({req.player_policy}, >= {preset.confirm_min} runs)")
+        prog("confirm", runs_planned=preset.confirm_min,
+             detail=f"winner at levels {lv} ({req.player_policy}, {req.sampling} sampling, >= {preset.confirm_min} runs)")
         rep, ev = evaluate_team(real.team, led, pool, runs=preset.confirm_min, seed=master, player_policy=req.player_policy,
                                 budget=preset.name, threshold=thr, max_runs=max_runs, extend_borderline=extend,
-                                borderline_max_runs=preset.borderline_max_runs,
+                                borderline_max_runs=preset.borderline_max_runs, sampling=req.sampling, floor=req.floor,
                                 on_batch=lambda n, w: prog("confirm", runs_done=n, runs_planned=preset.confirm_min,
-                                                           best={"levels": lv, "clear_rate": round(w / n, 4)},
+                                                           best={"levels": lv, "clear_rate": round(w / max(n, 1), 4)},
                                                            detail=f"{w}/{n} cleared"))
         ok = _confirm_ok(rep, preset, thr)
         attempts.append({"levels": list(lv), "runs": rep.n_runs, "clear_rate": rep.clear_rate, "ci95": list(rep.clear_ci95),
                          "borderline": rep.borderline, "final_level_gap_max": rep.final_level_gap_max,
-                         "expected_avg_final_level": rep.expected_avg_final_level, "passes_confirm_checks": ok})
+                         "expected_avg_final_level": rep.expected_avg_final_level, "passes_confirm_checks": ok,
+                         **_run_mix(rep)})
         state.data["stages"]["confirm_attempts"] = attempts
         state.save()
         if ok or bump == MAX_CONFIRM_BUMPS or all(x >= 100 for x in lv):
@@ -605,21 +640,29 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
         else:
             from platsim.evaluate import worker_team
 
-            prog("confirm", detail=f"runner-up at levels {ru_lv}, {len(ev.results)} paired runs")
-            full2 = run_full_gauntlets(pool, worker_team(ru_real.team, led), master=master, min_runs=len(ev.results),
-                                       max_runs=len(ev.results), target=None, player_policy=req.player_policy)
-            a = [bool(r["cleared"]) for r in ev.results]
-            b = [bool(r["cleared"]) for r in full2.results]
-            cmp = mcnemar_exact(a, b)
+            if req.sampling == "adaptive":
+                # 022: the runner-up on the same method and seeds; paired by kind and seed (optimizer/pairing.py)
+                from platsim.optimizer.pairing import paired_outcomes
+                from platsim.sampling import run_adaptive
+
+                prog("confirm", detail=f"runner-up at levels {ru_lv}, {rep.n_runs} runs (adaptive, paired by kind and seed)")
+                ru_runs = run_adaptive(pool, worker_team(ru_real.team, led), master=master, min_runs=rep.n_runs,
+                                       max_runs=rep.n_runs, target=None, player_policy=req.player_policy, floor=req.floor)
+                paired = paired_outcomes(ev.results, ev.cynthia_only_results, ru_runs.full_results, ru_runs.cynthia_only_results)
+                reuse = {"sampling": "adaptive", "floor": req.floor, "adaptive_runs": ru_runs}
+                full2 = None
+            else:
+                prog("confirm", detail=f"runner-up at levels {ru_lv}, {len(ev.results)} paired runs")
+                full2 = run_full_gauntlets(pool, worker_team(ru_real.team, led), master=master, min_runs=len(ev.results),
+                                           max_runs=len(ev.results), target=None, player_policy=req.player_policy)
+                paired = paired_outcomes_full(ev.results, full2.results)
+                reuse = {"full": full2}
+            cmp = mcnemar_exact(paired.a_flags, paired.b_flags) if paired.pairs else None
             comparison = {"runner_up": R.spec_to_json(ru), "runner_up_labels": [m.label() for m in ru],
-                          "levels_winner": lv, "levels_runner_up": ru_lv, "n_paired": cmp.n,
-                          "clear_rate_winner": cmp.a_rate, "clear_rate_runner_up": cmp.b_rate,
-                          "winner_only": cmp.a_only, "runner_up_only": cmp.b_only, "p_value": cmp.p_value,
-                          "test": "McNemar exact (two-sided), alpha 0.05",
-                          "verdict": {"A": "winner better", "B": "runner-up better"}.get(cmp.verdict, "indistinguishable")}
-            if cmp.verdict == "B":
-                rep2, _ = evaluate_team(ru_real.team, led, pool, runs=len(ev.results), seed=master, player_policy=req.player_policy,
-                                        budget=preset.name, threshold=thr, max_runs=len(ev.results), full=full2)
+                          "levels_winner": lv, "levels_runner_up": ru_lv, **_comparison_record(cmp, paired)}
+            if cmp is not None and cmp.verdict == "B":
+                rep2, _ = evaluate_team(ru_real.team, led, pool, runs=rep.n_runs, seed=master, player_policy=req.player_policy,
+                                        budget=preset.name, threshold=thr, max_runs=rep.n_runs, **reuse)
                 if _confirm_ok(rep2, preset, thr):
                     chosen, chosen_real, chosen_rep = ru, ru_real, rep2
                     comparison["switched_to_runner_up"] = True
@@ -647,6 +690,8 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
         "policy_per_stage": {"calibrate": SCREEN_POLICY, "ability_screen": SCREEN_POLICY, "screen": SCREEN_POLICY,
                              "level_search": req.player_policy, "setup_check": req.player_policy, "confirm": req.player_policy,
                              "opponent": OPPONENT},
+        # 022: the confirmation's sampling; the other stages keep full gauntlets
+        "sampling_per_stage": {"level_search": "full", "setup_check": "full", "confirm": req.sampling, "floor": req.floor},
         "seeds": {"scheme": SCHEME, "calibrate": f"{req.seed}|calibrate", "screen": f"{req.seed}|screen",
                   "ability_screen": "abilities.screen_master(seed, slot)", "level_search": f"{req.seed}|levels",
                   "setup_check": f"{req.seed}|setup", "confirm": f"{req.seed}|confirm",

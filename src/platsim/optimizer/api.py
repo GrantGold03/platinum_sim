@@ -12,6 +12,7 @@ from typing import Callable
 
 from platsim.budget import DEFAULT_PRESET
 from platsim.evaluate import DEFAULT_PLAYER_POLICY
+from platsim.sampling import DEFAULT_FLOOR, FLOOR_MAX, FLOOR_MIN
 from platsim.legality.models import LegalityOptions
 
 
@@ -33,8 +34,16 @@ class OptimizeRequest:
     # 018: the strong player for the level search, the setup check and the confirmation runs (the screening
     # stages keep greedy-v1). Part of the job fingerprint; named in the result's provenance.
     player_policy: str = DEFAULT_PLAYER_POLICY
+    # 022: the confirmation stage's sampling ("full", the reference, or "adaptive": feature 021's method) and its floor.
+    # The level search and the setup check keep full gauntlets. In the fingerprint only when non-default.
+    sampling: str = "full"
+    floor: float = DEFAULT_FLOOR
 
     def __post_init__(self) -> None:
+        if self.sampling not in ("full", "adaptive"):
+            raise InvalidRequest(f"sampling must be full or adaptive, got {self.sampling!r}", {"sampling": self.sampling})
+        if not FLOOR_MIN <= self.floor <= FLOOR_MAX:
+            raise InvalidRequest(f"floor must be in [{FLOOR_MIN}, {FLOOR_MAX}], got {self.floor}", {"floor": self.floor})
         if self.required_hms:
             from platsim.legality.movesources import normalize_hms
 

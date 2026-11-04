@@ -1,0 +1,5 @@
+.                                                                        [100%]
+================================= battle split =================================
+19 battle worker starts; 1 marked tests reached it; under-marked 0, started outside a test 0, over-marked 0
+  tests/integration/test_optimize_adaptive.py::test_quick_optimize_with_adaptive_confirmation_is_deterministic_and_records_the_mix: own start
+1 passed in 1404.09s (0:23:24)

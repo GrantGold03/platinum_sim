@@ -315,7 +315,8 @@ class TeamEvaluation:
 def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0", player_policy: str = DEFAULT_PLAYER_POLICY,
                   budget: str = "standard", threshold: float = 0.75, max_runs: int = DEFAULT_MAX_RUNS,
                   extend_borderline: bool = False, borderline_max_runs: int | None = None, full: _Runs | None = None,
-                  on_batch=None, sampling: str = "full", floor: float = DEFAULT_FLOOR) -> tuple[EvaluationReport, TeamEvaluation]:
+                  on_batch=None, sampling: str = "full", floor: float = DEFAULT_FLOOR,
+                  adaptive_runs=None) -> tuple[EvaluationReport, TeamEvaluation]:
     """The evaluation of an already validated TeamCandidate on an open pool (steps 2-6 of the module
     doc); used by `evaluate` and by the optimizer's confirm stage (T065). `extend_borderline` adds runs
     while the clear-rate CI straddles the threshold (R8; up to `max_runs`). `full` reuses full-gauntlet
@@ -327,8 +328,6 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
 
     if sampling not in ("full", "adaptive"):
         raise UsageError(f"sampling must be full or adaptive, got {sampling!r}")
-    if sampling == "adaptive" and extend_borderline:
-        raise UsageError("adaptive sampling is not available in the optimizer's confirm stage (full only)")
 
     preset = get_preset(budget)
     master = str(seed)
@@ -341,9 +340,12 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
     adaptive = None
     cyn_results: list[dict] = []
     if sampling == "adaptive":
-        adaptive = run_adaptive(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
-                                target=preset.ci_half_width, player_policy=player_policy, floor=floor,
-                                opponent_policy=OPPONENT_POLICY, on_batch=on_batch)
+        # 022: `adaptive_runs` reuses a precomputed run (the optimizer's runner-up), like `full=`; `extend_borderline`
+        # adds runs while the interval straddles the threshold (the confirm stage), as the full path does
+        adaptive = adaptive_runs if adaptive_runs is not None else run_adaptive(
+            pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs), target=preset.ci_half_width,
+            player_policy=player_policy, floor=floor, opponent_policy=OPPONENT_POLICY, on_batch=on_batch,
+            borderline_threshold=threshold if extend_borderline else None, borderline_max_runs=borderline_max_runs)
         full = _Runs(adaptive.full_results, adaptive.extension["full"] + adaptive.extension["cynthia_only"] > 0,
                      adaptive.target_met)
         cyn_results = adaptive.cynthia_only_results
@@ -387,15 +389,18 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         clear_ci = wilson_ci(wins, n)
         hw = wilson_half_width(wins, n)
     if adaptive is not None:
+        # the discard counts depend on the chunk size (worker count), so they are logged, never written to result.json
+        _log(f"adaptive sampling: {adaptive.discarded} full results past the switch and {adaptive.discarded_cynthia_only} "
+             f"Cynthia-only results past a stop were discarded (batch independence)")
         sampling_detail = {
             "floor": floor, "full_runs": n_full, "cynthia_only_runs": cyn_only_battles,
-            "switch_run": adaptive.switch_run, "discarded": adaptive.discarded,
-            "discarded_cynthia_only": adaptive.discarded_cynthia_only, "banked_states": len(adaptive.bank),
+            "switch_run": adaptive.switch_run, "banked_states": len(adaptive.bank),
             "e4_pass_rate": reached / n_full if n_full else None,
             "e4_pass_ci95": list(wilson_ci(reached, n_full)) if n_full else None,
             "cynthia_rate": champ.rate, "cynthia_battles": champ.battles,
             "composite_ci95": list(clear_ci) if adaptive.switch_run is not None else None,
             "extension": dict(adaptive.extension),
+            "borderline_extended": adaptive.borderline_extended,
             "statistic": "composite (delta interval)" if adaptive.switch_run is not None else "full (Wilson; floor never reached)",
         }
     means, avg, gap = final_level_stats(results, len(wteam))

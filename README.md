@@ -503,7 +503,7 @@ battles from banked states, drawn deterministically with reserved seed index 98 
 Elite Four pass rate times Cynthia's conditional win rate over all her battles, with a log-scale delta-method 95% interval, and
 the threshold, half-width and borderline rules apply to that interval; when the floor is never reached every run is full and the
 report keeps the full method's statistics. Results computed past the switch are discarded so result.json is independent of
-worker count and batch size (`sampling_detail.discarded` counts them). Reports carry `sampling` and `sampling_detail` (full and
+worker count and batch size (the discard counts are logged, not written to result.json, because they depend on the chunk size). Reports carry `sampling` and `sampling_detail` (full and
 Cynthia-only runs, switch run, banked states, the Elite Four pass rate and both intervals); per-trainer rates come from the
 full runs; loss causes include Cynthia-only losses. `--sampling full` is the reference; the user chose adaptive at floor 0.98 as the default on the acceptance below. Acceptance (paired on
 the same seeds, 2,000 runs, standard budget, `specs/021-adaptive-e4-sampling/validation-log.md` T017): on all five legal

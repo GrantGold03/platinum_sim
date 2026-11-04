@@ -90,7 +90,6 @@ def _evaluation_sheet(ws: Worksheet, r: EvaluationReport) -> None:
         _kv(ws, "Full runs", d.get("full_runs"))
         _kv(ws, "Cynthia-only runs", d.get("cynthia_only_runs"))
         _kv(ws, "Switch run", _or_nr(d.get("switch_run")))
-        _kv(ws, "Discarded past switch", d.get("discarded"))
         _kv(ws, "Banked states", d.get("banked_states"))
         _kv(ws, "Elite Four pass rate", _or_nr(d.get("e4_pass_rate")))
         e4ci = d.get("e4_pass_ci95") or [None, None]

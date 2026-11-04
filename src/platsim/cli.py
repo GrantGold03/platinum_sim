@@ -200,6 +200,14 @@ def _add_optimize(sub: argparse._SubParsersAction) -> None:
                         "checkpoint was made by different code or data, which is never resumed")
     from platsim.evaluate import DEFAULT_PLAYER_POLICY
 
+    from platsim.optimizer.api import OptimizeRequest as _OR
+    from platsim.sampling import DEFAULT_FLOOR as _FLOOR
+
+    p.add_argument("--sampling", choices=("full", "adaptive"), default=_OR.sampling,
+                   help=f"the confirmation stage's sampling (feature 022): full (the reference) or adaptive (feature 021's "
+                        f"method; the level search and setup check keep full gauntlets); default {_OR.sampling}")
+    p.add_argument("--floor", type=float, default=_FLOOR,
+                   help=f"adaptive only: Wilson 95%% lower bound each Elite Four member must reach (default {_FLOOR}; 0.9 to 1.0)")
     p.add_argument("--player-policy", default=DEFAULT_PLAYER_POLICY,
                    help=f"strong player for the level search, setup check and confirmation (default {DEFAULT_PLAYER_POLICY}); "
                         "the screening stages keep greedy-v1 (018)")
@@ -246,7 +254,8 @@ def optimize_request(args: argparse.Namespace):
     return OptimizeRequest(species=tuple(args.species), min_clear=args.min_clear, seed=args.seed,
                           budget=args.budget, workers=args.workers, out_dir=args.out,
                           force_new=args.force_new, legality=_legality(args),
-                          required_hms=tuple(args.require_hm), player_policy=args.player_policy)
+                          required_hms=tuple(args.require_hm), player_policy=args.player_policy,
+                          sampling=args.sampling, floor=args.floor)
 
 
 # serve, explain and report are appended below, each after its _add_* function.

@@ -48,7 +48,7 @@ def test_adaptive_sampling_switches_is_deterministic_and_equals_full_at_floor_1(
     assert d["switch_run"] is not None and d["switch_run"] < int(n) and d["cynthia_only_runs"] > 0
     assert d["full_runs"] + d["cynthia_only_runs"] == int(n)
     for k in ("floor", "banked_states", "e4_pass_rate", "e4_pass_ci95", "cynthia_rate", "cynthia_battles",
-              "composite_ci95", "extension", "discarded", "statistic"):
+              "composite_ci95", "extension", "statistic"):
         assert k in d, k
     assert r["provenance"]["sampling"]["method"] == "adaptive" and "cynthia_only_seed" in r["seeds"]
     assert r["champion_battles"] >= d["cynthia_only_runs"]

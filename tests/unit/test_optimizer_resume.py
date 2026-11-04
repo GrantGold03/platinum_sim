@@ -140,3 +140,34 @@ def test_checkpoint_records_player_policy_and_another_policy_is_a_different_job(
     out2 = tmp_path / "o2"
     R.run_optimization(_req(out2, player_policy=other))
     assert json.loads((out2 / "state.json").read_text())["fingerprint"]["player_policy"] == other
+
+
+def test_sampling_and_floor_enter_the_fingerprint_only_when_non_default(tmp_path, stubbed):
+    # 022: the confirmation's sampling and floor follow the 006/018 rule
+    from platsim.optimizer.api import OptimizeRequest as OR
+    from platsim.sampling import DEFAULT_FLOOR
+
+    out = tmp_path / "o"
+    R.run_optimization(_req(out))
+    st = json.loads((out / "state.json").read_text())
+    assert "sampling" not in st["fingerprint"] and "floor" not in st["fingerprint"]
+    other = "adaptive" if OR.sampling == "full" else "full"
+    with pytest.raises(InvalidRequest, match="different optimize job"):
+        R.run_optimization(_req(out, sampling=other))
+    out2 = tmp_path / "o2"
+    R.run_optimization(_req(out2, sampling=other, floor=0.95))
+    fp = json.loads((out2 / "state.json").read_text())["fingerprint"]
+    assert fp["sampling"] == other and fp["floor"] == 0.95 and DEFAULT_FLOOR != 0.95
+
+
+def test_optimize_cli_defaults_match_the_request_defaults():
+    from platsim.cli import build_parser, optimize_request
+    from platsim.optimizer.api import OptimizeRequest as OR
+    from platsim.sampling import DEFAULT_FLOOR
+
+    args = build_parser().parse_args(["optimize", *["garchomp"] * 6])
+    assert args.sampling == OR.sampling and args.floor == DEFAULT_FLOOR
+    req = optimize_request(args)
+    assert req.sampling == OR.sampling and req.floor == DEFAULT_FLOOR
+    with pytest.raises(InvalidRequest):
+        optimize_request(build_parser().parse_args(["optimize", *["garchomp"] * 6, "--floor", "0.5"]))

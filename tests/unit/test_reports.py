@@ -361,7 +361,7 @@ def test_json_round_trip_with_sampling_detail_and_old_json_reads_as_full(tmp_pat
     r = _report()
     d = r.to_dict()
     assert d["sampling"] == "full" and d["sampling_detail"] is None
-    detail = {"floor": 0.99, "full_runs": 400, "cynthia_only_runs": 1600, "switch_run": 381, "discarded": 19,
+    detail = {"floor": 0.99, "full_runs": 400, "cynthia_only_runs": 1600, "switch_run": 381,
               "banked_states": 380, "e4_pass_rate": 0.95, "e4_pass_ci95": [0.92, 0.97], "cynthia_rate": 0.9,
               "cynthia_battles": 1980, "composite_ci95": [0.83, 0.88], "extension": {"full": 0, "cynthia_only": 0},
               "statistic": "composite (delta interval)"}
@@ -383,7 +383,7 @@ def test_xlsx_evaluation_sheet_shows_the_sampling_rows_when_adaptive(tmp_path):
     r = _report()
     d = r.to_dict()
     d.update(sampling="adaptive", sampling_detail={"floor": 0.99, "full_runs": 400, "cynthia_only_runs": 1600,
-                                                   "switch_run": 381, "discarded": 19, "banked_states": 380,
+                                                   "switch_run": 381, "banked_states": 380,
                                                    "e4_pass_rate": 0.95, "e4_pass_ci95": [0.92, 0.97],
                                                    "cynthia_rate": 0.9, "cynthia_battles": 1980,
                                                    "composite_ci95": [0.83, 0.88],
