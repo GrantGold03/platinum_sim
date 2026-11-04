@@ -4,6 +4,21 @@ Planned work, plus a record of items already built (marked **Done**). Each item 
 after the user's hands-on testing (keep features small: about 3 stories / 30 tasks at most, one major
 layer, short acceptance runs). Ordered roughly by priority; the order is a proposal, not a decision.
 
+**Suggested order as of 2026-11-03 (after features 019 and 020, the two measurement spikes; replaces the roadmap page):**
+1. **021 adaptive Elite Four sampling in `evaluate`** (section 8, go; spec drafted on branch `021-adaptive-e4-sampling`, clarify
+   pending): the only item with a measured large payoff (projected 1.9 to 2.9x on evaluations of strong teams) and a decision
+   already made (delta-method interval); the full gauntlet stays the reference behind a flag; optimizer stages later.
+2. **022 v4 near-threshold retune** (section 7 follow-up (a)) **with the lead named in every output** riding along (section 8:
+   the lead spike found no supported gain from choosing the lead, so reporting it is all that remains).
+3. **023 Shift battle style** (section 3): the biggest unmodelled game rule; lands alone, after the evaluation method is settled so
+   its paired runs use the cheaper evaluation.
+4. **024 plain-language output** (section 4).
+5. **Exact speedups D, F, E, then H** (section 7): worth an estimated 10 to 15% together; do them right before the next planned long run.
+6. **Variable-power moves redone from the decomp** (section 1 slice 3, then section 6's Magnitude group): the only item that adds
+   moves the optimizer cannot offer today; the archived regression's cause comes first.
+7. **H4+ item groups** (section 0), Choice items last (player model change).
+Blocked: the alternatives stage and its acceptance (sections 1.5, 2). Killed by evidence: see section 7's last bullet and section 8.
+
 ## 0. Held items, redone in small slices (user, 2026-10-26)
 
 Built from the decomp and `main`, not from the 007-010 archive.
