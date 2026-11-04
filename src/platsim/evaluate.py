@@ -41,12 +41,14 @@ import hashlib
 import json
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from platsim import pins
 from platsim.budget import get_preset
 from platsim.report.json_report import BattleStat, DivergenceEntry, EvaluationReport
+from platsim.sampling import (CYNTHIA_ONLY_BATTLE_INDEX, DEFAULT_FLOOR, FLOOR_MAX, FLOOR_MIN, composite_estimate,
+                              cynthia_battle, e4_pass_stats, run_adaptive)
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import runs_needed, wilson_ci, wilson_half_width
 
@@ -257,9 +259,11 @@ def default_out_dir(team_path: Path, master: str, runs: int, policy: str) -> Pat
 def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", workers: int | None = None,
              player_policy: str = DEFAULT_PLAYER_POLICY, budget: str = "standard", threshold: float = 0.75,
              max_runs: int = DEFAULT_MAX_RUNS, out_dir: Path | None = None, pool=None,
-             legality=None, required_hms=()) -> tuple[EvaluationReport, dict]:
+             legality=None, required_hms=(), sampling: str = "full", floor: float = DEFAULT_FLOOR) -> tuple[EvaluationReport, dict]:
     """Run the evaluation and write the reports. Returns (report, {kind: path}). `legality`
-    (models.LegalityOptions, default both off) selects egg moves / trade evolutions."""
+    (models.LegalityOptions, default both off) selects egg moves / trade evolutions. `sampling` is "full" (the
+    reference, every run a full gauntlet) or "adaptive" (feature 021: Cynthia-only runs from banked states once the
+    Elite Four is proven at `floor`)."""
     from platsim.legality.validator import showdown_name
     from platsim.report import write_all
     from platsim.sim.pool import WorkerPool
@@ -268,6 +272,10 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
         raise UsageError(f"--runs must be >= 1, got {runs}")
     if not 0.0 <= threshold <= 1.0:
         raise UsageError(f"--min-clear must be in [0, 1], got {threshold}")
+    if sampling not in ("full", "adaptive"):
+        raise UsageError(f"--sampling must be full or adaptive, got {sampling!r}")
+    if not FLOOR_MIN <= floor <= FLOOR_MAX:
+        raise UsageError(f"--floor must be in [{FLOOR_MIN}, {FLOOR_MAX}], got {floor}")
     try:
         preset = get_preset(budget)
     except ValueError as e:
@@ -275,14 +283,15 @@ def evaluate(team_path: Path, *, runs: int = DEFAULT_RUNS, seed: str = "0", work
     master = str(seed)
     team, led = load_and_validate(team_path, legality, required_hms)
     _log(f"{team_path}: legal; {runs} runs, seed {master!r}, player {player_policy}, opponent {OPPONENT_POLICY}, "
-         f"budget {preset.name}")
+         f"budget {preset.name}, sampling {sampling}" + (f" (floor {floor})" if sampling == "adaptive" else ""))
 
     own_pool = pool is None
     if own_pool:
         pool = WorkerPool(workers)
     try:
         report, _ = evaluate_team(team, led, pool, runs=runs, seed=master, player_policy=player_policy,
-                                  budget=preset.name, threshold=threshold, max_runs=max_runs)
+                                  budget=preset.name, threshold=threshold, max_runs=max_runs,
+                                  sampling=sampling, floor=floor)
     finally:
         if own_pool:
             pool.close()
@@ -299,18 +308,26 @@ class TeamEvaluation:
     report: EvaluationReport
     results: list[dict]  # full gauntlet responses in run order
     timing: dict  # seconds per phase (NOT written to result.json: it would break determinism)
+    cynthia_only_results: list[dict] = field(default_factory=list)  # 021: adaptive sampling's Cynthia-only runs
 
 
 def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0", player_policy: str = DEFAULT_PLAYER_POLICY,
                   budget: str = "standard", threshold: float = 0.75, max_runs: int = DEFAULT_MAX_RUNS,
                   extend_borderline: bool = False, borderline_max_runs: int | None = None, full: _Runs | None = None,
-                  on_batch=None) -> tuple[EvaluationReport, TeamEvaluation]:
+                  on_batch=None, sampling: str = "full", floor: float = DEFAULT_FLOOR) -> tuple[EvaluationReport, TeamEvaluation]:
     """The evaluation of an already validated TeamCandidate on an open pool (steps 2-6 of the module
     doc); used by `evaluate` and by the optimizer's confirm stage (T065). `extend_borderline` adds runs
     while the clear-rate CI straddles the threshold (R8; up to `max_runs`). `full` reuses full-gauntlet
-    results already computed with the same team, seed and policy (they are not re-run)."""
+    results already computed with the same team, seed and policy (they are not re-run). `sampling` "adaptive"
+    (feature 021) runs full gauntlets until the Elite Four is proven at `floor`, then Cynthia-only runs from
+    banked states; "full" is the reference and leaves this function's behaviour unchanged."""
     from platsim.report.losses import collect_loss_causes
     from platsim.sim.champion import champion_topup
+
+    if sampling not in ("full", "adaptive"):
+        raise UsageError(f"sampling must be full or adaptive, got {sampling!r}")
+    if sampling == "adaptive" and extend_borderline:
+        raise UsageError("adaptive sampling is not available in the optimizer's confirm stage (full only)")
 
     preset = get_preset(budget)
     master = str(seed)
@@ -320,7 +337,16 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         if need not in hello[key]:
             raise UsageError(f"policy {need!r} is not offered by the worker (known: {hello[key]})")
     t0 = time.perf_counter()
-    if full is None:
+    adaptive = None
+    cyn_results: list[dict] = []
+    if sampling == "adaptive":
+        adaptive = run_adaptive(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
+                                target=preset.ci_half_width, player_policy=player_policy, floor=floor,
+                                opponent_policy=OPPONENT_POLICY, on_batch=on_batch)
+        full = _Runs(adaptive.full_results, adaptive.extension["full"] + adaptive.extension["cynthia_only"] > 0,
+                     adaptive.target_met)
+        cyn_results = adaptive.cynthia_only_results
+    elif full is None:
         full = run_full_gauntlets(pool, wteam, master=master, min_runs=runs, max_runs=max(max_runs, runs),
                                   target=preset.ci_half_width, player_policy=player_policy,
                                   borderline_threshold=threshold if extend_borderline else None,
@@ -328,25 +354,54 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
                                   on_batch=on_batch)
     t_full = time.perf_counter() - t0
     results = full.results
-    n = len(results)
+    n_full = len(results)
     wins = sum(bool(r["cleared"]) for r in results)
-    _log(f"full runs: {n} in {t_full:.1f}s; cleared {wins}/{n}; Cynthia top-up ...")
+    cyn_only_battles = len(cyn_results)
+    cyn_only_wins = sum(bool(r["battles"][0]["won"]) for r in cyn_results)
+    _log(f"full runs: {n_full} in {t_full:.1f}s; cleared {wins}/{n_full}"
+         + (f"; Cynthia-only runs {cyn_only_battles} (won {cyn_only_wins})" if adaptive else "") + "; Cynthia top-up ...")
     t1 = time.perf_counter()
-    champ = champion_topup(pool, wteam, results, master_seed=master, budget=preset.name)
+    champ = champion_topup(pool, wteam, results, master_seed=master, budget=preset.name,
+                           extra_cynthia=(cyn_only_battles, cyn_only_wins))
     t_champ = time.perf_counter() - t1
     _log(f"Cynthia: status {champ.status}, {champ.battles} battles ({champ.topup_battles} top-up) in "
          f"{t_champ:.1f}s; replaying lost battles for loss causes ...")
     t2 = time.perf_counter()
-    causes = collect_loss_causes(pool.map, wteam, results, GAUNTLET)
+    causes = collect_loss_causes(pool.map, wteam, results + cyn_results, GAUNTLET)
     t_loss = time.perf_counter() - t2
 
-    clear_ci = wilson_ci(wins, n)
-    hw = wilson_half_width(wins, n)
+    reached, _ = e4_pass_stats(results)
+    sampling_detail = None
+    if adaptive is not None and adaptive.switch_run is not None:
+        # composite statistic (research R4): Elite Four pass rate x Cynthia's conditional rate over ALL her battles
+        comp = composite_estimate(reached, n_full, champ.wins, champ.battles)
+        n = n_full + cyn_only_battles
+        clear_rate = comp.estimate
+        clear_ci = comp.ci95
+        hw = comp.half_width
+    else:
+        # the full method (also when adaptive sampling never reached the floor, FR-006)
+        n = n_full
+        clear_rate = wins / n
+        clear_ci = wilson_ci(wins, n)
+        hw = wilson_half_width(wins, n)
+    if adaptive is not None:
+        sampling_detail = {
+            "floor": floor, "full_runs": n_full, "cynthia_only_runs": cyn_only_battles,
+            "switch_run": adaptive.switch_run, "discarded": adaptive.discarded,
+            "discarded_cynthia_only": adaptive.discarded_cynthia_only, "banked_states": len(adaptive.bank),
+            "e4_pass_rate": reached / n_full if n_full else None,
+            "e4_pass_ci95": list(wilson_ci(reached, n_full)) if n_full else None,
+            "cynthia_rate": champ.rate, "cynthia_battles": champ.battles,
+            "composite_ci95": list(clear_ci) if adaptive.switch_run is not None else None,
+            "extension": dict(adaptive.extension),
+            "statistic": "composite (delta interval)" if adaptive.switch_run is not None else "full (Wilson; floor never reached)",
+        }
     means, avg, gap = final_level_stats(results, len(wteam))
     divs, div_file_version = _divergences()
     borderline = clear_ci[0] < threshold <= clear_ci[1]
     target = preset.ci_half_width
-    qualified = (not borderline and preset.qualifying and wins / n >= threshold and target is not None
+    qualified = (not borderline and preset.qualifying and clear_rate >= threshold and target is not None
                  and hw <= target and gap is not None and gap <= MAX_LEVEL_GAP)
     warnings = []
     if full.target_met is False:
@@ -371,6 +426,9 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         "stop_on_loss": True,
         "log_mode": "summary",
         "trainers": list(GAUNTLET),
+        **({"sampling": {"method": "adaptive", **sampling_detail,
+                         "cynthia_only_seed": f"derive_seed(master, k, {CYNTHIA_ONLY_BATTLE_INDEX})"}}
+           if sampling_detail is not None else {}),
         "champion": champ.to_dict(),
         "loss_cause_method": "lost battles replayed alone with log 'full'; log_hash checked (report/losses.py)",
         "final_levels_from": "cleared runs only",
@@ -378,7 +436,7 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
                                f"final_level_gap_max <= {MAX_LEVEL_GAP}"),
     }
     report = EvaluationReport(
-        team=team, n_runs=n, clear_rate=wins / n, clear_ci95=clear_ci, per_battle=per_battle_stats(results),
+        team=team, n_runs=n, clear_rate=clear_rate, clear_ci95=clear_ci, per_battle=per_battle_stats(results),
         champion_rate=champ.rate, champion_ci95=champ.ci95, champion_battles=champ.battles,
         budget_preset=preset.name, expected_final_levels=means, expected_avg_final_level=avg,
         final_level_gap_max=gap, loss_causes=causes, threshold=threshold, qualified=qualified,
@@ -386,22 +444,30 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         seeds={"master": master, "scheme": SCHEME,
                "full_run_request_seed": "derive_seed(master, run, 0); battle b: derive_seed(request_seed, 0, b)",
                "champion_topup_seed": "derive_seed(master, k, 99)",
+               **({"cynthia_only_seed": f"derive_seed(master, k, {CYNTHIA_ONLY_BATTLE_INDEX})"} if sampling_detail is not None else {}),
                "loss_cause_replay_seed": "the lost battle's own seed"},
         decomp_commit=hello["decomp_commit"], showdown_commit=hello["showdown_commit"],
         divergence_ledger_version=hello["divergence_ledger_version"], **code_version_fields(hello),
         divergences=divs, warnings=warnings, provenance=provenance,
+        sampling=sampling, sampling_detail=sampling_detail,
     )
     from platsim.report.sources import team_sources
 
     report.obtained_from, report.held_item_sources, report.held_item_source_refs = team_sources(team, led)
-    _log(f"timing: full runs {t_full:.1f}s ({n / max(t_full, 1e-9):.2f} gauntlets/s), Cynthia top-up {t_champ:.1f}s, "
+    _log(f"timing: runs {t_full:.1f}s ({n / max(t_full, 1e-9):.2f} runs/s), Cynthia top-up {t_champ:.1f}s, "
          f"loss replays {t_loss:.1f}s")
     return report, TeamEvaluation(report, results, {"full_runs_s": t_full, "champion_topup_s": t_champ,
-                                                    "loss_replays_s": t_loss})
+                                                    "loss_replays_s": t_loss}, cyn_results)
 
 
 def summary_text(r: EvaluationReport) -> str:
-    lines = [f"runs {r.n_runs}  player {r.player_policy}  opponent {r.opponent_policy}  budget {r.budget_preset}",
+    lines = [f"runs {r.n_runs}  player {r.player_policy}  opponent {r.opponent_policy}  budget {r.budget_preset}"
+             f"  sampling {r.sampling}"]
+    if r.sampling_detail:
+        d = r.sampling_detail
+        lines.append(f"adaptive sampling: full {d['full_runs']} / Cynthia-only {d['cynthia_only_runs']} runs, switch at "
+                     f"{d['switch_run']}, banked states {d['banked_states']}, floor {d['floor']}; statistic {d['statistic']}")
+    lines += [
              f"gauntlet clear rate {r.clear_rate:.4f}  95% CI [{r.clear_ci95[0]:.4f}, {r.clear_ci95[1]:.4f}]  "
              f"half-width {(r.clear_ci95[1] - r.clear_ci95[0]) / 2:.4f}"]
     for t, s in r.per_battle.items():

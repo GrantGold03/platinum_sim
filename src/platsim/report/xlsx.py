@@ -83,7 +83,23 @@ def _evaluation_sheet(ws: Worksheet, r: EvaluationReport) -> None:
     _kv(ws, "Threshold (min clear rate)", r.threshold)
     _kv(ws, "Budget preset", r.budget_preset)
     _kv(ws, "Objective", r.objective)
-    _kv(ws, "Runs (full gauntlets)", r.n_runs)
+    _kv(ws, "Runs (full + Cynthia-only)" if r.sampling_detail else "Runs (full gauntlets)", r.n_runs)
+    _kv(ws, "Sampling method", r.sampling)
+    if r.sampling_detail:
+        d = r.sampling_detail
+        _kv(ws, "Full runs", d.get("full_runs"))
+        _kv(ws, "Cynthia-only runs", d.get("cynthia_only_runs"))
+        _kv(ws, "Switch run", _or_nr(d.get("switch_run")))
+        _kv(ws, "Discarded past switch", d.get("discarded"))
+        _kv(ws, "Banked states", d.get("banked_states"))
+        _kv(ws, "Elite Four pass rate", _or_nr(d.get("e4_pass_rate")))
+        e4ci = d.get("e4_pass_ci95") or [None, None]
+        _kv(ws, "Elite Four pass 95% CI low", _or_nr(e4ci[0]))
+        _kv(ws, "Elite Four pass 95% CI high", _or_nr(e4ci[1]))
+        cci = d.get("composite_ci95") or [None, None]
+        _kv(ws, "Composite 95% CI low", _or_nr(cci[0]))
+        _kv(ws, "Composite 95% CI high", _or_nr(cci[1]))
+        _kv(ws, "Statistic", d.get("statistic"))
     _kv(ws, "Clear rate (full gauntlet)", r.clear_rate)
     _kv(ws, "Clear rate 95% CI low", r.clear_ci95[0])
     _kv(ws, "Clear rate 95% CI high", r.clear_ci95[1])

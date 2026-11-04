@@ -5,6 +5,7 @@
 The string is UTF-8 encoded; ints format in decimal (same as JS template literals for safe ints).
 "sodium,<32 hex>" is the PRNG seed format Showdown accepts (contracts/worker-protocol.md).
 Battle index 99 is reserved for Cynthia top-up battles (T057) so they never collide with full runs.
+Battle index 98 is reserved for the Cynthia-only runs of adaptive Elite Four sampling (feature 021).
 """
 
 import hashlib
