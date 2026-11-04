@@ -1,0 +1,14 @@
+{
+ "start": "2026-11-03 8:22:05 PM EST",
+ "floor_1_identical_after_strip": true,
+ "floor_1_switch_run": null,
+ "sampling_runs": 165,
+ "sampling_wins": 159,
+ "topup_battles": 165,
+ "topup_wins": 154,
+ "p_sampling": 0.9636363636363636,
+ "p_topup": 0.9333333333333333,
+ "z": 1.2451748631284518,
+ "within_noise": true,
+ "end": "2026-11-03 8:22:58 PM EST"
+}

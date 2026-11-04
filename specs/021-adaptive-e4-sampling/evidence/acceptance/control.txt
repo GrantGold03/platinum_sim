@@ -1,0 +1,2 @@
+control 1: adaptive floor 1.0 vs full, identical after removing the sampling keys: True; switch_run None
+control 2: Cynthia-only sampling 159/165 = 0.9636363636363636 vs top-up 154/165 = 0.9333333333333333; z 1.2451748631284518; within noise: True

@@ -1,0 +1,19 @@
+runs 80  player expectimax2-v4  opponent decomp-ai  budget quick  sampling adaptive
+adaptive sampling: full 35 / Cynthia-only 45 runs, switch at 35, banked states 35, floor 0.9; statistic composite (delta interval)
+gauntlet clear rate 0.9625  95% CI [0.9218, 1.0000]  half-width 0.0391
+  aaron    1.0000  [0.9011, 1.0000]  battles 35
+  bertha   1.0000  [0.9011, 1.0000]  battles 35
+  flint    1.0000  [0.9011, 1.0000]  battles 35
+  lucian   1.0000  [0.9011, 1.0000]  battles 35
+  cynthia  0.9714  [0.8547, 0.9949]  battles 35
+Cynthia P(win | reached) 0.9625  [0.8955, 0.9872]  battles 80
+expected final levels 60.74 / 60.47 / 60.00 / 60.41 / 60.32 / 60.00  avg 60.32  gap max 2.0
+threshold 0.75  qualified False  borderline False
+  loss cause: cynthia garchomp 1
+  loss cause: cynthia lucario 1
+  loss cause: cynthia roserade 1
+WARNING: QUICK BUDGET: this result used the 'quick' simulation preset. Its run counts have no confidence-interval target, it does not meet the confidence target for a qualifying result, and it can never be 'qualified'. For testing only.
+json: runs/021-evidence/hand/a/result.json
+xlsx: runs/021-evidence/hand/a/result.xlsx
+csv: runs/021-evidence/hand/a/result.csv
+team: runs/021-evidence/hand/a/team.txt

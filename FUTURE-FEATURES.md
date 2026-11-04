@@ -263,6 +263,14 @@ confirmed by the research stage:
   criterion met) or keep Bonferroni (then threshold teams need 2,700 to 5,600 full runs to resolve, and the method is not built).
   **User decision 2026-11-03: adopt the delta-method interval for feature 021 → go.** 021 (adaptive sampling in `evaluate`) is
   specified with the delta interval as the method's interval; its paired acceptance against the full gauntlet checks it on real runs.
+  **Feature 021 built 2026-11-03 (branch `021-adaptive-e4-sampling`, `specs/021-adaptive-e4-sampling/`): `evaluate --sampling adaptive`
+  with `--floor`; `full` the reference. **User decision 2026-11-03 after the acceptance: adaptive is evaluate's default at floor 0.98** (the optimizer's stages keep full gauntlets).** Acceptance paired on the same
+  seeds at 2,000 runs: all five legal teams contained and agreeing (B3 borderline on both sides); reference team 1.94x at floor 0.99
+  (switch after 563 full runs, 72% Cynthia-only); the three B2 teams never reach 0.99 and are 1.00x there, 1.70 / 2.06 / 2.05x at
+  floor 0.98 (switch after 650 / 280 / 280); B3 never switches (0.98 to 1.02x). Controls: floor 1.0 identical to full after removing the
+  sampling keys; Cynthia-only draws vs the top-up's on the same bank within noise. Two facts for the record: the policy benchmark
+  fixture cannot be evaluated through the report writers (placeholder sources), and the 018 v2 B2 team is the 014 b2-branch team.
+  **Follow-on**: the optimizer stages (level search, setup check, confirmation) on the same method, as their own feature.
 - **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
   version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),
   the Elite Four room scripts release control after each win, the party menu's Switch reorders, and the battle lead is

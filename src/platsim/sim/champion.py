@@ -84,6 +84,7 @@ class ChampionResult:
     target_met: bool = False  # both rules held (never True when status is cap_hit / no_reach)
     cap_hit: bool = False
     distinct_start_states: int = 0
+    extra_battles: int = 0  # 021: Cynthia-only sampling runs counted as already-played Cynthia battles
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -92,8 +93,11 @@ class ChampionResult:
 
 
 def _start_index(master: str, k: int, n_states: int) -> int:
-    h = hashlib.sha256(f"{master}|{k}|{TOPUP_BATTLE_INDEX}|start_state".encode("utf-8")).hexdigest()
-    return int(h, 16) % n_states
+    # Same hash and result as before feature 021; the rule now lives in platsim.sampling.start_index (index 98 for
+    # the adaptive sampling's Cynthia-only runs, 99 here).
+    from platsim.sampling import start_index
+
+    return start_index(master, k, TOPUP_BATTLE_INDEX, n_states)
 
 
 def _one_policy(values: set, what: str) -> str:
@@ -124,8 +128,12 @@ def _summarise_full(full_results: list[dict]):
 
 
 def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_seed: str | int,
-                   budget: str, max_topup: int = MAX_TOPUP_BATTLES) -> ChampionResult:
-    """Run the Cynthia top-up for one candidate. `pool` is a `WorkerPool` (anything with `map`)."""
+                   budget: str, max_topup: int = MAX_TOPUP_BATTLES,
+                   extra_cynthia: tuple[int, int] = (0, 0)) -> ChampionResult:
+    """Run the Cynthia top-up for one candidate. `pool` is a `WorkerPool` (anything with `map`).
+    `extra_cynthia` = (battles, wins) of Cynthia battles already played outside the full runs (feature 021's
+    Cynthia-only sampling runs): the count and half-width rules start from them, so top-ups are added only when
+    those rules are still unmet; the returned `battles`/`wins`/`rate` include them."""
     if not full_results:
         raise ChampionTopupError("no full results")
     if max_topup < 0:
@@ -137,9 +145,10 @@ def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_s
     reached = counts.get(CHAMPION, 0)
     others = {t: c for t, c in sorted(counts.items()) if t != CHAMPION}
     count_bar = max(others.values(), default=0)  # her count must exceed this
+    extra_battles, extra_wins = extra_cynthia
     base = dict(budget_preset=preset.name, target_half_width=target, master_seed=master, seed_scheme=SCHEME,
                 player_policy=player_policy, opponent_policy=opponent_policy, reached=reached,
-                full_wins=full_wins, other_battles=others, max_topup=max_topup)
+                full_wins=full_wins, other_battles=others, max_topup=max_topup, extra_battles=extra_battles)
 
     if reached == 0:
         return ChampionResult(status="no_reach", topup_battles=0, topup_wins=0, battles=0, wins=0,
@@ -155,7 +164,7 @@ def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_s
                 "trainers": [CHAMPION], "start_state": states[_start_index(master, k, len(states))],
                 "stop_on_loss": True, "log": "none"}
 
-    n, w, k = reached, full_wins, 0
+    n, w, k = reached + extra_battles, full_wins + extra_wins, 0
     ci_ok, count_ok = rules(w, n)
     done = ci_ok is not False and count_ok
     while not done and k < max_topup:
@@ -185,7 +194,7 @@ def champion_topup(pool, team: list[dict], full_results: list[dict], *, master_s
                 break
 
     return ChampionResult(
-        status="met" if done else "cap_hit", topup_battles=k, topup_wins=w - full_wins, battles=n, wins=w,
+        status="met" if done else "cap_hit", topup_battles=k, topup_wins=w - full_wins - extra_wins, battles=n, wins=w,
         rate=w / n, ci95=wilson_ci(w, n), half_width=wilson_half_width(w, n), ci_target_met=ci_ok,
         count_rule_met=count_ok, target_met=done, cap_hit=not done,
         distinct_start_states=len({_start_index(master, j, len(states)) for j in range(k)}), **base)

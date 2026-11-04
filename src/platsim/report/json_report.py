@@ -237,6 +237,8 @@ class EvaluationReport:
     no_qualifying: NoQualifying | None = None
     warnings: list[str] = field(default_factory=list)
     provenance: dict[str, Any] = field(default_factory=dict)
+    sampling: str = "full"  # 021: "full" (the reference) or "adaptive"
+    sampling_detail: dict[str, Any] | None = None  # 021: run mix and the composite's parts; None for full
 
     def __post_init__(self) -> None:
         if self.budget_preset not in BUDGET_PRESETS:
@@ -306,6 +308,8 @@ class EvaluationReport:
             "resources": [r.to_dict() for r in self.resources],
             "divergences": [d.to_dict() for d in self.divergences],
             "provenance": dict(self.provenance),
+            "sampling": self.sampling,
+            "sampling_detail": dict(self.sampling_detail) if self.sampling_detail is not None else None,
         }
 
     @classmethod
@@ -350,6 +354,8 @@ class EvaluationReport:
             else None,
             warnings=list(d.get("warnings", [])),
             provenance=dict(d.get("provenance", {})),
+            sampling=d.get("sampling", "full"),
+            sampling_detail=dict(d["sampling_detail"]) if d.get("sampling_detail") else None,
         )
 
     def to_json(self, **kwargs: Any) -> str:

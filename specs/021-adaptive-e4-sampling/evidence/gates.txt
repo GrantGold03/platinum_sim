@@ -1,0 +1,15 @@
+=== gates start 10:55:26 PM EST
+sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b sha256:f9128d6b68f493ce5d1beeb3d4f15053e5b6936e411b9cfbce5ef8215e6748c8
+diff main -- sim lines=0
+node exit=0
+# tests 351
+# pass 351
+# fail 0
+# duration_ms 144724.205914
+full start 10:57:51 PM EST
+full exit=1
+=========================== short test summary info ============================
+FAILED tests/integration/test_web_result_view.py::test_result_view - Assertio...
+1 failed, 599 passed, 4 xfailed, 1 warning in 3389.89s (0:56:29)
+FAILED tests/integration/test_web_result_view.py::test_result_view - Assertio...
+=== gates end 11:54:24 PM EST

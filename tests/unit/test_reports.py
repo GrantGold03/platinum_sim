@@ -351,3 +351,53 @@ def test_second_game_label_follows_team_order(ledger):
     team, _, _ = _team_from_dict(d)
     got = team_sources(team, ledger.with_options(SECOND_GAME))[0]
     assert [i for i, t in enumerate(got) if t.endswith(MS.SECOND_GAME_NOTE)] == [5], got
+
+
+# ---- feature 021: sampling fields ----
+
+def test_json_round_trip_with_sampling_detail_and_old_json_reads_as_full(tmp_path):
+    from platsim.report.json_report import EvaluationReport
+
+    r = _report()
+    d = r.to_dict()
+    assert d["sampling"] == "full" and d["sampling_detail"] is None
+    detail = {"floor": 0.99, "full_runs": 400, "cynthia_only_runs": 1600, "switch_run": 381, "discarded": 19,
+              "banked_states": 380, "e4_pass_rate": 0.95, "e4_pass_ci95": [0.92, 0.97], "cynthia_rate": 0.9,
+              "cynthia_battles": 1980, "composite_ci95": [0.83, 0.88], "extension": {"full": 0, "cynthia_only": 0},
+              "statistic": "composite (delta interval)"}
+    d2 = dict(d, sampling="adaptive", sampling_detail=detail)
+    back = EvaluationReport.from_dict(d2)
+    assert back.sampling == "adaptive" and back.sampling_detail == detail
+    assert EvaluationReport.from_dict(back.to_dict()).to_dict() == back.to_dict()
+    old = {k: v for k, v in d.items() if k not in ("sampling", "sampling_detail")}
+    legacy = EvaluationReport.from_dict(old)
+    assert legacy.sampling == "full" and legacy.sampling_detail is None
+
+
+def test_xlsx_evaluation_sheet_shows_the_sampling_rows_when_adaptive(tmp_path):
+    from openpyxl import load_workbook
+
+    from platsim.report.json_report import EvaluationReport
+    from platsim.report.xlsx import write_xlsx
+
+    r = _report()
+    d = r.to_dict()
+    d.update(sampling="adaptive", sampling_detail={"floor": 0.99, "full_runs": 400, "cynthia_only_runs": 1600,
+                                                   "switch_run": 381, "discarded": 19, "banked_states": 380,
+                                                   "e4_pass_rate": 0.95, "e4_pass_ci95": [0.92, 0.97],
+                                                   "cynthia_rate": 0.9, "cynthia_battles": 1980,
+                                                   "composite_ci95": [0.83, 0.88],
+                                                   "extension": {"full": 0, "cynthia_only": 0},
+                                                   "statistic": "composite (delta interval)"})
+    rep = EvaluationReport.from_dict(d)
+    path = tmp_path / "r.xlsx"
+    write_xlsx(rep, path)
+    ws = load_workbook(path)["Evaluation"]
+    keys = [row[0].value for row in ws.iter_rows(min_col=1, max_col=1)]
+    for k in ("Sampling method", "Full runs", "Cynthia-only runs", "Switch run", "Banked states", "Elite Four pass rate",
+              "Composite 95% CI low"):
+        assert k in keys
+    write_xlsx(r, tmp_path / "f.xlsx")
+    ws2 = load_workbook(tmp_path / "f.xlsx")["Evaluation"]
+    keys2 = [row[0].value for row in ws2.iter_rows(min_col=1, max_col=1)]
+    assert "Sampling method" in keys2 and "Cynthia-only runs" not in keys2
