@@ -1,4 +1,11 @@
-# START HERE (updated 2026-11-04, 3:15 PM EST, feature 022 merged to `main` (a989b62, fast-forward, user's go); nothing running)
+# START HERE (updated 2026-11-04, 3:50 PM EST, feature 023 `023-shift-battle-style` specified on its branch from `main` 581e836; clarify next)
+
+- **Feature 023 `023-shift-battle-style` specified 2026-11-04 (`/speckit-specify`, user's paste), branch from `main` 581e836 in the
+  main checkout.** `specs/023-shift-battle-style/spec.md` + `checklists/requirements.md` (all pass, 0 markers). Three stories: US1
+  the rule in the worker behind `--battle-style shift|set` (default `set` until the owner decides; Set byte-identical), US2 the
+  player policies answer the prompt with their existing scoring, US3 paired Shift vs Set acceptance on four teams + B2 quick under
+  each style, then the default decision. Research (decomp citations, worker hooks) is in FUTURE-FEATURES section 3. Next:
+  `/speckit-clarify` (user runs it). Nothing is running.
 
 - **Feature 022 `022-confirm-adaptive-sampling` closed on its branch 2026-11-04 (from `main` 93ac7c8; `main` has not moved).
   Gates (T021, 1:36 to 3:06 PM EST): sim hash unchanged, `diff main -- sim` empty, Node 351 pass, full pytest 610 passed + 4 xfailed
