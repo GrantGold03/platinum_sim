@@ -1,0 +1,6 @@
+T017 acceptance start 12:26:16 PM EST
+acceptance exit=1
+T017 acceptance end 1:04:48 PM EST
+T017 rerun (b2quick, resume) start 1:07:25 PM EST
+acceptance2 exit=1
+T017 rerun end 1:26:39 PM EST

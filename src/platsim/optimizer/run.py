@@ -676,6 +676,12 @@ def _confirm(req, preset, led, consts, out, state, pool, prog, winner, finalists
     return _report(req, preset, led, out, state, chosen, chosen_real, chosen_rep, lv, comparison, abilities)
 
 
+def _canonical(x):
+    """022: stage records with keys in sorted order, so result.json is byte-identical whether or not the job was
+    resumed (a resumed job reloads its stage records from the checkpoint, whose key order differs from a fresh run's)."""
+    return json.loads(json.dumps(x, sort_keys=True))
+
+
 def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None) -> dict:
     st = state.data["stages"]
     d = {
@@ -696,8 +702,8 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
                   "ability_screen": "abilities.screen_master(seed, slot)", "level_search": f"{req.seed}|levels",
                   "setup_check": f"{req.seed}|setup", "confirm": f"{req.seed}|confirm",
                   "candidate_sampling": f"random.Random(sha256('{req.seed}|screen-candidates'))"},
-        "stages": {k: st.get(k) for k in ("calibrate", "prune", "ability_screen", "screen", "level_search", "confirm")},
-        "level_points": [state.data["level_points"][k] for k in sorted(state.data["level_points"])],
+        "stages": {k: _canonical(st.get(k)) for k in ("calibrate", "prune", "ability_screen", "screen", "level_search", "confirm")},
+        "level_points": [_canonical(state.data["level_points"][k]) for k in sorted(state.data["level_points"])],
         "heuristics": "candidate generation, coverage scoring and item choice are heuristics over candidates "
                       "(optimizer/candidates.py docstring); legality comes from legality/movesources.py and the ledger "
                       "and is re-checked by the independent validator",

@@ -271,6 +271,13 @@ confirmed by the research stage:
   sampling keys; Cynthia-only draws vs the top-up's on the same bank within noise. Two facts for the record: the policy benchmark
   fixture cannot be evaluated through the report writers (placeholder sources), and the 018 v2 B2 team is the 014 b2-branch team.
   **Follow-on**: the optimizer stages (level search, setup check, confirmation) on the same method, as their own feature.
+  **Feature 022 built 2026-11-04 (branch `022-confirm-adaptive-sampling`): the confirmation stage on adaptive sampling behind
+  `optimize --sampling adaptive` (default `full`).** Acceptance: confirmation alone at the standard count 2.33x on 014 b2-main (contained,
+  agree), 1.00x on B3 (never switches; borderline extension to 4,000 on both sides, identical); pairing control exact; resume control
+  byte-identical after a canonical key order fix for the provenance's stage records. The B2 quick end to end failed the containment
+  rule by 0.002 at the quick count (full borderline at the level search's levels and bumped; adaptive passed one level lower; the
+  same team at equal levels, 0 discordant). Default decision pending. Remaining follow-on: the level search and the setup check on
+  adaptive sampling only if a measurement earns it (their batches sit at or below the switch point).
 - **Lead per fight** (idea 2; assessed 2026-11-03, `.specify/assessments/lead-per-fight/`, verdict **go** for a reshaped
   version). Game rule confirmed in the decomp: the start menu opens on any map but the Mystery Zone (`src/start_menu.c:261`),
   the Elite Four room scripts release control after each win, the party menu's Switch reorders, and the battle lead is

@@ -1,0 +1,8 @@
+b2quick full: wall 355s confirm 99.4s clear 0.8860 [0.8551509101576845, 0.9109630990059973] not_qualified levels [54, 52, 54, 54, 54, 55] attempts 2 mix full/cyn 500/0 switch None
+b2quick adaptive: wall 308s confirm 51.6s clear 0.8120 [0.7784653449469561, 0.8469792576892773] not_qualified levels [53, 51, 53, 53, 53, 54] attempts 1 mix full/cyn 189/311 switch 189
+b2quick: same build True, same levels False, contained both ways False, verdicts not_qualified/not_qualified, ratio confirm 1.926356589147287, whole 1.15x; equal-levels exit 0; pass False
+confirm b2main: full 0.9090 [0.8955988359412409, 0.9208330193826942] n 2000 qualified 131s | adaptive 0.9178 [0.9032993269685703, 0.9326246782952907] n 2000 qualified 56s | contained True agree True ratio 2.33x | mix full/cyn 281/1719 switch 281 ext {'full': 0, 'cynthia_only': 0} borderline_ext False
+confirm b3: full 0.7490 [0.7353286210798616, 0.7621935761618671] n 4000 borderline 277s | adaptive 0.7490 [0.7353286210798616, 0.7621935761618671] n 4000 borderline 276s | contained True agree True ratio 1.00x | mix full/cyn 4000/0 switch None ext {'full': 2000, 'cynthia_only': 0} borderline_ext True
+resume: killed True (during the confirmation attempt (checkpoint granularity: per attempt)); identical to the uninterrupted run: False
+pairing: switch {'b2main': 853, 'b2branch': 361}; full pairs 361, Cynthia-only pairs 1147, excluded 984; counts on full pairs full [76, 32] vs adaptive [76, 32] exact True; all pairs adaptive {'a_only': 277, 'b_only': 101, 'p': 4.5742899598372007e-20, 'verdict': 'A'} vs full {'a_only': 393, 'b_only': 132, 'p': 4.0850544869018576e-31, 'verdict': 'A'}
+{"b2quick": false, "confirm": true, "resume": false, "pairing": true}

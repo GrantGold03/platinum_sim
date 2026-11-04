@@ -153,7 +153,7 @@ or unknown species, with reasons), **1** internal error. For the full flag list,
 | `evaluate TEAM` | Battle-tests a fixed team over the full gauntlet | `--runs` (min, default 2000), `--seed` (default `0`), `--workers` (default: CPU count), `--player-policy` (default `expectimax2-v4`; `expectimax2-v2` is the reference), `--budget {quick,standard,thorough}`, `--min-clear` (default 0.75), `--max-runs` (default 20000), `--out` (default `runs/evaluate-<time>-<hash>/`), the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (default `adaptive` since feature 021 on the user's decision; `full` is the reference), `--floor` (adaptive only, default 0.98) |
 | `explain SUBJECT` | Traces a fact to the decomp | `tmNN`, `hmNN`, `species:<key>`, `item:<key>`, `move:<key>`, `trainer:<key>`, `divergence:<id>`; `--json`, `--level` (`move:` only, default 100) |
 | `serve` | Local web UI and HTTP API on 127.0.0.1 | `--port` (default 8000), `--runs-dir` (default `runs/`) |
-| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm` |
+| `optimize S1 … S6` | Finds the lowest-level qualifying build for six species and writes the same four reports plus a resumable `state.json` | `--min-clear` (default 0.75), `--seed` (default `default`), `--workers` (default: CPU count; never changes results), `--budget {quick,standard,thorough}` (default `standard`), `--player-policy` (default `expectimax2-v4`; the strong player for the level search, setup check and confirmation, feature 018; the screening stages keep `greedy-v1`), `--out` (default `runs/optimize-<hash of the request>/`; rerunning resumes), `--force-new`, the five `--allow-...` rule flags, `--require-hm`, `--sampling {full,adaptive}` (the confirmation stage's sampling, feature 022; default `full`), `--floor` (adaptive only, default 0.98) |
 | `bench` | Times the battle player on the fixed 40-gauntlet seed set, single process and worker pool, and checks both halves ran the same battles (feature 015; `node sim/bench.mjs` alone gives the single-process figures and records the replay fixture; since feature 017 the single-process half also reports the trainer-AI interpreter step count) | `--policy` (default `expectimax2-v4`), `--n` (default 20 per team), `--block` (default `a`), `--teams` (default `bench,ref`), `--trainers`, `--workers` (default: CPU count), `--no-single`, `--json` |
 | `report --rerender RUN_DIR` | Re-renders an existing run's report with the current source-text code. No battle is re-run, the numbers are copied unchanged, and the validator runs again | `--out` (default `<RUN_DIR>-rerendered`; never overwrites existing report files; `RUN_DIR` is never modified) |
 
@@ -511,6 +511,20 @@ acceptance teams the adaptive estimate lies inside the full run's interval and t
 faster at floor 0.99 (switch after 563 full runs); the B2 teams do not reach 0.99 (Lucian about 0.99 on them) and ran 1.70 to
 2.06x faster at floor 0.98; bench-010 B3 never switches and costs nothing. The policy benchmark fixture cannot be evaluated this
 way (placeholder sources). The optimizer's stages keep full gauntlets.
+
+Feature 022 (2026-11-04, `specs/022-confirm-adaptive-sampling/`): the optimizer's **confirmation stage** can use the same adaptive
+sampling (`optimize --sampling adaptive`, `--floor`; default `full`), including the borderline extension by the 021 rule; the level
+search and the setup check keep full gauntlets. The runner-up comparison stays paired by runs that share a seed: full runs by run
+index below both switch runs, Cynthia-only runs by their ordinal, the surplus excluded and counted (`optimizer/pairing.py`); a better
+runner-up is confirmed from its own runs. state.json's confirm attempts record the run mix and provenance names the sampling per
+stage. Acceptance (`specs/022-confirm-adaptive-sampling/validation-log.md` T017): the confirmation alone at the standard count was
+2.33x faster on the 014 b2-main team with the same verdict and containment, and 1.00x on bench-010 B3 (the floor is never reached;
+both sides extended to 4,000 runs); the pairing control reproduced the full method's McNemar counts exactly on the full-kind pairs;
+a run killed during the confirmation and resumed gives byte-identical result.json (the provenance's stage records are now written
+in canonical key order, which also fixes a pre-existing key-order difference after any resume). The B2 quick end-to-end comparison
+failed the clarified containment rule by 0.002: at the quick count of 500 runs the full method's first attempt was borderline and
+bumped a level while the adaptive attempt passed one level lower, the same team at equal levels (0 discordant pairs). The default
+stays `full` until the user's decision.
 
 Measured run times:
 

@@ -61,9 +61,12 @@ def block_b2quick(a) -> dict:
     runs = {}
     for sampling in ("full", "adaptive"):
         d = EVIDENCE / f"b2quick-{sampling}"
-        p, wall = optimize(sampling, d, a.workers, a.floor, ("--force-new",))
-        if p.returncode != 0:
-            raise SystemExit(f"b2quick {sampling} failed: {p.stderr[-2000:]}")
+        if a.reuse and (d / "result.json").exists():
+            wall = json.loads((d / "state.json").read_text())["timing"].get("total_s_this_session")
+        else:
+            p, wall = optimize(sampling, d, a.workers, a.floor, ("--force-new",))
+            if p.returncode != 0:
+                raise SystemExit(f"b2quick {sampling} failed: {p.stderr[-2000:]}")
         res = json.loads((d / "result.json").read_text())
         st = json.loads((d / "state.json").read_text())
         att = st["stages"]["confirm_attempts"][-1]
@@ -78,18 +81,28 @@ def block_b2quick(a) -> dict:
     f, ad = runs["full"], runs["adaptive"]
     same_build = [(t[0], t[1], t[2]) for t in f["team"]] == [(t[0], t[1], t[2]) for t in ad["team"]]
     same_levels = f["levels"] == ad["levels"]
-    cont = contained(ad["clear_rate"], f["ci95"]) and contained(f["clear_rate"], ad["ci95"])
+    # containment is judged at EQUAL levels: the first confirm attempt is always at the level search's levels on both
+    # sides; later attempts may sit at different levels after a bump, so comparing final results would mix levels
+    fa = json.loads((Path(f["dir"]) / "state.json").read_text())["stages"]["confirm_attempts"][0]
+    aa = json.loads((Path(ad["dir"]) / "state.json").read_text())["stages"]["confirm_attempts"][0]
+    assert fa["levels"] == aa["levels"], "first attempts at different levels"
+    cont = contained(aa["clear_rate"], fa["ci95"]) and contained(fa["clear_rate"], aa["ci95"])
+    out["first_attempt"] = {"levels": fa["levels"], "full": {"clear_rate": fa["clear_rate"], "ci95": fa["ci95"], "borderline": fa["borderline"], "passes": fa["passes_confirm_checks"]},
+                            "adaptive": {"clear_rate": aa["clear_rate"], "ci95": aa["ci95"], "borderline": aa["borderline"], "passes": aa["passes_confirm_checks"],
+                                         "switch_run": aa.get("switch_run"), "cynthia_only_runs": aa.get("cynthia_only_runs")},
+                            "contained_both_ways": cont}
     note = None
     if not same_levels:
-        note = "levels differ: a borderline flip with a confirm bump; passes while containment holds (clarification)" if cont else "levels differ and containment broken: FAIL"
+        note = "levels differ: a borderline flip with a confirm bump; passes while containment holds at equal levels (clarification)" if cont else "levels differ and containment broken at equal levels: FAIL"
     # 010 equal-levels comparison: A = adaptive result, B = full result, both at A's levels, reference player v2, 500 runs
     eq = subprocess.run([sys.executable, str(EQUAL_LEVELS), f["dir"], ad["dir"], "500"], cwd=REPO, capture_output=True, text=True)
-    out.update({"full": f, "adaptive": ad, "same_build": same_build, "same_levels": same_levels, "contained_both_ways": cont,
+    out.update({"full": f, "adaptive": ad, "same_build": same_build, "same_levels": same_levels, "contained_both_ways_at_equal_levels": cont,
                 "verdicts_agree": f["verdict"] == ad["verdict"], "note": note,
                 "ratio_confirm": (f["confirm_s"] / ad["confirm_s"]) if f["confirm_s"] and ad["confirm_s"] else None,
                 "ratio_whole": f["wall_s"] / ad["wall_s"], "equal_levels_stdout": eq.stdout[-3000:], "equal_levels_exit": eq.returncode,
                 "pass": same_build and cont and (same_levels or note.startswith("levels differ: a borderline")), "end": eastern_now()})
-    print(f"b2quick: same build {same_build}, same levels {same_levels}, contained both ways {cont}, verdicts {f['verdict']}/{ad['verdict']}, "
+    print(f"b2quick: same build {same_build}, same levels {same_levels}, first attempt at {fa['levels']}: full {fa['clear_rate']:.4f} {[round(x, 4) for x in fa['ci95']]} "
+          f"borderline {fa['borderline']} vs adaptive {aa['clear_rate']:.4f} {[round(x, 4) for x in aa['ci95']]} borderline {aa['borderline']}; contained both ways at equal levels {cont}, final verdicts {f['verdict']}/{ad['verdict']}, "
           f"ratio confirm {out['ratio_confirm']}, whole {out['ratio_whole']:.2f}x; equal-levels exit {eq.returncode}; pass {out['pass']}", flush=True)
     return out
 
@@ -229,6 +242,7 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--floor", type=float, default=0.98)
     ap.add_argument("--out", default=str(EVIDENCE / "acceptance.json"))
+    ap.add_argument("--reuse", action="store_true", help="b2quick: reuse existing optimize directories (deterministic) instead of rerunning")
     a = ap.parse_args(argv)
     assert_idle()
     EVIDENCE.mkdir(parents=True, exist_ok=True)

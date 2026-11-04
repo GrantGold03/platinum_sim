@@ -1,0 +1,5 @@
+b2quick full: wall 355s confirm 98.7s clear 0.8860 [0.8551509101576845, 0.9109630990059973] not_qualified levels [54, 52, 54, 54, 54, 55] attempts 2 mix full/cyn 500/0 switch None
+b2quick adaptive: wall 307s confirm 51.3s clear 0.8120 [0.7784653449469561, 0.8469792576892773] not_qualified levels [53, 51, 53, 53, 53, 54] attempts 1 mix full/cyn 189/311 switch 189
+b2quick: same build True, same levels False, first attempt at [53, 51, 53, 53, 53, 54]: full 0.7760 [0.7374, 0.8104] borderline True vs adaptive 0.8120 [0.7785, 0.847] borderline False; contained both ways at equal levels False, final verdicts not_qualified/not_qualified, ratio confirm 1.9239766081871346, whole 1.16x; equal-levels exit 0; pass False
+resume: killed True (during the confirmation attempt (checkpoint granularity: per attempt)); identical to the uninterrupted run: True
+{"b2quick": false, "resume": true}

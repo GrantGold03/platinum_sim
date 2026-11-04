@@ -1,0 +1,530 @@
+{
+ "hashes": {
+  "sim_code_hash": "sha256:299b1b556a0066a2d004e6026d9e2c12fd7bb47fa04c6446e34c24565301b59b",
+  "platsim_code_hash": "sha256:83396c29c564437125f17fd53ad82e21ead8fa4048d4364fc4a74b372fb448fe"
+ },
+ "b2quick": {
+  "start": "2026-11-04 1:07:25 PM EST",
+  "first_attempt": {
+   "levels": [
+    53,
+    51,
+    53,
+    53,
+    53,
+    54
+   ],
+   "full": {
+    "clear_rate": 0.776,
+    "ci95": [
+     0.7374303353251315,
+     0.8103610287400917
+    ],
+    "borderline": true,
+    "passes": false
+   },
+   "adaptive": {
+    "clear_rate": 0.812,
+    "ci95": [
+     0.7784653449469561,
+     0.8469792576892773
+    ],
+    "borderline": false,
+    "passes": true,
+    "switch_run": 189,
+    "cynthia_only_runs": 311
+   },
+   "contained_both_ways": false
+  },
+  "full": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/022-evidence/b2quick-full",
+   "wall_s": 354.8615393709915,
+   "confirm_s": 98.7,
+   "team": [
+    [
+     "garchomp",
+     [
+      "earthquake",
+      "dragon_claw",
+      "rock_slide",
+      "fire_blast"
+     ],
+     "earth_plate",
+     54
+    ],
+    [
+     "infernape",
+     [
+      "fire_blast",
+      "flamethrower",
+      "close_combat",
+      "stone_edge"
+     ],
+     "sitrus_berry",
+     52
+    ],
+    [
+     "staraptor",
+     [
+      "brave_bird",
+      "wing_attack",
+      "close_combat",
+      "secret_power"
+     ],
+     "sitrus_berry",
+     54
+    ],
+    [
+     "rotom",
+     [
+      "thunderbolt",
+      "shadow_ball",
+      "dark_pulse",
+      "charge_beam"
+     ],
+     "expert_belt",
+     54
+    ],
+    [
+     "floatzel",
+     [
+      "waterfall",
+      "surf",
+      "ice_beam",
+      "brine"
+     ],
+     "sitrus_berry",
+     54
+    ],
+    [
+     "weavile",
+     [
+      "ice_punch",
+      "avalanche",
+      "night_slash",
+      "ice_shard"
+     ],
+     "sitrus_berry",
+     55
+    ]
+   ],
+   "levels": [
+    54,
+    52,
+    54,
+    54,
+    54,
+    55
+   ],
+   "clear_rate": 0.886,
+   "ci95": [
+    0.8551509101576845,
+    0.9109630990059973
+   ],
+   "verdict": "not_qualified",
+   "avg_final": 54.29683972911964,
+   "attempts": 2,
+   "attempt": {
+    "banked_states": null,
+    "borderline": false,
+    "ci95": [
+     0.8551509101576845,
+     0.9109630990059973
+    ],
+    "clear_rate": 0.886,
+    "cynthia_only_runs": 0,
+    "expected_avg_final_level": 54.29683972911964,
+    "extension": null,
+    "final_level_gap_max": 5.0,
+    "full_runs": 500,
+    "levels": [
+     54,
+     52,
+     54,
+     54,
+     54,
+     55
+    ],
+    "passes_confirm_checks": true,
+    "runs": 500,
+    "sampling": "full",
+    "switch_run": null
+   },
+   "comparison": {
+    "clear_rate_runner_up": 0.766,
+    "clear_rate_winner": 0.886,
+    "cynthia_only_pairs": 0,
+    "excluded": 0,
+    "full_pairs": 500,
+    "levels_runner_up": [
+     54,
+     52,
+     54,
+     54,
+     54,
+     55
+    ],
+    "levels_winner": [
+     54,
+     52,
+     54,
+     54,
+     54,
+     55
+    ],
+    "n_paired": 500,
+    "p_value": 3.3742641422521276e-07,
+    "pairs": 500,
+    "runner_up": [
+     {
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_EARTHQUAKE",
+       "MOVE_DRAGON_CLAW",
+       "MOVE_ROCK_SLIDE",
+       "MOVE_FIRE_BLAST"
+      ],
+      "species": "SPECIES_GARCHOMP",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "item": "flame_plate",
+      "moves": [
+       "MOVE_FIRE_BLAST",
+       "MOVE_FLAMETHROWER",
+       "MOVE_CLOSE_COMBAT",
+       "MOVE_FIRE_PUNCH"
+      ],
+      "species": "SPECIES_INFERNAPE",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_BRAVE_BIRD",
+       "MOVE_CLOSE_COMBAT",
+       "MOVE_GIGA_IMPACT",
+       "MOVE_TAKE_DOWN"
+      ],
+      "species": "SPECIES_STARAPTOR",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_LEVITATE",
+      "ability_reason": "single_ability",
+      "item": "zap_plate",
+      "moves": [
+       "MOVE_THUNDERBOLT",
+       "MOVE_SHADOW_BALL",
+       "MOVE_DARK_PULSE",
+       "MOVE_CHARGE_BEAM"
+      ],
+      "species": "SPECIES_ROTOM",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_SWIFT_SWIM",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_WATERFALL",
+       "MOVE_ICE_BEAM",
+       "MOVE_ICE_PUNCH",
+       "MOVE_WATER_PULSE"
+      ],
+      "species": "SPECIES_FLOATZEL",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_PRESSURE",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_ICE_PUNCH",
+       "MOVE_AVALANCHE",
+       "MOVE_NIGHT_SLASH",
+       "MOVE_ICE_SHARD"
+      ],
+      "species": "SPECIES_WEAVILE",
+      "variant": "own"
+     }
+    ],
+    "runner_up_labels": [
+     "Garchomp [Earthquake/Dragon Claw/Rock Slide/Fire Blast] @ Sitrus Berry",
+     "Infernape [Fire Blast/Flamethrower/Close Combat/Fire Punch] @ Flame Plate",
+     "Staraptor [Brave Bird/Close Combat/Giga Impact/Take Down] @ Sitrus Berry",
+     "Rotom [Thunderbolt/Shadow Ball/Dark Pulse/Charge Beam] @ Zap Plate",
+     "Floatzel [Waterfall/Ice Beam/Ice Punch/Water Pulse] @ Sitrus Berry",
+     "Weavile [Ice Punch/Avalanche/Night Slash/Ice Shard] @ Sitrus Berry"
+    ],
+    "runner_up_only": 39,
+    "test": "McNemar exact (two-sided), alpha 0.05, paired by run kind and seed (optimizer/pairing.py)",
+    "verdict": "winner better",
+    "winner_only": 99
+   },
+   "sampling": "full"
+  },
+  "adaptive": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/022-evidence/b2quick-adaptive",
+   "wall_s": 306.58767785702366,
+   "confirm_s": 51.3,
+   "team": [
+    [
+     "garchomp",
+     [
+      "earthquake",
+      "dragon_claw",
+      "rock_slide",
+      "fire_blast"
+     ],
+     "earth_plate",
+     53
+    ],
+    [
+     "infernape",
+     [
+      "fire_blast",
+      "flamethrower",
+      "close_combat",
+      "stone_edge"
+     ],
+     "sitrus_berry",
+     51
+    ],
+    [
+     "staraptor",
+     [
+      "brave_bird",
+      "wing_attack",
+      "close_combat",
+      "secret_power"
+     ],
+     "sitrus_berry",
+     53
+    ],
+    [
+     "rotom",
+     [
+      "thunderbolt",
+      "shadow_ball",
+      "dark_pulse",
+      "charge_beam"
+     ],
+     "expert_belt",
+     53
+    ],
+    [
+     "floatzel",
+     [
+      "waterfall",
+      "surf",
+      "ice_beam",
+      "brine"
+     ],
+     "sitrus_berry",
+     53
+    ],
+    [
+     "weavile",
+     [
+      "ice_punch",
+      "avalanche",
+      "night_slash",
+      "ice_shard"
+     ],
+     "sitrus_berry",
+     54
+    ]
+   ],
+   "levels": [
+    53,
+    51,
+    53,
+    53,
+    53,
+    54
+   ],
+   "clear_rate": 0.812,
+   "ci95": [
+    0.7784653449469561,
+    0.8469792576892773
+   ],
+   "verdict": "not_qualified",
+   "avg_final": 53.32142857142857,
+   "attempts": 1,
+   "attempt": {
+    "banked_states": 189,
+    "borderline": false,
+    "ci95": [
+     0.7784653449469561,
+     0.8469792576892773
+    ],
+    "clear_rate": 0.812,
+    "cynthia_only_runs": 311,
+    "expected_avg_final_level": 53.32142857142857,
+    "extension": {
+     "cynthia_only": 0,
+     "full": 0
+    },
+    "final_level_gap_max": 5.0,
+    "full_runs": 189,
+    "levels": [
+     53,
+     51,
+     53,
+     53,
+     53,
+     54
+    ],
+    "passes_confirm_checks": true,
+    "runs": 500,
+    "sampling": "adaptive",
+    "switch_run": 189
+   },
+   "comparison": {
+    "clear_rate_runner_up": 0.7205882352941176,
+    "clear_rate_winner": 0.8186274509803921,
+    "cynthia_only_pairs": 219,
+    "excluded": 184,
+    "full_pairs": 189,
+    "levels_runner_up": [
+     53,
+     51,
+     53,
+     53,
+     53,
+     54
+    ],
+    "levels_winner": [
+     53,
+     51,
+     53,
+     53,
+     53,
+     54
+    ],
+    "n_paired": 408,
+    "p_value": 0.0011725629873702741,
+    "pairs": 408,
+    "runner_up": [
+     {
+      "ability": "ABILITY_SAND_VEIL",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_EARTHQUAKE",
+       "MOVE_DRAGON_CLAW",
+       "MOVE_ROCK_SLIDE",
+       "MOVE_FIRE_BLAST"
+      ],
+      "species": "SPECIES_GARCHOMP",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_BLAZE",
+      "ability_reason": "single_ability",
+      "item": "flame_plate",
+      "moves": [
+       "MOVE_FIRE_BLAST",
+       "MOVE_FLAMETHROWER",
+       "MOVE_CLOSE_COMBAT",
+       "MOVE_FIRE_PUNCH"
+      ],
+      "species": "SPECIES_INFERNAPE",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_INTIMIDATE",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_BRAVE_BIRD",
+       "MOVE_CLOSE_COMBAT",
+       "MOVE_GIGA_IMPACT",
+       "MOVE_TAKE_DOWN"
+      ],
+      "species": "SPECIES_STARAPTOR",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_LEVITATE",
+      "ability_reason": "single_ability",
+      "item": "zap_plate",
+      "moves": [
+       "MOVE_THUNDERBOLT",
+       "MOVE_SHADOW_BALL",
+       "MOVE_DARK_PULSE",
+       "MOVE_CHARGE_BEAM"
+      ],
+      "species": "SPECIES_ROTOM",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_SWIFT_SWIM",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_WATERFALL",
+       "MOVE_ICE_BEAM",
+       "MOVE_ICE_PUNCH",
+       "MOVE_WATER_PULSE"
+      ],
+      "species": "SPECIES_FLOATZEL",
+      "variant": "own"
+     },
+     {
+      "ability": "ABILITY_PRESSURE",
+      "ability_reason": "single_ability",
+      "item": "sitrus_berry",
+      "moves": [
+       "MOVE_ICE_PUNCH",
+       "MOVE_AVALANCHE",
+       "MOVE_NIGHT_SLASH",
+       "MOVE_ICE_SHARD"
+      ],
+      "species": "SPECIES_WEAVILE",
+      "variant": "own"
+     }
+    ],
+    "runner_up_labels": [
+     "Garchomp [Earthquake/Dragon Claw/Rock Slide/Fire Blast] @ Sitrus Berry",
+     "Infernape [Fire Blast/Flamethrower/Close Combat/Fire Punch] @ Flame Plate",
+     "Staraptor [Brave Bird/Close Combat/Giga Impact/Take Down] @ Sitrus Berry",
+     "Rotom [Thunderbolt/Shadow Ball/Dark Pulse/Charge Beam] @ Zap Plate",
+     "Floatzel [Waterfall/Ice Beam/Ice Punch/Water Pulse] @ Sitrus Berry",
+     "Weavile [Ice Punch/Avalanche/Night Slash/Ice Shard] @ Sitrus Berry"
+    ],
+    "runner_up_only": 53,
+    "test": "McNemar exact (two-sided), alpha 0.05, paired by run kind and seed (optimizer/pairing.py)",
+    "verdict": "winner better",
+    "winner_only": 93
+   },
+   "sampling": "adaptive"
+  },
+  "same_build": true,
+  "same_levels": false,
+  "contained_both_ways_at_equal_levels": false,
+  "verdicts_agree": true,
+  "note": "levels differ and containment broken at equal levels: FAIL",
+  "ratio_confirm": 1.9239766081871346,
+  "ratio_whole": 1.1574553219209294,
+  "equal_levels_stdout": "levels [53, 51, 53, 53, 53, 54]; A(v4) items ['earth_plate', 'sitrus_berry', 'sitrus_berry', 'expert_belt', 'sitrus_berry', 'sitrus_berry'] species ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile']; B(v2) items ['earth_plate', 'sitrus_berry', 'sitrus_berry', 'expert_belt', 'sitrus_berry', 'sitrus_berry'] species ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile']; player expectimax2-v2\nn 500: A(v4 result) 0.7920 vs B(v2 result) 0.7920, only 0/0, p 1, verdict indistinguishable\nmean final level (cleared runs): A 53.34469696969697 vs B 53.34469696969697\nwall 101.5 s\n",
+  "equal_levels_exit": 0,
+  "pass": false,
+  "end": "2026-11-04 1:20:47 PM EST"
+ },
+ "resume": {
+  "start": "2026-11-04 1:20:47 PM EST",
+  "killed": true,
+  "killed_at": "during the confirmation attempt (checkpoint granularity: per attempt)",
+  "identical_to_uninterrupted": true,
+  "pass": true,
+  "end": "2026-11-04 1:26:39 PM EST"
+ }
+}
