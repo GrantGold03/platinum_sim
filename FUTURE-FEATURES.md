@@ -5,8 +5,8 @@ after the user's hands-on testing (keep features small: about 3 stories / 30 tas
 layer, short acceptance runs). Ordered roughly by priority; the order is a proposal, not a decision.
 
 **Suggested order as of 2026-11-04 (after 021 and 022 merged; user's decision 2026-11-04):**
-1. **023 Shift battle style** (section 3): the biggest unmodelled game rule; lands alone so a level change is attributable to it;
-   its acceptance is paired runs of the same player under Set and Shift, so the player's near-threshold bias (section 7) cancels.
+1. **Done: 023 Shift battle style** (section 3; merged to `main` 2026-11-04, Shift the default on the user's decision; the
+   acceptance table is in section 3 and the README).
 2. **Exact speedups D, F, E, then H** (section 7): worth an estimated 10 to 15% together; do them right before the next planned long run.
 3. **Variable-power moves redone from the decomp** (section 1 slice 3, then section 6's Magnitude group): the only item that adds
    moves the optimizer cannot offer today; the archived regression's cause comes first.

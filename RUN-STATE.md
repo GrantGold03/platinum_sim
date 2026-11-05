@@ -1,4 +1,14 @@
-# START HERE (updated 2026-11-04, 10:25 PM EST, 023 merged; README headline evaluate rerun under today's defaults (0.9715, 107 s); nothing running)
+# START HERE (updated 2026-11-04, 10:35 PM EST, end of session before a reboot: `main` c57629d+ clean and pushed, nothing running, no feature branch open)
+
+- **RESUME (after the reboot).** `main` is checked out in the main checkout, clean, in sync with origin (the end-of-session docs
+  commit is the head). No measurement, suite or server is running; no stash. Features 019 to 023 are merged; feature 023 made
+  Shift the default battle style (Set behind `--battle-style set`), so every result from before 2026-11-04 is a Set result and
+  pre-023 optimizer checkpoints do not resume. Next feature: the user's choice from the FUTURE-FEATURES suggested order (2. exact
+  speedups D, F, E, H; 3. variable-power moves from the decomp; 4. held-item groups; 5. the v4 retune last, on Shift, with a
+  threshold team; 6. plain-language output). Start it with `/speckit-specify` on a new branch from `main` (the create script no
+  longer makes branches: `git checkout -b 024-<name>`). Session scratchpad copy: `runs/scratchpad-session-550e51a5/` (local).
+  Standing traps: never pipe a gating command into tail; never amend or force-push; measurements alone on the machine; a worker
+  response without `battle_style` is Set; fake pools must echo the style under Shift.
 - **README headline rerun (docs only, user's go, 2026-11-04 10:21 PM EST)**: `evaluate tests/fixtures/reference_team.json
   --runs 2000 --seed fixed --workers 16` under today's defaults (v4, adaptive 0.98, Shift): clear rate 0.9715 [0.9642, 0.9788],
   107 s (was 0.9445, 769 s under v2/full/Set); `runs/readme-shift/ref-2000` (local); README has both blocks. The optimize

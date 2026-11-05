@@ -432,7 +432,7 @@ runs on 2026-10-08:
 
 | Setup | Throughput |
 |---|---|
-| `expectimax2-v2` (default player) | **2.1–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (T076 optimizer confirmation), 2.14–2.25 (`runs/final-defaults` confirmation); 2.74 on 8 workers |
+| `expectimax2-v2` (the reference player; `expectimax2-v4` is the default since feature 018) | **2.1–2.8 gauntlets/s** on 16 workers: 2.62 (T056 benchmark team), 2.82 (reference team), 2.34–2.61 (T076 optimizer confirmation), 2.14–2.25 (`runs/final-defaults` confirmation); 2.74 on 8 workers |
 | `expectimax2-v1` | 1.79 gauntlets/s (T056 benchmark team, 16 workers) |
 | `greedy-v1` | 55.8 gauntlets/s (T056 benchmark team, 16 workers) |
 | Bare engine | 59 gauntlets/s ceiling (T008 spike, no AI or policy) |
@@ -678,16 +678,17 @@ uv run pytest -q -m "not battle_sim"                       # fast mode: every te
 uv run pytest -q -m battle_sim                             # only the tests that start the battle worker
 uv run pytest -q -m browser tests/browser/                 # web page in the system Chrome (about 1 min)
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
-(cd sim && node --test test/*.test.mjs)                    # Node suites (334 tests, about 2.5 min)
+(cd sim && node --test test/*.test.mjs)                    # Node suites (372 tests, about 3 min)
 uv run pytest -q --durations=25                            # full suite with the 25 slowest tests listed (the merge gate)
 ```
 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-11-03 (feature 018 merge gate, browser tests included):
-  `uv run pytest -q --durations=25` gave **561 passed, 4 xfailed in 3,287 s (55 min)** plus 2 tests that pinned the old
-  default player name, fixed and rerun green (22 min); 563 tests in all. The same suite took 2 h 09 min on 2026-10-30
+- **Full pytest:** the last full run was on 2026-11-04 (feature 023 merge gate):
+  `uv run pytest -q --durations=25` gave **614 passed, 4 xfailed in 4,936 s (1 h 22 min)** plus 2 unit tests whose fake pool
+  did not echo the battle style, fixed (test file only) and rerun green; 616 tests in all. Earlier: 2026-11-03 (018 gate)
+  561 passed in 55 min plus 2 tests that pinned the old default player name, fixed and rerun green. The same suite took 2 h 09 min on 2026-10-30
   before feature 015, 1 h 20 min after it, 1 h 05 min after 016 and 55 min after 017: the three slowest tests
   (`test_optimize_small.py` quick optimize 1,248 s, `test_policy_strength.py` paired benchmark 743 s with v4 at 2,000
   pairs, `test_evaluate.py` V7 401 s) all run the battle player. Do not commit during a full run: each process
@@ -702,7 +703,7 @@ gauntlets) and two `quick` optimizes.
   worker start, an unmarked test that starts the worker fails at its teardown, and an unmarked test using a
   fixture that started it, a start outside any test, or a marked test that never reached the worker fail the
   session. The "battle split" section at the end of each run lists the counts and each marked test's route.
-  On 2026-11-02 the fast mode gave 535 passed, 28 deselected, 4 xfailed in 612 s (10 min; 528 before feature 018); its slowest test
+  On 2026-11-04 the fast mode gave 583 passed, 30 deselected, 4 xfailed in 632 s (10.5 min; 535 on 2026-11-02, 528 before feature 018); its slowest test
   is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s). The battle set is 28 tests
   (26 before features 015 and 016 added the bench tests).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
