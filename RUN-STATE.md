@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-04, 7:45 PM EST, feature 023 closed on its branch, Shift the default; merge waits for the user's go)
+# START HERE (updated 2026-11-04, 7:50 PM EST, feature 023 merged to `main` (ab5a06d, fast-forward, user's go); Shift is the default; nothing running)
 
 - **Feature 023 `023-shift-battle-style` closed on its branch 2026-11-04 (from `main` 581e836; `main` has not moved).
   Shift battle style: `--battle-style {set,shift}` on evaluate and optimize, **Shift the default on the user's go
@@ -6,7 +6,7 @@
   0.912 -> 0.987, b2-branch 0.776 -> 0.979, B3 0.761 -> 0.985; control 0 discordant; B2 quick two levels lower). Gates
   (T023, 6:11 to 7:36 PM EST): vendored tree unchanged, Node 372 pass, full pytest 614 passed + 2 fake-pool tests fixed
   (test file only) and rerun green. Hashes and the ledger version changed (pre-023 checkpoints do not resume). Nothing
-  is running.** Merge on the user's go: `git checkout main && git merge --ff-only 023-shift-battle-style && git push`.
+  is running. Merged to `main` 2026-11-04, 7:50 PM EST on the user's go (fast-forward to ab5a06d, pushed).**
   Commits b565099, 78102b9, 2006ad3, 58406ea, 670ce6d, then the closing commit. Evidence `runs/023-evidence/` (local)
   with copies under `specs/023-shift-battle-style/evidence/`. Traps: a worker response without `battle_style` is Set
   whatever the Python default (`style_of`); fake pools must echo the style under Shift; Scizor/Bronzong are Steel in
