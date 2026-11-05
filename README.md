@@ -216,6 +216,28 @@ That run (T076, 2026-10-08, before the legality flags and code hashes were added
 `result.json`, `result.xlsx`, `result.csv` and `team.txt` (a Showdown export). The older
 expectimax2-v1 figure for this team (0.7930) is superseded.
 
+The same command under today's defaults (2026-11-04: player `expectimax2-v4` since 018, adaptive sampling at floor
+0.98 since 021, Shift battle style since 023; `runs/readme-shift/ref-2000`, 10:20:59 to 10:22:46 PM EST, alone):
+
+```console
+$ uv run platsim evaluate tests/fixtures/reference_team.json --runs 2000 --seed fixed --workers 16
+platsim evaluate [adaptive]: Elite Four proven after 189 full runs (floor 0.98); 189 banked states; 67 results past the switch discarded
+platsim evaluate: full runs: 189 in 62.9s; cleared 182/189; Cynthia-only runs 1811 (won 1761); Cynthia top-up ...
+runs 2000  player expectimax2-v4  opponent decomp-ai  budget standard  sampling adaptive  style shift
+adaptive sampling: full 189 / Cynthia-only 1811 runs, switch at 189, banked states 189, floor 0.98; statistic composite (delta interval)
+gauntlet clear rate 0.9715  95% CI [0.9642, 0.9788]  half-width 0.0073
+Cynthia P(win | reached) 0.9715  [0.9633, 0.9779]  battles 2000
+expected final levels 60.82 / 60.84 / 60.02 / 60.05 / 60.37 / 60.00  avg 60.35  gap max 2.0
+threshold 0.75  qualified True  borderline False
+  loss cause: cynthia garchomp 26
+  loss cause: cynthia milotic 18                                                          # exit 0, 107 s wall
+```
+
+The clear rate rises from 0.9445 to 0.9715 (the free switch before each of Cynthia's Pokemon; feature 023's acceptance
+measured 0.951 to 0.974 on this team with full gauntlets) and the wall time falls from 769 s to 107 s (adaptive sampling
+and the cheaper player). The optimizer headline below is still the 2026-10-08 Set result with `expectimax2-v2`; it has
+not been rerun under today's defaults (hours of pool time).
+
 ```console
 $ uv run platsim optimize infernape staraptor luxray garchomp gyarados gardevoir --seed fixed --workers 16 --out runs/final-defaults
 platsim optimize: [calibrate] greedy-v1 at U=58: 59/100 cleared
@@ -555,6 +577,7 @@ Measured run times:
 | Run | Wall time |
 |---|---|
 | `evaluate` reference team, 2,000 runs, standard | 769 s on 16 workers, 790 s on 8 |
+| `evaluate` reference team, 2,000 runs, standard, today's defaults (v4, adaptive 0.98, Shift; 2026-11-04) | 107 s on 16 workers |
 | `optimize` six species, `standard`, 16 workers (`runs/final-defaults`, before the borderline cap) | 4 h 39 min, of which about 2.5 h was the 20,000-run borderline extension |
 | `optimize` same, superseded T076 rules (egg moves allowed) | 2 h 07 min (level search 82 min, confirmation 39 min) |
 | `optimize` same six species, `quick`, via the web UI, 16 workers | 25.6 min |

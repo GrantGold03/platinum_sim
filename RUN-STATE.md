@@ -1,4 +1,8 @@
-# START HERE (updated 2026-11-04, 7:50 PM EST, feature 023 merged to `main` (ab5a06d, fast-forward, user's go); Shift is the default; nothing running)
+# START HERE (updated 2026-11-04, 10:25 PM EST, 023 merged; README headline evaluate rerun under today's defaults (0.9715, 107 s); nothing running)
+- **README headline rerun (docs only, user's go, 2026-11-04 10:21 PM EST)**: `evaluate tests/fixtures/reference_team.json
+  --runs 2000 --seed fixed --workers 16` under today's defaults (v4, adaptive 0.98, Shift): clear rate 0.9715 [0.9642, 0.9788],
+  107 s (was 0.9445, 769 s under v2/full/Set); `runs/readme-shift/ref-2000` (local); README has both blocks. The optimize
+  headline (`runs/final-defaults`, 2026-10-08, Set, v2) is not rerun. No code change.
 
 - **Feature 023 `023-shift-battle-style` closed on its branch 2026-11-04 (from `main` 581e836; `main` has not moved).
   Shift battle style: `--battle-style {set,shift}` on evaluate and optimize, **Shift the default on the user's go
