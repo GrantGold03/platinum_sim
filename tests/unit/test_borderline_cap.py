@@ -17,9 +17,11 @@ class AtThresholdPool:
 
     def map(self, reqs):
         out = []
-        for _ in reqs:
+        for req in reqs:
             out.append({"ok": True, "cleared": self.calls % 4 != 0, "player_policy": "p",
-                        "opponent_policy": OPPONENT_POLICY, "battles": []})
+                        "opponent_policy": OPPONENT_POLICY, "battles": [],
+                        # 023: the real worker echoes the style only under Shift
+                        **({"battle_style": "shift"} if req.get("battle_style") == "shift" else {})})
             self.calls += 1
         return out
 

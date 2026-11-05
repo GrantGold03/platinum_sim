@@ -106,8 +106,8 @@ Eastern times.
 
 ## Phase 6: Polish, gates, close
 
-- [ ] T023 Gates, in order, nothing else running: `git diff --stat main -- pokemon-showdown` empty (FR-006) and recorded; record the after-values of `sim_code_hash`, `platsim_code_hash` and the ledger version (changed, as expected) in the validation log; `(cd sim && node --test test/*.test.mjs)` green; the full pytest suite `uv run pytest -q --durations=25 > runs/023-evidence/full.log 2>&1` green (about 1 h 30 min); log each output with Eastern times; copy a gates summary to `specs/023-shift-battle-style/evidence/gates.txt`
-- [ ] T024 Closing commit `docs(023): gates recorded; feature closed on its branch`; push; report to the user. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 023-shift-battle-style && git push`, or a merge commit if `main` moved)
+- [X] T023 Gates, in order, nothing else running: `git diff --stat main -- pokemon-showdown` empty (FR-006) and recorded; record the after-values of `sim_code_hash`, `platsim_code_hash` and the ledger version (changed, as expected) in the validation log; `(cd sim && node --test test/*.test.mjs)` green; the full pytest suite `uv run pytest -q --durations=25 > runs/023-evidence/full.log 2>&1` green (about 1 h 30 min); log each output with Eastern times; copy a gates summary to `specs/023-shift-battle-style/evidence/gates.txt`
+- [X] T024 Closing commit `docs(023): gates recorded; feature closed on its branch`; push; report to the user. Merge to `main` only on the user's go (`git checkout main && git merge --ff-only 023-shift-battle-style && git push`, or a merge commit if `main` moved)
 
 ---
 

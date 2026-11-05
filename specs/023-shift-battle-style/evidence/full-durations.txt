@@ -1,0 +1,27 @@
+============================= slowest 25 durations =============================
+1327.81s call     tests/integration/test_optimize_adaptive.py::test_quick_optimize_with_adaptive_confirmation_is_deterministic_and_records_the_mix
+1200.06s call     tests/integration/test_optimize_small.py::test_optimize_quick_deterministic_and_legal
+730.18s call     tests/integration/test_policy_strength.py::test_expectimax2_beats_greedy_paired
+371.45s call     tests/integration/test_evaluate.py::test_v7_reference_team_2000_runs
+218.31s call     tests/integration/test_extract.py::test_extract_twice_identical_check_and_corruption
+197.26s call     tests/integration/test_evaluate_adaptive.py::test_adaptive_sampling_switches_is_deterministic_and_equals_full_at_floor_1
+137.86s call     tests/integration/test_evaluate_shift.py::test_default_is_shift_and_the_set_flag_names_set
+95.53s call     tests/integration/test_evaluate.py::test_determinism_fast
+95.12s call     tests/integration/test_evaluate_shift.py::test_shift_is_deterministic_across_worker_counts_and_named_in_the_report
+87.15s call     tests/integration/test_extract.py::test_real_default_dir_is_current
+82.51s call     tests/integration/test_policy_strength.py::test_expectimax2_v2_not_worse_than_greedy_on_reversal_team
+56.82s call     tests/integration/test_web_process_determinism.py::test_child_process_matches_in_process
+43.46s call     tests/integration/test_extract.py::test_known_values_in_output
+38.76s call     tests/integration/test_evaluate.py::test_egg_move_team_exits_2_without_the_flag
+38.07s call     tests/unit/test_validator.py::test_validator_does_not_import_optimizer
+37.94s call     tests/integration/test_evaluate.py::test_illegal_fixture_exits_2
+37.86s setup    tests/browser/test_page.py::test_page_walkthrough
+20.87s call     tests/browser/test_page.py::test_page_walkthrough
+11.55s call     tests/integration/test_web.py::test_full_name_search_returns_that_pokemon_first
+7.88s call     tests/integration/test_pool.py::test_64_gauntlets_on_4_workers_match_single_worker
+7.49s call     tests/integration/test_champion_topup.py::test_deterministic_for_fixed_seed
+6.96s call     tests/unit/test_optimizer_candidates.py::test_member_candidates_and_full_team_validate
+6.07s setup    tests/integration/test_final_levels.py::test_final_levels_match_worker
+4.59s call     tests/integration/test_ability_screen.py::test_real_screen_quick_preset
+4.48s setup    tests/unit/test_story_rank.py::test_controls[MAP_HEADER_TWINLEAF_TOWN-0]
+=========================== short test summary info ============================

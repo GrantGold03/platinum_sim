@@ -1,0 +1,4 @@
+.......................................                                  [100%]
+================================= battle split =================================
+0 battle worker starts; 0 marked tests reached it; under-marked 0, started outside a test 0, over-marked 0
+39 passed in 0.37s

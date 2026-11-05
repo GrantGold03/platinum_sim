@@ -152,3 +152,36 @@ Set whatever the Python default: `style_of` now uses a fixed `WORKER_ABSENT_STYL
 uv run pytest -q tests/unit/test_reports.py: exit 0, 17 passed
 uv run pytest -q tests/integration/test_evaluate_shift.py: exit 0, 2 passed in 234.88s (default equals --battle-style shift; set names set)
 ```
+
+## T023 Gates (6:11:44 to 7:36:35 PM EST, nothing else running)
+
+Run on the final source code (670ce6d). Outputs in `runs/023-evidence/gates.txt` (copy `evidence/gates.txt`), `full.log`
+(slowest-25 table in `evidence/full-durations.txt`).
+
+```
+sim_code_hash after:      sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493  (was 299b1b55...)
+platsim_code_hash after:  sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f  (was 83396c29...)
+divergence_ledger_version after: sha256:baeaf406c676c665  (was 8fc3728d461fba56)
+git diff --stat main -- pokemon-showdown: 0 lines (FR-006)     sim/test/replay_prof_a.json: 0 lines
+node --test test/*.test.mjs: tests 372, pass 372, fail 0  (exit 0)
+full pytest (uv run pytest -q --durations=25), 6:14:17 to 7:36:35 PM EST:
+2 failed, 614 passed, 4 xfailed, 1 warning in 4935.72s (1:22:15)   exit 1
+```
+
+The two failures were `tests/unit/test_borderline_cap.py` (both tests): its fake pool never echoed `battle_style`, so
+with the default now `shift` the request/echo check read "worker played set, requested shift". The real worker echoes the
+request's style under Shift; the fake now does the same (a test-file change only; `platsim_code_hash` unchanged, the 018
+precedent). Rerun with the exit code kept:
+
+```
+uv run pytest -q tests/unit/test_borderline_cap.py tests/unit/test_sampling.py tests/unit/test_confirm_pairing.py tests/unit/test_optimizer_resume.py: exit 0, 39 passed
+```
+
+Slowest: `test_optimize_adaptive` 1,328 s, `test_optimize_small` 1,200 s, `test_policy_strength` 730 s,
+`test_v7_reference_team_2000_runs` 371 s, `test_evaluate_shift` 138 s (the new test). The suite grew from 610 to 616
+passed. **All gates green on the final code; the feature is closed on its branch. Merge on the user's go.**
+
+## T024 Closing commit (7:45 PM EST)
+
+`docs(023): gates recorded; feature closed on its branch` (validation log, evidence copies, tasks T023/T024, RUN-STATE,
+the fake-pool test fix).
