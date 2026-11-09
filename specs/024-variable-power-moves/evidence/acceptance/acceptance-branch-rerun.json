@@ -1,0 +1,253 @@
+{
+ "side": "branch",
+ "start": "2026-11-09 1:21:01 PM EST",
+ "b2_wall_s": 389.9,
+ "b2": {
+  "dir": "b2-branch",
+  "species": [
+   "garchomp",
+   "infernape",
+   "staraptor",
+   "rotom",
+   "floatzel",
+   "weavile"
+  ],
+  "moves": [
+   [
+    "earthquake",
+    "dragon_claw",
+    "stone_edge",
+    "aerial_ace"
+   ],
+   [
+    "fire_blast",
+    "flamethrower",
+    "close_combat",
+    "fire_punch"
+   ],
+   [
+    "pluck",
+    "close_combat",
+    "giga_impact",
+    "u_turn"
+   ],
+   [
+    "thunderbolt",
+    "shadow_ball",
+    "thunder",
+    "ominous_wind"
+   ],
+   [
+    "waterfall",
+    "ice_beam",
+    "blizzard",
+    "ice_fang"
+   ],
+   [
+    "ice_punch",
+    "avalanche",
+    "night_slash",
+    "brick_break"
+   ]
+  ],
+  "items": [
+   "sitrus_berry",
+   "wise_glasses",
+   "sky_plate",
+   "expert_belt",
+   "splash_plate",
+   "sitrus_berry"
+  ],
+  "levels": [
+   51,
+   52,
+   52,
+   53,
+   52,
+   53
+  ],
+  "variable_members": [],
+  "clear_rate": 0.93,
+  "clear_ci95": [
+   0.9042028101480832,
+   0.949240257054982
+  ],
+  "n_runs": 500,
+  "qualified": false,
+  "borderline": false,
+  "expected_avg_final_level": 52.79139784946236,
+  "confirm_attempts": 2,
+  "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+  "platsim_code_hash": "sha256:eb92dee26412cbc7226f65d030a30df0a914b267f9506a67fa78064246edde42",
+  "repo_commit": "2043ba97cea6bc4eb639e36732c3a3977d01cbd0"
+ },
+ "identity_runs": {
+  "ref": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/024-evidence/ident-branch/ref",
+   "wall_s": 63.0
+  },
+  "b2main": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/024-evidence/ident-branch/b2main",
+   "wall_s": 61.3
+  }
+ },
+ "b2_main": {
+  "dir": "b2-main",
+  "species": [
+   "garchomp",
+   "infernape",
+   "staraptor",
+   "rotom",
+   "floatzel",
+   "weavile"
+  ],
+  "moves": [
+   [
+    "earthquake",
+    "dragon_claw",
+    "stone_edge",
+    "aerial_ace"
+   ],
+   [
+    "fire_blast",
+    "flamethrower",
+    "close_combat",
+    "fire_punch"
+   ],
+   [
+    "pluck",
+    "close_combat",
+    "giga_impact",
+    "u_turn"
+   ],
+   [
+    "thunderbolt",
+    "shadow_ball",
+    "thunder",
+    "ominous_wind"
+   ],
+   [
+    "waterfall",
+    "ice_beam",
+    "blizzard",
+    "ice_fang"
+   ],
+   [
+    "ice_punch",
+    "avalanche",
+    "night_slash",
+    "brick_break"
+   ]
+  ],
+  "items": [
+   "sitrus_berry",
+   "wise_glasses",
+   "sky_plate",
+   "expert_belt",
+   "splash_plate",
+   "sitrus_berry"
+  ],
+  "levels": [
+   51,
+   52,
+   52,
+   53,
+   52,
+   53
+  ],
+  "variable_members": [],
+  "clear_rate": 0.93,
+  "clear_ci95": [
+   0.9042028101480832,
+   0.949240257054982
+  ],
+  "n_runs": 500,
+  "qualified": false,
+  "borderline": false,
+  "expected_avg_final_level": 52.79139784946236,
+  "confirm_attempts": 2,
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+  "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0"
+ },
+ "screen": {
+  "main_candidates": 81,
+  "branch_candidates": 95,
+  "prefix_identical": true,
+  "extras_screened": 14
+ },
+ "identity": {
+  "ref": {
+   "identical_without_volatile": true,
+   "differing_keys": [],
+   "removed_main": {
+    "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+    "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+    "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:baeaf406c676c665",
+    "divergences": "<75 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:baeaf406c676c665",
+    "provenance.worker.divergence_ledger_version": "sha256:baeaf406c676c665"
+   },
+   "removed_branch": {
+    "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+    "platsim_code_hash": "sha256:eb92dee26412cbc7226f65d030a30df0a914b267f9506a67fa78064246edde42",
+    "repo_commit": "2043ba97cea6bc4eb639e36732c3a3977d01cbd0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
+    "divergences": "<76 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:feb2a48ef2e1dd08",
+    "provenance.worker.divergence_ledger_version": "sha256:feb2a48ef2e1dd08"
+   }
+  },
+  "b2main": {
+   "identical_without_volatile": true,
+   "differing_keys": [],
+   "removed_main": {
+    "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+    "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+    "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:baeaf406c676c665",
+    "divergences": "<75 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:baeaf406c676c665",
+    "provenance.worker.divergence_ledger_version": "sha256:baeaf406c676c665"
+   },
+   "removed_branch": {
+    "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+    "platsim_code_hash": "sha256:eb92dee26412cbc7226f65d030a30df0a914b267f9506a67fa78064246edde42",
+    "repo_commit": "2043ba97cea6bc4eb639e36732c3a3977d01cbd0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
+    "divergences": "<76 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:feb2a48ef2e1dd08",
+    "provenance.worker.divergence_ledger_version": "sha256:feb2a48ef2e1dd08"
+   }
+  }
+ },
+ "equal_levels": {
+  "n": 2000,
+  "a_rate": 0.9275,
+  "b_rate": 0.9275,
+  "a_only": 0,
+  "b_only": 0,
+  "p_value": 1.0,
+  "verdict": "indistinguishable",
+  "mean_final_level_a": 52.79317160826594,
+  "mean_final_level_b": 52.79317160826594,
+  "levels": [
+   51,
+   52,
+   52,
+   53,
+   52,
+   53
+  ],
+  "player": "expectimax2-v4",
+  "wall_s": 333.3
+ },
+ "level_diff_branch_minus_main": 0.0,
+ "pass": true,
+ "end": "2026-11-09 1:35:08 PM EST"
+}

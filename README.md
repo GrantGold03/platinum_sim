@@ -591,12 +591,14 @@ player computes their power yet); fixed-damage, OHKO and counter moves (not atta
 Water Spout keep their data power 150. Ledger: `mech-weight-tier-boundary` (accepted): the engine's Low Kick and Grass
 Knot break at weight >= limit, so Flint's Flareon (exactly 250 hg) is 40 in the game and 60 in the engine; the player's
 model and the optimizer follow the game. Checkpoints from before this feature do not resume (code hashes changed).
-**Acceptance (`specs/024-variable-power-moves/validation-log.md` T017, 2026-11-09): not merged.** The B2 quick winner on the
-branch (levels [51, 51, 52, 52, 52, 52], Staraptor with Return) lost to today's winner (levels [51, 52, 52, 53, 52, 53]) at equal levels on 2,000 paired
-gauntlets: 0.7780 vs 0.8225, p 2.2e-04. Today's candidate sets are untouched (a prefix of the new lists for all
-six members); the cause measured is the screen's sampling: appending options shifts its random fill under the 81-team cap, so
-today's winning team was never screened on the branch. The two unaffected teams evaluated identically on both codes. The branch
-stays open for the user's decision.
+**Acceptance (`specs/024-variable-power-moves/validation-log.md` T017 to T023, 2026-11-09).** The first run failed its
+gate: the branch's B2 quick winner (a Staraptor with Return) lost to today's at equal levels (0.778 vs 0.823, p 2e-4) although
+today's candidate sets were untouched, because appending options had changed the screen's random sample under its 81-team cap
+(only 43 of 81 teams shared; today's winner never screened). The user chose the **screen superset**: the screen's capped list is
+built from today's options only, so its first 81 teams are exactly today's, and the extra sets ride beyond the cap as single-slot
+deviations (14 teams on B2 quick, about 7% more screening). On the rerun the first 81 screened teams are identical to today's, the
+winner is **the same team, moves, items and levels** as today's (0 discordant pairs at equal levels), and the two unaffected teams
+evaluate identically on both codes: on this team the four moves are offered and not chosen. Recorded results are unchanged.
 
 Measured run times:
 

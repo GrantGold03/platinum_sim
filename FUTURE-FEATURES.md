@@ -63,14 +63,13 @@ benchmarked against main, so a regression points at one change. Triggered by the
    (2026-10-19):** on B2 the 007 team clears 8-10 points less than the Oct 8 team under the same player and
    levels; 4 of 6 moveset changes add a variable-power move and drop coverage (Ice Beam, Close Combat). Find
    and fix the cause (candidate ranking and/or the greedy-v1 screen) before this slice lands.
-   **Feature 024 (2026-11-09, branch `024-variable-power-moves`, not merged):** redone from the decomp and `main`: a shared power
-   helper in `sim/`, greedy-v1 scoring the four moves, an additive candidate list (today's sets a prefix, proven against a
-   pre-feature snapshot), a ledger entry for the weight-tier boundary. Acceptance failed FR-009: the branch's B2 quick winner
-   (Staraptor with Return) lost at equal levels, 0.778 vs 0.823, p 2e-4. Cause as measured: not displacement (the prefix holds) but the
-   screen's sampling: the appended options change the random fill under the 81-team cap, the two screens shared 43 of 81 teams and
-   today's winning team was never screened on the branch. Open decision: keep the screen's population stable when extras exist (the
-   baseline and deviations first, the fill drawn from today's options, extras added on top), or raise the cap, or measure the Return
-   set alone against today's Staraptor set (single swap, 2,000 pairs) before any optimizer change.
+   **Feature 024 (2026-11-09, branch `024-variable-power-moves`): built and accepted.** Redone from the decomp and `main`: a shared
+   power helper in `sim/` (the trainer-AI port and expectimax2 call it), greedy-v1 scores Return / Grass Knot / Low Kick / Gyro Ball,
+   `decomp/weights.py`, an additive candidate list (today's sets a prefix, proven against a pre-feature snapshot), the screen's capped
+   list held to today's with the extras appended beyond the cap (the user's decision after a first acceptance that failed on the
+   screen's sampling, not on displacement), a ledger entry for the weight-tier boundary. Outcome on B2 quick: 14 extra teams screened,
+   none beat today's finalist, the winner identical to today's (0 discordant at equal levels); the moves are offered, not chosen here.
+   The archived 010 regression's cause as measured today: the screen's sampling under its cap when the option list grows.
 4. expectimax2-v3 as the default player: paired v3 vs v2 on B1-B5. B2 check 2026-10-19: v3 >= v2 (p 0.025 on
    the Oct 8 team; tie on the 007 team).
 5. Alternatives stage, off by default, with the item pairings.
@@ -176,7 +175,7 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 
 ## 6. Smaller follow-ups
 
-- Magnitude, Wring Out, Crush Grip, Punishment: offer them once the strong player computes their power
+- Magnitude, Wring Out, Crush Grip, Punishment (and Flail, Reversal, Fling, Trump Card, Natural Gift, Present, Spit Up; feature 024's not-offered list): offer them once the strong player computes their power
   (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5). On `main` no variable-power
   move is offered at all (`optimizer/candidates.py`: power 1 excluded; 010 was reverted).
 

@@ -143,3 +143,25 @@ clarification entry; `acceptance.py --side branch` now checks that the branch's 
 uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py tests/unit/test_legality_options.py tests/unit/test_optimizer_candidates.py: exit 0, 62 passed
 ```
 
+## T023 Acceptance rerun with the screen superset (1:21:01 to 1:35:08 PM EST, alone, exit 0)
+
+| | today's code (`b2-main`) | branch (`b2-branch`, rerun) |
+|---|---|---|
+| screened teams | 81 | 95 (14 variable-power extras beyond the cap); first 81 identical: **True** |
+| winner | levels [51, 52, 52, 53, 52, 53], clear 0.9300, avg final 52.79 | **the same team, moves, items and levels**: levels [51, 52, 52, 53, 52, 53], clear 0.9300, avg final 52.79; variable-power members: none |
+| wall | 365.9 s | 389.9 s (the 14 extra teams in the screen) |
+| equal levels (2,000 pairs, v4) | 0.9275 | 0.9275; only A 0 / only B 0, p 1, indistinguishable |
+| identity | ref True, b2main True | |
+| FR-009 | | **PASS** (level diff +0.00) |
+
+**Reading.** With the screen's capped population held to today's, the branch screens the 14 extra teams (18 extras minus repairs
+and duplicates) and none beats today's finalist, so the optimizer's output on B2 quick is identical to today's: the four moves are
+offered and not chosen on this team. The first acceptance's loss (T017, T018) was the screen's sampling, now removed by construction
+(the prefix check). Every stated guarantee holds: today's candidate sets are a prefix (T013), today's screened teams are a prefix
+(T023), unaffected teams evaluate identically, recorded results unchanged (T009). Whether a variable-power set ever wins is a
+property of the team: on B2 quick, none did.
+
+## T019 Docs (1:40 PM EST)
+
+README (the 024 block with the outcome), FUTURE-FEATURES sections 1 and 6, RUN-STATE. **Commit 4**: `feat(024): acceptance rerun ...`.
+
