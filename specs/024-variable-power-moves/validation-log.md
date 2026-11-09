@@ -165,3 +165,26 @@ property of the team: on B2 quick, none did.
 
 README (the 024 block with the outcome), FUTURE-FEATURES sections 1 and 6, RUN-STATE. **Commit 4**: `feat(024): acceptance rerun ...`.
 
+
+## T020 Gates (1:36:13 to 3:05:23 PM EST, nothing else running)
+
+Run on the final code (853eb88). Outputs in `runs/024-evidence/gates.txt` (copy `evidence/gates.txt`), `full.log` (slowest-25 table in
+`evidence/full-durations.txt`).
+
+```
+git diff --stat main -- pokemon-showdown: 0 lines (the vendored engine untouched)
+sim_code_hash after:     sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d  (was c07be275...)
+platsim_code_hash after: sha256:eb92dee26412cbc7226f65d030a30df0a914b267f9506a67fa78064246edde42  (was 92793dc1...)
+divergence_ledger_version after: sha256:feb2a48ef2e1dd08  (was baeaf406c676c665)   -> pre-024 checkpoints are refused (FR-007)
+node --test test/*.test.mjs: exit 0, tests 381, pass 381
+full pytest (uv run pytest -q --durations=25), 1:38:48 to 3:05:23 PM EST: exit 0
+621 passed, 4 xfailed, 1 warning in 5192.36s (1:26:32)
+```
+
+Slowest: `test_optimize_adaptive` 1,410 s, `test_optimize_small` 1,288 s, `test_policy_strength` 755 s. The suite grew from 616 to
+625 (the 5 new variable-power tests and others). **All gates green on the final code; the feature is closed on its branch. Merge on the
+user's go.**
+
+## T021 Closing commit (3:10 PM EST)
+
+`docs(024): gates recorded; feature closed on its branch`.

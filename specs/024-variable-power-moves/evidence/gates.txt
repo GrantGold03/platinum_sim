@@ -1,0 +1,13 @@
+=== gates start 1:36:13 PM EST
+diff main -- pokemon-showdown lines=0
+hashes after: sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d sha256:eb92dee26412cbc7226f65d030a30df0a914b267f9506a67fa78064246edde42
+ledger version after: sha256:feb2a48ef2e1dd08
+before (T001): sim sha256:c07be275... platsim sha256:92793dc1... ledger sha256:baeaf406c676c665 -> all three must differ
+node exit=0
+# tests 381
+# pass 381
+# fail 0
+full start 1:38:48 PM EST
+full exit=0
+621 passed, 4 xfailed, 1 warning in 5192.36s (1:26:32)
+=== gates end 3:05:23 PM EST

@@ -110,8 +110,8 @@ cause is recorded and the merge is blocked.
 
 ## Phase 6: Gates and close
 
-- [ ] T020 Gates, in order, nothing else running: `git diff --stat main -- pokemon-showdown` empty; after-values of `sim_code_hash`, `platsim_code_hash` and the ledger version recorded and asserted different from the T001 before-values (FR-007: pre-feature checkpoints are refused by the code fingerprint); `(cd sim && node --test test/*.test.mjs)` green; the full pytest suite `uv run pytest -q --durations=25 > runs/024-evidence/full.log 2>&1; echo full exit=$?` green (about 1 h 25 min); each output with Eastern times into the log; copy a gates summary to `specs/024-variable-power-moves/evidence/gates.txt`
-- [ ] T021 Closing commit `docs(024): gates recorded; feature closed on its branch`; push; report to the user with the merge command (`git checkout main && git merge --ff-only 024-variable-power-moves && git push`, or a merge commit if `main` moved). Merge only on the user's go
+- [X] T020 Gates, in order, nothing else running: `git diff --stat main -- pokemon-showdown` empty; after-values of `sim_code_hash`, `platsim_code_hash` and the ledger version recorded and asserted different from the T001 before-values (FR-007: pre-feature checkpoints are refused by the code fingerprint); `(cd sim && node --test test/*.test.mjs)` green; the full pytest suite `uv run pytest -q --durations=25 > runs/024-evidence/full.log 2>&1; echo full exit=$?` green (about 1 h 25 min); each output with Eastern times into the log; copy a gates summary to `specs/024-variable-power-moves/evidence/gates.txt`
+- [X] T021 Closing commit `docs(024): gates recorded; feature closed on its branch`; push; report to the user with the merge command (`git checkout main && git merge --ff-only 024-variable-power-moves && git push`, or a merge commit if `main` moved). Merge only on the user's go
 
 ---
 

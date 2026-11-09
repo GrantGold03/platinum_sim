@@ -1,6 +1,7 @@
-# START HERE (updated 2026-11-09, 1:40 PM EST, feature 024 accepted on its branch after the screen-superset rerun; gates running; merge waits for the user's go)
-- **Feature 024 `024-variable-power-moves` accepted on its branch 2026-11-09 (from `main` cf4a9ff): the gates (T020) run next, then
-  the closing commit; merge on the user's go.** Built: `sim/variable_power.mjs`, greedy-v1 scoring the four moves, `decomp/weights.py`,
+# START HERE (updated 2026-11-09, 3:10 PM EST, feature 024 closed on its branch, all gates green; merge waits for the user's go)
+- **Feature 024 `024-variable-power-moves` closed on its branch 2026-11-09 (from `main` cf4a9ff; `main` has not moved). Gates (T020, 1:36 to 3:05 PM EST): vendored tree
+  unchanged, Node 381 pass, full pytest 621 passed + 4 xfailed in 1 h 27 min; the three fingerprints changed (pre-024 checkpoints refused).
+  Merge on the user's go: `git checkout main && git merge --ff-only 024-variable-power-moves && git push`.** Built: `sim/variable_power.mjs`, greedy-v1 scoring the four moves, `decomp/weights.py`,
   additive candidates (prefix proven), the screen superset (the user's decision after a first acceptance failed on screen sampling),
   ledger `mech-weight-tier-boundary`. Acceptance rerun: the first 81 screened teams identical to today's, 14 extras screened, the B2
   quick winner identical to today's (0 discordant at equal levels), unaffected teams identical. The moves are offered, not chosen on
