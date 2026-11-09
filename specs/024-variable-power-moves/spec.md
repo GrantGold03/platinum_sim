@@ -98,9 +98,9 @@ two unaffected teams evaluated byte-identically. A supported loss blocks the mer
 **Why this priority**: it is the reference-first check that the archived branch failed; the feature is only worth
 merging if it passes.
 
-**Independent Test**: the acceptance script's table is complete; the equal-levels row shows no supported loss and an
-expected average final level at most one level above today's; the two unaffected teams' result.json files are
-byte-identical to the pre-feature code's.
+**Independent Test**: the acceptance script's table is complete; the equal-levels row shows no supported loss and the
+branch winner's expected average final level is at most one level above today's winner's; the two unaffected teams'
+result.json files equal the pre-feature code's once the code-version and ledger fields are removed.
 
 **Acceptance Scenarios**:
 
@@ -108,11 +108,13 @@ byte-identical to the pre-feature code's.
    lists each winner's species, moves, items, levels, confirmation clear rate and interval, wall time, and the members
    whose chosen set carries one of the four moves.
 2. **Given** the two winners at the new winner's levels, **When** 2,000 paired gauntlets are played with the same seeds
-   by expectimax2-v4, **Then** the exact paired test shows the new team not worse by a supported margin, and its
-   expected average final level is at most one level above today's on average (equal or lower expected); otherwise
+   by expectimax2-v4, **Then** the exact paired test shows the new team not worse by a supported margin, and the new
+   winner's expected average final level (from its own optimizer result) is at most one level above today's winner's
+   (equal or lower expected); otherwise
    the feature does not merge until the cause is found, starting with the candidate lists per member.
 3. **Given** the reference team and the 014 b2-main team (no variable-power move), **When** evaluated on the branch and
-   on the pre-feature code with the same request, **Then** result.json is byte-identical.
+   on the pre-feature code with the same request, **Then** result.json is identical after removing the code-version and ledger fields (`sim_code_hash`, `platsim_code_hash`, `repo_commit`, `repo_dirty`, `divergence_ledger_version`, `divergence_ledger_file_version`, `provenance.worker.divergence_ledger_version`, `divergences`), which change with every feature; every statistic, level, seed and loss
+   cause is the same.
 
 ---
 
@@ -164,7 +166,7 @@ byte-identical to the pre-feature code's.
   request on the pre-feature code and on the branch (winner species, moves, items, levels, confirmation clear rate and
   interval, wall, members carrying a variable-power move); the two winners at the new winner's levels on 2,000 paired
   gauntlets with the same seeds by expectimax2-v4 with the exact paired test; and the reference team and the 014
-  b2-main team evaluated on both codes with byte-identical result.json.
+  b2-main team evaluated on both codes with result.json identical after removing the code-version and ledger fields (`sim_code_hash`, `platsim_code_hash`, `repo_commit`, `repo_dirty`, `divergence_ledger_version`, `divergence_ledger_file_version`, `provenance.worker.divergence_ledger_version`, `divergences`), which change with every feature.
 - **FR-009**: The feature MUST NOT merge if the equal-levels comparison shows the new team worse by a statistically
   supported margin (exact paired test at alpha 0.05), or if the new winner's expected average final level is higher
   than today's by more than one level on average (a difference of at most one level is within the quick level
@@ -197,8 +199,9 @@ byte-identical to the pre-feature code's.
 - **SC-002**: The three replay fixtures and the determinism tests pass unchanged: zero digests, choices or draw counts
   differ.
 - **SC-003**: For all six B2 species, today's candidate sets are a prefix of the new candidate list, in order.
-- **SC-004**: The acceptance table is complete; the two unaffected teams are byte-identical across codes; the
-  equal-levels row shows no supported loss and an expected average final level at most one level above today's.
+- **SC-004**: The acceptance table is complete; the two unaffected teams' reports are identical across codes once the
+  code-version and ledger fields are removed; the equal-levels row shows no supported loss and the branch winner's
+  expected average final level is at most one level above today's winner's.
 - **SC-005**: The ledger validates with the new entry; the README names the rule, both lists and the assumption.
 - **SC-006**: The Node suite and the full pytest suite are green on the final code.
 
@@ -210,7 +213,8 @@ byte-identical to the pre-feature code's.
 - The additive candidate list is the chosen guard against displacement; K extra sets use the same K as today's list.
 - Checkpoint refusal comes for free from the code fingerprint (the optimizer's Python changes), as in 018 and 023; the
   plan confirms it or bumps the state version.
-- The acceptance's pre-feature side is the merge base on `main`, run from a second checkout or a stash-free switch
-  before the branch code is used, so both sides use today's defaults.
+- The acceptance's pre-feature side runs on this branch before any code change (the branch's code equals `main` at
+  the branch point), with the code hashes and the repository commit recorded in each result as proof; both sides use
+  today's defaults.
 - Acceptance pool time about one hour: two B2 quick runs (about 7 min each), 2,000 paired gauntlets at equal levels
   (about 5 min), two reference evaluations on each code (about 2 min each).
