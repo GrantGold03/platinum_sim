@@ -24,6 +24,13 @@ on the B2 team, where a displaced set cost Infernape its Close Combat and about 
 acceptance that compares the new B2 winner with today's at equal levels on paired runs and refuses to merge a loss.
 The archived branches are a source of hypotheses only; nothing is copied from them.
 
+## Clarifications
+
+### Session 2026-11-09
+
+- Q: How should the extra candidate sets that carry a variable-power move be chosen and ordered after today's sets? → A: Rank every four-move set drawn from today's pool plus the member's variable-power moves by today's coverage score; keep, in rank order, up to K sets containing at least one variable-power move that differ from each other by at least two moves (diversity among the extra sets only); today's sets stay first and unchanged.
+- Q: If the branch's B2 quick winner settles one level higher than today's winner while the equal-levels paired test shows no supported loss, does the acceptance pass or fail? → A: Pass if the paired test shows no supported loss and the level difference is at most one level on average (the quick search's known noise, 022); fail on two or more levels or on a supported loss; the difference is recorded either way.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The screening player values the four moves (Priority: P1)
@@ -92,8 +99,8 @@ two unaffected teams evaluated byte-identically. A supported loss blocks the mer
 merging if it passes.
 
 **Independent Test**: the acceptance script's table is complete; the equal-levels row shows no supported loss and an
-equal or lower expected average final level; the two unaffected teams' result.json files are byte-identical to the
-pre-feature code's.
+expected average final level at most one level above today's; the two unaffected teams' result.json files are
+byte-identical to the pre-feature code's.
 
 **Acceptance Scenarios**:
 
@@ -102,8 +109,8 @@ pre-feature code's.
    whose chosen set carries one of the four moves.
 2. **Given** the two winners at the new winner's levels, **When** 2,000 paired gauntlets are played with the same seeds
    by expectimax2-v4, **Then** the exact paired test shows the new team not worse by a supported margin, and its
-   expected average final level is equal or lower; otherwise the feature does not merge until the cause is found,
-   starting with the candidate lists per member.
+   expected average final level is at most one level above today's on average (equal or lower expected); otherwise
+   the feature does not merge until the cause is found, starting with the candidate lists per member.
 3. **Given** the reference team and the 014 b2-main team (no variable-power move), **When** evaluated on the branch and
    on the pre-feature code with the same request, **Then** result.json is byte-identical.
 
@@ -146,6 +153,11 @@ pre-feature code's.
 - **FR-006**: The candidate list MUST be additive: the sets produced today MUST be produced first and unchanged (same
   sets, same order), followed by up to K extra sets each containing at least one of the four moves; a unit test on the
   six B2 species MUST pin this.
+- **FR-006a**: The extra sets MUST be chosen by ranking every four-move set drawn from today's pool plus the member's
+  variable-power moves with today's coverage score (ties broken as today), keeping in rank order up to K sets that
+  contain at least one variable-power move and differ from each other by at least two moves; the diversity rule
+  applies among the extra sets only, not against today's sets, so a one-move swap of today's best set is offered when it
+  ranks.
 - **FR-007**: Checkpoints written before this feature MUST NOT resume (the plan states which fingerprint field
   changes).
 - **FR-008**: Acceptance MUST run, alone on the machine with Eastern times, under today's defaults: the B2 quick
@@ -154,8 +166,10 @@ pre-feature code's.
   gauntlets with the same seeds by expectimax2-v4 with the exact paired test; and the reference team and the 014
   b2-main team evaluated on both codes with byte-identical result.json.
 - **FR-009**: The feature MUST NOT merge if the equal-levels comparison shows the new team worse by a statistically
-  supported margin or a higher expected average final level; the cause MUST be found first, starting with the
-  candidate lists per member.
+  supported margin (exact paired test at alpha 0.05), or if the new winner's expected average final level is higher
+  than today's by more than one level on average (a difference of at most one level is within the quick level
+  search's known noise, feature 022, and passes when the paired test shows no supported loss; the difference is
+  recorded either way); the cause MUST be found first, starting with the candidate lists per member.
 - **FR-010**: The README MUST state the rule, the offered and not-offered lists with reasons, the friendship assumption
   and the acceptance numbers; FUTURE-FEATURES sections 1 and 6 MUST be updated; evidence lives under
   `runs/024-evidence/` with small copies under the feature's `evidence/`.
@@ -169,7 +183,8 @@ pre-feature code's.
 - **Not-offered list**: Hidden Power (IVs assumed uniform 15), Frustration (1 at friendship 255), the moves no player
   computes, fixed-damage and counter moves; each with its reason.
 - **Candidate list**: today's K sets (unchanged, first) plus up to K appended sets with at least one variable-power
-  move.
+  move, ranked by today's coverage score over today's pool plus the member's variable-power moves, diverse among
+  themselves only.
 - **Acceptance table**: per code (pre-feature, branch) the B2 quick winner's build, levels, confirmation statistics
   and wall; the equal-levels paired row; the two byte-identical unaffected evaluations.
 
@@ -183,7 +198,7 @@ pre-feature code's.
   differ.
 - **SC-003**: For all six B2 species, today's candidate sets are a prefix of the new candidate list, in order.
 - **SC-004**: The acceptance table is complete; the two unaffected teams are byte-identical across codes; the
-  equal-levels row shows no supported loss and an equal or lower expected average final level.
+  equal-levels row shows no supported loss and an expected average final level at most one level above today's.
 - **SC-005**: The ledger validates with the new entry; the README names the rule, both lists and the assumption.
 - **SC-006**: The Node suite and the full pytest suite are green on the final code.
 
