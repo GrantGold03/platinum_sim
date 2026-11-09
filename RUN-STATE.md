@@ -1,4 +1,13 @@
-# START HERE (updated 2026-11-09, feature 024 `024-variable-power-moves` specified on its branch from `main` cf4a9ff; clarify next)
+# START HERE (updated 2026-11-09, 12:55 PM EST, feature 024 built on its branch; acceptance FAILED FR-009 (screen sampling); merge blocked; user's decision pending)
+- **Feature 024 `024-variable-power-moves` built on its branch 2026-11-09 (from `main` cf4a9ff); acceptance FAILED FR-009, merge
+  blocked, waiting for the user.** Built: `sim/variable_power.mjs` (shared formulas), greedy-v1 scores Return / Grass Knot / Low Kick /
+  Gyro Ball, `decomp/weights.py`, `candidates.py` additive extras (today's sets a prefix: proven against `evidence/b2-candidates-main.json`),
+  ledger `mech-weight-tier-boundary`. Gates so far: Node 381 pass; fast pytest 587 + 2 pins fixed and rerun green. Acceptance: branch B2
+  quick winner (Staraptor with Return) 0.778 vs today's 0.823 at equal levels, p 2e-4 (verdict today's); identity evaluations identical
+  after removing volatile fields; cause: the screen's random fill under the 81 cap changed with the appended options (43 of 81 teams
+  shared; today's winner never screened on the branch). Commits: pre-feature evidence, c982ee8 (US1), commit 3 (US2), then the
+  finding commit. Options for the user are in the validation log T018 and FUTURE-FEATURES section 1. Nothing is running.
+
 - **Feature 024 `024-variable-power-moves` specified 2026-11-09 (`/speckit-specify`, user's paste), branch from `main` cf4a9ff in the
   main checkout.** `specs/024-variable-power-moves/spec.md` + `checklists/requirements.md` (all pass, 0 markers). Three stories: US1
   the screening player values Return, Grass Knot, Low Kick and Gyro Ball from one shared helper (decomp formulas; recorded results

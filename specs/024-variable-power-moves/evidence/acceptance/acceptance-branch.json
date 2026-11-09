@@ -1,0 +1,249 @@
+{
+ "side": "branch",
+ "start": "2026-11-09 12:33:10 PM EST",
+ "b2_wall_s": 315.5,
+ "b2": {
+  "dir": "b2-branch",
+  "species": [
+   "garchomp",
+   "infernape",
+   "staraptor",
+   "rotom",
+   "floatzel",
+   "weavile"
+  ],
+  "moves": [
+   [
+    "earthquake",
+    "dragon_claw",
+    "stone_edge",
+    "aerial_ace"
+   ],
+   [
+    "fire_blast",
+    "flamethrower",
+    "close_combat",
+    "fire_punch"
+   ],
+   [
+    "return",
+    "close_combat",
+    "fly",
+    "u_turn"
+   ],
+   [
+    "thunderbolt",
+    "shadow_ball",
+    "thunder",
+    "ominous_wind"
+   ],
+   [
+    "waterfall",
+    "surf",
+    "ice_beam",
+    "brine"
+   ],
+   [
+    "ice_punch",
+    "avalanche",
+    "night_slash",
+    "brick_break"
+   ]
+  ],
+  "items": [
+   "sitrus_berry",
+   "sitrus_berry",
+   "silk_scarf",
+   "sitrus_berry",
+   "sitrus_berry",
+   "sitrus_berry"
+  ],
+  "levels": [
+   51,
+   51,
+   52,
+   52,
+   52,
+   52
+  ],
+  "variable_members": [
+   "staraptor"
+  ],
+  "clear_rate": 0.792,
+  "clear_ci95": [
+   0.7542636968800828,
+   0.8252836882903708
+  ],
+  "n_runs": 500,
+  "qualified": false,
+  "borderline": false,
+  "expected_avg_final_level": 52.2979797979798,
+  "confirm_attempts": 1,
+  "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+  "platsim_code_hash": "sha256:6ca6b8435c2830656979605bbb59e2dcc9c29449bd9f44a1b25fc14a95a7ae4a",
+  "repo_commit": "3992c50fda4a03c8f3dfbaf1637086bffc70f9fa"
+ },
+ "identity_runs": {
+  "ref": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/024-evidence/ident-branch/ref",
+   "wall_s": 60.2
+  },
+  "b2main": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/024-evidence/ident-branch/b2main",
+   "wall_s": 59.2
+  }
+ },
+ "b2_main": {
+  "dir": "b2-main",
+  "species": [
+   "garchomp",
+   "infernape",
+   "staraptor",
+   "rotom",
+   "floatzel",
+   "weavile"
+  ],
+  "moves": [
+   [
+    "earthquake",
+    "dragon_claw",
+    "stone_edge",
+    "aerial_ace"
+   ],
+   [
+    "fire_blast",
+    "flamethrower",
+    "close_combat",
+    "fire_punch"
+   ],
+   [
+    "pluck",
+    "close_combat",
+    "giga_impact",
+    "u_turn"
+   ],
+   [
+    "thunderbolt",
+    "shadow_ball",
+    "thunder",
+    "ominous_wind"
+   ],
+   [
+    "waterfall",
+    "ice_beam",
+    "blizzard",
+    "ice_fang"
+   ],
+   [
+    "ice_punch",
+    "avalanche",
+    "night_slash",
+    "brick_break"
+   ]
+  ],
+  "items": [
+   "sitrus_berry",
+   "wise_glasses",
+   "sky_plate",
+   "expert_belt",
+   "splash_plate",
+   "sitrus_berry"
+  ],
+  "levels": [
+   51,
+   52,
+   52,
+   53,
+   52,
+   53
+  ],
+  "variable_members": [],
+  "clear_rate": 0.93,
+  "clear_ci95": [
+   0.9042028101480832,
+   0.949240257054982
+  ],
+  "n_runs": 500,
+  "qualified": false,
+  "borderline": false,
+  "expected_avg_final_level": 52.79139784946236,
+  "confirm_attempts": 2,
+  "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+  "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+  "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0"
+ },
+ "identity": {
+  "ref": {
+   "identical_without_volatile": true,
+   "differing_keys": [],
+   "removed_main": {
+    "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+    "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+    "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:baeaf406c676c665",
+    "divergences": "<75 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:baeaf406c676c665",
+    "provenance.worker.divergence_ledger_version": "sha256:baeaf406c676c665"
+   },
+   "removed_branch": {
+    "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+    "platsim_code_hash": "sha256:6ca6b8435c2830656979605bbb59e2dcc9c29449bd9f44a1b25fc14a95a7ae4a",
+    "repo_commit": "3992c50fda4a03c8f3dfbaf1637086bffc70f9fa",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
+    "divergences": "<76 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:feb2a48ef2e1dd08",
+    "provenance.worker.divergence_ledger_version": "sha256:feb2a48ef2e1dd08"
+   }
+  },
+  "b2main": {
+   "identical_without_volatile": true,
+   "differing_keys": [],
+   "removed_main": {
+    "sim_code_hash": "sha256:c07be275722f26cf900d810cb52e577b15321cd1c8a7df2f26f196568d5af493",
+    "platsim_code_hash": "sha256:92793dc145501bae565639b5827c6b6c7a9c3113a48347d7e445ab0248b2370f",
+    "repo_commit": "c949d408109c7d61398689a8f59a88d180502df0",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:baeaf406c676c665",
+    "divergences": "<75 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:baeaf406c676c665",
+    "provenance.worker.divergence_ledger_version": "sha256:baeaf406c676c665"
+   },
+   "removed_branch": {
+    "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
+    "platsim_code_hash": "sha256:6ca6b8435c2830656979605bbb59e2dcc9c29449bd9f44a1b25fc14a95a7ae4a",
+    "repo_commit": "3992c50fda4a03c8f3dfbaf1637086bffc70f9fa",
+    "repo_dirty": true,
+    "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
+    "divergences": "<76 entries>",
+    "provenance.divergence_ledger_file_version": "sha256:feb2a48ef2e1dd08",
+    "provenance.worker.divergence_ledger_version": "sha256:feb2a48ef2e1dd08"
+   }
+  }
+ },
+ "equal_levels": {
+  "n": 2000,
+  "a_rate": 0.778,
+  "b_rate": 0.8225,
+  "a_only": 241,
+  "b_only": 330,
+  "p_value": 0.000224699217218168,
+  "verdict": "B",
+  "mean_final_level_a": 52.3037703513282,
+  "mean_final_level_b": 52.29057750759878,
+  "levels": [
+   51,
+   51,
+   52,
+   52,
+   52,
+   52
+  ],
+  "player": "expectimax2-v4",
+  "wall_s": 320.8
+ },
+ "level_diff_branch_minus_main": -0.493,
+ "pass": false,
+ "end": "2026-11-09 12:45:46 PM EST"
+}

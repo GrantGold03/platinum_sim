@@ -572,6 +572,32 @@ entry effects by speed, the game puts the player first and runs abilities by cat
 
 B2 quick (`--seed 014-b2`, 16 workers): Set winner levels [54, 52, 54, 54, 54, 55] clear 0.8860 [0.8552, 0.911] (n 500, 2 confirm attempts, wall 407 s); Shift winner levels [51, 52, 52, 53, 52, 53] clear 0.9300 [0.9042, 0.9492] (n 500, 2 attempts, wall 416 s); same species, moves and items; expected average final level 54.30 (Set) vs 52.79 (Shift).
 
+Feature 024 (2026-11-09, `specs/024-variable-power-moves/`): the optimizer **offers four variable-power moves**: Return,
+Grass Knot, Low Kick and Gyro Ball, whose data power is 1 because the game computes it at use. One shared helper in the
+battle code (`sim/variable_power.mjs`, mirrored by `src/platsim/decomp/weights.py`) holds the game's formulas from the
+decomp: Return `friendship*10/25` (the simulator assumes maximum friendship, 255, as the legality layer does, so 102);
+Grass Knot and Low Kick from the target's weight tier (100 hg: 20, 250: 40, 500: 60, 1000: 80, 2000: 100, heavier: 120;
+the first limit at or above the weight, so a weight exactly on a limit takes the lower tier); Gyro Ball `1 + 25 *
+target speed / user speed`, capped at 150. The strong player's lookahead and the trainer-AI port already used these
+formulas and now call the helper; the screening player greedy-v1 scores the four moves through it (Gyro Ball from the
+two Pokemon's speed stats at their levels, not the in-battle speed value: an approximation of the screening heuristic).
+Candidate generation scores them per League opponent (Gyro Ball from the member's speed at the candidate level against
+each opponent's at its level) and offers them in **extra candidate sets appended after today's sets**, so every set the
+optimizer offered before is still offered first and unchanged; the archived 010 attempt had let such sets displace a
+member's coverage set and lost about ten points on the B2 team. **Not offered**, with the reason: Hidden Power (IVs are a
+uniform 15 by assumption, so its type and power would be fixed by that); Frustration (power 1 at friendship 255);
+Magnitude, Wring Out, Crush Grip, Punishment, Flail, Reversal, Fling, Trump Card, Natural Gift, Present, Spit Up (no
+player computes their power yet); fixed-damage, OHKO and counter moves (not attacks for candidate scoring). Eruption and
+Water Spout keep their data power 150. Ledger: `mech-weight-tier-boundary` (accepted): the engine's Low Kick and Grass
+Knot break at weight >= limit, so Flint's Flareon (exactly 250 hg) is 40 in the game and 60 in the engine; the player's
+model and the optimizer follow the game. Checkpoints from before this feature do not resume (code hashes changed).
+**Acceptance (`specs/024-variable-power-moves/validation-log.md` T017, 2026-11-09): not merged.** The B2 quick winner on the
+branch (levels [51, 51, 52, 52, 52, 52], Staraptor with Return) lost to today's winner (levels [51, 52, 52, 53, 52, 53]) at equal levels on 2,000 paired
+gauntlets: 0.7780 vs 0.8225, p 2.2e-04. Today's candidate sets are untouched (a prefix of the new lists for all
+six members); the cause measured is the screen's sampling: appending options shifts its random fill under the 81-team cap, so
+today's winning team was never screened on the branch. The two unaffected teams evaluated identically on both codes. The branch
+stays open for the user's decision.
+
 Measured run times:
 
 | Run | Wall time |

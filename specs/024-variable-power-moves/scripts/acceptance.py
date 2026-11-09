@@ -31,11 +31,12 @@ B2_SPECIES = ["garchomp", "infernape", "staraptor", "rotom", "floatzel", "weavil
 B2_SEED = "014-b2"
 IDENT_RUNS = "200"
 IDENT_SEED = "024-ident"
-VARIABLE = {"MOVE_RETURN", "MOVE_GRASS_KNOT", "MOVE_LOW_KICK", "MOVE_GYRO_BALL"}
+VARIABLE = {"return", "grass_knot", "low_kick", "gyro_ball"}  # result.json uses move keys
 # Fields that change with every feature (code version, ledger) and are removed before the identity comparison (FR-008).
 VOLATILE = ("sim_code_hash", "platsim_code_hash", "repo_commit", "repo_dirty", "divergence_ledger_version",
             "divergence_ledger_file_version", "divergences")
 VOLATILE_PROV = ("divergence_ledger_version",)  # under provenance.worker
+VOLATILE_PROV_TOP = ("divergence_ledger_file_version",)  # under provenance
 
 
 def log(m: str) -> None:
@@ -87,7 +88,11 @@ def strip_volatile(d: dict) -> dict:
     for k in VOLATILE:
         if k in d:
             removed[k] = d.pop(k)
-    w = (d.get("provenance") or {}).get("worker") or {}
+    prov = d.get("provenance") or {}
+    for k in VOLATILE_PROV_TOP:
+        if k in prov:
+            removed[f"provenance.{k}"] = prov.pop(k)
+    w = prov.get("worker") or {}
     for k in VOLATILE_PROV:
         if k in w:
             removed[f"provenance.worker.{k}"] = w.pop(k)

@@ -1,0 +1,6 @@
+start 2026-11-09 12:33:10 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [51, 51, 52, 52, 52, 52] clear 0.7920 [0.7543, 0.8253] n 500 attempts 1 wall 315.5 s variable members []
+identity ref: identical without volatile fields False differing ['provenance']
+identity b2main: identical without volatile fields False differing ['provenance']
+equal levels at [51, 51, 52, 52, 52, 52]: n 2000 A(branch) 0.7780 B(main) 0.8225 only A 241 / only B 330 p 0.000225 verdict B; winners' expected avg final level branch 52.30 vs main 52.79 (diff -0.49); FR-009 pass False
+end 2026-11-09 12:45:46 PM EST

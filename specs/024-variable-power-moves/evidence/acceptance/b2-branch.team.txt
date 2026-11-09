@@ -1,0 +1,65 @@
+Garchomp @ Sitrus Berry
+Ability: Sand Veil
+Level: 51
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Earthquake
+- Dragon Claw
+- Stone Edge
+- Aerial Ace
+
+Infernape @ Sitrus Berry
+Ability: Blaze
+Level: 51
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Fire Blast
+- Flamethrower
+- Close Combat
+- Fire Punch
+
+Staraptor @ Silk Scarf
+Ability: Intimidate
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Return
+- Close Combat
+- Fly
+- U-turn
+
+Rotom @ Sitrus Berry
+Ability: Levitate
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Thunderbolt
+- Shadow Ball
+- Thunder
+- Ominous Wind
+
+Floatzel @ Sitrus Berry
+Ability: Swift Swim
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Waterfall
+- Surf
+- Ice Beam
+- Brine
+
+Weavile @ Sitrus Berry
+Ability: Pressure
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Ice Punch
+- Avalanche
+- Night Slash
+- Brick Break

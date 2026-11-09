@@ -94,3 +94,40 @@ arguments); the pin updated for the additive list, the level given a default; re
 ```
 
 **Commit 3**: `feat(024): optimizer offers Return, Grass Knot, Low Kick, Gyro Ball in an additive candidate list ...`.
+
+## T017 Acceptance, branch side (12:33:10 to 12:45:46 PM EST, alone, exit 0)
+
+`acceptance.py --side branch --workers 16 --runs 2000` (evidence `runs/024-evidence/`, copies in `evidence/acceptance/`).
+
+| | today's code (`b2-main`) | branch (`b2-branch`) |
+|---|---|---|
+| levels | [51, 52, 52, 53, 52, 53] | [51, 51, 52, 52, 52, 52] |
+| confirmation clear rate [95% CI], n | 0.9300 [0.9042, 0.9492], 500 | 0.7920 [0.7543, 0.8253], 500 |
+| expected average final level | 52.79 | 52.30 (diff -0.49) |
+| members with a variable-power move | none | ['staraptor'] (Staraptor: return / close combat / fly / u-turn) |
+| wall | 365.9 s | 315.5 s |
+| equal levels ([51, 51, 52, 52, 52, 52], 2,000 pairs, v4) | B 0.8225 | A 0.7780; only A 241 / only B 330, p 0.000225, verdict **B** (today's better) |
+| identity (reference team, 014 b2-main team) | identical after removing the code-version and ledger fields: ref True, b2main True | |
+| FR-009 | | **FAIL** (supported loss; the level criterion itself passes) |
+
+Teams: today's: garchomp earthquake+dragon claw+stone edge+aerial ace [sitrus_berry] / infernape fire blast+flamethrower+close combat+fire punch [wise_glasses] / staraptor pluck+close combat+giga impact+u turn [sky_plate] / rotom thunderbolt+shadow ball+thunder+ominous wind [expert_belt] / floatzel waterfall+ice beam+blizzard+ice fang [splash_plate] / weavile ice punch+avalanche+night slash+brick break [sitrus_berry]. Branch: garchomp earthquake+dragon claw+stone edge+aerial ace [sitrus_berry] / infernape fire blast+flamethrower+close combat+fire punch [sitrus_berry] / staraptor return+close combat+fly+u turn [silk_scarf] / rotom thunderbolt+shadow ball+thunder+ominous wind [sitrus_berry] / floatzel waterfall+surf+ice beam+brine [sitrus_berry] / weavile ice punch+avalanche+night slash+brick break [sitrus_berry].
+
+Script slips fixed after the run, without new battles: the identity comparison had left `provenance.divergence_ledger_file_version`
+in place (now removed with the other volatile fields; both pairs identical), and the variable-member detection compared constant
+names against the report's move keys (Staraptor carries Return).
+
+## T018 FR-009 verdict: FAIL, merge blocked; the cause as measured (12:50 PM EST)
+
+The branch winner is worse at equal levels by a supported margin (4.5 points, p 2e-4). The displacement test is clean: today's
+candidate sets are a prefix of the branch's for all six members (T013), so no set was displaced. The difference is upstream of the
+sets: the **screen's sampling**. The screen builds its 81 candidate teams from the baseline, the single-slot deviations and a random
+fill over the option list (`run.py` screen stage); appending up to three sets per member doubles the option list, so the random fill
+and the 81 cap land on a different population: the two screens shared only 43 of 81 teams, and **today's winning team was never
+screened on the branch** (nor the branch's winner on today's code). The branch's screen then preferred a Staraptor with Return (its
+first move by score: 102 with STAB) over today's Pluck / Giga Impact set and a different Floatzel set and items, and the quick
+level search and confirmation worked from that finalist. The loss is therefore attributable to the screen seeing a different, worse
+subset under its cap, with the Return set as the one variable-power pick; whether the Return set itself is worse than today's
+Staraptor set is not separated by this run (the 010 record found Return indistinguishable from what it replaced in single swaps).
+The feature is not merged; the decision on the next step is the user's (options in the report: a screen that always includes today's
+baseline team and deviations before the fill, or a larger cap when extras exist, or a single-swap measurement of the Return set).
+
