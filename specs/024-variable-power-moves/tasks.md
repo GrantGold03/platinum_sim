@@ -102,6 +102,12 @@ cause is recorded and the merge is blocked.
 
 ---
 
+## Phase 5b: The screen superset (user's decision after the first acceptance, 2026-11-09)
+
+- [X] T022 [US3] `src/platsim/optimizer/run.py` screen stage (FR-006b): `_member_options` splits each member's options into today's (movesets before the `extras` suffix) and the extras; the baseline, the single-slot deviations and the RNG fill use today's options only (identical combos to today's for the same request); after the cap, append one single-slot deviation per extra set with its first item, repaired / validated / deduplicated as the others; `state.json` screen stage records `extras_screened`; provenance notes the rule
+- [ ] T023 [US3] `acceptance.py --side branch`: after the run, compare the first 81 screened teams of `b2-branch/state.json` with `b2-main/state.json` (`screen.candidates`, as specs) and report `screen_prefix_identical` and the number of appended teams; rerun the acceptance alone (T017 again, about 15 min) and record; the FR-009 rule decides
+- [X] T024 [US3] Fast tests touched by the screen change (`uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py tests/unit/test_legality_options.py -m "not battle_sim"`) green before the rerun
+
 ## Phase 6: Gates and close
 
 - [ ] T020 Gates, in order, nothing else running: `git diff --stat main -- pokemon-showdown` empty; after-values of `sim_code_hash`, `platsim_code_hash` and the ledger version recorded and asserted different from the T001 before-values (FR-007: pre-feature checkpoints are refused by the code fingerprint); `(cd sim && node --test test/*.test.mjs)` green; the full pytest suite `uv run pytest -q --durations=25 > runs/024-evidence/full.log 2>&1; echo full exit=$?` green (about 1 h 25 min); each output with Eastern times into the log; copy a gates summary to `specs/024-variable-power-moves/evidence/gates.txt`

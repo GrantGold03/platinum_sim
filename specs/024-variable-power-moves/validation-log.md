@@ -131,3 +131,15 @@ Staraptor set is not separated by this run (the 010 record found Return indistin
 The feature is not merged; the decision on the next step is the user's (options in the report: a screen that always includes today's
 baseline team and deviations before the fill, or a larger cap when extras exist, or a single-swap measurement of the Return set).
 
+## T022-T024 Screen superset (user's decision, 1:05 PM EST)
+
+User decision on the T018 report: **screen superset**. `run.py`: `_member_options` returns today's sets only (the movesets before
+the `extras` suffix), so the baseline, the single-slot deviations and the RNG fill are identical to today's; `_member_extra_options`
+gives one option per extra set with its first held item, appended as single-slot deviations of the baseline beyond the 81 cap
+(repaired, validated, deduplicated as the others); the screen stage records `extras_screened`. The spec gained FR-006b and a second
+clarification entry; `acceptance.py --side branch` now checks that the branch's first 81 screened teams equal the pre-feature run's.
+
+```
+uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py tests/unit/test_legality_options.py tests/unit/test_optimizer_candidates.py: exit 0, 62 passed
+```
+

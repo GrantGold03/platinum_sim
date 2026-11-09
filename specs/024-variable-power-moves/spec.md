@@ -31,6 +31,10 @@ The archived branches are a source of hypotheses only; nothing is copied from th
 - Q: How should the extra candidate sets that carry a variable-power move be chosen and ordered after today's sets? → A: Rank every four-move set drawn from today's pool plus the member's variable-power moves by today's coverage score; keep, in rank order, up to K sets containing at least one variable-power move that differ from each other by at least two moves (diversity among the extra sets only); today's sets stay first and unchanged.
 - Q: If the branch's B2 quick winner settles one level higher than today's winner while the equal-levels paired test shows no supported loss, does the acceptance pass or fail? → A: Pass if the paired test shows no supported loss and the level difference is at most one level on average (the quick search's known noise, 022); fail on two or more levels or on a supported loss; the difference is recorded either way.
 
+### Session 2026-11-09 (after the first acceptance)
+
+- Q: The first acceptance failed FR-009 (branch winner 0.778 vs today's 0.823 at equal levels, p 2e-4) with today's candidate sets intact; the measured cause was the screen's random fill changing under its 81-team cap once options were appended (43 of 81 teams shared; today's winner never screened). How should the screen handle the extra sets? → A: Screen superset: the screen's baseline, single-slot deviations and random fill draw from today's options only, so its first 81 teams are exactly today's; then one single-slot deviation per extra set (with that set's top held item) is appended beyond the cap (up to 18 more teams at quick).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The screening player values the four moves (Priority: P1)
@@ -160,6 +164,10 @@ result.json files equal the pre-feature code's once the code-version and ledger 
   contain at least one variable-power move and differ from each other by at least two moves; the diversity rule
   applies among the extra sets only, not against today's sets, so a one-move swap of today's best set is offered when it
   ranks.
+- **FR-006b**: The optimizer's screen MUST build its capped candidate list (the baseline, the single-slot deviations and
+  the random fill) from today's options only, so that list is identical to today's for the same request, and MUST then
+  append one single-slot deviation of the baseline per extra set (with the set's first held-item candidate) beyond the
+  cap; the acceptance MUST show the branch's first 81 screened teams equal to the pre-feature run's.
 - **FR-007**: Checkpoints written before this feature MUST NOT resume (the plan states which fingerprint field
   changes).
 - **FR-008**: Acceptance MUST run, alone on the machine with Eastern times, under today's defaults: the B2 quick

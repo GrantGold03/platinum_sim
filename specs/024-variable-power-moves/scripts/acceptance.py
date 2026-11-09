@@ -179,6 +179,15 @@ def main(argv=None) -> int:
     else:
         main_row = winner_row(EVIDENCE / "b2-main")
         out["b2_main"] = main_row
+        # FR-006b: the branch's first 81 screened teams are today's; the extras come after
+        sm = json.loads((EVIDENCE / "b2-main" / "state.json").read_text())["stages"]["screen"]
+        sb = json.loads((b2 / "state.json").read_text())["stages"]["screen"]
+        n_main = len(sm["candidates"])
+        out["screen"] = {"main_candidates": n_main, "branch_candidates": len(sb["candidates"]),
+                         "prefix_identical": sb["candidates"][:n_main] == sm["candidates"],
+                         "extras_screened": sb.get("extras_screened")}
+        print(f"screen: main {n_main} teams, branch {len(sb['candidates'])} (extras {sb.get('extras_screened')}); "
+              f"first {n_main} identical {out['screen']['prefix_identical']}", flush=True)
         out["identity"] = compare_identity()
         for name, r in out["identity"].items():
             print(f"identity {name}: identical without volatile fields {r['identical_without_volatile']}"

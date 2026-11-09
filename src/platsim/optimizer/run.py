@@ -205,12 +205,23 @@ def _apply_abilities(specs, abilities: dict) -> tuple:
 
 
 def _member_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
-    """(variant key, moveset, item) choices of one member, the baseline first."""
+    """(variant key, moveset, item) choices of one member, the baseline first. 024: today's sets only (the movesets
+    before each variant's `extras` suffix), so the screen's capped candidate list is identical to the pre-024 one."""
     out = []
     for vkey, mc in mcs.items():
-        for ms in mc.movesets:
+        for ms in mc.movesets[:len(mc.movesets) - mc.extras]:
             for item in mc.items[ms]:
                 out.append((vkey, ms, item))
+    return out
+
+
+def _member_extra_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
+    """024 (FR-006b): one option per appended variable-power set, with its first held-item candidate; screened as
+    single-slot deviations of the baseline beyond the cap."""
+    out = []
+    for vkey, mc in mcs.items():
+        for ms in mc.movesets[len(mc.movesets) - mc.extras:]:
+            out.append((vkey, ms, mc.items[ms][0]))
     return out
 
 
@@ -412,18 +423,27 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             c = tuple(rng.randrange(len(o)) for o in opts)
             if c not in combos:
                 combos.append(c)
+        # 024 (FR-006b): the extras ride beyond the cap as single-slot deviations of the baseline, one per appended set
+        extra_opts = [_member_extra_options(mcs) for mcs in cands]
+        extra_specs = []
+        for slot in range(6):
+            for o in extra_opts[slot]:
+                extra_specs.append(tuple(R.MemberSpec(consts[slot], *o) if s == slot else baseline[s] for s in range(6)))
         teams_specs, seen, dropped = [], set(), []
-        for c in combos:
-            if len(teams_specs) >= N_CANDIDATES:
-                break
-            if c == tuple(base_idx):
+        extras_screened = 0
+        for kind, c in [("combo", c) for c in combos] + [("extra", e) for e in extra_specs]:
+            if kind == "combo" and len(teams_specs) >= N_CANDIDATES:
+                continue
+            if kind == "extra":
+                specs = c
+            elif c == tuple(base_idx):
                 specs = baseline
             else:
                 specs = tuple(baseline[s] if j is None else R.MemberSpec(consts[s], *opts[s][j]) for s, j in enumerate(c))
             specs = _apply_abilities(specs, abilities)
             rr = R.repair(specs, screen_levels, led, _ranked(cands, specs), required_hms=req.required_hms)
             if isinstance(rr, R.Refusal):
-                dropped.append({"combo": list(c), "reason": rr.reason})
+                dropped.append({"combo": R.spec_to_json(specs) if kind == "extra" else list(c), "reason": rr.reason})
                 continue
             specs = rr[0]
             key = json.dumps(R.spec_to_json(specs))
@@ -432,18 +452,20 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             real = R.realize(specs, screen_levels, led, required_hms=req.required_hms)
             v = validate(real.team, led, required_hms=req.required_hms)
             if v:  # the optimizer is not trusted (Constitution III): never screened
-                dropped.append({"combo": list(c), "reason": "validator: " + "; ".join(x.message for x in v[:3])})
+                dropped.append({"combo": R.spec_to_json(specs) if kind == "extra" else list(c), "reason": "validator: " + "; ".join(x.message for x in v[:3])})
                 continue
             seen.add(key)
             teams_specs.append(specs)
-        prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels}")
+            if kind == "extra":
+                extras_screened += 1
+        prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels} ({extras_screened} variable-power extras beyond the cap)")
         wteams = [worker_team(R.realize(s, screen_levels, led, required_hms=req.required_hms).team, led) for s in teams_specs]
         res = successive_halving(pool, wteams, seed=seed, rounds=preset.screening_rounds, battle_style=req.battle_style,
                                  progress=lambda d, p, best, sc, r: prog(
                                      "screen", runs_done=d, runs_planned=p,
                                      best={"candidate": best, "cleared": sc[0], "runs": sc[2]},
                                      detail=f"round {r}: best candidate {best} cleared {sc[0]}/{sc[2]}"))
-        scr = {"levels": screen_levels, "candidates": [R.spec_to_json(s) for s in teams_specs],
+        scr = {"levels": screen_levels, "candidates": [R.spec_to_json(s) for s in teams_specs], "extras_screened": extras_screened,  # 024
                "labels": [[m.label() for m in s] for s in teams_specs], "dropped": dropped,
                "result": res.to_dict(), "policy": SCREEN_POLICY, "seeds": f"derive_seed('{seed}|screen', i, 0)",
                "finalists": res.order[:2]}
