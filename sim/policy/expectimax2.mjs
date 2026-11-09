@@ -127,7 +127,7 @@
 // MODELLED MOVE EFFECTS (decomp effect names, data/generated/moves.json `effect`):
 //   damage: fixed-power moves at data power; LEVEL_DAMAGE_FLAT, 20/40_DAMAGE_FLAT, HALVE_HP;
 //   variable power: Return/Frustration (TAI:3018-3026 formula), Low Kick/Grass Knot
-//   (calcdamage.mjs WEIGHT_TO_POWER, speciesWeightHg), Hidden Power (TAI:2973-2993 formula),
+//   (sim/variable_power.mjs, shared with the trainer-AI port and greedy since 024), Hidden Power (TAI:2973-2993 formula),
 //   Gyro Ball (TAI:2995-3003 formula on the decomp speeds); multi-hit (MULTI_HIT 2-5 hits with
 //   3/8,3/8,1/8,1/8, HIT_TWICE, POISON_MULTI_HIT x2); Counter / Mirror Coat (2x the damage of that
 //   class taken earlier in the turn); recoil 1/2, 1/3, 1/4 (subscript_recoil_1_*.s; Rock Head and
@@ -173,7 +173,7 @@ import { createAIState, processLog, stateFor } from '../ai/opponent.mjs';
 import { replacementSlot } from '../ai/switch.mjs';
 import { pickCommand } from '../ai/items.mjs';
 import { compareBattlerSpeed } from '../ai/cmds/battler.mjs';
-import { WEIGHT_TO_POWER, speciesWeightHg } from '../ai/calcdamage.mjs';
+import { frustrationPower, gyroBallPower, returnPower, speciesWeightHg, weightTierPower } from '../variable_power.mjs'; // 024: one source of truth
 
 export const EXPECTIMAX2 = 'expectimax2-v1';
 export const EXPECTIMAX2_V2 = 'expectimax2-v2';
@@ -470,14 +470,9 @@ function speedInfo(X, S) {
 function variablePower(X, S, u, t, rec, uRef, tRef) {
   const e = eff(rec);
   switch (e) {
-    case 'POWER_BASED_ON_FRIENDSHIP': return Math.trunc((uRef.happiness ?? 0) * 10 / 25); // TAI:3018-3021
-    case 'POWER_BASED_ON_LOW_FRIENDSHIP': return Math.trunc((255 - (uRef.happiness ?? 0)) * 10 / 25); // TAI:3023-3026
-    case 'INCREASE_POWER_WITH_WEIGHT': { // TAI:3055-3072
-      const weight = speciesWeightHg(ENUMS.species[tRef.species.num]);
-      let i;
-      for (i = 0; WEIGHT_TO_POWER[i][0] !== 0xFFFF; i++) if (WEIGHT_TO_POWER[i][0] >= weight) break;
-      return WEIGHT_TO_POWER[i][0] !== 0xFFFF ? WEIGHT_TO_POWER[i][1] : 120;
-    }
+    case 'POWER_BASED_ON_FRIENDSHIP': return returnPower(uRef.happiness ?? 0); // TAI:3018-3021 (024: shared formula)
+    case 'POWER_BASED_ON_LOW_FRIENDSHIP': return frustrationPower(uRef.happiness ?? 0); // TAI:3023-3026
+    case 'INCREASE_POWER_WITH_WEIGHT': return weightTierPower(speciesWeightHg(ENUMS.species[tRef.species.num])); // TAI:3055-3072
     case 'RANDOM_POWER_BASED_ON_IVS': { // TAI:2973-2993 (power part)
       const iv = uRef.set.ivs;
       const p = ((iv.hp & 2) >> 1) | ((iv.atk & 2) >> 0) | ((iv.def & 2) << 1) | ((iv.spe & 2) << 2) | ((iv.spa & 2) << 3) | ((iv.spd & 2) << 4);
@@ -486,8 +481,7 @@ function variablePower(X, S, u, t, rec, uRef, tRef) {
     case 'POWER_BASED_ON_LOW_SPEED': { // TAI:2995-3003
       const { speeds } = speedInfo(X, S);
       const a = speeds[u.side === 0 ? 0 : 1], d = speeds[u.side === 0 ? 1 : 0];
-      if (!a) return 0;
-      return Math.min(150, 1 + Math.floor((25 * d) / a));
+      return gyroBallPower(a, d); // 024: shared formula (0 when a is 0)
     }
     default: return undefined;
   }

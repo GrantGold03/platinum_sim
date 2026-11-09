@@ -22,11 +22,17 @@
 //     (PP/src/battle/battle_controller_player.c:2900-2903 `if (hitRate == 0) return 0;`), so 1.
 //     Accuracy/evasion stages, Compound Eyes, Sand Veil, Bright Powder etc. are NOT modelled.
 //   - Status moves (CLASS_STATUS, power 0) score 0.
-//   - Variable-power / fixed-damage / OHKO moves (decomp power 1: Seismic Toss, Night Shade,
-//     Low Kick, Grass Knot, Gyro Ball, Return, Hidden Power, Flail, Fissure, Counter, ... — see
-//     damage.mjs "MECHANICS NOT COVERED") score 0. damage.mjs needs the caller to pass their
-//     power, which greedy does not compute; scoring them 0 is the conservative choice and means
-//     greedy prefers any fixed-power damaging move over them.
+//   - 024: Return, Grass Knot, Low Kick and Gyro Ball (the moves the optimizer offers) are scored at the
+//     power the game computes (sim/variable_power.mjs): Return at the attacker's friendship (Showdown's
+//     default 255 -> 102; the simulator assumes max friendship, as legality does), Grass Knot / Low Kick
+//     from the foe's species weight tier (the decomp boundary rule), Gyro Ball from the two Pokemon's
+//     speed STATS at their levels (`storedStats.spe`), not the game's in-battle speed values (stages,
+//     paralysis, items): greedy has no AI adapter and also scores benched members, so this is an
+//     approximation of the screening heuristic (plan Complexity Tracking).
+//   - Every other variable-power / fixed-damage / OHKO move (decomp power 1: Seismic Toss, Night Shade,
+//     Hidden Power, Frustration, Magnitude, Flail, Fissure, Counter, ... — see damage.mjs "MECHANICS NOT
+//     COVERED") scores 0: damage.mjs needs the caller to pass their power, which greedy does not compute
+//     for them; scoring them 0 is the conservative choice.
 //   - Moves with a fixed nominal power that the game varies at run time (Eruption, Water Spout,
 //     Brine, Payback, Facade, Weather Ball, Wake-Up Slap, ...) are scored at their data power.
 //   - Multi-hit moves are scored as one hit. Crits are ignored. Damage is not capped at the
@@ -34,7 +40,8 @@
 //   - Absorbing abilities (Water/Volt Absorb, Flash Fire, Dry Skin water, Motor Drive) are only
 //     modelled as far as damage.mjs models them.
 //   - Moves Showdown offers that have no decomp move (e.g. `recharge`) score 0.
-import { calcDamage, fromShowdown } from '../damage.mjs';
+import { ENUMS, calcDamage, fromShowdown } from '../damage.mjs';
+import { OFFERED_VARIABLE, gyroBallPower, returnPower, speciesWeightHg, weightTierPower } from '../variable_power.mjs'; // 024
 
 export const GREEDY = 'greedy-v1';
 
@@ -47,11 +54,27 @@ function decompMove(gd, sdId) {
 /** Expected damage of `attacker` using Showdown move `sdId` on `foe` (see header). */
 export function expectedDamage(gd, battle, attacker, foe, sdId) {
   const md = decompMove(gd, sdId);
-  if (!md || md.category === 'CLASS_STATUS' || md.power <= 1) return 0;
-  const { rolls } = calcDamage(fromShowdown(battle, attacker, foe, sdId));
+  if (!md || md.category === 'CLASS_STATUS') return 0;
+  let power;
+  if (md.power <= 1) {
+    power = variablePowerFor(md.const, attacker, foe); // 024: the four offered moves
+    if (!power) return 0;
+  }
+  const { rolls } = calcDamage(fromShowdown(battle, attacker, foe, sdId, power ? { power } : {}));
   const mean = rolls.reduce((a, b) => a + b, 0) / rolls.length;
   const hit = md.accuracy === 0 ? 1 : md.accuracy / 100;
   return mean * hit;
+}
+
+// 024: the computed power of an offered variable-power move for `attacker` on `foe` (Showdown Pokemon), else 0.
+export function variablePowerFor(moveConst, attacker, foe) {
+  if (!OFFERED_VARIABLE.has(moveConst)) return 0;
+  switch (moveConst) {
+    case 'MOVE_RETURN': return returnPower(attacker.happiness ?? 255);
+    case 'MOVE_GRASS_KNOT': case 'MOVE_LOW_KICK': return weightTierPower(speciesWeightHg(ENUMS.species[foe.species.num]));
+    case 'MOVE_GYRO_BALL': return gyroBallPower(attacker.storedStats.spe, foe.storedStats.spe);
+    default: return 0;
+  }
 }
 
 const foeOf = (battle, side) => battle.sides[side.n ^ 1].active[0];

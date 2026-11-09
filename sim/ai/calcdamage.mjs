@@ -28,6 +28,7 @@
 //          Only Gyro Ball reads it (TAI:2996). The caller must keep it current.
 // A ctx from interp.mjs's makeCtx satisfies `env` directly.
 import { readFileSync } from 'node:fs';
+import { WEIGHT_TO_POWER, frustrationPower, gyroBallPower, returnPower, speciesWeightHg, weightTierPower } from '../variable_power.mjs';
 import { join } from 'node:path';
 import { DECOMP_ROOT, readList } from './constants.mjs';
 import { replayTypeChart, battleDivide, MOVE_STATUS, ENUMS } from '../damage.mjs';
@@ -76,14 +77,9 @@ function parseJudgmentSwitch() {
 }
 export const JUDGMENT_TYPES = parseJudgmentSwitch();
 
-// sWeightToPower — include/data/battle/weight_to_power.h:1-8 ({weight in hectograms, power}).
-function parseWeightToPower() {
-  const text = readFileSync(join(DECOMP_ROOT, 'include/data/battle/weight_to_power.h'), 'utf8');
-  const rows = [...text.matchAll(/\{\s*(0x[0-9A-Fa-f]+|\d+)\s*,\s*(0x[0-9A-Fa-f]+|\d+)\s*\}/g)].map((m) => [Number(m[1]), Number(m[2])]);
-  if (rows.at(-1)?.[0] !== 0xFFFF) throw new Error('calcdamage: sWeightToPower terminator missing');
-  return rows;
-}
-export const WEIGHT_TO_POWER = parseWeightToPower();
+// 024: the weight table and the species weights live in sim/variable_power.mjs (one source of truth with the
+// strong player and the screening player); re-exported here for the tests and older imports.
+export { WEIGHT_TO_POWER, speciesWeightHg };
 
 // STAT_* order (generated/pokemon_stats.txt:1-6): HP, ATTACK, DEFENSE, SPEED, SPECIAL_ATTACK, SPECIAL_DEFENSE.
 const STATS = readList('pokemon_stats').map((e) => {
@@ -95,43 +91,6 @@ const STAT = new Proxy(STAT_INDEX, {
   get(t, k) { if (!(k in t)) throw new Error(`calcdamage: unknown stat ${String(k)}`); return t[k]; },
 });
 
-// ---------- species weight (battleMons[b].weight, battle_lib.c:150) ----------
-// Pokedex_HeightWeightData_Weight comes from the dataproc build: hectograms =
-// round(LB_TO_KG(weight_pounds - override) * 10), or round(weight_kilograms * 10)
-// (tools/dataproc/src/speciesproc.c:696, 698-716, 735-752). The override list is read from that C.
-const SPECIESPROC = 'tools/dataproc/src/speciesproc.c';
-function parseWeightOverrides() {
-  const lines = readFileSync(join(DECOMP_ROOT, SPECIESPROC), 'utf8').split('\n');
-  const start = lines.findIndex((l) => l.includes('species_weight_rounding_override(enum Species species) {'));
-  if (start < 0) throw new Error(`calcdamage: species_weight_rounding_override not found in ${SPECIESPROC}`);
-  const out = new Map();
-  let pending = [];
-  for (let i = start + 1; i < lines.length; i++) {
-    const t = lines[i].trim();
-    let m = t.match(/^case (SPECIES_\w+):$/);
-    if (m) { pending.push(m[1]); continue; }
-    m = t.match(/^return (-?[\d.]+);$/);
-    if (m) { for (const s of pending) out.set(s, Number(m[1])); pending = []; continue; }
-    if (t.startsWith('default:')) break;
-  }
-  if (out.size === 0) throw new Error('calcdamage: no weight overrides parsed');
-  return out;
-}
-const WEIGHT_OVERRIDES = parseWeightOverrides();
-const weightCache = new Map();
-// `speciesConst` e.g. 'SPECIES_SNORLAX'. Base form data (res/pokemon/<name>/data.json).
-export function speciesWeightHg(speciesConst) {
-  if (weightCache.has(speciesConst)) return weightCache.get(speciesConst);
-  const dir = speciesConst.replace(/^SPECIES_/, '').toLowerCase();
-  const d = JSON.parse(readFileSync(join(DECOMP_ROOT, 'res/pokemon', dir, 'data.json'), 'utf8')).pokedex_data;
-  let kg;
-  if (d.weight_kilograms !== undefined) kg = d.weight_kilograms;
-  else if (d.weight_pounds !== undefined) kg = (d.weight_pounds - (WEIGHT_OVERRIDES.get(speciesConst) ?? 0.0)) * 0.45359237;
-  else throw new Error(`calcdamage: no weight for ${speciesConst}`);
-  const hg = Math.round(kg * 10); // C round(): half away from zero; equal to Math.round for kg >= 0
-  weightCache.set(speciesConst, hg);
-  return hg;
-}
 
 // ---------- helpers over the adapter ----------
 
@@ -249,8 +208,7 @@ export function calcDamage(env, { move, heldItem, ivs, attacker, ability, embarg
       const a = sv?.[attacker];
       if (d === undefined || a === undefined) throw new Error('calcdamage: Gyro Ball needs mem.monSpeedValues (battleCtx->monSpeedValues)');
       if ((a >>> 0) === 0) throw new Error('calcdamage: Gyro Ball with monSpeedValues[attacker] == 0 (division by zero in the game)');
-      power = 1 + Math.floor(((25 * (d >>> 0)) >>> 0) / (a >>> 0));
-      if (power > 150) power = 150;
+      power = gyroBallPower(a >>> 0, d >>> 0); // 024: the shared formula; 25*d cannot reach the u32 wrap for speed values
       type = K(ai, 'TYPE_NORMAL');
       break;
     }
@@ -265,11 +223,11 @@ export function calcDamage(env, { move, heldItem, ivs, attacker, ability, embarg
       damage = idiv(ai.level(attacker) * ((env.rand() % 11) + 5), 10);
       break;
     case mv('MOVE_RETURN'): // TAI:3018-3021
-      power = idiv(ai.friendship(attacker) * 10, 25);
+      power = returnPower(ai.friendship(attacker)); // 024: shared formula
       type = K(ai, 'TYPE_NORMAL');
       break;
     case mv('MOVE_FRUSTRATION'): // TAI:3023-3026
-      power = idiv((255 - ai.friendship(attacker)) * 10, 25);
+      power = frustrationPower(ai.friendship(attacker)); // 024: shared formula
       type = K(ai, 'TYPE_NORMAL');
       break;
     case mv('MOVE_MAGNITUDE'): // TAI:3028-3049 (draws RNG)
@@ -288,12 +246,7 @@ export function calcDamage(env, { move, heldItem, ivs, attacker, ability, embarg
       break;
     case mv('MOVE_LOW_KICK'): // TAI:3055-3072
     case mv('MOVE_GRASS_KNOT'): {
-      const weight = speciesWeightHg(ENUMS.species[ai.species(defender)]);
-      let i;
-      for (i = 0; WEIGHT_TO_POWER[i][0] !== 0xFFFF; i++) {
-        if (WEIGHT_TO_POWER[i][0] >= weight) break;
-      }
-      power = WEIGHT_TO_POWER[i][0] !== 0xFFFF ? WEIGHT_TO_POWER[i][1] : 120;
+      power = weightTierPower(speciesWeightHg(ENUMS.species[ai.species(defender)])); // 024: shared formula
       break;
     }
     default: // TAI:3074-3078

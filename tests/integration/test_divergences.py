@@ -68,7 +68,8 @@ def test_ledger_matches_fresh_diff():
     assert endure["decomp_ref"] == "pokeplatinum/res/moves/endure/data.json:20"
     for i in ("damage-type-chart-sequential-truncation", "mech-resist-berry-order", "mech-full-restore-pseudo-move",
               "exp-gain-and-participation", "mech-pp-ups", "mech-stats-overwrite", "ai-trainer-ai", "mech-rng",
-              "exp-auto-learn-spec-conflict", "mech-shift-prompt", "mech-shift-entry-order"):
+              "exp-auto-learn-spec-conflict", "mech-shift-prompt", "mech-shift-entry-order",
+              "mech-weight-tier-boundary"):
         assert i in by_id
 
 

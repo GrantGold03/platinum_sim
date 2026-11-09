@@ -250,6 +250,26 @@ _ENTRIES: list[dict] = [
             "absence of a move between are the same. Recorded, not corrected (feature 023)."),
         "test_id": "sim/test/shift.test.mjs (documents the entry order; does not assert player-first)",
     },
+    {
+        "id": "mech-weight-tier-boundary",
+        "area": "mechanics",
+        "description": (
+            "Low Kick and Grass Knot power from the target's weight. Game: the first sWeightToPower limit "
+            ">= weight gives the power (100:20, 250:40, 500:60, 1000:80, 2000:100, else 120), so a weight "
+            "exactly on a limit takes the LOWER tier. Showdown: thresholds of the form weight >= limit, so a "
+            "weight exactly on a limit takes the next tier."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/battle_script.c:6815-6824 (BtlCmd_CalcWeightBasedPower); "
+            "pokeplatinum/include/data/battle/weight_to_power.h:1-8 (sWeightToPower)"),
+        "showdown_ref": "pokemon-showdown/data/moves.ts:10449-10458 (lowkick basePowerCallback); :7541 (grassknot)",
+        "resolution": "accepted",
+        "impact": (
+            "Among League Pokemon only Flint's Flareon sits on a limit (55.1 lb -> 250 hg): the game gives 40, "
+            "the engine 60. The player's model (expectimax2, greedy) and the optimizer's candidate scoring follow "
+            "the decomp (sim/variable_power.mjs, src/platsim/decomp/weights.py); the battle itself follows the "
+            "engine (feature 024)."),
+        "test_id": "sim/test/variable_power.test.mjs (the boundary case: Flareon 250 -> 40)",
+    },
 ]
 
 
