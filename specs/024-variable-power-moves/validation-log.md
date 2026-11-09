@@ -64,3 +64,33 @@ node --test test/*.test.mjs: exit 0, tests 381, pass 381
 ```
 
 **Commit 2**: `feat(024): shared variable-power helper in sim/; greedy-v1 scores Return, Grass Knot, Low Kick, Gyro Ball; weight-tier ledger entry`.
+
+## T010-T014 The optimizer offers the four moves (12:18 to 12:35 PM EST)
+
+`src/platsim/decomp/weights.py` (the Python twin of the helper: `species_weight_hg`, `weight_tier_power`, `gyro_ball_power`,
+`return_power`); `candidates.py`: `LeagueOpponent` with level/iv/nature, `variable_power` per opponent (Return 102; the opponent's
+weight tier; Gyro Ball from the member's speed at the candidate level with IV 15 / EV 85 / Hardy against the opponent's at its
+level with its iv / EV 0 / nature), `move_value(..., member_level=100)` (the level defaults to 100 so older callers and tests keep
+working; every optimizer caller passes its level), `OFFERED_VARIABLE`, `NOT_OFFERED_VARIABLE` with reasons, the additive extras in
+`member_candidates` (today's `pool`, `chosen`, setup and `ranked` prefix unchanged; extras ranked by the same key over the pool plus
+the member's variable moves, diverse among themselves), `summary()` with `variable_offered` and `extras`; `held_item_candidates`
+and `resources._slot_cost` take the level and accept the four moves as the best attack.
+
+Two slips corrected by the prefix test against the pre-feature snapshot: (1) the rewrite multiplied the value's factors in a
+different order and flipped a floating-point tie at position 174 of Rotom's ranked list; restored the exact pre-024 order, so
+fixed-power values are bit-identical; (2) a first reading blamed a small pool, which was wrong (Rotom's pool is 10, 210 combos).
+
+`tests/unit/test_variable_power.py` (5 tests): weight pins and Node parity for every League party species, tiers on both sides of
+every limit, Gyro Ball, Return; `variable_power` per opponent (Grass Knot: Rhyperior 120, Flareon 40; a slow Bronzong's Gyro Ball
+above a fast Weavile's); the not-offered list absent from every B2 list; **the additive prefix for all six B2 species** against
+`evidence/b2-candidates-main.json`. Hand check `evidence/b2-candidates-branch.txt`: every B2 member learns Return, Infernape also
+Grass Knot; 3 extras each.
+
+```
+uv run pytest -q tests/unit/test_variable_power.py: exit 0, 5 passed
+fast mode, 12:20:57 to 12:31:06 PM EST: 2 failed, 587 passed, 32 deselected, 4 xfailed in 606.63s; the two failures were pins from
+before the feature (test_optimizer_candidates: movesets <= K and every move an is_attack; test_required_hms: move_value with two
+arguments); the pin updated for the additive list, the level given a default; rerun of the four touched files: exit 0
+```
+
+**Commit 3**: `feat(024): optimizer offers Return, Grass Knot, Low Kick, Gyro Ball in an additive candidate list ...`.

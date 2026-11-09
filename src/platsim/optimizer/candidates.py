@@ -70,10 +70,13 @@ import json
 import re
 from dataclasses import dataclass, field
 from functools import cache
+from typing import NamedTuple
 
 from platsim.decomp.item_use import is_excluded_single_use
 from platsim.decomp.items import load_items, tm_moves
 from platsim.decomp.moves import load_moves
+from platsim.decomp.stats import calc_stats
+from platsim.decomp.weights import gyro_ball_power, return_power, species_weight_hg, weight_tier_power
 from platsim.legality import movesources as MS
 from platsim.optimizer.api import InvalidRequest
 from platsim.pins import DECOMP_ROOT, REPO_ROOT
@@ -116,6 +119,28 @@ HP_BERRY_EFFECT = "HOLD_EFFECT_HP_PCT_RESTORE"
 # 014: plain damage boosters, applied by the battle player's damage model (sim/damage.mjs:381-382, :639)
 POWER_UP_SE = "HOLD_EFFECT_POWER_UP_SE"  # Expert Belt: super-effective hits
 POWER_UP_BY_CLASS = {"CLASS_PHYSICAL": "HOLD_EFFECT_POWER_UP_PHYS", "CLASS_SPECIAL": "HOLD_EFFECT_POWER_UP_SPEC"}
+
+# 024: variable-power moves (data power 1) the optimizer offers, scored at the power the game computes (research R4):
+# Return at max friendship (the simulator's assumption, as legality's), Grass Knot / Low Kick from the opponent's weight
+# tier (the decomp boundary rule, decomp/weights.py), Gyro Ball from the member's speed at the candidate level (IV 15,
+# EV 85, Hardy: the team defaults) against the opponent's speed at its level (its iv, EV 0, its nature).
+FRIENDSHIP = 255
+OFFERED_VARIABLE = frozenset({"MOVE_RETURN", "MOVE_GRASS_KNOT", "MOVE_LOW_KICK", "MOVE_GYRO_BALL"})
+# Not offered, with the reason (documented in the README; asserted absent by tests/unit/test_variable_power.py).
+NOT_OFFERED_VARIABLE = {
+    "MOVE_HIDDEN_POWER": "IVs are a uniform 15 by assumption (user, 2026-10-19); its type and power would be fixed by that",
+    "MOVE_FRUSTRATION": "power 1 at friendship 255",
+    "MOVE_MAGNITUDE": "no player computes its power", "MOVE_WRING_OUT": "no player computes its power",
+    "MOVE_CRUSH_GRIP": "no player computes its power", "MOVE_PUNISHMENT": "no player computes its power",
+    "MOVE_FLAIL": "no player computes its power", "MOVE_REVERSAL": "no player computes its power",
+    "MOVE_FLING": "no player computes its power", "MOVE_TRUMP_CARD": "no player computes its power",
+    "MOVE_NATURAL_GIFT": "no player computes its power", "MOVE_PRESENT": "no player computes its power",
+    "MOVE_SPIT_UP": "no player computes its power",
+    "(fixed damage, OHKO, counters)": "not attacks for candidate scoring (data power 1, excluded by is_attack as today)",
+}
+MEMBER_IVS = {k: 15 for k in ("hp", "atk", "def", "spa", "spd", "spe")}
+MEMBER_EVS = {k: 85 for k in ("hp", "atk", "def", "spa", "spd", "spe")}
+MEMBER_NATURE = "NATURE_HARDY"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -172,17 +197,53 @@ def expectimax_self_boosts() -> dict[str, dict[str, int]]:
     return out
 
 
+class LeagueOpponent(NamedTuple):
+    species: str
+    types: tuple[str, ...]
+    weight: float
+    level: int  # 024
+    iv: int  # 024: trainers.json's single IV for every stat
+    nature: str  # 024: NATURE_*
+
+
 @cache
-def league_opponents() -> tuple[tuple[str, tuple[str, ...], float], ...]:
-    """(species, types, weight) for every mon of the five gauntlet trainers (trainers.json)."""
+def league_opponents() -> tuple[LeagueOpponent, ...]:
+    """(species, types, weight, level, iv, nature) for every mon of the five gauntlet trainers (trainers.json); the first
+    three positions as before feature 024."""
     data = json.loads(TRAINERS_JSON.read_text())["trainers"]
     by_key = {t["key"]: t for t in data}
     out = []
     for k in GAUNTLET_KEYS:
         w = CHAMPION_WEIGHT if k.startswith("champion") else 1.0
         for mon in by_key[k]["party"]:
-            out.append((mon["species"], tuple(MS.by_constant()[mon["species"]].types), w))
+            out.append(LeagueOpponent(mon["species"], tuple(MS.by_constant()[mon["species"]].types), w,
+                                      int(mon["level"]), int(mon["iv"]), mon["nature"]))
     return tuple(out)
+
+
+@cache
+def _opponent_speed(opp: LeagueOpponent) -> int:
+    base = MS.by_constant()[opp.species].base_stats
+    ivs = {k: opp.iv for k in base}
+    evs = {k: 0 for k in base}
+    return calc_stats(base, ivs, evs, opp.level, opp.nature, opp.species)["spe"]
+
+
+@cache
+def _member_speed(const_member: str, level: int) -> int:
+    base = MS.by_constant()[const_member].base_stats
+    return calc_stats(base, MEMBER_IVS, MEMBER_EVS, level, MEMBER_NATURE, const_member)["spe"]
+
+
+def variable_power(move_const: str, const_member: str, member_level: int, opp: LeagueOpponent) -> int | None:
+    """024: the game's power of an offered variable-power move against `opp`; None for every other move."""
+    if move_const not in OFFERED_VARIABLE:
+        return None
+    if move_const == "MOVE_RETURN":
+        return return_power(FRIENDSHIP)
+    if move_const in ("MOVE_GRASS_KNOT", "MOVE_LOW_KICK"):
+        return weight_tier_power(species_weight_hg(opp.species))
+    return gyro_ball_power(_member_speed(const_member, member_level), _opponent_speed(opp))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -364,15 +425,23 @@ def prune(move_consts: list[str]) -> tuple[list[str], dict[str, str]]:
     return kept, dropped
 
 
-def move_value(const_member: str, move_const: str) -> list[float]:
-    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order."""
+def move_value(const_member: str, move_const: str, member_level: int = 100) -> list[float]:
+    """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order. 024: the power is
+    the data power for fixed-power moves and the game's computed power per opponent for the offered variable-power
+    moves (`variable_power`), which is why the member's level is needed (Gyro Ball)."""
     m = load_moves()[move_const]
     sp = MS.by_constant()[const_member]
     acc = 1.0 if m.accuracy == 0 else m.accuracy / 100
     stab = STAB_WEIGHT if m.type in sp.types else 1.0
     stat = sp.base_stats["atk"] if m.category == "CLASS_PHYSICAL" else sp.base_stats["spa"]
-    base = m.power * acc * stab * stat * EFFECT_WEIGHT.get(m.effect, 1.0)
-    return [w * base * type_mult(m.type, types) for _, types, w in league_opponents()]
+    effw = EFFECT_WEIGHT.get(m.effect, 1.0)
+    out = []
+    for opp in league_opponents():
+        power = variable_power(move_const, const_member, member_level, opp)
+        # the same multiplication order as before 024, so fixed-power values are bit-identical (tie order in ranked lists)
+        base = (m.power if power is None else power) * acc * stab * stat * effw
+        out.append(opp.weight * base * type_mult(m.type, opp.types))
+    return out
 
 
 def coverage(vals: list[list[float]]) -> float:
@@ -402,9 +471,12 @@ class MemberCandidates:
     pool: list[str] = field(default_factory=list)
     pruned: dict[str, str] = field(default_factory=dict)
     scores: dict[str, float] = field(default_factory=dict)
+    variable_offered: list[str] = field(default_factory=list)  # 024: the member's legal offered variable-power moves
+    extras: int = 0  # 024: how many of `movesets` are appended variable-power sets (the last `extras` entries)
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
+                "variable_offered": list(self.variable_offered), "extras": self.extras,
                 "movesets": [list(m) for m in self.movesets],
                 "setup_moveset": list(self.setup_moveset) if self.setup_moveset else None,
                 "items": {"|".join(k): v for k, v in self.items.items()},
@@ -424,7 +496,7 @@ def _item_copies(led, const: str) -> int | str:
 
 
 def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
-                         team: tuple[str, ...] | None = None) -> list[str | None]:
+                         team: tuple[str, ...] | None = None, level: int = 100) -> list[str | None]:
     """Held items worth trying: the best HP berry, a boost for the strongest attack, and (003 FR-009)
     Leftovers when this team may hold it: a wild holder (Munchlax / Snorlax) is on the team, or a
     non-holder copy exists (post-game items rule). `team` is the six SPECIES_* of the job.
@@ -440,9 +512,9 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
                       and _item_copies(led, it.const) != 0), key=lambda it: (-it.effect_param, it.key))
     if berries:
         out.append(berries[0].key)
-    attacks = [m for m in moveset if is_attack(load_moves()[m])]
+    attacks = [m for m in moveset if is_attack(load_moves()[m]) or m in OFFERED_VARIABLE]  # 024
     if attacks:
-        best = max(attacks, key=lambda m: (sum(move_value(const_member, m)), m))
+        best = max(attacks, key=lambda m: (sum(move_value(const_member, m, level)), m))
         t = load_moves()[best].type
         effs = set(type_boost_items().get(t, []))
         boosts = [it for it in items.values() if it.hold_effect in effs and _item_copies(led, it.const) != 0
@@ -469,9 +541,9 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
     legal = legal_moves(variant, level, led)
     attacks, dropped = prune(legal)
-    scores = {m: sum(move_value(const, m)) for m in attacks}
+    scores = {m: sum(move_value(const, m, level)) for m in attacks}
     pool = sorted(attacks, key=lambda m: (-scores[m], m))[:POOL]
-    vals = {m: move_value(const, m) for m in pool}
+    vals = {m: move_value(const, m, level) for m in pool}
     size = min(4, len(pool))
     combos = []
     for combo in itertools.combinations(sorted(pool), size):
@@ -496,14 +568,40 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
             chosen = [tuple(sorted(legal)[:4])] if legal else []
     if not chosen:
         raise InvalidRequest(f"{display_name(const)}: no legal move at Lv {level}", {const: "no legal move"})
+    # 024: extra sets carrying a variable-power move, appended AFTER today's sets (FR-006, FR-006a): combos over the pool
+    # plus the member's offered variable moves, at least one variable move each, ranked by the same key, diverse among
+    # themselves only (never displacing or reordering today's sets).
+    variable = [m for m in legal if m in OFFERED_VARIABLE]
+    extras: list[tuple[str, ...]] = []
+    extra_combos: list[tuple[str, ...]] = []
+    if variable and size == 4:
+        for m in variable:
+            scores[m] = sum(move_value(const, m, level))
+            vals[m] = move_value(const, m, level)
+        wide = sorted(set(pool) | set(variable))
+        ranked_extra = []
+        for combo in itertools.combinations(wide, 4):
+            if not any(m in OFFERED_VARIABLE for m in combo):
+                continue
+            ranked_extra.append((-coverage([vals[m] for m in combo]), -sum(scores[m] for m in combo), combo))
+        ranked_extra.sort()
+        extra_combos = [c for _, _, c in ranked_extra]
+        for combo in extra_combos:
+            if all(len(set(combo) ^ set(c)) // 2 >= 2 for c in extras):
+                extras.append(combo)
+            if len(extras) >= k:
+                break
     # order each moveset by score (stable display; worker order does not matter for legality)
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
+    extras = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extras]
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
-    items = {ms: held_item_candidates(const, ms, led, team) for ms in chosen + ([setup] if setup else [])}
-    return MemberCandidates(const, variant, level, chosen, setup, items, ranked, pool, dropped,
-                            {m: scores[m] for m in pool})
+    ranked += [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extra_combos]  # 024: prefix unchanged
+    movesets = chosen + extras
+    items = {ms: held_item_candidates(const, ms, led, team, level) for ms in movesets + ([setup] if setup else [])}
+    return MemberCandidates(const, variant, level, movesets, setup, items, ranked, pool, dropped,
+                            {m: scores[m] for m in pool + variable}, variable_offered=variable, extras=len(extras))
 
 
 __all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "coverage", "display_name", "dominates",

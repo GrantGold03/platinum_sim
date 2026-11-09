@@ -198,13 +198,13 @@ def _member(spec: MemberSpec, level: int, opt, led, used: Counter,
     return choices, local, MS.move_cost(picks, led)
 
 
-def _slot_cost(species: str, move: str) -> tuple:
+def _slot_cost(species: str, move: str, level: int = 100) -> tuple:
     """How much a member loses when `move` gives way to a required HM: a modelled self-boost (a
     setup moveset the optimizer kept on purpose) only as a last resort, then the move's League
     coverage value (candidates.move_value; 0 for other status moves)."""
     mv = load_moves()[move]
     boost = 1 if C.boost_score(species, move) else 0
-    return (boost, sum(C.move_value(species, move)) if C.is_attack(mv) else 0.0)
+    return (boost, sum(C.move_value(species, move, level)) if (C.is_attack(mv) or move in C.OFFERED_VARIABLE) else 0.0)  # 024
 
 
 def place_required_hms(specs: TeamSpec, levels, led, required) -> tuple[TeamSpec | None, str | None]:
@@ -232,8 +232,8 @@ def place_required_hms(specs: TeamSpec, levels, led, required) -> tuple[TeamSpec
                 slots = [(j, m) for j, m in enumerate(s.moves) if m not in req_moves]
                 if not slots:
                     continue
-                j, m = min(slots, key=lambda jm: (_slot_cost(s.species, jm[1]), jm[0]))
-                cand = (_slot_cost(s.species, m), i, j)
+                j, m = min(slots, key=lambda jm: (_slot_cost(s.species, jm[1], lv), jm[0]))
+                cand = (_slot_cost(s.species, m, lv), i, j)
             if best is None or cand < best:
                 best = cand
         if best is None:

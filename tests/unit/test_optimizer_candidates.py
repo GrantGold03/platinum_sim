@@ -86,9 +86,10 @@ def test_member_candidates_and_full_team_validate(led):
     consts = C.resolve_species(["infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"], led)
     cands = [C.member_candidates(c, C.variants(c, led)[0], 55, led) for c in consts]
     for mc in cands:
-        assert 1 <= len(mc.movesets) <= C.K_MOVESETS and mc.ranked
+        # 024: today's sets (at most K) first, then up to K appended sets carrying a variable-power move
+        assert 1 <= len(mc.movesets) - mc.extras <= C.K_MOVESETS and len(mc.movesets) <= 2 * C.K_MOVESETS and mc.ranked
         for ms in mc.movesets:
-            assert len(ms) <= 4 and all(C.is_attack(C.load_moves()[m]) for m in ms)
+            assert len(ms) <= 4 and all(C.is_attack(C.load_moves()[m]) or m in C.OFFERED_VARIABLE for m in ms)
         assert set(mc.pruned).isdisjoint(mc.pool)
     specs = tuple(R.MemberSpec(c, "own", mc.movesets[0], mc.items[mc.movesets[0]][0]) for c, mc in zip(consts, cands))
     specs, _ = R.repair(specs, [55] * 6, led, [mc.ranked for mc in cands])
