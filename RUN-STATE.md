@@ -1,4 +1,12 @@
-# START HERE (updated 2026-11-04, 10:35 PM EST, end of session before a reboot: `main` c57629d+ clean and pushed, nothing running, no feature branch open)
+# START HERE (updated 2026-11-09, feature 024 `024-variable-power-moves` specified on its branch from `main` cf4a9ff; clarify next)
+- **Feature 024 `024-variable-power-moves` specified 2026-11-09 (`/speckit-specify`, user's paste), branch from `main` cf4a9ff in the
+  main checkout.** `specs/024-variable-power-moves/spec.md` + `checklists/requirements.md` (all pass, 0 markers). Three stories: US1
+  the screening player values Return, Grass Knot, Low Kick and Gyro Ball from one shared helper (decomp formulas; recorded results
+  byte-identical; a ledger entry for the weight-tier boundary), US2 the optimizer offers them in an additive candidate list (today's
+  sets first and unchanged), US3 the B2 quick pair on both codes with the equal-levels paired check (a supported loss blocks the
+  merge). Survey facts (2026-11-09): Showdown computes every variable move at run time; expectimax2 already models the four;
+  greedy-v1 scores power-1 moves 0; `candidates.is_attack` excludes power <= 1; the 010 record blamed candidate-list displacement
+  (K_MOVESETS 3 + diversity), not the moves. Next: `/speckit-clarify` (user runs it). Nothing is running.
 
 - **RESUME (after the reboot).** `main` is checked out in the main checkout, clean, in sync with origin (the end-of-session docs
   commit is the head). No measurement, suite or server is running; no stash. Features 019 to 023 are merged; feature 023 made
