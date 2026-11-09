@@ -1,7 +1,8 @@
-# START HERE (updated 2026-11-09, 3:10 PM EST, feature 024 closed on its branch, all gates green; merge waits for the user's go)
+# START HERE (updated 2026-11-09, 3:15 PM EST, feature 024 merged to `main` (f884bd2, fast-forward, user's go); nothing running)
 - **Feature 024 `024-variable-power-moves` closed on its branch 2026-11-09 (from `main` cf4a9ff; `main` has not moved). Gates (T020, 1:36 to 3:05 PM EST): vendored tree
   unchanged, Node 381 pass, full pytest 621 passed + 4 xfailed in 1 h 27 min; the three fingerprints changed (pre-024 checkpoints refused).
-  Merge on the user's go: `git checkout main && git merge --ff-only 024-variable-power-moves && git push`.** Built: `sim/variable_power.mjs`, greedy-v1 scoring the four moves, `decomp/weights.py`,
+  Merged to `main` 2026-11-09, 3:15 PM EST on the user's go (fast-forward to f884bd2, pushed).** Next: the FUTURE-FEATURES order
+  (exact speedups D, F, E, H; held-item groups; the v4 retune last, on Shift; plain-language output). Built: `sim/variable_power.mjs`, greedy-v1 scoring the four moves, `decomp/weights.py`,
   additive candidates (prefix proven), the screen superset (the user's decision after a first acceptance failed on screen sampling),
   ledger `mech-weight-tier-boundary`. Acceptance rerun: the first 81 screened teams identical to today's, 14 extras screened, the B2
   quick winner identical to today's (0 discordant at equal levels), unaffected teams identical. The moves are offered, not chosen on

@@ -8,8 +8,8 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 1. **Done: 023 Shift battle style** (section 3; merged to `main` 2026-11-04, Shift the default on the user's decision; the
    acceptance table is in section 3 and the README).
 2. **Exact speedups D, F, E, then H** (section 7): worth an estimated 10 to 15% together; do them right before the next planned long run.
-3. **Variable-power moves redone from the decomp** (section 1 slice 3, then section 6's Magnitude group): the only item that adds
-   moves the optimizer cannot offer today; the archived regression's cause comes first.
+3. **Done: 024 variable-power moves** (section 1 slice 3; merged to `main` 2026-11-09: Return, Grass Knot, Low Kick, Gyro Ball offered
+   additively; on B2 quick offered, not chosen). Section 6's Magnitude group stays open (needs a player that computes them).
 4. **H4+ item groups** (section 0), Choice items last (player model change).
 5. **v4 near-threshold retune** (section 7 follow-up (a)): deferred until after the last model change above, so the ladder runs once
    on the settled model (every model change moves where the deficit shows, and every player change breaks checkpoints); the ladder
