@@ -561,6 +561,202 @@ def coverage(vals: list[list[float]]) -> float:
     return sum(max(col) for col in zip(*vals)) if vals else 0.0
 
 
+# ---- 026: candidate sets by marginal coverage (spec FR-001 to FR-006; research R1 to R3) ---------------------------
+NO_LIVE_REASON = "no better option: its two strongest moves cover every League opponent"
+
+
+def marginal(move: str, moveset, vals: dict[str, list[float]]) -> float:
+    """A move's marginal contribution to a set: the set's coverage minus the coverage of the set without it."""
+    ms = list(moveset)
+    return coverage([vals[m] for m in ms]) - coverage([vals[m] for m in ms if m != move])
+
+
+def dead_moves(moveset, vals: dict[str, list[float]]) -> list[str]:
+    """The moves of a set that are never the best choice against any opponent given the set's other moves. A tie between
+    two moves (equal values everywhere, Aerial Ace and Pluck) counts for the one first by name, so only the other is dead."""
+    ms = list(moveset)
+    out = []
+    for m in ms:
+        best_somewhere = False
+        for i, v in enumerate(vals[m]):
+            if v <= 0:
+                continue
+            if all(vals[o][i] < v or (vals[o][i] == v and o > m) for o in ms if o != m):
+                best_somewhere = True
+                break
+        if not best_somewhere:
+            out.append(m)
+    return out
+
+
+def live_moves(cands: list[str], vals: dict[str, list[float]], scores: dict[str, float]) -> list[str]:
+    """Moves that are the best choice against at least one opponent given the member's two strongest moves by score."""
+    top2 = sorted(cands, key=lambda m: (-scores[m], m))[:2]
+    return [m for m in cands if m not in top2 and marginal(m, top2 + [m], vals) > 0]
+
+
+def takeover(move: str, moveset, vals: dict[str, list[float]]) -> set[int]:
+    """Opponent indexes where `move` would be the best move of `moveset` + move (strictly better than every member)."""
+    ms = [m for m in moveset if m != move]
+    out = set()
+    for i, v in enumerate(vals[move]):
+        best = max((vals[m][i] for m in ms), default=0.0)
+        if v > best:
+            out.add(i)
+    return out
+
+
+# The cost class of 025 (EFFECT_COSTS) split into two tiers for pool entry (FR-006; a refinement found on Staraptor, where the
+# single-tier rule locked Close Combat out while keeping Fly in): a TURN cost (charge turn, recharge, lock-in, delayed hit,
+# first-turn-only, sleep-only, fails-when-hit, the user faints) is a move a competent player does not click when a cost-free
+# move already hits the opponent, so it enters only for opponents no cost-free move hits at all (an immunity); a DAMAGE cost
+# (recoil, a self stat drop, crash damage) is an accepted price, so it is compared with cost-free candidates only: it enters when
+# it answers an opponent no cost-free candidate answers. Dominance (prune) keeps the single class.
+TURN_COST_EFFECTS = frozenset({
+    "BATTLE_EFFECT_DIG", "BATTLE_EFFECT_FLY", "BATTLE_EFFECT_DIVE", "BATTLE_EFFECT_BOUNCE", "BATTLE_EFFECT_SKIP_CHARGE_TURN_IN_SUN",
+    "BATTLE_EFFECT_CHARGE_TURN_DEF_UP", "BATTLE_EFFECT_CHARGE_TURN_HIGH_CRIT", "BATTLE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH",
+    "BATTLE_EFFECT_SHADOW_FORCE", "BATTLE_EFFECT_RECHARGE_AFTER", "BATTLE_EFFECT_CONTINUE_AND_CONFUSE_SELF",
+    "BATTLE_EFFECT_DOUBLE_POWER_EACH_TURN_LOCK_INTO", "BATTLE_EFFECT_HIT_IN_3_TURNS", "BATTLE_EFFECT_ALWAYS_FLINCH_FIRST_TURN_ONLY",
+    "BATTLE_EFFECT_RECOVER_DAMAGE_SLEEP", "BATTLE_EFFECT_HIT_LAST_WHIFF_IF_HIT", "BATTLE_EFFECT_LEAVE_WITH_1_HP"})
+
+
+def cost_tier(move: str) -> str | None:
+    """'turn' | 'damage' | None for a move constant (the EFFECT_COSTS class split for pool entry)."""
+    eff = load_moves()[move].effect
+    if effect_class(eff) != "cost":
+        return None
+    return "turn" if eff in TURN_COST_EFFECTS else "damage"
+
+
+def prefer_cost_free(candidates, moveset, vals, scores, cost_tier=None) -> str | None:
+    """The move to add to `moveset` (R3): the candidate with the highest marginal contribution, ties by score then name,
+    except for cost moves: a turn-cost move is allowed only for an opponent no cost-free move hits (neither a cost-free
+    candidate's takeover nor a cost-free move already in the set with a positive value), a damage-cost move only for an
+    opponent no cost-free candidate takes over; an allowed cost move is taken when its contribution is at least the best
+    cost-free candidate's. None when no allowed candidate adds coverage."""
+    tier = cost_tier or globals()["cost_tier"]
+    ms = list(moveset)
+    pos = [(m, marginal(m, ms + [m], vals)) for m in candidates if m not in ms]
+    pos = [(m, g) for m, g in pos if g > 0]
+    if not pos:
+        return None
+    key = lambda mg: (-mg[1], -scores[mg[0]], mg[0])  # noqa: E731
+    free = sorted((x for x in pos if not tier(x[0])), key=key)
+    cost = sorted((x for x in pos if tier(x[0])), key=key)
+    if not cost:
+        return free[0][0]
+    covered_cand: set[int] = set()
+    for m, _ in free:
+        covered_cand |= takeover(m, ms, vals)
+    n_opp = len(next(iter(vals.values())))
+    covered_set = {i for i in range(n_opp) if any(vals[m][i] > 0 and not tier(m) for m in ms)}
+    allowed = [(m, g) for m, g in cost
+               if takeover(m, ms, vals) - covered_cand - (covered_set if tier(m) == "turn" else set())]
+    if not free:
+        return allowed[0][0] if allowed else None
+    if allowed and allowed[0][1] >= free[0][1]:
+        return allowed[0][0]
+    return free[0][0]
+
+
+def pool_by_marginal(cands: list[str], vals, scores, size: int = POOL, cost_tier=None) -> list[str]:
+    """The pool built greedily by marginal contribution (FR-002): the first move by score; each next the one adding the most
+    coverage to the pool so far (cost preference), ties by score then name; when nothing adds coverage, the rest by score."""
+    if not cands:
+        return []
+    tier = cost_tier or globals()["cost_tier"]
+    pool = [sorted(cands, key=lambda m: (-scores[m], m))[0]]
+    while len(pool) < size and len(pool) < len(cands):
+        rest = [m for m in cands if m not in pool]
+        m = prefer_cost_free(rest, pool, vals, scores, cost_tier=tier)
+        if m is None:  # nothing allowed adds coverage: fill by score, cost-free moves before cost moves
+            m = sorted(rest, key=lambda x: (tier(x) is not None, -scores[x], x))[0]
+        pool.append(m)
+    return pool
+
+
+def _rank_key(combo, vals, scores):
+    """Coverage, then the standalone sum, then name (today's key; a marginal-sum tie-break was tried and dropped: a filler that
+    backs nothing up maximises the other moves' marginals, so it rewarded the weakest filler)."""
+    return (-coverage([vals[m] for m in combo]), -sum(scores[m] for m in combo), combo)
+
+
+def rank_sets(pool: list[str], vals, scores, size: int = 4) -> list[tuple[str, ...]]:
+    """Every `size`-move combination of the pool, best first by coverage, the standalone sum, name (FR-003)."""
+    size = min(size, len(pool))
+    return sorted(itertools.combinations(sorted(pool), size), key=lambda c: _rank_key(c, vals, scores))
+
+
+def _repaired(combo, cands, vals, scores, cost_tier=None) -> tuple[str, ...]:
+    """Replace each dead move by the legal move with the highest marginal contribution given the other moves (cost
+    preference); repeats until the set is all-live or no replacement adds coverage (each replacement raises coverage)."""
+    ms = list(combo)
+    changed = True
+    while changed:
+        changed = False
+        dead = set(dead_moves(ms, vals))
+        for i, m in enumerate(ms):
+            if m in dead:
+                others = [x for j, x in enumerate(ms) if j != i]
+                r = prefer_cost_free([c for c in cands if c not in ms], others, vals, scores, cost_tier=cost_tier)
+                if r is not None:
+                    ms[i] = r
+                    changed = True
+                    break
+    return tuple(sorted(ms))
+
+
+def filler_reason(cands, vals, scores) -> str:
+    live = live_moves(cands, vals, scores)
+    if not live:
+        return NO_LIVE_REASON
+    top2 = sorted(cands, key=lambda m: (-scores[m], m))[:2]
+    names = ", ".join(display_move(m) for m in top2 + live)
+    return f"no live replacement left: its live moves ({names}) already cover every League opponent; nothing else it learns is the best choice against any of them"
+
+
+def display_move(m: str) -> str:
+    return load_moves()[m].name if m in load_moves() else m
+
+
+def choose_sets(ranked, k: int, cands, vals, scores, cost_tier=None):
+    """(sets, one_apart, reason) (R2, revised at implementation): every ranked combo has its dead moves replaced where a live
+    legal move exists (a replacement raises coverage); the repaired sets are re-ranked by coverage; the next offered set is the
+    best one at least two moves apart from those offered, unless an all-live set one move apart has strictly higher coverage
+    (FR-004a). A set keeps a dead move only when no live replacement exists (filler, listed with `reason`); a set is never
+    dropped for a lower-coverage all-live one."""
+    repaired: list[tuple[str, ...]] = []
+    seen: set[tuple[str, ...]] = set()
+    for combo in ranked:
+        c = _repaired(combo, cands, vals, scores, cost_tier=cost_tier)
+        if c not in seen:
+            seen.add(c)
+            repaired.append(c)
+    repaired.sort(key=lambda c: _rank_key(c, vals, scores))
+    repaired = [c for c in repaired if len(c) == len(ranked[0])] if ranked else repaired
+    accepted: list[tuple[str, ...]] = []
+    one_apart: list[tuple[str, ...]] = []
+
+    def dist(c):
+        return min((len(set(c) ^ set(p)) // 2 for p in accepted), default=99)
+
+    cov = lambda c: coverage([vals[m] for m in c])  # noqa: E731
+    while len(accepted) < k:
+        best2 = next((c for c in repaired if c not in accepted and dist(c) >= 2), None)
+        best1 = next((c for c in repaired if c not in accepted and dist(c) == 1 and not dead_moves(c, vals)), None)
+        if best2 is None and best1 is None:
+            break
+        # FR-004a (option B): the one-apart all-live set replaces a two-apart set only when that set carries a dead move
+        # and the all-live set is at least as good as its live part
+        if best1 is not None and (best2 is None or (dead_moves(best2, vals) and cov(best1) >= cov(best2))):
+            accepted.append(best1)
+            one_apart.append(best1)
+        else:
+            accepted.append(best2)
+    reason = filler_reason(cands, vals, scores) if any(dead_moves(c, vals) for c in accepted) else None
+    return accepted, one_apart, reason
+
+
 def boost_score(const_member: str, move_const: str) -> float | None:
     eff = load_moves()[move_const].effect.removeprefix("BATTLE_EFFECT_")
     boosts = expectimax_self_boosts().get(eff)
@@ -590,10 +786,17 @@ class MemberCandidates:
     item_extras: dict[tuple[str, ...], str] = field(default_factory=dict)  # 025: item-conditioned extra set -> its item
     extra_kind: dict[tuple[str, ...], str] = field(default_factory=dict)  # appended set -> variable_power | accuracy_item | crit_item
     extras_by_kind: dict[str, int] = field(default_factory=dict)
+    dead_moves: dict[tuple[str, ...], list[str]] = field(default_factory=dict)  # 026: per offered base set (expected empty)
+    no_live_reason: str | None = None  # 026: set when a set with dead moves was accepted (FR-005)
+    one_apart: list[tuple[str, ...]] = field(default_factory=list)  # 026: sets accepted one move apart (FR-004a)
+    unavailable: frozenset = frozenset()  # 026: moves the team allocation took away (story 3)
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
                 "variable_offered": list(self.variable_offered), "extras": self.extras,
+                "dead_moves": {"|".join(k): v for k, v in self.dead_moves.items()},
+                "no_live_reason": self.no_live_reason, "one_apart": [list(x) for x in self.one_apart],
+                "unavailable": sorted(self.unavailable),
                 "extras_by_kind": dict(self.extras_by_kind),
                 "items_extra": {"|".join(k): v for k, v in self.items_extra.items()},
                 "item_extras": {"|".join(k): v for k, v in self.item_extras.items()},
@@ -683,29 +886,36 @@ def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
 
 
 def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int = K_MOVESETS,
-                      team: tuple[str, ...] | None = None) -> MemberCandidates:
+                      team: tuple[str, ...] | None = None, unavailable: frozenset = frozenset()) -> MemberCandidates:
     level = max(ref_level, min(o.min_level for o in variant.options(led)))
-    legal = legal_moves(variant, level, led)
+    legal = [m for m in legal_moves(variant, level, led) if m not in unavailable]
     attacks, dropped = prune(legal)
-    scores = {m: sum(move_value(const, m, level)) for m in attacks}
-    pool = sorted(attacks, key=lambda m: (-scores[m], m))[:POOL]
-    vals = {m: move_value(const, m, level) for m in pool}
+    # 026: one value table over the attacks and the offered variable-power moves; the pool by marginal contribution
+    variable = [m for m in legal if m in OFFERED_VARIABLE]
+    cands = attacks + variable
+    scores = {m: sum(move_value(const, m, level)) for m in cands}
+    vals = {m: move_value(const, m, level) for m in cands}
+    pool = pool_by_marginal(cands, vals, scores)
     size = min(4, len(pool))
-    combos = []
-    for combo in itertools.combinations(sorted(pool), size):
-        combos.append((-coverage([vals[m] for m in combo]), -sum(scores[m] for m in combo), combo))
-    combos.sort()
-    chosen: list[tuple[str, ...]] = []
-    for _, _, combo in combos:
-        if all(len(set(combo) ^ set(c)) // 2 >= 2 or size < 4 for c in chosen):
+    ranked_sets = rank_sets(pool, vals, scores, size)
+    combos = [(*_rank_key(c, vals, scores)[:2], c) for c in ranked_sets]
+    one_apart: list[tuple[str, ...]] = []
+    no_live_reason = None
+    if size == 4:
+        chosen, one_apart, no_live_reason = choose_sets(ranked_sets, k, cands, vals, scores)
+    else:
+        chosen = []
+        for combo in ranked_sets:
             if combo not in chosen:
                 chosen.append(combo)
-        if len(chosen) >= k:
-            break
+            if len(chosen) >= k:
+                break
     boosts = sorted(((boost_score(const, m), m) for m in legal if boost_score(const, m)), key=lambda x: (-x[0], x[1]))
     setup = None
     if boosts and pool:
         best3 = min(((-coverage([vals[m] for m in c]), c) for c in itertools.combinations(sorted(pool), min(3, len(pool)))))[1]
+        if len(best3) == 3:
+            best3 = _repaired(best3, cands, vals, scores)
         setup = tuple(best3) + (boosts[0][1],)
     if not chosen:
         if boosts:
@@ -715,23 +925,15 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     if not chosen:
         raise InvalidRequest(f"{display_name(const)}: no legal move at Lv {level}", {const: "no legal move"})
     # 024: extra sets carrying a variable-power move, appended AFTER today's sets (FR-006, FR-006a): combos over the pool
-    # plus the member's offered variable moves, at least one variable move each, ranked by the same key, diverse among
-    # themselves only (never displacing or reordering today's sets).
-    variable = [m for m in legal if m in OFFERED_VARIABLE]
+    # plus the member's offered variable moves, at least one variable move each, ranked by the 026 key, diverse among
+    # themselves only and not already offered (026: a variable move may already be in a base set).
     extras: list[tuple[str, ...]] = []
     extra_combos: list[tuple[str, ...]] = []
     if variable and size == 4:
-        for m in variable:
-            scores[m] = sum(move_value(const, m, level))
-            vals[m] = move_value(const, m, level)
         wide = sorted(set(pool) | set(variable))
-        ranked_extra = []
-        for combo in itertools.combinations(wide, 4):
-            if not any(m in OFFERED_VARIABLE for m in combo):
-                continue
-            ranked_extra.append((-coverage([vals[m] for m in combo]), -sum(scores[m] for m in combo), combo))
-        ranked_extra.sort()
-        extra_combos = [c for _, _, c in ranked_extra]
+        ranked_extra = [c for c in itertools.combinations(wide, 4) if any(m in OFFERED_VARIABLE for m in c)]
+        ranked_extra.sort(key=lambda c: _rank_key(c, vals, scores))
+        extra_combos = [c for c in ranked_extra if c not in set(chosen)]
         for combo in extra_combos:
             if all(len(set(combo) ^ set(c)) // 2 >= 2 for c in extras):
                 extras.append(combo)
@@ -744,7 +946,6 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     extra_kind: dict[tuple[str, ...], str] = {c: "variable_power" for c in extras}
     if size == 4:
         mv = load_moves()
-        cands = attacks + variable
         conditioning = []
         if any(0 < mv[m].accuracy < 100 for m in cands):
             it = _item_for_effect(ACCURACY_UP_EFFECT, led)
@@ -756,13 +957,12 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
                 conditioning.append(("crit_item", CRITRATE_UP_EFFECT, it))
         existing = set(chosen) | set(extras)
         for kind, effect, item in conditioning:
-            sc_i = {m: sum(move_value(const, m, level, item_effect=effect)) for m in cands}
-            pool_i = sorted(cands, key=lambda m: (-sc_i[m], m))[:POOL]
-            vals_i = {m: move_value(const, m, level, item_effect=effect) for m in pool_i}
-            ranked_i = sorted((-coverage([vals_i[m] for m in c]), -sum(sc_i[m] for m in c), c)
-                              for c in itertools.combinations(sorted(pool_i), 4))
+            vals_i = {m: move_value(const, m, level, item_effect=effect) for m in cands}
+            sc_i = {m: sum(v) for m, v in vals_i.items()}
+            pool_i = pool_by_marginal(cands, vals_i, sc_i)  # 026: the same pool and ranking rule under the item valuation
+            ranked_i = rank_sets(pool_i, vals_i, sc_i, 4)
             picked: list[tuple[str, ...]] = []
-            for _, _, c in ranked_i:
+            for c in ranked_i:
                 if c in existing or any(len(set(c) ^ set(p)) // 2 < 2 for p in picked):
                     continue
                 picked.append(c)
@@ -781,7 +981,8 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     extra_kind = {tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))): kind for c, kind in extra_kind.items()}
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
-    ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
+    ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for *_, c in combos[:RANKED]]
+    dead = {tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))): dead_moves(c, vals) for c in chosen}
     ranked += [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extra_combos]  # 024: prefix unchanged
     movesets = chosen + extras + [c for c, _, _ in item_sets]
     items = {ms: held_item_candidates(const, ms, led, team, level) for ms in chosen + extras + ([setup] if setup else [])}
@@ -797,9 +998,13 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     return MemberCandidates(const, variant, level, movesets, setup, items, ranked, pool, dropped,
                             {m: scores[m] for m in pool + variable + [m for c, _, _ in item_sets for m in c] if m in scores},
                             variable_offered=variable, extras=len(extras) + len(item_sets),
-                            items_extra=items_extra, item_extras=item_extras, extra_kind=extra_kind, extras_by_kind=by_kind)
+                            items_extra=items_extra, item_extras=item_extras, extra_kind=extra_kind, extras_by_kind=by_kind,
+                            dead_moves=dead, no_live_reason=no_live_reason,
+                            one_apart=[tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in one_apart],
+                            unavailable=frozenset(unavailable))
 
 
-__all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "coverage", "display_name", "dominates",
+__all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "choose_sets", "coverage", "dead_moves", "display_name", "dominates",
+           "cost_tier", "filler_reason", "live_moves", "marginal", "pool_by_marginal", "prefer_cost_free", "rank_sets", "takeover",
            "held_item_candidates", "league_opponents", "legal_moves", "member_candidates", "prune",
            "resolve_species", "type_chart", "type_mult", "unavailable_reason", "variants"]

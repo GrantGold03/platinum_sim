@@ -36,16 +36,20 @@ def marginal(move: str, moveset, vals: dict) -> float:
     return full - rest
 
 
-def dead_moves_of(mc, vals: dict | None = None) -> dict[str, list[str]]:
-    """{'|'.join(set): [moves with zero marginal contribution]} for every offered set (own computation from move_value)."""
+def dead_moves_of(mc, vals: dict | None = None, extras: bool = False) -> dict[str, list[str]]:
+    """{'|'.join(set): [dead moves]} for the offered base sets (the dead-move rule's scope, FR-004), or with `extras`
+    for the appended sets (024 variable-power and 025 item-conditioned: the pool and ranking rule only, FR-007). Own
+    computation from move_value, tie-aware like candidates.dead_moves."""
     from platsim.optimizer import candidates as C
     out = {}
     v = vals if vals is not None else {}
-    for ms in mc.movesets:
+    n_base = len(mc.movesets) - getattr(mc, "extras", 0)
+    sets = mc.movesets[n_base:] if extras else mc.movesets[:n_base]
+    for ms in sets:
         for m in ms:
             if m not in v:
                 v[m] = C.move_value(mc.species, m, mc.ref_level)
-        out["|".join(ms)] = [m for m in ms if marginal(m, ms, v) <= 0]
+        out["|".join(ms)] = C.dead_moves(ms, v) if hasattr(C, "dead_moves") else [m for m in ms if marginal(m, ms, v) <= 0]
     return out
 
 
@@ -151,13 +155,23 @@ def attribute(snap: dict, mc) -> list[dict]:
                 out.append({"kind": "pool", "cause": "crit_term", "moves": [m], "note": "left the pool"})
             else:
                 out.append({"kind": "pool", "cause": "defect", "moves": [m], "note": "left the pool although it adds more than an entrant"})
+    # the filler tail: positions after the last pool member that added coverage are filled by score (cost-free first)
+    pos_gain = []
+    for i, m in enumerate(new_pool):
+        pos_gain.append(coverage([pv[x] for x in new_pool[:i + 1]]) - coverage([pv[x] for x in new_pool[:i]]))
+    last_gain = max((i for i, g in enumerate(pos_gain) if g > 0), default=0)
+    # fillers rank by score among cost-free moves first (candidates.pool_by_marginal), so only cost-free leavers compete
+    tier = getattr(C, "cost_tier", lambda m: None)
+    leaver_scores = [snap.get("scores", {}).get(m, 0.0) for m in old_pool if m not in new_pool and m not in dom and not tier(m)]
     for m in entrants:
         if gains[m] > 0:
             out.append({"kind": "pool", "cause": "marginal_pool", "moves": [m], "note": f"entered the pool: gain {gains[m]:.0f}"})
+        elif new_pool.index(m) > last_gain and mc.scores.get(m, 0.0) >= min(leaver_scores, default=0.0):
+            out.append({"kind": "pool", "cause": "marginal_pool", "moves": [m], "note": "entered the pool as filler by score"})
         elif left_dominated:
             out.append({"kind": "pool", "cause": "dominated", "moves": [m], "note": "entered the pool after a dominated move left"})
         else:
-            out.append({"kind": "pool", "cause": "defect", "moves": [m], "note": "entered the pool with zero gain"})
+            out.append({"kind": "pool", "cause": "defect", "moves": [m], "note": "entered the pool with zero gain outside the filler tail"})
     if [m for m in old_pool if m in new_pool] != [m for m in new_pool if m in old_pool]:
         out.append({"kind": "pool", "cause": "marginal_pool" if old_pool != new_pool else "crit_term",
                     "note": "order among surviving pool moves"})
@@ -174,11 +188,27 @@ def attribute(snap: dict, mc) -> list[dict]:
     # items of surviving sets
     items_extra = getattr(mc, "items_extra", {})
     item_extras = getattr(mc, "item_extras", {})
+    n_base_old = len(old_sets) - extras_old
+    conditioning = set(item_extras.values()) | {snap["items"]["|".join(ms)][0] for ms in old_sets[n_base_old:]
+                                                 if "|".join(ms) in snap.get("items", {}) and snap["items"]["|".join(ms)]}
+    conditioning.discard(None)
     for key, old_items in snap.get("items", {}).items():
         ms = tuple(key.split("|"))
         if ms not in mc.items:
             continue
         new_items = list(mc.items[ms])
+        was_conditioned = ms in {tuple(x) for x in old_sets[n_base_old:]} and old_items and old_items[0] in conditioning
+        if was_conditioned or ms in item_extras:
+            # the set's kind may differ between the codes (a lens set on main, a base or claw set on the branch): the
+            # usual items must match once the conditioning item is removed from both lists
+            usual_old = [i for i in old_items if i not in conditioning]
+            usual_new = [i for i in new_items if i not in conditioning]
+            if usual_new[:len(usual_old)] != usual_old:
+                out.append({"kind": "items", "cause": "defect", "set": list(ms), "note": f"usual items changed: {old_items} -> {new_items}"})
+            elif (old_items[:1] if was_conditioned else []) != ([item_extras[ms]] if ms in item_extras else []):
+                out.append({"kind": "items", "cause": "appended", "set": list(ms),
+                            "note": f"the set's kind changed: {old_items[:1] if was_conditioned else 'base'} -> {item_extras.get(ms, 'base')}"})
+            continue
         if ms in item_extras:
             # a set the crit term re-ranked out of today's list (attributed above) and the item valuation re-added as an
             # item-conditioned extra: its items are the conditioning item first, then its usual list (FR-001a)

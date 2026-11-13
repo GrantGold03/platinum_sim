@@ -10,7 +10,7 @@
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/026-marginal-coverage-sets/validation-log.md` (before-values: `platsim.version.sim_code_hash()`,
+- [x] T001 Start `specs/026-marginal-coverage-sets/validation-log.md` (before-values: `platsim.version.sim_code_hash()`,
       `platsim_code_hash()`, the ledger version from a result; `git diff --stat main -- src sim tests pyproject.toml` must be
       empty) and write the scripts under `specs/026-marginal-coverage-sets/scripts/`: `acceptance.py` (025's with `EVIDENCE =
       runs/026-evidence`, `IDENT_SEED = "026-ident"`, no `NEW_ITEMS` table; the snapshot records per member and per set the dead
@@ -22,7 +22,7 @@
       moves lie in the new pool and that removed a dead move or is in `mc.one_apart`; `dead_table(snapshot, mcs)` before/after;
       everything else as 025), `equal_levels.py` (master `026-equal|B2`), `hand_check.py` (025's plus dead moves per set,
       `no_live_reason`, `one_apart`, and the allocation record of the B2 team at level 48 via `run._build_cands`)
-- [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/026-marginal-coverage-sets/scripts/acceptance.py --side main --workers 16 > runs/026-evidence/acceptance-main.txt 2> runs/026-evidence/acceptance-main.err; echo exit=$?`
+- [x] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/026-marginal-coverage-sets/scripts/acceptance.py --side main --workers 16 > runs/026-evidence/acceptance-main.txt 2> runs/026-evidence/acceptance-main.err; echo exit=$?`
       → `runs/026-evidence/b2-main`, `ident-main/{ref,b2main}`, `specs/026-marginal-coverage-sets/evidence/candidates-main.json`
       (36 members with dead moves per set) and the candidate-generation time for the six B2 species on today's code (SC-006,
       printed by the script); copy `acceptance-main.txt/json`, the winner's `result.json`/`team.txt` to `evidence/pre/`; record
@@ -34,14 +34,14 @@
 
 ## Phase 2: Foundational (definitions every story uses)
 
-- [ ] T003 `src/platsim/optimizer/candidates.py` (contracts/candidates-marginal.md, data-model.md): `marginal(move, moveset,
+- [x] T003 `src/platsim/optimizer/candidates.py` (contracts/candidates-marginal.md, data-model.md): `marginal(move, moveset,
       vals) -> float`, `dead_moves(moveset, vals) -> list[str]`, `live_moves(cands, vals, scores) -> list[str]` (best against at
       least one opponent given the top two by score), `takeover(move, moveset, vals) -> set[int]` (opponent indexes where it
       becomes the best), `_prefer_cost_free(candidates, moveset, vals, scores) -> str | None` (R3: the best cost move only if its
       takeover has an opponent no cost-free candidate takes over, else the best cost-free; ties by score then name; `effect_class`
       from 025); `MemberCandidates` fields `dead_moves: dict[tuple, list[str]]`, `no_live_reason: str | None`, `one_apart:
       list[tuple]`, `unavailable: frozenset[str]`, in `summary()`
-- [ ] T004 [P] `tests/unit/test_marginal_coverage.py` part 1 (synthetic `vals` over three opponents): `marginal` and `dead_moves`
+- [x] T004 [P] `tests/unit/test_marginal_coverage.py` part 1 (synthetic `vals` over three opponents): `marginal` and `dead_moves`
       on a redundant pair, `live_moves` with a weaker other-type move that is best against one opponent, `takeover`, the cost
       preference (a cost move with the same takeover loses; a cost move with an extra opponent wins); run and record
 
@@ -56,37 +56,37 @@ filler-move note in the report.
 
 **Independent Test**: the named controls on the six B2 species at level 48; the synthetic member; the report round trip.
 
-- [ ] T005 [US1] `candidates.py` `pool_by_marginal(cands, vals, scores, size=POOL)` (R1): first by score; each next by the largest
+- [x] T005 [US1] `candidates.py` `pool_by_marginal(cands, vals, scores, size=POOL)` (R1): first by score; each next by the largest
       `coverage(pool + [m]) - coverage(pool)` with the cost preference, ties by score then name; `tests/unit/test_marginal_coverage.py`
       part 2: a synthetic member whose ten highest scores are one type while a weaker other-type move is best somewhere (the
       marginal pool holds it, the score pool does not); Solar Beam-like cost move not taken when a cost-free move has the same
       takeover, taken when nothing cost-free covers its opponent; run and record
-- [ ] T006 [US1] `candidates.py` `rank_sets(pool, vals, scores, size=4)` key `(-coverage, -Σ marginal, -Σ score, combo)` and
+- [x] T006 [US1] `candidates.py` `rank_sets(pool, vals, scores, size=4)` key `(-coverage, -Σ marginal, -Σ score, combo)` and
       `choose_sets(ranked, k, cands, vals, scores) -> (sets, one_apart, no_live_reason)` (R2: per combo replace each dead move by
       the legal move with the highest marginal given the other three with the cost preference, re-checking; pass 1 all-live and
       two apart; pass 2 all-live one apart; pass 3 sets with dead moves two apart with the reason "no better option: the two
       strongest moves cover every League opponent"; duplicates skipped; deterministic); `tests/unit/test_marginal_coverage.py`
       part 3 on synthetic values: five live moves give three all-live sets with `one_apart` non-empty; nothing live gives
       today's sets and the reason; a dead move replaced from outside the pool; run and record
-- [ ] T007 [US1] `candidates.py` `member_candidates(const, variant, ref_level, led, k=K_MOVESETS, team=None, unavailable=frozenset())`:
+- [x] T007 [US1] `candidates.py` `member_candidates(const, variant, ref_level, led, k=K_MOVESETS, team=None, unavailable=frozenset())`:
       `legal` minus `unavailable`; `cands = attacks + variable` with one `scores`/`vals` table; `pool = pool_by_marginal(...)`;
       `ranked = rank_sets(...)`; `chosen, one_apart, reason = choose_sets(...)`; the setup set from the best three by coverage with
       the dead-move replacement among them; the 024 variable extras over the marginal pool ∪ variable moves (at least one variable
       move, not already offered, diverse among themselves) and the 025 item-conditioned extras with a marginal pool under the item
       valuation and `rank_sets`; `dead_moves` per offered set; fields filled; `extra_item_candidates`, `held_item_candidates`,
       `prune`, `dominates`, `move_value` unchanged
-- [ ] T008 [US1] `tests/unit/test_marginal_coverage.py` part 4, real members (B2 species at level 48 with `team=`): Infernape no
+- [x] T008 [US1] `tests/unit/test_marginal_coverage.py` part 4, real members (B2 species at level 48 with `team=`): Infernape no
       Fire Punch in any offered set, no dead move, Grass Knot in an offered set, three sets with `one_apart` non-empty, Solar Beam
       not offered; Floatzel and Weavile: Brick Break in the pool and in an offered set, no dead move; Rotom: sets equal the
       pre-feature snapshot's (`evidence/candidates-main.json`), `no_live_reason` set; Garchomp and Staraptor: sets equal the
       snapshot's; every B2 member: `extras_by_kind` sums to `extras`, each 025 item-conditioned set starts with its item; run
       and record
-- [ ] T009 [US1] Update the pinned tests: `tests/unit/test_optimizer_candidates.py` (the set bounds, any pinned set), `tests/unit/test_variable_power.py`
+- [x] T009 [US1] Update the pinned tests: `tests/unit/test_optimizer_candidates.py` (the set bounds, any pinned set), `tests/unit/test_variable_power.py`
       (the attributed comparison against `specs/024-variable-power-moves/evidence/b2-candidates-main.json` imports
       `specs/026-marginal-coverage-sets/scripts/attribution.py` by path, registered in `sys.modules`; 0 defects; the extras
       assertions per kind), `tests/unit/test_h4_items.py` (item-conditioned extras on B2 still hold; pins that named a set
       updated to the rule); run `uv run pytest -q tests/unit/test_marginal_coverage.py tests/unit/test_optimizer_candidates.py tests/unit/test_variable_power.py tests/unit/test_h4_items.py -m "not battle_sim"` (exit code kept) and record
-- [ ] T010 [US1] Hand check: `uv run python specs/026-marginal-coverage-sets/scripts/hand_check.py > runs/026-evidence/b2-candidates-branch.txt`
+- [x] T010 [US1] Hand check: `uv run python specs/026-marginal-coverage-sets/scripts/hand_check.py > runs/026-evidence/b2-candidates-branch.txt`
       (sets, pools, dead moves per set, `one_apart`, `no_live_reason`, the candidate-generation time for the six B2 species
       against T002's, SC-006; copy to `evidence/`); read it against the spec's Overview table and record; then the fast suite `uv run pytest -q -m "not battle_sim" > runs/026-evidence/fast.log 2>&1; echo exit=$?`;
       Commit 2 `feat(026): candidate pool and sets by marginal coverage; dead-move rule with the one-apart relaxation; cost preference; extras under the same rule`; push

@@ -83,10 +83,10 @@ def _attribution():
     import importlib.util
     import sys
 
-    path = pins.REPO_ROOT / "specs" / "025-h4-wide-lens-razor-claw" / "scripts" / "attribution.py"
-    spec = importlib.util.spec_from_file_location("attribution_025", path)
+    path = pins.REPO_ROOT / "specs" / "026-marginal-coverage-sets" / "scripts" / "attribution.py"  # 026: adds marginal_pool
+    spec = importlib.util.spec_from_file_location("attribution_026", path)
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["attribution_025"] = mod
+    sys.modules["attribution_026"] = mod
     spec.loader.exec_module(mod)
     return mod
 
