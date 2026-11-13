@@ -1,0 +1,52 @@
+start 2026-11-13 1:39:29 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [51, 52, 52, 52, 53, 53] clear 0.9380 [0.9133, 0.956] n 500 attempts 2 wall 428.5 s new-item members {}
+screen: main 95 teams, branch 170 (extras {'accuracy_item': 15, 'crit_item': 17, 'item_deviation': 43, 'total': 89, 'variable_power': 14}); overlap 0 of 95
+diff B2quick|SPECIES_GARCHOMP|own: {'crit_term': 124}
+diff B2quick|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B2quick|SPECIES_STARAPTOR|own: identical
+diff B2quick|SPECIES_ROTOM|own: identical
+diff B2quick|SPECIES_FLOATZEL|own: {'crit_term': 6, 'dominated': 123, 'defect': 2}
+DEFECT B2quick|SPECIES_FLOATZEL|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_WATERFALL', 'MOVE_SURF', 'MOVE_ICE_BEAM', 'MOVE_RETURN'], 'note': "today's items changed: ['sitrus_berry', 'splash_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'splash_plate', 'expert_belt']"}
+DEFECT B2quick|SPECIES_FLOATZEL|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_WATERFALL', 'MOVE_BRINE', 'MOVE_ICE_PUNCH', 'MOVE_RETURN'], 'note': "today's items changed: ['sitrus_berry', 'splash_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'splash_plate', 'expert_belt']"}
+diff B2quick|SPECIES_WEAVILE|own: {'crit_term': 129, 'defect': 1}
+DEFECT B2quick|SPECIES_WEAVILE|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_ICE_PUNCH', 'MOVE_FAINT_ATTACK', 'MOVE_RETURN', 'MOVE_AERIAL_ACE'], 'note': "today's items changed: ['sitrus_berry', 'icicle_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'icicle_plate', 'expert_belt']"}
+diff B1|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B1|SPECIES_STARAPTOR|own: identical
+diff B1|SPECIES_LUXRAY|own: identical
+diff B1|SPECIES_GARCHOMP|own: {'crit_term': 124, 'defect': 2}
+DEFECT B1|SPECIES_GARCHOMP|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_EARTHQUAKE', 'MOVE_DRAGON_RUSH', 'MOVE_STONE_EDGE', 'MOVE_FIRE_BLAST'], 'note': "today's items changed: ['sitrus_berry', 'earth_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'earth_plate', 'expert_belt']"}
+DEFECT B1|SPECIES_GARCHOMP|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_EARTHQUAKE', 'MOVE_DRAGON_CLAW', 'MOVE_ROCK_SLIDE', 'MOVE_FIRE_BLAST'], 'note': "today's items changed: ['sitrus_berry', 'earth_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'earth_plate', 'expert_belt']"}
+diff B1|SPECIES_GYARADOS|own: {'dominated': 122}
+diff B1|SPECIES_GARDEVOIR|own: identical
+diff B2|SPECIES_GARCHOMP|own: {'crit_term': 124}
+diff B2|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B2|SPECIES_STARAPTOR|own: identical
+diff B2|SPECIES_ROTOM|own: identical
+diff B2|SPECIES_FLOATZEL|own: {'crit_term': 6, 'dominated': 123, 'defect': 2}
+DEFECT B2|SPECIES_FLOATZEL|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_WATERFALL', 'MOVE_SURF', 'MOVE_ICE_BEAM', 'MOVE_RETURN'], 'note': "today's items changed: ['sitrus_berry', 'splash_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'splash_plate', 'expert_belt']"}
+DEFECT B2|SPECIES_FLOATZEL|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_WATERFALL', 'MOVE_BRINE', 'MOVE_ICE_PUNCH', 'MOVE_RETURN'], 'note': "today's items changed: ['sitrus_berry', 'splash_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'splash_plate', 'expert_belt']"}
+diff B2|SPECIES_WEAVILE|own: {'crit_term': 128}
+diff B3|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B3|SPECIES_GARCHOMP|own: {'crit_term': 124, 'defect': 2}
+DEFECT B3|SPECIES_GARCHOMP|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_EARTHQUAKE', 'MOVE_DRAGON_RUSH', 'MOVE_STONE_EDGE', 'MOVE_FIRE_BLAST'], 'note': "today's items changed: ['sitrus_berry', 'earth_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'earth_plate', 'expert_belt']"}
+DEFECT B3|SPECIES_GARCHOMP|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_EARTHQUAKE', 'MOVE_DRAGON_CLAW', 'MOVE_ROCK_SLIDE', 'MOVE_FIRE_BLAST'], 'note': "today's items changed: ['sitrus_berry', 'earth_plate', 'expert_belt'] -> ['wide_lens', 'sitrus_berry', 'earth_plate', 'expert_belt']"}
+diff B3|SPECIES_GYARADOS|own: {'dominated': 122}
+diff B3|SPECIES_LUCARIO|own: {'crit_term': 37}
+diff B3|SPECIES_CHATOT|own: {'crit_term': 1}
+diff B3|SPECIES_STARAPTOR|own: identical
+diff B4|SPECIES_ROSERADE|own: identical
+diff B4|SPECIES_BLISSEY|own: identical
+diff B4|SPECIES_GLISCOR|own: {'dominated': 122, 'crit_term': 65}
+diff B4|SPECIES_MILOTIC|own: {'crit_term': 122}
+diff B4|SPECIES_BRONZONG|own: identical
+diff B4|SPECIES_LUCARIO|own: {'crit_term': 37}
+diff B5|SPECIES_TORTERRA|own: {'crit_term': 45}
+diff B5|SPECIES_MAGNEZONE|own: identical
+diff B5|SPECIES_CLEFABLE|own: identical
+diff B5|SPECIES_LUMINEON|own: {'dominated': 123, 'crit_term': 1}
+diff B5|SPECIES_GALLADE|own: {'crit_term': 116, 'defect': 1}
+DEFECT B5|SPECIES_GALLADE|own: {'kind': 'items', 'cause': 'defect', 'set': ['MOVE_CLOSE_COMBAT', 'MOVE_ICE_PUNCH', 'MOVE_LEAF_BLADE', 'MOVE_PSYCHO_CUT'], 'note': "today's items changed: ['sitrus_berry', 'fist_plate', 'expert_belt'] -> ['razor_claw', 'sitrus_berry', 'fist_plate', 'expert_belt']"}
+diff B5|SPECIES_SPIRITOMB|own: identical
+equal levels at [51, 52, 52, 52, 53, 53]: n 2000 A(branch) 0.9230 B(main) 0.8855 only A 209 / only B 134 p 6.06e-05 verdict A; winners' expected avg final level branch 52.79 vs main 52.79 (diff -0.00); defects 10; FR-010 pass False
+end 2026-11-13 1:54:13 PM EST
+exit=1

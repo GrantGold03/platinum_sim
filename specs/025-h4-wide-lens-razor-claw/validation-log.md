@@ -117,3 +117,60 @@ notes the appended-option rule (T012). `EvaluationReport.from_dict` unchanged: a
 uv run pytest -q tests/unit/test_reports.py -m "not battle_sim"                              → 18 passed, exit 0
 uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py -m "not battle_sim"   → 24 passed, exit 0
 ```
+
+## T019, T020 Branch side, run 1 (1:39:29 to 1:54:13 PM EST, alone; `runs/025-evidence/acceptance-run1.txt`, exit 1)
+
+`acceptance.py --side branch --workers 16 --runs 2000` on 1f894e5:
+
+- B2 quick on the branch (`b2-branch`): same six species, levels [51, 52, 52, 52, 53, 53] (main [51, 52, 52, 53, 52, 53]: Rotom
+  and Floatzel swap a level), clear 0.9380 [0.9133, 0.956] (n 500, 2 attempts), expected average final level 52.79 (main
+  52.79), wall 428.5 s (main 380.4 s). **No member holds Wide Lens or Razor Claw** (the items are offered, not chosen on this
+  team). The winner differs from main's on three members by the crit term's re-rank: Garchomp takes its setup set (Swords Dance
+  for Aerial Ace), Floatzel Brine / Water Pulse for Blizzard / Ice Fang, Weavile Shadow Claw / X-Scissor for Avalanche / Brick Break.
+- Screen: main 95 teams (81 + 14 extras), branch 170 (81 + 89 extras: variable_power 14, accuracy_item 15, crit_item 17,
+  item_deviation 43); **overlap 0 of 95**: Floatzel's and Weavile's first sets changed under the crit term, every team carries
+  both, so no screened team equals a main one by spec JSON (FR-003 expects the lists to differ; reported, not a gate).
+- Equal levels at [51, 52, 52, 52, 53, 53], 2,000 pairs, expectimax2-v4: branch 0.9230 vs main 0.8855, only-branch 209 /
+  only-main 134, p 6.06e-05, **verdict A (branch better)**; mean final level 52.79 vs 52.81; level diff 0.00.
+- Identity evaluations (`ident-branch/{ref,b2main}` vs `ident-main`): both **identical** once the volatile fields are removed
+  (`sim_code_hash`, `platsim_code_hash`, `repo_commit`, `repo_dirty`, `divergence_ledger_version`, `divergences`,
+  `provenance.divergence_ledger_file_version`, `provenance.worker.divergence_ledger_version`, `provenance.member_defaults`).
+  Found offline after the run: the script defined `compare_identity()` but never called it (an omission in my adaptation of
+  024's script); fixed for run 2, which prints both rows and folds them into the pass rule.
+- Attributed diff over the 36 snapshot members: 16 identical; the rest dominated (Floatzel, Gyarados, Gliscor, Lumineon: Dive
+  or Dig) or crit_term; **10 DEFECT lines, all of one shape**: a set the crit term re-ranked out of today's list (already
+  attributed) that the item-conditioned valuation re-added as a lens or claw extra, whose items are now `[item] + today's`; the
+  helper's items rule compared today's items as a prefix and called the leading item a change. Not a code defect: the sets'
+  usual items follow the conditioning item exactly as FR-001a specifies. The helper now attributes such a set as `appended`
+  ("re-added as a wide_lens set") and still flags any other item change; recomputed offline over all 36 members: 0 defects
+  (Floatzel 2, Weavile 1, B1/B3 Garchomp 2 each, Gallade 1 appended).
+- FR-010 on run 1: verdict A, level diff 0.00, identity identical, defects 10 (helper) → `pass False` by the rule as run.
+  Run 2 follows with the helper and script fixed, no `src/` change (same commit 1f894e5), so the measurements are expected to
+  reproduce exactly (seeded).
+
+## T020 Branch side, run 2 (1:56:49 to 2:11:56 PM EST, alone; `runs/025-evidence/acceptance.txt`, exit 0; copies in `evidence/acceptance/`)
+
+Same commit 1f894e5, the helper and the script fixed (no `src/` change). Every measurement reproduced run 1 exactly
+(seeded): B2 quick winner, levels, clear 0.9380, the screen counts and overlap, the equal-levels row (0.9230 vs 0.8855, p
+6.06e-05, verdict A, diff 0.00). Identity rows printed and identical; defects 0. **FR-010 pass True.**
+
+| Measure | main (3a91eac code) | branch (1f894e5) |
+|---|---|---|
+| B2 quick winner levels | [51, 52, 52, 53, 52, 53] | [51, 52, 52, 52, 53, 53] |
+| clear rate [95% CI] (n 500) | 0.9300 [0.9042, 0.9492] | 0.9380 [0.9133, 0.956] |
+| expected average final level | 52.79 | 52.79 |
+| members holding Wide Lens or Razor Claw | none | none |
+| screened teams (cap 81 + extras) | 95 (14 variable-power) | 170 (14 variable-power, 15 lens sets, 17 claw sets, 43 item deviations) |
+| screen overlap with main's list | | 0 of 95 (Floatzel's and Weavile's first sets re-ranked by the crit term) |
+| equal levels [51, 52, 52, 52, 53, 53], 2,000 pairs | 0.8855 | 0.9230 (only-branch 209, only-main 134, p 6.06e-05, verdict A) |
+| identity evaluations ref / b2main | | identical without volatile fields |
+| attributed diff, 36 members | | 14 identical; dominated, crit_term, appended elsewhere; 0 defects |
+
+Reading: the two items are offered on every B2 member (lens sets where an attack can miss, claw sets everywhere, and each
+base set with either item), screened (89 extras beyond the cap) and **not chosen** by the B2 quick screen; the winner's
+differences from main's come from the crit term's re-rank (Garchomp's setup set, Floatzel's and Weavile's high-crit moves) and
+the branch team is better at equal levels. The wall grew from 380 to 432 s (the larger screen). SC-002 (at least 17 members
+with extras reviewed): all 36 snapshot members carry item-conditioned extras where the rule allows; reviewed through the
+attributed diff and the B2 hand check.
+
+## T021 FR-010 gate: pass; continue.

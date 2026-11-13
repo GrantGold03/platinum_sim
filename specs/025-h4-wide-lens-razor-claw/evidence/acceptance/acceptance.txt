@@ -1,0 +1,44 @@
+start 2026-11-13 1:56:49 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [51, 52, 52, 52, 53, 53] clear 0.9380 [0.9133, 0.956] n 500 attempts 2 wall 431.8 s new-item members {}
+identity ref: identical (removed: ['divergence_ledger_version', 'divergences', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+identity b2main: identical (removed: ['divergence_ledger_version', 'divergences', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+screen: main 95 teams, branch 170 (extras {'accuracy_item': 15, 'crit_item': 17, 'item_deviation': 43, 'total': 89, 'variable_power': 14}); overlap 0 of 95
+diff B2quick|SPECIES_GARCHOMP|own: {'crit_term': 124}
+diff B2quick|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B2quick|SPECIES_STARAPTOR|own: identical
+diff B2quick|SPECIES_ROTOM|own: identical
+diff B2quick|SPECIES_FLOATZEL|own: {'crit_term': 6, 'dominated': 123, 'appended': 2}
+diff B2quick|SPECIES_WEAVILE|own: {'crit_term': 129, 'appended': 1}
+diff B1|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B1|SPECIES_STARAPTOR|own: identical
+diff B1|SPECIES_LUXRAY|own: identical
+diff B1|SPECIES_GARCHOMP|own: {'crit_term': 124, 'appended': 2}
+diff B1|SPECIES_GYARADOS|own: {'dominated': 122}
+diff B1|SPECIES_GARDEVOIR|own: identical
+diff B2|SPECIES_GARCHOMP|own: {'crit_term': 124}
+diff B2|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B2|SPECIES_STARAPTOR|own: identical
+diff B2|SPECIES_ROTOM|own: identical
+diff B2|SPECIES_FLOATZEL|own: {'crit_term': 6, 'dominated': 123, 'appended': 2}
+diff B2|SPECIES_WEAVILE|own: {'crit_term': 128}
+diff B3|SPECIES_INFERNAPE|own: {'crit_term': 1}
+diff B3|SPECIES_GARCHOMP|own: {'crit_term': 124, 'appended': 2}
+diff B3|SPECIES_GYARADOS|own: {'dominated': 122}
+diff B3|SPECIES_LUCARIO|own: {'crit_term': 37}
+diff B3|SPECIES_CHATOT|own: {'crit_term': 1}
+diff B3|SPECIES_STARAPTOR|own: identical
+diff B4|SPECIES_ROSERADE|own: identical
+diff B4|SPECIES_BLISSEY|own: identical
+diff B4|SPECIES_GLISCOR|own: {'dominated': 122, 'crit_term': 65}
+diff B4|SPECIES_MILOTIC|own: {'crit_term': 122}
+diff B4|SPECIES_BRONZONG|own: identical
+diff B4|SPECIES_LUCARIO|own: {'crit_term': 37}
+diff B5|SPECIES_TORTERRA|own: {'crit_term': 45}
+diff B5|SPECIES_MAGNEZONE|own: identical
+diff B5|SPECIES_CLEFABLE|own: identical
+diff B5|SPECIES_LUMINEON|own: {'dominated': 123, 'crit_term': 1}
+diff B5|SPECIES_GALLADE|own: {'crit_term': 116, 'appended': 1}
+diff B5|SPECIES_SPIRITOMB|own: identical
+equal levels at [51, 52, 52, 52, 53, 53]: n 2000 A(branch) 0.9230 B(main) 0.8855 only A 209 / only B 134 p 6.06e-05 verdict A; winners' expected avg final level branch 52.79 vs main 52.79 (diff -0.00); defects 0; identity ok; FR-010 pass True
+end 2026-11-13 2:11:56 PM EST
+exit=0

@@ -200,6 +200,11 @@ def main(argv=None) -> int:
     else:
         main_row = winner_row(EVIDENCE / "b2-main")
         out["b2_main"] = main_row
+        # FR-008: the two unaffected teams evaluate identically on both codes once the volatile fields are removed
+        out["identity"] = compare_identity()
+        for name, row in out["identity"].items():
+            print(f"identity {name}: {'identical' if row['identical_without_volatile'] else 'DIFFERS ' + str(row['differing_keys'])}"
+                  f" (removed: {sorted(row['removed_branch'])})", flush=True)
         # FR-003 (025): the capped list follows today's rule from the base options; report the overlap with the main run
         sm = json.loads((EVIDENCE / "b2-main" / "state.json").read_text())["stages"]["screen"]
         sb = json.loads((b2 / "state.json").read_text())["stages"]["screen"]
@@ -238,11 +243,12 @@ def main(argv=None) -> int:
         out["equal_levels"] = eqr
         level_diff = out["b2"]["expected_avg_final_level"] - main_row["expected_avg_final_level"]
         out["level_diff_branch_minus_main"] = round(level_diff, 3)
-        out["pass"] = eqr["verdict"] != "B" and level_diff <= 1.0 and n_defect == 0
+        ident_ok = all(r["identical_without_volatile"] for r in out["identity"].values())
+        out["pass"] = eqr["verdict"] != "B" and level_diff <= 1.0 and n_defect == 0 and ident_ok
         print(f"equal levels at {eqr['levels']}: n {eqr['n']} A(branch) {eqr['a_rate']:.4f} B(main) {eqr['b_rate']:.4f} "
               f"only A {eqr['a_only']} / only B {eqr['b_only']} p {eqr['p_value']:.3g} verdict {eqr['verdict']}; "
               f"winners' expected avg final level branch {out['b2']['expected_avg_final_level']:.2f} vs main "
-              f"{main_row['expected_avg_final_level']:.2f} (diff {level_diff:+.2f}); defects {n_defect}; FR-010 pass {out['pass']}", flush=True)
+              f"{main_row['expected_avg_final_level']:.2f} (diff {level_diff:+.2f}); defects {n_defect}; identity {'ok' if ident_ok else 'DIFFERS'}; FR-010 pass {out['pass']}", flush=True)
     out["end"] = eastern_now()
     (EVIDENCE / f"acceptance-{a.side}.json").write_text(json.dumps(out, indent=1))
     print(f"end {out['end']}", flush=True)

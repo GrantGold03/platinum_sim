@@ -107,11 +107,21 @@ def attribute(snap: dict, mc) -> list[dict]:
         out.append({"kind": "ranked", "cause": "crit_term", "note": "order among the same combos"})
     # items of surviving sets
     items_extra = getattr(mc, "items_extra", {})
+    item_extras = getattr(mc, "item_extras", {})
     for key, old_items in snap.get("items", {}).items():
         ms = tuple(key.split("|"))
         if ms not in mc.items:
             continue
         new_items = list(mc.items[ms])
+        if ms in item_extras:
+            # a set the crit term re-ranked out of today's list (attributed above) and the item valuation re-added as an
+            # item-conditioned extra: its items are the conditioning item first, then its usual list (FR-001a)
+            if new_items[0] != item_extras[ms] or new_items[1:1 + len(old_items)] != list(old_items):
+                out.append({"kind": "items", "cause": "defect", "set": list(ms),
+                            "note": f"item-conditioned set's items not item + today's: {old_items} -> {new_items}"})
+            else:
+                out.append({"kind": "items", "cause": "appended", "set": list(ms), "note": f"re-added as a {item_extras[ms]} set"})
+            continue
         if new_items[:len(old_items)] != list(old_items):
             out.append({"kind": "items", "cause": "defect", "set": list(ms), "note": f"today's items changed: {old_items} -> {new_items}"})
         extra = new_items[len(old_items):]

@@ -108,7 +108,9 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   - **Held items the optimizer offers** (per moveset; each limited copy goes to one member): the best
     HP-restoring berry, the type-boost item for the strongest attack's type, Leftovers (when allowed),
     Expert Belt, and Wise Glasses or Muscle Band to match the strongest attack's category (014; Expert Belt and
-    Wise Glasses have 1 copy each, Muscle Band none). Items are picked by hold effect from the decomp. A held
+    Wise Glasses have 1 copy each, Muscle Band none); then **Wide Lens** (accuracy x1.1, unlimited copies) for a set
+    with an attack that can miss and **Razor Claw** (+1 critical-hit stage, 2 copies; Weavile's evolution uses one)
+    for any set with an attack (025; Scope Lens has no pre-Champion copy). Items are picked by hold effect from the decomp. A held
     item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
     White Herb, Mental Herb, Power Herb, Berry Juice).
   - **TMs are single-use.** Each TM has as many copies as the game gives before the Champion. Shop
@@ -117,7 +119,8 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     (HP, status, faints). PP carries over, except that Leppa Berries can be farmed.
   - Every member has **IV 15, EV 85 in each stat, a neutral nature (Hardy) and maximum friendship**:
     the average Pokemon a player has, not a bred or trained one (constitution v1.5.0). NPC trades and
-    gifts use the values the game fixes for them. **No PP Ups**: every move has base PP, on both sides.
+    gifts use the values the game fixes for them. Every report states these assumptions in its provenance
+    (`member_defaults`, with the members the game fixes differently; 025). **No PP Ups**: every move has base PP, on both sides.
   - Level-up moves are **auto-learned as in the game** when a member has fewer than 4 moves.
     Otherwise the prompt is declined. Evolution is always declined.
   - Abilities: when there are two, both are tested and the better one is kept. A tie keeps the
@@ -618,6 +621,38 @@ built from today's options only, so its first 81 teams are exactly today's, and 
 deviations (14 teams on B2 quick, about 7% more screening). On the rerun the first 81 screened teams are identical to today's, the
 winner is **the same team, moves, items and levels** as today's (0 discordant pairs at equal levels), and the two unaffected teams
 evaluate identically on both codes: on this team the four moves are offered and not chosen. Recorded results are unchanged.
+
+Feature 025 (2026-11-13, `specs/025-h4-wide-lens-razor-claw/`, the first H4 held-item group): the optimizer **offers Wide
+Lens and Razor Claw**, chosen by hold effect (`HOLD_EFFECT_ACCURACY_UP`, `HOLD_EFFECT_CRITRATE_UP`) with a pre-Champion copy
+(Wide Lens unlimited; Razor Claw 2, one of which Weavile's evolution consumes; Scope Lens 0, so never offered). The battle
+player already modelled both (hit chance x1.1; +1 crit stage). Three changes to candidate generation, all additive to the
+item lists but not to the move lists: (1) **every move's value carries a critical-hit term**, 1 + P(crit) from the game's stage
+table (`battle_lib.c` `sCriticalStageRates`: 1/16, 1/8, 1/4, 1/3, 1/2; a crit doubles damage), so a high-crit move (Stone Edge,
+Slash, Night Slash, Shadow Claw) is worth 1/16 more than its power alone said and some sets re-rank; (2) **choosing an item
+re-evaluates the member's moves under it**: for the lens the attacks are re-valued with accuracy x1.1 (capped at 100), so
+Fire Blast's penalty against Flamethrower shrinks, for the claw with the extra crit stage; a pool and four-move sets are
+ranked under that valuation exactly as today's are, and up to three sets that differ from today's are appended per item as
+item-conditioned extra sets, each paired with its item (the sets are the next-best under the item, so one may contain no
+move the item affects); (3) the **dominance rule that drops strictly worse moves is widened** from "same type, category,
+accuracy, priority, more power, plain loser" to: same type and category, at least as good on power, accuracy, priority, PP
+and effect, strictly better on one, where the effect axis has a cost class (charge and recharge turns, recoil, self stat
+drops, lock-ins, crash damage, Explosion and the like: a move with a cost loses the axis to one without; two different
+secondary effects are incomparable). On the benchmark teams this drops Dig under Earthquake, Dive under Waterfall and Take Down
+under Rock Climb (the three pairs the dominance assessment found) and keeps Fire Blast vs Flamethrower, Close Combat vs
+Brick Break and Thunderbolt vs Discharge; because PP is an axis, Cut no longer drops Tackle. A self stat drop is a cost by
+the user's decision and lasts only until the member switches; the player's model resets every stage on a switch (pinned by
+`sim/test/switch_reset.test.mjs`). The screen's capped list is built from today's base options; every appended option (the
+024 variable-power sets, the item-conditioned sets, and each base set with Wide Lens or Razor Claw) is screened beyond the cap
+as a single-slot deviation of the baseline, counted by kind in the screen stage (`extras_screened`). Every report's provenance
+gains `member_defaults` (the average-Pokemon assumptions). Checkpoints from before this feature do not resume.
+**Acceptance (`specs/025-h4-wide-lens-razor-claw/validation-log.md` T019 to T021, 2026-11-13).** B2 quick on both codes: the
+same six species; no member holds Wide Lens or Razor Claw (offered, screened as 89 extra teams beyond the 81-team cap, not
+chosen); the branch winner differs on three members by the crit term's re-rank and is better at equal levels (0.923 vs 0.886
+on 2,000 paired gauntlets, p 6e-5) at the same expected average final level (52.79); the two unaffected teams evaluate
+identically on both codes; every difference between the pre-feature candidate lists and the branch's over 36 benchmark members
+is attributed to a dominated move, the crit term or an appended set or item (0 unexplained). The first run's 10 "defect" lines
+were a gap in the attribution helper (a set the crit term re-ranked out and the item valuation re-added), fixed and rerun with
+identical measurements.
 
 Measured run times:
 

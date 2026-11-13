@@ -1,0 +1,65 @@
+Garchomp @ Sitrus Berry
+Ability: Sand Veil
+Level: 51
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Earthquake
+- Dragon Claw
+- Stone Edge
+- Swords Dance
+
+Infernape @ Wise Glasses
+Ability: Blaze
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Fire Blast
+- Flamethrower
+- Close Combat
+- Fire Punch
+
+Staraptor @ Sky Plate
+Ability: Intimidate
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Pluck
+- Close Combat
+- Giga Impact
+- U-turn
+
+Rotom @ Expert Belt
+Ability: Levitate
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Thunderbolt
+- Shadow Ball
+- Thunder
+- Ominous Wind
+
+Floatzel @ Splash Plate
+Ability: Swift Swim
+Level: 53
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Waterfall
+- Ice Beam
+- Brine
+- Water Pulse
+
+Weavile @ Sitrus Berry
+Ability: Pressure
+Level: 53
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Ice Punch
+- Night Slash
+- Shadow Claw
+- X-Scissor

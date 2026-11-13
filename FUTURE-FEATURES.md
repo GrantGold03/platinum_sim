@@ -36,20 +36,25 @@ Built from the decomp and `main`, not from the 007-010 archive.
 - **H3** (feature 014, branch `014-damage-boost-items`, built and checked 2026-10-29; **merged to `main` 2026-10-29**):
   the optimizer offers the damage boosters chosen by hold effect (Expert Belt, Wise Glasses; Muscle Band has no
   pre-Champion copy). B2 at equal levels: branch team clears 0.8195 vs 0.7650 (McNemar p 1.0e-5).
+- **H4 Wide Lens and Razor Claw** (feature 025, branch `025-h4-wide-lens-razor-claw`, built 2026-11-13): both offered by
+  hold effect with copies; the crit term in every move value; item-conditioned extra sets (choosing an item re-evaluates the
+  member's moves under it); the `dominates` ride-along below landed here (PP axis, effect cost class; Earthquake > Dig,
+  Waterfall > Dive, Rock Climb > Take Down; Cut no longer drops Tackle); `provenance.member_defaults`. Refinement left open:
+  an item-conditioned extra set may contain no move the item affects (it is the next-best set under the item's valuation);
+  a "must contain a missable move" filter for the lens sets was not specified.
 - **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
-  (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome, Wide
-  Lens, King's Rock / Razor Fang, Razor Claw, Shell Bell, then Lum Berry and the resist berries. Life Orb has no
+  (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome,
+  King's Rock / Razor Fang, Shell Bell, then Lum Berry and the resist berries. Life Orb has no
   pre-Champion copy. Reusable checks: `specs/014-damage-boost-items/scripts/` (B1-B5 candidate snapshot, B2
   equal-levels comparison), plus feature 024's candidate snapshot and prefix test (`specs/024-variable-power-moves/`)
   and its acceptance protocol (B2 quick on both codes, equal levels, identity evaluations). **Rules from the dominance
   assessment (2026-11-13, `.specify/assessments/dominance-list/decision.md`)**: the berry group offers **Lum Berry only**
   among the status-cure berries (it dominates Cheri, Chesto, Pecha, Rawst, Aspear and Persim: a superset cure on the same
   single-use trigger; stated and tested); identical items (King's Rock and Razor Fang; a type booster and its incense) are
-  one option with a copy count, not two; and whichever H4 feature first touches the candidate lists carries the ride-along
-  widening of `dominates` (PP and an effect cost class, three positive pairs and the negative controls, the 024 prefix test
-  re-snapshotted). Order within H4 to be chosen by the player work each group needs: Wide Lens (accuracy) and Shell Bell
-  (drain) touch no damage formula; Metronome and King's Rock / Razor Fang need the player to track consecutive use and
-  flinch odds; the Choice items last. Items tied to status moves (Light Clay, weather
+  one option with a copy count, not two; and the ride-along widening of `dominates` **landed in feature 025** (the 024 prefix
+  test became an attributed comparison through `specs/025-h4-wide-lens-razor-claw/scripts/attribution.py`). Order within the
+  remaining H4 groups by the player work each needs: Shell Bell (drain) touches no damage formula; Metronome and King's Rock /
+  Razor Fang need the player to track consecutive use and flinch odds; the Choice items last. Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
 - Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
   walking partner) are treated as always visible; the partner condition is therefore not stated with the
@@ -362,3 +367,7 @@ confirmed by the research stage:
   positive pairs and the negative controls (Fire Blast vs Flamethrower, Close Combat vs Brick Break, two different secondaries),
   with the 024 prefix test re-snapshotted; expected effect five pool slots and one chosen set on the benchmark, the B2 quick
   winner unchanged. Not carried: a general classification engine, cross-type dominance, item dominance beyond the Lum rule.
+  **Landed in feature 025 (2026-11-13)**: `candidates.dominance_axes`/`dominates` with the PP axis and `EFFECT_COSTS` (28
+  effect constants with reasons); the three pairs drop on B2 (Garchomp and Infernape's Dig, Floatzel's Dive, Garchomp's Take
+  Down); PP as an axis un-drops Cut over Tackle (recorded, not tuned around); the 024 prefix test became an attributed
+  comparison (dominated / crit_term / appended / defect) through `specs/025-h4-wide-lens-razor-claw/scripts/attribution.py`.
