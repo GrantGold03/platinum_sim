@@ -1,4 +1,8 @@
-# START HERE (updated 2026-11-09, 3:15 PM EST, feature 024 merged to `main` (f884bd2, fast-forward, user's go); nothing running)
+# START HERE (updated 2026-11-13, feature 024 merged; dominance-list assessment closed (kill, rules carried into H4); H4 is next, specify text not yet drafted; nothing running)
+- **Assessment `dominance-list` closed 2026-11-13 (`.specify/assessments/dominance-list/`, verdict kill as a standalone feature)**:
+  a read-only probe found 17 strictly dominated attacks (three pairs) over 803 on the benchmark, 1 in a chosen set, no optimizer time
+  at stake; the Lum-only berry rule and a `dominates` ride-along are recorded in FUTURE-FEATURES section 0 (H4+) and section 8.
+  **Next: H4 (the first held-item group); the user asked for no specify draft yet.** `main` d75b5d5 plus this docs commit.
 - **Feature 024 `024-variable-power-moves` closed on its branch 2026-11-09 (from `main` cf4a9ff; `main` has not moved). Gates (T020, 1:36 to 3:05 PM EST): vendored tree
   unchanged, Node 381 pass, full pytest 621 passed + 4 xfailed in 1 h 27 min; the three fingerprints changed (pre-024 checkpoints refused).
   Merged to `main` 2026-11-09, 3:15 PM EST on the user's go (fast-forward to f884bd2, pushed).** Next: the FUTURE-FEATURES order

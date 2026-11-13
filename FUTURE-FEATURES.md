@@ -10,7 +10,8 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 2. **Exact speedups D, F, E, then H** (section 7): worth an estimated 10 to 15% together; do them right before the next planned long run.
 3. **Done: 024 variable-power moves** (section 1 slice 3; merged to `main` 2026-11-09: Return, Grass Knot, Low Kick, Gyro Ball offered
    additively; on B2 quick offered, not chosen). Section 6's Magnitude group stays open (needs a player that computes them).
-4. **H4+ item groups** (section 0), Choice items last (player model change).
+4. **H4+ item groups** (section 0; the dominance assessment's rules apply: Lum only among status-cure berries, identical items
+   as one option, the `dominates` ride-along), Choice items last (player model change). **Next up (user, 2026-11-13).**
 5. **v4 near-threshold retune** (section 7 follow-up (a)): deferred until after the last model change above, so the ladder runs once
    on the settled model (every model change moves where the deficit shows, and every player change breaks checkpoints); the ladder
    must include a threshold team. Until then `--player-policy expectimax2-v2` is the workaround for runs whose levels must be right.
@@ -39,7 +40,16 @@ Built from the decomp and `main`, not from the 007-010 archive.
   (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome, Wide
   Lens, King's Rock / Razor Fang, Razor Claw, Shell Bell, then Lum Berry and the resist berries. Life Orb has no
   pre-Champion copy. Reusable checks: `specs/014-damage-boost-items/scripts/` (B1-B5 candidate snapshot, B2
-  equal-levels comparison). Items tied to status moves (Light Clay, weather
+  equal-levels comparison), plus feature 024's candidate snapshot and prefix test (`specs/024-variable-power-moves/`)
+  and its acceptance protocol (B2 quick on both codes, equal levels, identity evaluations). **Rules from the dominance
+  assessment (2026-11-13, `.specify/assessments/dominance-list/decision.md`)**: the berry group offers **Lum Berry only**
+  among the status-cure berries (it dominates Cheri, Chesto, Pecha, Rawst, Aspear and Persim: a superset cure on the same
+  single-use trigger; stated and tested); identical items (King's Rock and Razor Fang; a type booster and its incense) are
+  one option with a copy count, not two; and whichever H4 feature first touches the candidate lists carries the ride-along
+  widening of `dominates` (PP and an effect cost class, three positive pairs and the negative controls, the 024 prefix test
+  re-snapshotted). Order within H4 to be chosen by the player work each group needs: Wide Lens (accuracy) and Shell Bell
+  (drain) touch no damage formula; Metronome and King's Rock / Razor Fang need the player to track consecutive use and
+  flinch odds; the Choice items last. Items tied to status moves (Light Clay, weather
   rocks, Chesto Berry) wait for the status-move work (007's version was reverted; not on `main`, no item yet).
 - Follow-up found in H1: objects hidden when a map loads and shown only by a gated script (Amity Square's
   walking partner) are treated as always visible; the partner condition is therefore not stated with the
@@ -335,3 +345,20 @@ confirmed by the research stage:
   leading the most (+0.85 over the others' mean). **Follow-ons**: (a) the lead named in every output and the rule documented (go,
   small); (b) no confirmation-stage lead check now; reopen if a future optimizer-built team shows a held-out gain, e.g. by adding a
   cheap first-half-of-confirmation lead screen as a report-only column.
+
+- **Dominated moves and items list** (user, 2026-11-13; assessed the same day, `.specify/assessments/dominance-list/`, verdict
+  **kill as a standalone feature**, the useful parts carried into existing work). Research was a read-only probe on `main`
+  d75b5d5 (`probe.py`, `probe-output.txt` beside the assessment): over the 30 B1 to B5 benchmark members, 803 legal attacks;
+  today's R8 rule drops 14; a strict rule (same type and category, power / accuracy / priority / PP at least as good, the effect
+  compared by a cost class, one axis strictly better) finds **17 more, all three pairs: Earthquake over Dig (9), Waterfall over
+  Dive (5), Rock Climb over Take Down (3)**; 5 of them reach a ten-move pool and **1 reaches a chosen set** (Lumineon's Dive, B5).
+  Candidate generation is 3.2 s for all 30 members and the screen is a fixed 81 teams, so the stated motive (optimizer time) is
+  absent; the strong player already prices charge turns and recoil in battle. Items: King's Rock = Razor Fang and each type
+  booster = its incense are ties; the only strict dominance among offerable items is Lum Berry over each single-status berry
+  (a superset cure, same trigger), which arises only when H4 offers those berries. Decision: not worth two days, a judgement
+  table over effects and a checkpoint-breaking hash change for three pairs. **Carried forward**: (1) the H4 berry group offers
+  Lum only (rule stated and tested); (2) the next feature that touches candidate lists widens `dominates` with PP and a small
+  effect cost class (charge turns, recharge, recoil, self stat drops, crash on miss, lock-in, delayed hit), pinned by the three
+  positive pairs and the negative controls (Fire Blast vs Flamethrower, Close Combat vs Brick Break, two different secondaries),
+  with the 024 prefix test re-snapshotted; expected effect five pool slots and one chosen set on the benchmark, the B2 quick
+  winner unchanged. Not carried: a general classification engine, cross-type dominance, item dominance beyond the Lum rule.
