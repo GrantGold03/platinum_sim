@@ -174,3 +174,33 @@ with extras reviewed): all 36 snapshot members carry item-conditioned extras whe
 attributed diff and the B2 hand check.
 
 ## T021 FR-010 gate: pass; continue.
+
+## T023 Gates (2:12:57 to 3:57:23 PM EST, nothing else running, on cb05abe)
+
+Outputs in `runs/025-evidence/gates.txt` (copy `evidence/gates.txt`), `node.log`, `full.log` (slowest-25 table in
+`evidence/full-durations.txt`):
+
+```
+git diff --stat main -- pokemon-showdown: 0 lines (the vendored engine untouched)
+git diff --stat main -- sim: sim/test/switch_reset.test.mjs only (+56; the sim code unchanged)
+sim_code_hash after:     sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d  (= T001)
+platsim_code_hash after: sha256:047562351ac92cdec4042061850daaea072437bdc2bc5dffd2c21c4eda867142  (was eb92dee2...: pre-025 checkpoints are refused)
+divergence_ledger_version after: sha256:feb2a48ef2e1dd08  (= T001)
+(cd sim && node --test test/*.test.mjs): tests 384, pass 384, fail 0, exit 0 (381 + the 3 switch-reset tests)
+uv run pytest -q --durations=25 (2:15:37 to 3:57:23 PM EST): 634 passed, 4 xfailed, 1 warning in 6102.96s (1:41:42), exit 0
+```
+
+The suite grew from 621 to 634 passed (the 12 H4 tests and the member-defaults report tests). **All gates green on the final
+code; the feature is closed on its branch. Merge on the user's go.**
+
+## T024 Close
+
+Closing commit `docs(025): gates recorded; feature closed on its branch`. Merge: `git checkout main && git merge --ff-only
+025-h4-wide-lens-razor-claw && git push` (`main` at 3a91eac has not moved).
+
+Follow-up found during the user's review of the B2 winner (not caused by 025; main's winner has the same Infernape set):
+Infernape's second set carries Flamethrower and Fire Punch as dead moves (never the best choice against any League opponent
+given Fire Blast and Close Combat), because the pool is the ten highest standalone scores and coverage ties break on the score
+sum; on the B2 team Garchomp takes the only Earthquake and Stone Edge TMs, so the repair step gives Infernape that set. A probe
+showed a marginal-contribution tie-break alone changes nothing (every leftover pool move contributes zero); the pool must be
+built by marginal contribution. Specify text drafted for the next feature (FUTURE-FEATURES section 6).

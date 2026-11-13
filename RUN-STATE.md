@@ -1,16 +1,18 @@
-# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) built and accepted on its branch; gates next, then merge on the user's go)
+# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) closed on its branch, all gates green; merge on the user's go)
 - **Feature 025 `025-h4-wide-lens-razor-claw` built 2026-11-13 on its branch from `main` 3a91eac (main checkout).** Commits
   fda56c9 (pre-feature evidence), a8f7792 (candidates: crit term, item-conditioned move value, Wide Lens and Razor Claw with
   item-conditioned extra sets, widened dominance rule, screen kinds, switch-reset Node test), 1f894e5 (`provenance.member_defaults`),
   then Commit 4 (acceptance and docs). **Acceptance run 2 (1:56 to 2:12 PM EST) FR-010 pass**: B2 quick same species, no member
   holds a new item, branch better at equal levels (0.923 vs 0.886, p 6e-5), level diff 0, identity rows identical, attributed diff
   0 defects over 36 members (run 1 had 10 helper-side "defects": a re-added item-conditioned set; helper fixed, rerun identical).
-  Evidence `runs/025-evidence/` (local), copies `specs/025-h4-wide-lens-razor-claw/evidence/`. **Next: T023 gates** (vendored
-  diff empty, `sim` diff only `sim/test/`, hashes: sim and ledger unchanged, platsim changed; Node suite; full pytest about 1 h 30
-  min), T024 closing commit, then the merge on the user's go: `git checkout main && git merge --ff-only 025-h4-wide-lens-razor-claw
+  Evidence `runs/025-evidence/` (local), copies `specs/025-h4-wide-lens-razor-claw/evidence/`. **Gates (T023, 2:12:57 to 3:57:23 PM EST): vendored diff empty, `sim` diff only the new test, sim hash and
+  ledger version unchanged, platsim hash changed, Node 384 pass, full pytest 634 passed + 4 xfailed in 1 h 41 min. Closed with the
+  docs commit. Next: the merge on the user's go: `git checkout main && git merge --ff-only 025-h4-wide-lens-razor-claw
   && git push`. Traps found: `report/provenance.py` must not import `candidates` (circular through `optimizer.api` → `evaluate`);
   Weavile's evolution consumes a Razor Claw copy; Earthquake's data effect is `DOUBLE_DAMAGE_DIG` (secondary, not plain); the
-  acceptance script's identity comparison must be called (it was defined and unused in run 1).
+  acceptance script's identity comparison must be called (it was defined and unused in run 1). **After the merge: the next feature
+  is the marginal-coverage candidate fix (FUTURE-FEATURES section 6, specify text drafted 2026-11-13 in the session; the user pastes
+  it on a new branch from `main`).** Nothing is running.
 - **Assessment `dominance-list` closed 2026-11-13 (`.specify/assessments/dominance-list/`, verdict kill as a standalone feature)**:
   a read-only probe found 17 strictly dominated attacks (three pairs) over 803 on the benchmark, 1 in a chosen set, no optimizer time
   at stake; the Lum-only berry rule and a `dominates` ride-along are recorded in FUTURE-FEATURES section 0 (H4+) and section 8.

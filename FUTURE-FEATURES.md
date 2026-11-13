@@ -190,6 +190,19 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
 
 ## 6. Smaller follow-ups
 
+- **Candidate sets by marginal coverage: no dead fourth move** (user, 2026-11-13, found reviewing 025's B2 winner; specify
+  text drafted the same day, next feature after 025 merges). Infernape's second set is Fire Blast / Flamethrower / Close Combat /
+  Fire Punch: Flamethrower and Fire Punch are dead (never the best choice against any League opponent given the other two),
+  because the pool is the ten highest standalone scores (five redundant Fire and Fighting moves) and coverage ties break on the
+  score sum. Probe on B2 at level 48: dead moves in Infernape's, Rotom's, Floatzel's and Weavile's sets; a marginal-contribution
+  tie-break alone changes nothing (every leftover pool move contributes zero); a pool built greedily by marginal contribution
+  changes Infernape (Solar Beam enters for Whiscash; Grass Knot should be preferred, no charge turn), Floatzel and Weavile (Brick
+  Break enters), leaves Garchomp and Staraptor unchanged, and cannot help Rotom (nothing it learns is ever best beyond
+  Thunderbolt and Shadow Ball; to be listed with the reason). The user-conditioned cross-category dominance alternative (power ×
+  the member's own attacking stat) was offered and not chosen. Related limitation: on the B2 team Garchomp takes the only
+  Earthquake and Stone Edge TMs, so Infernape's first set cannot be built and the repair step gives it its second set (team-level
+  TM allocation; separate).
+
 - Magnitude, Wring Out, Crush Grip, Punishment (and Flail, Reversal, Fling, Trump Card, Natural Gift, Present, Spit Up; feature 024's not-offered list): offer them once the strong player computes their power
   (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5). On `main` no variable-power
   move is offered at all (`optimizer/candidates.py`: power 1 excluded; 010 was reverted).

@@ -1,0 +1,16 @@
+=== gates start 2:12:57 PM EST on cb05abe
+diff main -- pokemon-showdown lines=0
+diff main -- sim:
+ sim/test/switch_reset.test.mjs | 56 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+hashes after: sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d sha256:047562351ac92cdec4042061850daaea072437bdc2bc5dffd2c21c4eda867142
+ledger version after: sha256:feb2a48ef2e1dd08
+before (T001): sim sha256:e968ff0f... platsim sha256:eb92dee2... ledger sha256:feb2a48ef2e1dd08 -> sim and ledger must be equal, platsim different
+node exit=0
+# tests 384
+# pass 384
+# fail 0
+full start 2:15:37 PM EST
+full exit=0
+634 passed, 4 xfailed, 1 warning in 6102.96s (1:41:42)
+=== gates end 3:57:23 PM EST
