@@ -1,4 +1,12 @@
-# START HERE (updated 2026-11-13, feature 024 merged; dominance-list assessment closed (kill, rules carried into H4); H4 is next, specify text not yet drafted; nothing running)
+# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) specified on its branch from `main` 3a91eac; clarify next)
+- **Feature 025 `025-h4-wide-lens-razor-claw` specified 2026-11-13 (`/speckit-specify`, user's paste), branch from `main` 3a91eac in
+  the main checkout.** `specs/025-h4-wide-lens-razor-claw/spec.md` + `checklists/requirements.md` (all pass, 0 markers). Three stories:
+  US1 Wide Lens (ACCURACY_UP, unlimited) and Razor Claw (CRITRATE_UP, 2 copies) offered additively by hold effect, the R8 dominance
+  widening (PP + effect cost class, the three positive pairs and the negative controls), the screen's capped list kept today's with
+  every appended option beyond the cap; US2 `provenance.member_defaults` (Hardy, IV 15, EV 85, friendship 255, constitution v1.5.0);
+  US3 the 024 acceptance protocol on both codes. Survey facts (2026-11-13): the player already models Wide Lens (hit chance) and
+  Razor Claw (crit); Scope Lens / Focus Band / Muscle Band / Choice Band have 0 pre-Champion copies; Shell Bell / King's Rock /
+  Razor Fang 1, Razor Claw 2; Zoom Lens param 20 unmodelled. Next: `/speckit-clarify` (user runs it). Nothing is running.
 - **Assessment `dominance-list` closed 2026-11-13 (`.specify/assessments/dominance-list/`, verdict kill as a standalone feature)**:
   a read-only probe found 17 strictly dominated attacks (three pairs) over 803 on the benchmark, 1 in a chosen set, no optimizer time
   at stake; the Lum-only berry rule and a `dominates` ride-along are recorded in FUTURE-FEATURES section 0 (H4+) and section 8.
