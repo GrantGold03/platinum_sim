@@ -83,3 +83,17 @@ uv run pytest -q tests/unit/test_marginal_coverage.py tests/unit/test_optimizer_
 
 Fast suite (`runs/026-evidence/fast.log`, 6:03:10 to 6:13:07 PM EST): `617 passed, 32 deselected, 4 xfailed, 1 warning in
 594.96s`, exit 0.
+
+## T011, T012 The filler-move note (6:25 to 6:40 PM EST)
+
+`EvaluationReport.member_notes` (default empty; pre-026 files read with none); `team_txt.team_text` appends a `Notes:` block
+after the Showdown export and `legality.models.import_team` skips it (round trip tested); `evaluate.summary_text` prints
+`note: ...` lines; the xlsx **Evaluation** sheet gets one "Member note" row per note (the plan's Team-sheet column was dropped:
+the Team headers are the published spreadsheet contract of feature 001 and two tests pin them); `csv_report.member_note`
+matches a member by key or display name. `run._member_notes` builds the lines from the prune stage's candidate summaries
+(`dead_moves` of the chosen set and `no_live_reason`): "Rotom: Thunder, Ominous Wind are filler: no better option: its two
+strongest moves cover every League opponent".
+
+```
+uv run pytest -q tests/unit/test_reports.py tests/unit/test_marginal_coverage.py tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py -m "not battle_sim"   → 59 passed, exit 0
+```

@@ -112,6 +112,20 @@ def _member_row(
     ]
 
 
+def _norm(s: str) -> str:
+    return "".join(ch for ch in s.lower() if ch.isalnum())
+
+
+def member_note(report: EvaluationReport, species: str, name_of: NameFn = _identity) -> str:
+    """026 (FR-009a): the report's filler-move line for `species` (matched on the name before the colon, by key or display
+    name, case and punctuation ignored), or ''."""
+    keys = {_norm(species), _norm(name_of("species", species))}
+    for n in report.member_notes:
+        if _norm(n.split(":", 1)[0]) in keys:
+            return n
+    return ""
+
+
 def no_qualifying_text(report: EvaluationReport) -> str:
     nq = report.no_qualifying
     if nq is None:

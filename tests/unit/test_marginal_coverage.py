@@ -244,3 +244,26 @@ def test_extras_still_follow_their_kinds(b2):
         for ms, item in mc.item_extras.items():
             assert mc.items[ms][0] == item
         assert set(mc.dead_moves) == set(_base(mc))
+
+
+# ---- part 4b: the optimizer's filler-move note from the prune stage's summaries (FR-009a, T012) ---------------------
+def test_optimizer_member_notes_from_candidate_summaries():
+    from platsim.optimizer import resources as R
+    from platsim.optimizer.run import _member_notes
+
+    class FakeState:
+        def __init__(self, members):
+            self.members = members
+
+        def stage(self, name):
+            return {"members": self.members} if name == "prune" else None
+
+    ms = ("MOVE_THUNDERBOLT", "MOVE_SHADOW_BALL", "MOVE_THUNDER", "MOVE_OMINOUS_WIND")
+    members = [{"own": {"dead_moves": {"|".join(ms): ["MOVE_THUNDER", "MOVE_OMINOUS_WIND"]}, "no_live_reason": C.NO_LIVE_REASON}},
+               {"own": {"dead_moves": {}, "no_live_reason": None}}]
+    specs = (R.MemberSpec("SPECIES_ROTOM", "own", ms, None), R.MemberSpec("SPECIES_GARCHOMP", "own", ("MOVE_EARTHQUAKE",), None))
+    notes = _member_notes(FakeState(members), specs, None)
+    assert notes == [f"Rotom: Thunder, Ominous Wind are filler: {C.NO_LIVE_REASON}"]
+    # a chosen set that is not one of the summarised sets (repaired) gets no note
+    other = (R.MemberSpec("SPECIES_ROTOM", "own", ("MOVE_THUNDERBOLT",), None),)
+    assert _member_notes(FakeState(members), other, None) == []

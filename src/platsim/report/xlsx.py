@@ -86,6 +86,8 @@ def _evaluation_sheet(ws: Worksheet, r: EvaluationReport) -> None:
     _kv(ws, "Runs (full + Cynthia-only)" if r.sampling_detail else "Runs (full gauntlets)", r.n_runs)
     _kv(ws, "Sampling method", r.sampling)
     _kv(ws, "Battle style", r.battle_style)  # 023
+    for n in r.member_notes:  # 026 (FR-009a): filler moves per member
+        _kv(ws, "Member note", n)
     if r.sampling_detail:
         d = r.sampling_detail
         _kv(ws, "Full runs", d.get("full_runs"))

@@ -236,6 +236,7 @@ class EvaluationReport:
     divergences: list[DivergenceEntry] = field(default_factory=list)
     no_qualifying: NoQualifying | None = None
     warnings: list[str] = field(default_factory=list)
+    member_notes: list[str] = field(default_factory=list)  # 026: one line per member whose chosen set carries filler moves
     provenance: dict[str, Any] = field(default_factory=dict)
     sampling: str = "full"  # 021: "full" (the reference) or "adaptive"
     sampling_detail: dict[str, Any] | None = None  # 021: run mix and the composite's parts; None for full
@@ -273,6 +274,7 @@ class EvaluationReport:
     def to_dict(self) -> dict[str, Any]:
         return {
             "warnings": list(self.warnings),
+            "member_notes": list(self.member_notes),  # 026
             "budget_preset": self.budget_preset,
             "qualified": self.qualified,
             "borderline": self.borderline,
@@ -355,6 +357,7 @@ class EvaluationReport:
             if d.get("no_qualifying")
             else None,
             warnings=list(d.get("warnings", [])),
+            member_notes=list(d.get("member_notes", [])),  # 026: absent in files before 026
             provenance=dict(d.get("provenance", {})),
             sampling=d.get("sampling", "full"),
             sampling_detail=dict(d["sampling_detail"]) if d.get("sampling_detail") else None,

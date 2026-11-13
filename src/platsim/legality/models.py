@@ -329,6 +329,8 @@ def import_team(text: str, key_of: NameFn = _identity) -> list[ShowdownSet]:
         lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
         if not lines:
             continue
+        if lines[0].startswith("Notes:"):  # 026: the report's filler-move block after the sets (report/team_txt.py)
+            continue
         name, _, item = lines[0].partition(" @ ")
         for suffix in (" (M)", " (F)"):
             if name.endswith(suffix):

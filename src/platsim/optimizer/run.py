@@ -774,6 +774,20 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
     return d
 
 
+def _member_notes(state: _State, specs, led) -> list[str]:
+    """026 (FR-009a): one line per member whose chosen set carries filler moves (dead moves with no live replacement),
+    from the prune stage's candidate summaries."""
+    members = (state.stage("prune") or {}).get("members") or []
+    out = []
+    for slot, sp in enumerate(specs):
+        summ = (members[slot] if slot < len(members) else {}).get(sp.variant) or {}
+        dead = summ.get("dead_moves", {}).get("|".join(sp.moves)) or []
+        if dead and summ.get("no_live_reason"):
+            names = ", ".join(C.display_move(m) for m in dead)
+            out.append(f"{C.display_name(sp.species)}: {names} {'are' if len(dead) > 1 else 'is'} filler: {summ['no_live_reason']}")
+    return out
+
+
 def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, abilities) -> bool:
     from platsim.legality.validator import format_violations, showdown_name, validate
     from platsim.report import write_all
@@ -793,6 +807,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
         "final_team_labels": [m.label() for m in (R.place_required_hms(specs, levels, led, req.required_hms)[0]
                                                   if req.required_hms else specs)]})
     rep.provenance["validator"] = {"violations": 0, "final_levels_checked": finals}
+    rep.member_notes = _member_notes(state, specs, led)  # 026 (FR-009a)
     if req.required_hms:  # 006 FR-008: the constraint the result was made under
         rep.provenance["required_hms"] = list(req.required_hms)
     if comparison and comparison.get("verdict") == "indistinguishable":

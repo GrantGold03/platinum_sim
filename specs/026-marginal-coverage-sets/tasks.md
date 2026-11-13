@@ -90,13 +90,13 @@ filler-move note in the report.
       (sets, pools, dead moves per set, `one_apart`, `no_live_reason`, the candidate-generation time for the six B2 species
       against T002's, SC-006; copy to `evidence/`); read it against the spec's Overview table and record; then the fast suite `uv run pytest -q -m "not battle_sim" > runs/026-evidence/fast.log 2>&1; echo exit=$?`;
       Commit 2 `feat(026): candidate pool and sets by marginal coverage; dead-move rule with the one-apart relaxation; cost preference; extras under the same rule`; push
-- [ ] T011 [P] [US1] Report note (contracts/report-filler-note.md): `src/platsim/report/json_report.py` `EvaluationReport.member_notes:
+- [x] T011 [P] [US1] Report note (contracts/report-filler-note.md): `src/platsim/report/json_report.py` `EvaluationReport.member_notes:
       list[str]` default `[]`, `from_dict` tolerant; `src/platsim/report/team_txt.py` appends a blank line and a `Notes:` block
       when notes exist; `src/platsim/legality/models.py` `import_team` skips a block whose first line starts with `Notes:`;
       `src/platsim/evaluate.py` `summary_text` prints the notes after the per-battle lines; `src/platsim/report/xlsx.py` Team sheet
       gains a Note column; `tests/unit/test_reports.py`: round trip with notes, a pre-026 file reads with `[]`, `import_team(team_text(r))`
       still equals the builds' sets with a note present, the xlsx column, the summary line; run `uv run pytest -q tests/unit/test_reports.py -m "not battle_sim"` and record
-- [ ] T012 [US1] `src/platsim/optimizer/run.py`: the winner's `member_notes` from each member's `MemberCandidates.no_live_reason`
+- [x] T012 [US1] `src/platsim/optimizer/run.py`: the winner's `member_notes` from each member's `MemberCandidates.no_live_reason`
       for its chosen set ("<Name>: <moves> are filler: no better option, its two strongest moves cover every League opponent"),
       set on the report before `write_all`; `_no_qualifying` none; a fake-pool test in `tests/unit/test_marginal_coverage.py`
       asserts the note for a member whose chosen set carries dead moves; run and record; Commit 3 `feat(026): filler-move note in the player-facing report`; push

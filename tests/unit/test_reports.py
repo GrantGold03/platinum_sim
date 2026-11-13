@@ -444,3 +444,29 @@ def test_member_defaults_friendship_matches_candidates():
     from platsim.report import provenance as P
 
     assert P.FRIENDSHIP == C.FRIENDSHIP == 255
+
+
+def test_member_notes_round_trip_team_text_summary_and_xlsx(tmp_path):
+    # 026 (FR-009a): the filler-move line per member; a pre-026 file reads with no notes; team.txt stays importable
+    from platsim.evaluate import summary_text
+    from platsim.legality.models import import_team
+    from platsim.report.csv_report import TEAM_HEADERS, member_note
+    from platsim.report.team_txt import team_text
+
+    r = _report()
+    sp = r.team.builds[1].species
+    r.member_notes = [f"{sp}: Thunder, Ominous Wind are filler: no better option: its two strongest moves cover every League opponent"]
+    paths = write_all(r, tmp_path)
+    back = EvaluationReport.from_json(paths["json"].read_text(encoding="utf-8"))
+    assert back == r and back.member_notes == r.member_notes
+    text = team_text(r)
+    assert "Notes:" in text and r.member_notes[0] in text
+    assert import_team(text) == [b.showdown_set() for b in r.team.builds]
+    assert any(line == "note: " + r.member_notes[0] for line in summary_text(r).splitlines())
+    ev = _sheet_rows(load_workbook(paths["xlsx"])["Evaluation"])
+    assert ["Member note", r.member_notes[0]] in [list(row[:2]) for row in ev]
+    assert TEAM_HEADERS[-1] == "Move 4 source"  # the Team sheet contract is unchanged
+    assert member_note(r, sp) == r.member_notes[0] and member_note(r, r.team.builds[0].species) == ""
+    old = _report()
+    d = json.loads(old.to_json()); d.pop("member_notes")
+    assert EvaluationReport.from_dict(d).member_notes == []

@@ -504,6 +504,7 @@ def summary_text(r: EvaluationReport) -> str:
     lines.append(f"threshold {r.threshold}  qualified {r.qualified}  borderline {r.borderline}")
     for c in r.loss_causes[:10]:
         lines.append(f"  loss cause: {c.trainer} {c.opponent_mon} {c.losses}")
+    lines += [f"note: {n}" for n in r.member_notes]  # 026: filler moves
     lines += [f"WARNING: {w}" for w in r.warnings]
     return "\n".join(lines)
 
