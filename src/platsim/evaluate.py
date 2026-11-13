@@ -48,6 +48,7 @@ from platsim import pins
 from platsim.budget import get_preset
 from platsim.report.json_report import BattleStat, DivergenceEntry, EvaluationReport
 from platsim.battle_style import BATTLE_STYLES, DEFAULT_BATTLE_STYLE, style_of
+from platsim.report.provenance import member_defaults_block
 from platsim.sampling import (CYNTHIA_ONLY_BATTLE_INDEX, DEFAULT_FLOOR, DEFAULT_SAMPLING, FLOOR_MAX, FLOOR_MIN,
                               composite_estimate, cynthia_battle, e4_pass_stats, run_adaptive)
 from platsim.sim.seeds import SCHEME, derive_seed
@@ -447,6 +448,7 @@ def evaluate_team(team, led, pool, *, runs: int = DEFAULT_RUNS, seed: str = "0",
         "log_mode": "summary",
         "trainers": list(GAUNTLET),
         "battle_style": battle_style,  # 023
+        "member_defaults": member_defaults_block(team),  # 025
         **({"sampling": {"method": "adaptive", **sampling_detail,
                          "cynthia_only_seed": f"derive_seed(master, k, {CYNTHIA_ONLY_BATTLE_INDEX})"}}
            if sampling_detail is not None else {}),

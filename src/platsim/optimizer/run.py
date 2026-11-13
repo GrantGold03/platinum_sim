@@ -69,6 +69,7 @@ from platsim.optimizer.levels import LevelSearch, Point, team_key
 from platsim.optimizer.screen import ScreenResult, successive_halving
 from platsim.sim.seeds import SCHEME, derive_seed
 from platsim.stats import mcnemar_exact, wilson_ci
+from platsim.report.provenance import member_defaults_block
 
 STATE_VERSION = 3  # 2: balanced descent (levels.py); 3: strong player expectimax2-v2 (a v1 state is not resumed)
 CALIBRATION_TARGET = 0.5
@@ -763,7 +764,10 @@ def _optimizer_provenance(req, preset, state: _State, extra: dict | None = None)
         "level_points": [_canonical(state.data["level_points"][k]) for k in sorted(state.data["level_points"])],
         "heuristics": "candidate generation, coverage scoring and item choice are heuristics over candidates "
                       "(optimizer/candidates.py docstring); legality comes from legality/movesources.py and the ledger "
-                      "and is re-checked by the independent validator",
+                      "and is re-checked by the independent validator; the screen's capped list is built from the base "
+                      "options and every appended option (024 variable-power sets, 025 item-conditioned sets, 025 "
+                      "Wide Lens/Razor Claw on base sets) is screened beyond the cap as a single-slot deviation of the "
+                      "baseline (extras_screened by kind)",
     }
     if extra:
         d.update(extra)
@@ -784,6 +788,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
     rep.obtained_from, rep.held_item_sources, rep.held_item_source_refs = team_sources(real.team, led)
     rep.resources = R.resource_lines(real, led)
     rep.provenance["optimizer"] = _optimizer_provenance(req, preset, state, {
+        "member_defaults": member_defaults_block(real.team),  # 025
         "final_levels_start": list(levels), "runner_up_comparison": comparison,
         "final_team_labels": [m.label() for m in (R.place_required_hms(specs, levels, led, req.required_hms)[0]
                                                   if req.required_hms else specs)]})
@@ -821,6 +826,7 @@ def _no_qualifying(req, preset, led, consts, out, state, hello, best: Point, spe
         divergences=divs, no_qualifying=nq,
         warnings=[f"No qualifying team: {why}. Best clear rate {best.wins}/{best.n} at start levels {best.levels}."],
         provenance={"legality_options": req.legality.to_dict(), "optimizer": _optimizer_provenance(req, preset, state, {
+            "member_defaults": member_defaults_block(None),  # 025
             "best_team_labels": [m.label() for m in specs], "best_team": R.spec_to_json(specs),
             "confirm_attempts": attempts}), **({"required_hms": list(req.required_hms)} if req.required_hms else {})},
     )

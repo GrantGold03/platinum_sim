@@ -437,3 +437,10 @@ def test_style_of_reads_an_absent_key_as_set_whatever_the_default():
     assert style_of({"battle_style": "shift"}) == "shift"
     assert DEFAULT_BATTLE_STYLE in ("set", "shift")
 
+
+
+def test_member_defaults_friendship_matches_candidates():
+    from platsim.optimizer import candidates as C
+    from platsim.report import provenance as P
+
+    assert P.FRIENDSHIP == C.FRIENDSHIP == 255

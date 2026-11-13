@@ -103,3 +103,17 @@ Fast suite (`runs/025-evidence/fast.log`, 1:25:48 to 1:35:50 PM EST):
 601 passed, 32 deselected, 4 xfailed, 1 warning in 599.51s (0:09:59)
 exit=0
 ```
+
+## T016, T017 Provenance `member_defaults` (1:40 to 1:55 PM EST)
+
+`src/platsim/report/provenance.py`: `member_defaults_block(team)` → {nature Hardy, ivs 15, evs 85, friendship 255, reason,
+fixed_by_game} reading the constants from `legality/models.py`; friendship is pinned locally (255) with a test that it equals
+`candidates.FRIENDSHIP`, because importing `candidates` from the report module made a circular import (`candidates` →
+`optimizer.api` → `evaluate` → this module). `evaluate_team` sets `provenance["member_defaults"]`; `run.py` passes the block for
+the winner's team through `_optimizer_provenance`'s `extra` and `None` for `_no_qualifying`; the optimizer's `heuristics` text
+notes the appended-option rule (T012). `EvaluationReport.from_dict` unchanged: a pre-025 file reads without the block.
+
+```
+uv run pytest -q tests/unit/test_reports.py -m "not battle_sim"                              → 18 passed, exit 0
+uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py -m "not battle_sim"   → 24 passed, exit 0
+```
