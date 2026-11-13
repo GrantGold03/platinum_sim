@@ -21,7 +21,8 @@
   marginal contribution, cost preference of R3, not already in the set, re-checked after each replacement; accept the result in
   pass 1 if all-live and at least two moves apart from every accepted set; after the list, pass 2 accepts all-live sets one
   apart; pass 3 (only if still fewer than k) accepts sets with dead moves two apart as today and records the member as
-  no-live-move with the reason. Duplicates skipped. `one_apart` records the sets accepted in pass 2.
+  no-live-move with the reason; pass 3 walks the list under today's key (coverage, then the standalone sum), so a no-live-move
+  member's sets are unchanged (SC-002). Duplicates skipped. `one_apart` records the sets accepted in pass 2.
 - **Rationale**: one deterministic walk; the probe's Infernape (five live moves) yields three all-live sets one apart; Rotom
   falls to pass 3 with the reason.
 - **Setup set**: the best three by coverage from the pool, then the dead-move replacement among those three, then the setup move.
@@ -57,17 +58,22 @@
   `repair` walks the ranked list on refusal; a move's resources come from `movesources.sources(species, move, level, led,
   option)` → `uses_of(choice)`; copies from `resources.copies`. On B2, Garchomp (slot 1) takes TM26 and TM71; Infernape's
   all-live sets all need one of them.
-- **Decision**: `allocation.allocate(consts, variants, level, led, cands, required)`: (1) for each member, the resources its
+- **Decision**: `allocation.allocate(consts, variants, level, led, cands)`: (1) for each member, the resources its
   first set needs (the cheapest source per move at the level: the first `sources` choice whose uses are affordable alone;
-  a move with a resource-free source needs nothing); (2) a resource is contested when the members needing it outnumber its
-  copies; required HM / required moves keep theirs first; (3) for each contested resource, each contender's gain = coverage of
+  a move with a resource-free source needs nothing; HMs are never consumed, so never counted); (2) a resource is contested when
+  the members needing it outnumber its copies; (3) for each contested resource, each contender's gain = coverage of
   its first set minus the coverage of its best all-live set with the resource's moves excluded (computed by
   `member_candidates(..., unavailable={moves needing it})`); the top `copies` contenders by gain (ties by slot) keep it; the
-  others get `unavailable` extended and their lists rebuilt; (4) repeat until no contested resource or every resource has been
-  decided once (bounded); (5) the record `{resource: {copies, contenders: [(species, gain)], given_to: [...]}}` goes into the
-  prune stage and provenance. Only the first set decides contention (the screen's baseline); extras and later sets may still
-  need a lost resource and are then refused or repaired as today, which the acceptance counts (expected zero repair notes for
-  the baseline and the single-slot deviations of first sets).
+  others get `unavailable` extended and their lists rebuilt; (3b) **remaining copies**: the copies left per single-copy
+  resource after every member's first set is charged; for each member, every move whose only sources need a resource with zero
+  copies left, charged to *other* members' first sets, becomes `unavailable` for that member and its list is rebuilt (a member's
+  own first set never makes its own moves unavailable); because a rebuild can change a first set (the pool is greedy, removing a
+  move can shift later picks), return to (2) until no first set changes, bounded by the number of single-copy resources;
+  (4) the record `{resource: {copies, contenders: [(species, gain)], given_to: [...], rebuilt: [...], unavailable: {species:
+  [moves]}}}` goes into the prune stage and provenance. Post-condition: every offered set, extra and setup set of every member is
+  buildable beside the other members' first sets at the reference level, so the screen's single-slot deviations need no repair;
+  the screen's randomly combined teams (two members' non-first sets) and level differences may still reach the repair step,
+  which the acceptance counts and reports.
 - **Alternatives**: resource-aware `repair` only (rejected by the owner); full joint optimisation over sets × resources (too
   large; the greedy gain rule is enough for single-copy TMs).
 

@@ -158,8 +158,8 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
 - **Members with fewer than four legal attacks**: unchanged (sets of the available size, no dead-move rule applies).
 - **A contested single-copy resource** (a TM, an evolution item, a held item with one copy): it goes to the member whose coverage
   gains the most from it, ties by slot order; the others are built without it and the summary says who got it and why.
-- **A contested resource that a member's HM requirement or the user's required moves need**: the required move keeps it (the 006
-  rule), and the allocation is made among the rest.
+- **HM requirements** (feature 006) never contest a resource: the game never consumes an HM, so an HM has unlimited copies;
+  the allocation concerns TMs, evolution items and single-copy held items only.
 - **The repair step** stays as the safety net for anything the allocation missed (levels, evolution paths), and its notes are
   expected empty for the offered sets.
 - **The setup set** (three attacks plus a setup move): built from the same pool; the dead-move rule applies to its attacks.
@@ -176,11 +176,12 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
   move by standalone score, each next move the one adding the most coverage to the pool so far, ties by standalone score then by
   name; the pool size is unchanged (10).
 - **FR-003**: Sets MUST be ranked by coverage, then by the sum of their moves' marginal contributions, then by the standalone
-  sum, then by name; the three offered sets keep today's pairwise diversity rule (at least two moves apart) while an all-live
-  set two apart exists, and otherwise accept a set one move apart rather than a set with a dead move (FR-004a).
+  sum, then by name, the marginal-sum tie-break applying among all-live sets; sets accepted with dead moves (FR-005) keep
+  today's key (coverage, then the standalone sum), so a no-live-move member's sets are unchanged. The three offered sets keep
+  today's pairwise diversity rule (two moves apart) except as FR-004a states.
 - **FR-004**: No offered set MAY contain a dead move while a legal attack or offered variable move with positive marginal
   contribution given the set's other three moves exists; the replacement is the one with the highest marginal contribution
-  (ties as FR-002), and the resulting set MUST still satisfy the diversity rule against the sets offered before it.
+  (ties as FR-002); diversity against the sets offered before it follows FR-004a.
 - **FR-004a**: When no set at least two moves apart from the sets already offered is free of dead moves while a set one move
   apart is, the one-apart set MUST be offered; a dead move is accepted only when no live replacement exists at either distance
   (FR-005). The candidate summary MUST state which offered sets were taken at one move apart.
@@ -212,17 +213,22 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
   user-conditioned dominance idea as considered and not chosen.
 - **FR-014**: Each member's offered sets MUST be built knowing the team's copies of single-copy resources (TMs, evolution items,
   held items): a resource wanted by more members than it has copies goes to the members whose coverage gains the most from it
-  (ties by slot order), the others' pools and sets are built without it, required moves (HMs, the user's required moves) keep
-  theirs first, and the candidate summary MUST name each contested resource, who received it and the coverage each contender
-  would have gained.
-- **FR-015**: Every offered set of every member MUST be buildable together with the other members' first sets at the screen's
-  levels; the repair step MUST report no replacement for the offered sets (its notes stay as the safety net).
+  (ties by slot order), the others' pools and sets are built without it (HMs are never consumed and never contested), and the
+  candidate summary MUST name each contested resource, who received it and the coverage each contender would have gained.
+- **FR-015**: Every offered set of every member (today's sets, the extras, the setup set) MUST be buildable together with the
+  other members' first sets at the reference level the candidates are built at: after the first-set contention is resolved, a
+  move whose resource the other members' first sets fully consume is unavailable to that member and its lists are rebuilt
+  without it. The repair step MUST report no replacement for the baseline or for any single-slot deviation of it at the
+  reference level; its notes stay as the safety net for the screen's randomly combined teams (two members' non-first sets may
+  still compete for one copy) and for level differences between the reference and the screen's levels, and the acceptance
+  reports those counts.
 
 ### Key Entities
 
 - **Marginal contribution**: a move's share of a set's coverage; zero means the set is as good without it.
 - **Live move**: a move that is the best choice against at least one opponent given the member's two strongest moves.
 - **Dead move**: a move with zero marginal contribution in its set.
+- **Filler move**: a dead move in a chosen set that has no live replacement, as the player-facing report names it (FR-009a).
 - **Pool**: the ten moves the sets are drawn from, built greedily by marginal contribution.
 - **No-live-move member**: a member whose legal attacks hold nothing live beyond its two strongest; listed with the reason in
   the candidate summary and, for the final team, in the player-facing report (filler moves named).
@@ -243,12 +249,13 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
 - **SC-004**: The branch's B2 quick winner is not worse than today's at equal levels (no supported loss at alpha 0.05) and its
   expected average final level is at most one level above today's.
 - **SC-005**: The two unaffected teams evaluate identically on both codes once the volatile fields are removed.
-- **SC-006**: Candidate generation for the six B2 species takes at most twice today's time (the greedy pool scans every legal
-  attack ten times; the allocation adds one pass over the contested resources).
-- **SC-008**: On the B2 team, every offered set of every member is buildable together with the others' first sets (zero repair
-  notes for the candidate sets), Infernape's offered sets contain a live coverage move it can learn on that team, and the
-  summary names the Earthquake and Stone Edge allocation.
+- **SC-006**: Candidate generation for the six B2 species takes at most twice today's time, both measured in the acceptance
+  (the pre-feature side on today's code, the branch side after; the greedy pool scans every legal attack ten times and the
+  allocation adds a rebuild per member that loses a resource).
 - **SC-007**: The Node suite and the full pytest suite pass on the final code.
+- **SC-008**: On the B2 team, every offered set of every member is buildable together with the others' first sets at the
+  reference level (zero repair notes for the baseline and its single-slot deviations), Infernape's offered sets contain a live
+  coverage move it can learn on that team, and the summary names the Earthquake and Stone Edge allocation.
 
 ## Assumptions
 
@@ -258,7 +265,8 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
 - Variable-power moves become eligible for today's base sets (the user's Grass Knot example); 024's extras still append sets for
   variable moves not chosen.
 - Team-level resource allocation is in scope (story 3, the owner's decision); which member gets a contested TM is decided by
-  coverage gained, not by slot order, and the user can still force a move through the required-moves option of 006.
+  coverage gained, not by slot order; HMs (the only requirement the tool takes, feature 006) are never consumed and never
+  contested.
 - The pre-feature prefix guarantee of 024 does not hold (today's sets change where dead moves are replaced); every change is
   attributed instead, as in 025.
 - The pool size and the number of offered sets (3) are unchanged; the diversity threshold (2 moves) relaxes to 1 only where

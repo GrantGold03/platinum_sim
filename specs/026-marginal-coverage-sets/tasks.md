@@ -24,8 +24,9 @@
       `no_live_reason`, `one_apart`, and the allocation record of the B2 team at level 48 via `run._build_cands`)
 - [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/026-marginal-coverage-sets/scripts/acceptance.py --side main --workers 16 > runs/026-evidence/acceptance-main.txt 2> runs/026-evidence/acceptance-main.err; echo exit=$?`
       → `runs/026-evidence/b2-main`, `ident-main/{ref,b2main}`, `specs/026-marginal-coverage-sets/evidence/candidates-main.json`
-      (36 members with dead moves per set); copy `acceptance-main.txt/json`, the winner's `result.json`/`team.txt` to
-      `evidence/pre/`; record in the log; Commit 1 `docs(026): pre-feature evidence and scripts`; push
+      (36 members with dead moves per set) and the candidate-generation time for the six B2 species on today's code (SC-006,
+      printed by the script); copy `acceptance-main.txt/json`, the winner's `result.json`/`team.txt` to `evidence/pre/`; record
+      in the log; Commit 1 `docs(026): pre-feature evidence and scripts`; push
 
 **Checkpoint**: the comparison baseline exists on today's code.
 
@@ -86,8 +87,8 @@ filler-move note in the report.
       assertions per kind), `tests/unit/test_h4_items.py` (item-conditioned extras on B2 still hold; pins that named a set
       updated to the rule); run `uv run pytest -q tests/unit/test_marginal_coverage.py tests/unit/test_optimizer_candidates.py tests/unit/test_variable_power.py tests/unit/test_h4_items.py -m "not battle_sim"` (exit code kept) and record
 - [ ] T010 [US1] Hand check: `uv run python specs/026-marginal-coverage-sets/scripts/hand_check.py > runs/026-evidence/b2-candidates-branch.txt`
-      (sets, pools, dead moves per set, `one_apart`, `no_live_reason`; copy to `evidence/`); read it against the spec's
-      Overview table and record; then the fast suite `uv run pytest -q -m "not battle_sim" > runs/026-evidence/fast.log 2>&1; echo exit=$?`;
+      (sets, pools, dead moves per set, `one_apart`, `no_live_reason`, the candidate-generation time for the six B2 species
+      against T002's, SC-006; copy to `evidence/`); read it against the spec's Overview table and record; then the fast suite `uv run pytest -q -m "not battle_sim" > runs/026-evidence/fast.log 2>&1; echo exit=$?`;
       Commit 2 `feat(026): candidate pool and sets by marginal coverage; dead-move rule with the one-apart relaxation; cost preference; extras under the same rule`; push
 - [ ] T011 [P] [US1] Report note (contracts/report-filler-note.md): `src/platsim/report/json_report.py` `EvaluationReport.member_notes:
       list[str]` default `[]`, `from_dict` tolerant; `src/platsim/report/team_txt.py` appends a blank line and a `Notes:` block
@@ -97,7 +98,7 @@ filler-move note in the report.
       still equals the builds' sets with a note present, the xlsx column, the summary line; run `uv run pytest -q tests/unit/test_reports.py -m "not battle_sim"` and record
 - [ ] T012 [US1] `src/platsim/optimizer/run.py`: the winner's `member_notes` from each member's `MemberCandidates.no_live_reason`
       for its chosen set ("<Name>: <moves> are filler: no better option, its two strongest moves cover every League opponent"),
-      set on the report before `write_all`; `_no_qualifying` none; `tests/unit/test_optimizer_resume.py` or a small fake-pool test
+      set on the report before `write_all`; `_no_qualifying` none; a fake-pool test in `tests/unit/test_marginal_coverage.py`
       asserts the note for a member whose chosen set carries dead moves; run and record; Commit 3 `feat(026): filler-move note in the player-facing report`; push
 
 **Checkpoint**: every offered set is all-live or explained; the user is told.
@@ -114,19 +115,24 @@ baseline repairs; a no-contest team equal to member-by-member lists.
 
 - [ ] T013 [US3] Write `src/platsim/optimizer/allocation.py` (contracts/allocation.md, R6): `needs(species, variant, moveset,
       level, led) -> dict[str, int]` (the cheapest `movesources.sources` choice per move whose `uses_of` is affordable alone; a
-      resource-free source needs nothing), `contested(cands, consts, level, led, required_hms) -> dict[str, list[int]]` (members
-      whose first set needs the resource, when more than `resources.copies`; HM requirements and required moves excluded),
-      `allocate(consts, variants, ref_level, led, cands, required_hms=()) -> (cands, record)`: gain per contender = coverage of
-      its first set minus the coverage of its best all-live set with the resource's moves `unavailable`; the top `copies` by gain
-      (ties by slot) keep it; the others' `unavailable` extended and `member_candidates` rebuilt; loop until stable, bounded by
-      the number of resources; `record` per resource `{copies, contenders: [[species, gain]], given_to, rebuilt}`
+      resource-free source needs nothing; HMs never counted, the game never consumes them), `contested(cands, consts, level,
+      led) -> dict[str, list[int]]` (members whose first set needs the resource, when more than `resources.copies`),
+      `remaining(cands, consts, level, led) -> dict[str, int]` (copies left after every first set is charged),
+      `allocate(consts, variants, ref_level, led, cands) -> (cands, record)`: step 1, gain per contender = coverage of its
+      first set minus the coverage of its best all-live set with the resource's moves `unavailable`; the top `copies` by gain
+      (ties by slot) keep it; the others' `unavailable` extended and `member_candidates` rebuilt; step 2 (R6 3b), moves needing
+      a resource with zero copies left charged to other members' first sets become `unavailable` for that member; rebuild; loop
+      to step 1 until no first set changes, bounded by the number of single-copy resources; `record` per resource `{copies,
+      contenders: [[species, gain]], given_to, rebuilt, unavailable: {species: [moves]}}`
 - [ ] T014 [US3] `src/platsim/optimizer/run.py`: `_build_cands` returns `(cands, allocation)` through `allocate`; the prune stage
       stores `allocation`; `_optimizer_provenance` carries it (`extra`); `checkpoint` fingerprint unchanged in shape
 - [ ] T015 [US3] `tests/unit/test_marginal_coverage.py` part 5: the B2 team at level 48: `allocation` names TM26 and TM71 with
-      Garchomp and Infernape as contenders and gains, the loser rebuilt, Infernape's offered sets buildable with Garchomp's first
-      set (`resources.realize` on the two, no Refusal) and containing a live move; `resources.repair` on the six first sets returns
-      no notes; a team with no contested resource gives lists equal to member-by-member; a synthetic two-member case where the
-      lower slot wins a TM on gain; run and record; Commit 4 `feat(026): contested single-copy resources allocated by coverage gained; lists rebuilt`; push
+      Garchomp and Infernape as contenders and gains, the loser rebuilt, Infernape's offered sets containing a live move it can
+      learn on that team; for every member and every one of its offered sets (today's, the 024 extras, the 025 item-conditioned
+      sets, the setup set) `resources.realize` of that set with the other five members' first sets at level 48 is not a Refusal
+      and `resources.repair` on each such deviation returns no notes; the record shows which Infernape moves became
+      unavailable and that no first set changed on the last loop; a team with no contested resource gives lists equal to
+      member-by-member; a synthetic two-member case where the lower slot wins a TM on gain; run and record; Commit 4 `feat(026): contested single-copy resources allocated by coverage gained; lists rebuilt`; push
 
 **Checkpoint**: the screen's sets are the sets a player can teach.
 
