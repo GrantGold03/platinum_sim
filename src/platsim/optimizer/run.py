@@ -215,13 +215,31 @@ def _member_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
     return out
 
 
-def _member_extra_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
-    """024 (FR-006b): one option per appended variable-power set, with its first held-item candidate; screened as
-    single-slot deviations of the baseline beyond the cap."""
+EXTRA_KINDS = ("variable_power", "accuracy_item", "crit_item", "item_deviation")
+
+
+def _member_extra_options(mcs: dict) -> list[tuple[str, tuple[str, tuple, str | None]]]:
+    """(kind, (variant key, moveset, item)) options screened beyond the cap as single-slot deviations of the baseline.
+    024 (FR-006b): one per appended variable-power set with its first held-item candidate. 025 (FR-003, FR-004): one per
+    item-conditioned extra set with its conditioning item (kinds accuracy_item, crit_item), then one `item_deviation` per
+    (base or 024 set, appended item) pair: the set as today with Wide Lens or Razor Claw."""
     out = []
     for vkey, mc in mcs.items():
-        for ms in mc.movesets[len(mc.movesets) - mc.extras:]:
-            out.append((vkey, ms, mc.items[ms][0]))
+        appended = mc.movesets[len(mc.movesets) - mc.extras:]
+        for ms in appended:
+            if mc.extra_kind.get(ms, "variable_power") == "variable_power":
+                out.append(("variable_power", (vkey, ms, mc.items[ms][0])))
+        for ms in appended:
+            kind = mc.extra_kind.get(ms, "variable_power")
+            if kind != "variable_power":
+                out.append((kind, (vkey, ms, mc.item_extras.get(ms, mc.items[ms][0]))))
+        for ms in mc.movesets[:len(mc.movesets) - mc.extras]:
+            for item in mc.items_extra.get(ms, []):
+                out.append(("item_deviation", (vkey, ms, item)))
+        for ms in appended:
+            if mc.extra_kind.get(ms, "variable_power") == "variable_power":
+                for item in mc.items_extra.get(ms, []):
+                    out.append(("item_deviation", (vkey, ms, item)))
     return out
 
 
@@ -425,17 +443,17 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
                 combos.append(c)
         # 024 (FR-006b): the extras ride beyond the cap as single-slot deviations of the baseline, one per appended set
         extra_opts = [_member_extra_options(mcs) for mcs in cands]
-        extra_specs = []
+        extra_specs = []  # (kind, specs); 025: three kinds beyond the 024 variable-power one, in `EXTRA_KINDS` order per slot
         for slot in range(6):
-            for o in extra_opts[slot]:
-                extra_specs.append(tuple(R.MemberSpec(consts[slot], *o) if s == slot else baseline[s] for s in range(6)))
+            for ekind, o in extra_opts[slot]:
+                extra_specs.append((ekind, tuple(R.MemberSpec(consts[slot], *o) if s == slot else baseline[s] for s in range(6))))
         teams_specs, seen, dropped = [], set(), []
-        extras_screened = 0
+        extras_screened = {k: 0 for k in EXTRA_KINDS}
         for kind, c in [("combo", c) for c in combos] + [("extra", e) for e in extra_specs]:
             if kind == "combo" and len(teams_specs) >= N_CANDIDATES:
                 continue
             if kind == "extra":
-                specs = c
+                ekind, specs = c
             elif c == tuple(base_idx):
                 specs = baseline
             else:
@@ -445,6 +463,13 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             if isinstance(rr, R.Refusal):
                 dropped.append({"combo": R.spec_to_json(specs) if kind == "extra" else list(c), "reason": rr.reason})
                 continue
+            if kind == "extra" and ekind != "variable_power":
+                # 025: an item-conditioned set or an item deviation whose appended item the repair took away is not that
+                # option any more (the set with its usual item is a base candidate already)
+                changed = [i for i in range(6) if specs[i] != baseline[i]]
+                if changed and rr[0][changed[0]].item != specs[changed[0]].item:
+                    dropped.append({"combo": R.spec_to_json(specs), "reason": f"{ekind}: appended item repaired away; " + "; ".join(rr[1][:2])})
+                    continue
             specs = rr[0]
             key = json.dumps(R.spec_to_json(specs))
             if key in seen:
@@ -457,15 +482,17 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
             seen.add(key)
             teams_specs.append(specs)
             if kind == "extra":
-                extras_screened += 1
-        prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels} ({extras_screened} variable-power extras beyond the cap)")
+                extras_screened[ekind] += 1
+        extras_screened["total"] = sum(extras_screened[k] for k in EXTRA_KINDS)
+        prog("screen", detail=f"{len(teams_specs)} candidate teams at levels {screen_levels} ({extras_screened['total']} extras beyond the cap: "
+                              + ", ".join(f"{extras_screened[k]} {k}" for k in EXTRA_KINDS) + ")")
         wteams = [worker_team(R.realize(s, screen_levels, led, required_hms=req.required_hms).team, led) for s in teams_specs]
         res = successive_halving(pool, wteams, seed=seed, rounds=preset.screening_rounds, battle_style=req.battle_style,
                                  progress=lambda d, p, best, sc, r: prog(
                                      "screen", runs_done=d, runs_planned=p,
                                      best={"candidate": best, "cleared": sc[0], "runs": sc[2]},
                                      detail=f"round {r}: best candidate {best} cleared {sc[0]}/{sc[2]}"))
-        scr = {"levels": screen_levels, "candidates": [R.spec_to_json(s) for s in teams_specs], "extras_screened": extras_screened,  # 024
+        scr = {"levels": screen_levels, "candidates": [R.spec_to_json(s) for s in teams_specs], "extras_screened": extras_screened,  # 024; 025: a dict by kind plus total
                "labels": [[m.label() for m in s] for s in teams_specs], "dropped": dropped,
                "result": res.to_dict(), "policy": SCREEN_POLICY, "seeds": f"derive_seed('{seed}|screen', i, 0)",
                "finalists": res.order[:2]}

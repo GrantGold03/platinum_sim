@@ -39,12 +39,16 @@ def test_type_chart_positive_controls():
 
 def test_dominance_rule_r8():
     mk = lambda **k: SimpleNamespace(**{"type": "TYPE_FIRE", "category": "CLASS_SPECIAL", "accuracy": 100,  # noqa: E731
-                                        "priority": 0, "power": 90, "effect": C.PLAIN, "effect_chance": 0, **k})
+                                        "priority": 0, "power": 90, "pp": 10, "effect": C.PLAIN, "effect_chance": 0, **k})  # 025: pp axis
     strong, weak = mk(power=95), mk(power=40)
     assert C.dominates(strong, weak) and not C.dominates(weak, strong)
     assert not C.dominates(strong, mk(power=40, effect="BATTLE_EFFECT_BURN_HIT", effect_chance=10))  # side effect kept
     assert not C.dominates(mk(power=120, accuracy=85), weak)  # different accuracy class
     assert not C.dominates(mk(power=150, effect="BATTLE_EFFECT_RECHARGE_AFTER"), weak)  # drawback
+    # 025: the widened rule's axes (PP, accuracy, the effect cost class); the controls on real moves are in test_h4_items.py
+    assert not C.dominates(mk(pp=5), weak) and C.dominates(mk(power=40, pp=15), weak)
+    assert C.dominates(weak, mk(power=40, effect="BATTLE_EFFECT_RECHARGE_AFTER"))  # a plain move beats an equal one with a cost
+    assert C.dominance_axes(mk(power=95, accuracy=0), weak) == ["power", "accuracy"]
 
 
 def test_resolve_species_errors(led):
@@ -86,8 +90,10 @@ def test_member_candidates_and_full_team_validate(led):
     consts = C.resolve_species(["infernape", "staraptor", "luxray", "garchomp", "gyarados", "gardevoir"], led)
     cands = [C.member_candidates(c, C.variants(c, led)[0], 55, led) for c in consts]
     for mc in cands:
-        # 024: today's sets (at most K) first, then up to K appended sets carrying a variable-power move
-        assert 1 <= len(mc.movesets) - mc.extras <= C.K_MOVESETS and len(mc.movesets) <= 2 * C.K_MOVESETS and mc.ranked
+        # 024: today's sets (at most K) first, then up to K appended sets carrying a variable-power move; 025: up to K more
+        # per conditioning item (lens, claw), each appended set with a kind
+        assert 1 <= len(mc.movesets) - mc.extras <= C.K_MOVESETS and len(mc.movesets) <= 4 * C.K_MOVESETS and mc.ranked
+        assert sum(mc.extras_by_kind.values()) == mc.extras and all(ms in mc.extra_kind for ms in mc.movesets[len(mc.movesets) - mc.extras:])
         for ms in mc.movesets:
             assert len(ms) <= 4 and all(C.is_attack(C.load_moves()[m]) or m in C.OFFERED_VARIABLE for m in ms)
         assert set(mc.pruned).isdisjoint(mc.pool)

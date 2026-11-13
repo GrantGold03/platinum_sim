@@ -138,6 +138,74 @@ NOT_OFFERED_VARIABLE = {
     "MOVE_SPIT_UP": "no player computes its power",
     "(fixed damage, OHKO, counters)": "not attacks for candidate scoring (data power 1, excluded by is_attack as today)",
 }
+# 025 (H4): the critical-hit stage table of the game (battle_lib.c sCriticalStageRates, :7097-7103: a critical hit at
+# 1 in 16, 8, 4, 3, 2 by stage; BattleSystem_CalcCriticalMulti :7105-7135 doubles damage), read from the decomp by name like
+# the type chart; the stage counts the move's high-critical-ratio effect and, under item-conditioned valuation, the held
+# item (HOLD_EFFECT_CRITRATE_UP: Razor Claw, Scope Lens). Abilities are not counted here (plan, Complexity: none).
+def _crit_stage_rates() -> tuple[int, ...]:
+    text = BATTLE_LIB_C.read_text()
+    body = text[text.index("sCriticalStageRates[] = {"):]
+    body = body[:body.index("};")]
+    rates = tuple(int(x) for x in re.findall(r"(\d+)\s*,", body))
+    if len(rates) < 5:
+        raise ValueError(f"sCriticalStageRates: expected 5 stages, parsed {rates}")
+    return rates
+
+
+CRIT_STAGE_RATES: tuple[int, ...] = _crit_stage_rates()
+MAX_CRIT_STAGE = 4
+ACCURACY_UP_EFFECT = "HOLD_EFFECT_ACCURACY_UP"
+CRITRATE_UP_EFFECT = "HOLD_EFFECT_CRITRATE_UP"
+ACCURACY_UP_PARAM_DEFAULT = 10  # Wide Lens's decomp param; used only if no ACCURACY_UP item is in the data
+
+
+def is_high_crit(effect: str) -> bool:
+    return "HIGH_CRITICAL" in effect
+
+
+def crit_stage(move, item_effect: str | None) -> int:
+    stage = (1 if is_high_crit(move.effect) else 0) + (1 if item_effect == CRITRATE_UP_EFFECT else 0)
+    return min(stage, MAX_CRIT_STAGE)
+
+
+def crit_term(stage: int) -> float:
+    """Expected-damage multiplier of critical hits at `stage`: 1 + P(crit), a crit doubling damage."""
+    return 1.0 + 1.0 / CRIT_STAGE_RATES[min(stage, MAX_CRIT_STAGE)]
+
+
+# 025: move effects that are a pure cost to the user (the dominance rule's cost class; each with its reason). A move with a
+# cost effect loses on the effect axis to a plain move or to one with a secondary; two different secondaries are incomparable.
+# Self stat drops are costs by the owner's decision (spec clarification 3): the drop lasts only until the user switches, which
+# the battle player's model prices (sim/test/switch_reset.test.mjs pins the reset).
+EFFECT_COSTS: dict[str, str] = {
+    "BATTLE_EFFECT_DIG": "charge turn (two-turn move)", "BATTLE_EFFECT_FLY": "charge turn", "BATTLE_EFFECT_DIVE": "charge turn",
+    "BATTLE_EFFECT_BOUNCE": "charge turn", "BATTLE_EFFECT_SKIP_CHARGE_TURN_IN_SUN": "charge turn (Solar Beam)",
+    "BATTLE_EFFECT_CHARGE_TURN_DEF_UP": "charge turn (Skull Bash)", "BATTLE_EFFECT_CHARGE_TURN_HIGH_CRIT": "charge turn (Sky Attack)",
+    "BATTLE_EFFECT_CHARGE_TURN_HIGH_CRIT_FLINCH": "charge turn", "BATTLE_EFFECT_SHADOW_FORCE": "charge turn",
+    "BATTLE_EFFECT_RECHARGE_AFTER": "recharge turn (Hyper Beam, Giga Impact)",
+    "BATTLE_EFFECT_RECOIL_HALF": "recoil", "BATTLE_EFFECT_RECOIL_THIRD": "recoil", "BATTLE_EFFECT_RECOIL_QUARTER": "recoil",
+    "BATTLE_EFFECT_RECOIL_BURN_HIT": "recoil (Flare Blitz)", "BATTLE_EFFECT_RECOIL_PARALYZE_HIT": "recoil (Volt Tackle)",
+    "BATTLE_EFFECT_USER_SP_ATK_DOWN_2": "self stat drop (Overheat, Draco Meteor, Leaf Storm, Psycho Boost)",
+    "BATTLE_EFFECT_LOWER_OWN_ATK_AND_DEF": "self stat drop (Superpower)",
+    "BATTLE_EFFECT_DEF_SPD_DOWN_HIT": "self stat drop (Close Combat)",
+    "BATTLE_EFFECT_SPEED_DOWN_HIT": "self stat drop (Hammer Arm)",
+    "BATTLE_EFFECT_CONTINUE_AND_CONFUSE_SELF": "locks in and confuses the user (Outrage, Thrash, Petal Dance)",
+    "BATTLE_EFFECT_CRASH_ON_MISS": "crash damage on a miss (Jump Kick)",
+    "BATTLE_EFFECT_DOUBLE_POWER_EACH_TURN_LOCK_INTO": "locks in (Rollout, Ice Ball)",
+    "BATTLE_EFFECT_HIT_IN_3_TURNS": "delayed hit (Future Sight)",
+    "BATTLE_EFFECT_ALWAYS_FLINCH_FIRST_TURN_ONLY": "first turn only (Fake Out)",
+    "BATTLE_EFFECT_RECOVER_DAMAGE_SLEEP": "only while the target sleeps (Dream Eater)",
+    "BATTLE_EFFECT_HIT_LAST_WHIFF_IF_HIT": "fails when hit first (Focus Punch)",
+    "BATTLE_EFFECT_LEAVE_WITH_1_HP": "the user faints (Explosion, Self-Destruct)",
+}
+
+
+def effect_class(effect: str) -> str:
+    if effect == PLAIN:
+        return "plain"
+    return "cost" if effect in EFFECT_COSTS else "secondary"
+
+
 MEMBER_IVS = {k: 15 for k in ("hp", "atk", "def", "spa", "spd", "spe")}
 MEMBER_EVS = {k: 85 for k in ("hp", "atk", "def", "spa", "spd", "spe")}
 MEMBER_NATURE = "NATURE_HARDY"
@@ -403,35 +471,80 @@ def is_attack(mv) -> bool:
     return mv.power > 1 and mv.category != "CLASS_STATUS" and mv.effect not in EXCLUDED_ATTACK_EFFECTS
 
 
+def _acc(m) -> int:
+    return 101 if m.accuracy == 0 else m.accuracy  # 0 means "never misses" in the data
+
+
+def _effect_order(a, b) -> tuple[bool, bool] | None:
+    """(at least as good, strictly better) of a's effect against b's, or None when incomparable."""
+    if a.effect == b.effect:
+        return a.effect_chance >= b.effect_chance, a.effect_chance > b.effect_chance
+    ca, cb = effect_class(a.effect), effect_class(b.effect)
+    if cb == "cost" and ca != "cost":
+        return True, True
+    if cb == "plain" and ca == "secondary":
+        return True, True
+    return None
+
+
+def dominance_axes(a, b) -> list[str] | None:
+    """025 (widening the R8 rule, dominance assessment): the axes on which `a` is strictly better than `b`, when `a` is at
+    least as good on every axis (same type and category; power, accuracy, priority, PP, effect) and strictly better on one;
+    None otherwise."""
+    if a.type != b.type or a.category != b.category:
+        return None
+    if not (a.power >= b.power and _acc(a) >= _acc(b) and a.priority >= b.priority and a.pp >= b.pp):
+        return None
+    eff = _effect_order(a, b)
+    if eff is None or not eff[0]:
+        return None
+    axes = [name for name, gt in (("power", a.power > b.power), ("accuracy", _acc(a) > _acc(b)),
+                                  ("priority", a.priority > b.priority), ("PP", a.pp > b.pp), ("effect", eff[1])) if gt]
+    return axes or None
+
+
 def dominates(a, b) -> bool:
-    """R8 strict dominance (module doc, step 3)."""
-    return (a.type == b.type and a.category == b.category and a.accuracy == b.accuracy
-            and a.priority == b.priority and a.power > b.power and b.effect == PLAIN
-            and (a.effect == PLAIN or a.effect_chance > 0))
+    """Strict dominance: same type and category, at least as good on power, accuracy, priority, PP and effect, strictly
+    better on one (R8 widened by feature 025 with PP and the effect cost class)."""
+    return dominance_axes(a, b) is not None
 
 
 def prune(move_consts: list[str]) -> tuple[list[str], dict[str, str]]:
-    """Damaging moves after R8 pruning; and {dropped move: reason}."""
+    """Damaging moves after dominance pruning; and {dropped move: reason naming the winner and the axes}."""
     mv = load_moves()
     attacks = [m for m in move_consts if is_attack(mv[m])]
     dropped = {}
     kept = []
     for b in attacks:
-        dom = next((a for a in attacks if a != b and dominates(mv[a], mv[b])), None)
+        dom = next(((a, dominance_axes(mv[a], mv[b])) for a in attacks if a != b and dominates(mv[a], mv[b])), None)
         if dom:
-            dropped[b] = f"dominated by {dom} (same type/category/accuracy/priority, higher power, R8)"
+            dropped[b] = (f"dominated by {dom[0]} (same type/category; at least as good on power, accuracy, priority, PP, "
+                          f"effect; better: {', '.join(dom[1])})")
         else:
             kept.append(b)
     return kept, dropped
 
 
-def move_value(const_member: str, move_const: str, member_level: int = 100) -> list[float]:
+@cache
+def _accuracy_up_param() -> int:
+    for it in load_items().values():
+        if it.hold_effect == ACCURACY_UP_EFFECT:
+            return int(it.effect_param)
+    return ACCURACY_UP_PARAM_DEFAULT
+
+
+def move_value(const_member: str, move_const: str, member_level: int = 100, item_effect: str | None = None) -> list[float]:
     """v(m, o) for every League opponent mon (module doc, step 4), in league_opponents() order. 024: the power is
     the data power for fixed-power moves and the game's computed power per opponent for the offered variable-power
-    moves (`variable_power`), which is why the member's level is needed (Gyro Ball)."""
+    moves (`variable_power`), which is why the member's level is needed (Gyro Ball). 025: every value carries the
+    critical-hit term of the move's crit stage; under `item_effect` the valuation is item-conditioned: HOLD_EFFECT_ACCURACY_UP
+    raises the accuracy factor (capped at 1), HOLD_EFFECT_CRITRATE_UP raises the crit stage."""
     m = load_moves()[move_const]
     sp = MS.by_constant()[const_member]
     acc = 1.0 if m.accuracy == 0 else m.accuracy / 100
+    if item_effect == ACCURACY_UP_EFFECT and m.accuracy != 0:
+        acc = min(1.0, acc * (100 + _accuracy_up_param()) / 100)
+    crit = crit_term(crit_stage(m, item_effect))
     stab = STAB_WEIGHT if m.type in sp.types else 1.0
     stat = sp.base_stats["atk"] if m.category == "CLASS_PHYSICAL" else sp.base_stats["spa"]
     effw = EFFECT_WEIGHT.get(m.effect, 1.0)
@@ -440,7 +553,7 @@ def move_value(const_member: str, move_const: str, member_level: int = 100) -> l
         power = variable_power(move_const, const_member, member_level, opp)
         # the same multiplication order as before 024, so fixed-power values are bit-identical (tie order in ranked lists)
         base = (m.power if power is None else power) * acc * stab * stat * effw
-        out.append(opp.weight * base * type_mult(m.type, opp.types))
+        out.append(opp.weight * base * type_mult(m.type, opp.types) * crit)
     return out
 
 
@@ -472,11 +585,18 @@ class MemberCandidates:
     pruned: dict[str, str] = field(default_factory=dict)
     scores: dict[str, float] = field(default_factory=dict)
     variable_offered: list[str] = field(default_factory=list)  # 024: the member's legal offered variable-power moves
-    extras: int = 0  # 024: how many of `movesets` are appended variable-power sets (the last `extras` entries)
+    extras: int = 0  # how many of `movesets` are appended sets (024 variable-power and 025 item-conditioned): the last `extras`
+    items_extra: dict[tuple[str, ...], list[str]] = field(default_factory=dict)  # 025: appended items per base/024 set
+    item_extras: dict[tuple[str, ...], str] = field(default_factory=dict)  # 025: item-conditioned extra set -> its item
+    extra_kind: dict[tuple[str, ...], str] = field(default_factory=dict)  # appended set -> variable_power | accuracy_item | crit_item
+    extras_by_kind: dict[str, int] = field(default_factory=dict)
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
                 "variable_offered": list(self.variable_offered), "extras": self.extras,
+                "extras_by_kind": dict(self.extras_by_kind),
+                "items_extra": {"|".join(k): v for k, v in self.items_extra.items()},
+                "item_extras": {"|".join(k): v for k, v in self.item_extras.items()},
                 "movesets": [list(m) for m in self.movesets],
                 "setup_moveset": list(self.setup_moveset) if self.setup_moveset else None,
                 "items": {"|".join(k): v for k, v in self.items.items()},
@@ -493,6 +613,32 @@ def _item_copies(led, const: str) -> int | str:
     if k not in _ITEM_COPIES:
         _ITEM_COPIES[k] = led.item_copies(const)
     return _ITEM_COPIES[k]
+
+
+def _item_for_effect(effect: str, led) -> str | None:
+    """025: the offerable item with `effect` (a pre-Champion copy, not single-use): unlimited copies first, then by key."""
+    found = []
+    for it in load_items().values():
+        if it.hold_effect == effect and _item_copies(led, it.const) != 0 and not is_excluded_single_use(it.key):
+            found.append((_item_copies(led, it.const) != MS.UNLIMITED, it.key))
+    return sorted(found)[0][1] if found else None
+
+
+def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> list[str]:
+    """025 (H4): items appended after today's candidates for a moveset: the ACCURACY_UP item when any attack can miss
+    (0 < accuracy < 100), then the CRITRATE_UP item when the set has an attack; each only with a pre-Champion copy."""
+    mv = load_moves()
+    attacks = [m for m in moveset if is_attack(mv[m]) or m in OFFERED_VARIABLE]
+    out: list[str] = []
+    if any(0 < mv[m].accuracy < 100 for m in attacks):
+        it = _item_for_effect(ACCURACY_UP_EFFECT, led)
+        if it:
+            out.append(it)
+    if attacks:
+        it = _item_for_effect(CRITRATE_UP_EFFECT, led)
+        if it:
+            out.append(it)
+    return out
 
 
 def held_item_candidates(const_member: str, moveset: tuple[str, ...], led,
@@ -591,17 +737,67 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
                 extras.append(combo)
             if len(extras) >= k:
                 break
+    # 025 (H4, FR-001a): item-conditioned extra sets. For each conditioning item the member can hold, re-value every attack
+    # under the item, cut a pool and rank the four-move sets as today, and append up to k sets not already offered, diverse
+    # among themselves; each is paired with the item. Lens-conditioned sets come before claw-conditioned ones.
+    item_sets: list[tuple[tuple[str, ...], str, str]] = []
+    extra_kind: dict[tuple[str, ...], str] = {c: "variable_power" for c in extras}
+    if size == 4:
+        mv = load_moves()
+        cands = attacks + variable
+        conditioning = []
+        if any(0 < mv[m].accuracy < 100 for m in cands):
+            it = _item_for_effect(ACCURACY_UP_EFFECT, led)
+            if it:
+                conditioning.append(("accuracy_item", ACCURACY_UP_EFFECT, it))
+        if cands:
+            it = _item_for_effect(CRITRATE_UP_EFFECT, led)
+            if it:
+                conditioning.append(("crit_item", CRITRATE_UP_EFFECT, it))
+        existing = set(chosen) | set(extras)
+        for kind, effect, item in conditioning:
+            sc_i = {m: sum(move_value(const, m, level, item_effect=effect)) for m in cands}
+            pool_i = sorted(cands, key=lambda m: (-sc_i[m], m))[:POOL]
+            vals_i = {m: move_value(const, m, level, item_effect=effect) for m in pool_i}
+            ranked_i = sorted((-coverage([vals_i[m] for m in c]), -sum(sc_i[m] for m in c), c)
+                              for c in itertools.combinations(sorted(pool_i), 4))
+            picked: list[tuple[str, ...]] = []
+            for _, _, c in ranked_i:
+                if c in existing or any(len(set(c) ^ set(p)) // 2 < 2 for p in picked):
+                    continue
+                picked.append(c)
+                if len(picked) >= k:
+                    break
+            for c in picked:
+                item_sets.append((c, item, kind))
+                existing.add(c)
+                extra_kind[c] = kind
+                for m in c:
+                    scores.setdefault(m, sc_i[m])
     # order each moveset by score (stable display; worker order does not matter for legality)
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
     extras = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extras]
+    item_sets = [(tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))), item, kind) for c, item, kind in item_sets]
+    extra_kind = {tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))): kind for c, kind in extra_kind.items()}
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for _, _, c in combos[:RANKED]]
     ranked += [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extra_combos]  # 024: prefix unchanged
-    movesets = chosen + extras
-    items = {ms: held_item_candidates(const, ms, led, team, level) for ms in movesets + ([setup] if setup else [])}
+    movesets = chosen + extras + [c for c, _, _ in item_sets]
+    items = {ms: held_item_candidates(const, ms, led, team, level) for ms in chosen + extras + ([setup] if setup else [])}
+    item_extras: dict[tuple[str, ...], str] = {}
+    for c, item, _ in item_sets:
+        usual = held_item_candidates(const, c, led, team, level)
+        items[c] = [item] + [x for x in usual if x != item]
+        item_extras[c] = item
+    items_extra = {ms: extra_item_candidates(const, ms, led) for ms in chosen + extras}
+    by_kind: dict[str, int] = {}
+    for kind in extra_kind.values():
+        by_kind[kind] = by_kind.get(kind, 0) + 1
     return MemberCandidates(const, variant, level, movesets, setup, items, ranked, pool, dropped,
-                            {m: scores[m] for m in pool + variable}, variable_offered=variable, extras=len(extras))
+                            {m: scores[m] for m in pool + variable + [m for c, _, _ in item_sets for m in c] if m in scores},
+                            variable_offered=variable, extras=len(extras) + len(item_sets),
+                            items_extra=items_extra, item_extras=item_extras, extra_kind=extra_kind, extras_by_kind=by_kind)
 
 
 __all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "coverage", "display_name", "dominates",

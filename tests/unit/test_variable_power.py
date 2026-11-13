@@ -78,22 +78,39 @@ def snapshot_and_lists():
     return out
 
 
-def test_todays_candidates_are_a_prefix_of_the_new_lists(snapshot_and_lists):
+def _attribution():
+    """specs/025-h4-wide-lens-razor-claw/scripts/attribution.py imported by path (registered in sys.modules: the 019 lesson)."""
+    import importlib.util
+    import sys
+
+    path = pins.REPO_ROOT / "specs" / "025-h4-wide-lens-razor-claw" / "scripts" / "attribution.py"
+    spec = importlib.util.spec_from_file_location("attribution_025", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["attribution_025"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_todays_candidates_differ_from_024s_only_by_attributed_causes(snapshot_and_lists):
+    # 024 pinned today's lists as a prefix of the new ones. 025 (the crit term in every move value, the widened dominance
+    # rule, the item-conditioned extras) changes them; every difference from the 024 snapshot must be attributed to one
+    # of those causes by the shared helper (also used by the 025 acceptance), never a "defect".
+    attribution = _attribution()
     assert len(snapshot_and_lists) == 6
     for key, (s, mc) in snapshot_and_lists.items():
-        n = len(s["movesets"])
-        assert [list(m) for m in mc.movesets[:n]] == s["movesets"], key
-        assert (list(mc.setup_moveset) if mc.setup_moveset else None) == s["setup_moveset"], key
-        nr = len(s["ranked_prefix"])  # today's combos; fewer than 210 when the pool is small (Rotom)
-        assert [list(m) for m in mc.ranked[:nr]] == s["ranked_prefix"], key
-        assert list(mc.pool) == s["pool"], key
-        assert mc.extras == len(mc.movesets) - n
+        records = attribution.attribute(s, mc)
+        defects = [r for r in records if r["cause"] == "defect"]
+        assert not defects, (key, defects)
+        n = len(mc.movesets) - mc.extras
+        assert 1 <= n <= C.K_MOVESETS, key
+        assert sum(mc.extras_by_kind.values()) == mc.extras, key
         if mc.variable_offered:
-            assert mc.extras >= 1, key
+            assert mc.extras_by_kind.get("variable_power", 0) >= 1, key
             for extra in mc.movesets[n:]:
-                assert any(m in C.OFFERED_VARIABLE for m in extra), (key, extra)
+                if mc.extra_kind.get(extra) == "variable_power":
+                    assert any(m in C.OFFERED_VARIABLE for m in extra), (key, extra)
         else:
-            assert mc.extras == 0, key
+            assert mc.extras_by_kind.get("variable_power", 0) == 0, key
 
 
 def test_not_offered_moves_never_appear(snapshot_and_lists):
