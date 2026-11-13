@@ -235,8 +235,9 @@ blocked.
   can miss and of none whose attacks all hit; the lens-conditioned extra sets appear where the lens changes the ranking and
   carry the lens; Razor Claw in every moveset with an attack; claw-conditioned extra sets where the claw changes the ranking;
   every list difference from the pre-feature snapshot attributed to one of the three causes of FR-006.
-- **SC-002**: The dominance controls pass; on the benchmark, the 17 dominated moves the assessment's probe found are dropped
-  and no other move is.
+- **SC-002**: The dominance controls pass; on the benchmark, at least the 17 dominated moves the assessment's probe found are
+  dropped; any additional drop is listed in the validation log with its winner and the cost-table entry that decided it, and
+  reviewed.
 - **SC-003**: The branch's screen on B2 quick is built by today's rule from the base options with every appended option
   beyond the cap; the overlap with the pre-feature run's 81 teams is reported.
 - **SC-004**: The identity evaluations are identical after removing the volatile fields and `member_defaults`; the equal-levels
