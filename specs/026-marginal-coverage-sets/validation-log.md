@@ -130,3 +130,27 @@ uv run pytest -q tests/unit/test_marginal_coverage.py -m "not battle_sim"   → 
 uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py tests/unit/test_reports.py tests/unit/test_optimizer_candidates.py -m "not battle_sim"   → see below
 ```
 60 passed in 46.38s
+
+## T016 Branch side, run 1 (6:27:38 to 6:43:07 PM EST, alone; `runs/026-evidence/acceptance-run1.txt`, exit 1)
+
+`acceptance.py --side branch --workers 16 --runs 2000` on ce7cc91:
+
+- B2 quick on the branch: the same six species at levels **[52, 50, 50, 50, 51, 53]** (main [51, 52, 52, 52, 53, 53]: two levels
+  lower on average), clear 0.9440 [0.9203, 0.961] (n 500, 2 attempts), expected average final level **51.69** (main 52.79,
+  diff −1.10), wall 481.2 s. Winner differences: Garchomp Rock Slide / Crunch for Stone Edge / Swords Dance, Infernape Grass
+  Knot for Fire Punch (Expert Belt), Staraptor Return / Aerial Ace for Giga Impact / U-turn, Rotom's fillers, Floatzel Ice
+  Punch / Crunch / Focus Blast, Weavile Aerial Ace / Brick Break; the report's Notes block names Infernape's Flamethrower,
+  Staraptor's Pluck and Rotom's Charge Beam / ThunderShock as filler.
+- Equal levels at [52, 50, 50, 50, 51, 53], 2,000 pairs, expectimax2-v4: **branch 0.9485 vs main 0.7555**, only-branch 470 /
+  only-main 84, p 4.66e-66, verdict A.
+- Screen: main 170 teams, branch 188 (extras 107: variable_power 18, accuracy_item 18, crit_item 18, item_deviation 53);
+  overlap 0 of 170 (every member's lists changed). Baseline repairs 0; screen drops mentioning repair 0.
+- Attributed diff over 36 members: 0 defects. Dead moves in offered base sets: 335 (all sets) before, **0 after** outside the
+  9 listed members. Candidate generation six B2 species: main 0.9 s, branch 1.2 s (without the allocation; see T013-T015).
+- Identity rows: **DIFFERS on `member_notes`** only: the new report field is `[]` on the branch and absent on main; the script
+  must strip it as a volatile field, as 025 stripped its new provenance block (an omission in the script's adaptation). Fixed;
+  `compare_identity()` offline on run 1's files: both identical.
+- Also fixed after run 1: the filler reason named the member's live moves given its two strongest, which on the rebuilt
+  Infernape listed 17 moves; it is now a fixed sentence ("the set's other moves already cover every League opponent").
+- FR-012 on run 1: verdict A, level diff −1.10, defects 0, baseline repairs 0, dead after 0, identity (script) → `pass False`
+  by the rule as run. Run 2 follows on the fixed script and wording (the measurements are seeded; identical results expected).

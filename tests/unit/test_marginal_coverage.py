@@ -165,7 +165,7 @@ def test_choose_sets_replaces_a_dead_move_from_outside_the_pool():
     # W (outside the score pool) replaces a dead move; the other two slots stay dead because only X0 and W are ever best,
     # and the member is listed with the "live moves fill the sets" reason
     assert "W" in sets[0] and "X0" in sets[0]
-    assert set(C.dead_moves(sets[0], vals)) <= {f"X{i}" for i in range(1, 10)} and reason and "live moves" in reason
+    assert set(C.dead_moves(sets[0], vals)) <= {f"X{i}" for i in range(1, 10)} and reason == C.FILLER_REASON
 
 
 # ---- part 4: the real controls on the six B2 species at level 48 (SC-001, SC-002) ------------------------------------
@@ -233,7 +233,7 @@ def test_garchomp_unchanged_and_staraptor_takes_return_without_a_cost_move(b2):
     assert all("MOVE_FLY" not in ms and "MOVE_GIGA_IMPACT" not in ms for ms in base), base
     # Return, Close Combat and Aerial Ace cover every League opponent, so the fourth slot is a filler, kept (the set is not
     # dropped for a weaker all-live one) and listed with the reason
-    assert mc.dead_moves[base[0]] and mc.no_live_reason and "live moves" in mc.no_live_reason
+    assert mc.dead_moves[base[0]] and mc.no_live_reason == C.FILLER_REASON
     assert all(len(C.dead_moves(ms, _vals(mc))) <= 1 for ms in base)
 
 

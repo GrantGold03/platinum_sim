@@ -35,7 +35,7 @@ IDENT_SEED = "026-ident"
 VARIABLE = {"return", "grass_knot", "low_kick", "gyro_ball"}  # result.json uses move keys (024)
 # Fields that change with every feature (code version, ledger) and are removed before the identity comparison (FR-008).
 VOLATILE = ("sim_code_hash", "platsim_code_hash", "repo_commit", "repo_dirty", "divergence_ledger_version",
-            "divergence_ledger_file_version", "divergences")
+            "divergence_ledger_file_version", "divergences", "member_notes")  # member_notes is new in 026 (empty for evaluate)
 VOLATILE_PROV = ("divergence_ledger_version",)  # under provenance.worker
 VOLATILE_PROV_TOP = ("divergence_ledger_file_version", "member_defaults")  # under provenance (member_defaults is new in 025)
 

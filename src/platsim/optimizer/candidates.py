@@ -720,13 +720,14 @@ def _repaired(combo, cands, vals, scores, cost_tier=None) -> tuple[str, ...]:
     return tuple(sorted(ms))
 
 
+FILLER_REASON = ("no live replacement left: the set's other moves already cover every League opponent; nothing else it "
+                 "learns is the best choice against any of them")
+
+
 def filler_reason(cands, vals, scores) -> str:
-    live = live_moves(cands, vals, scores)
-    if not live:
-        return NO_LIVE_REASON
-    top2 = sorted(cands, key=lambda m: (-scores[m], m))[:2]
-    names = ", ".join(display_move(m) for m in top2 + live)
-    return f"no live replacement left: its live moves ({names}) already cover every League opponent; nothing else it learns is the best choice against any of them"
+    """The reason a set keeps a dead move: nothing live beyond the two strongest moves (NO_LIVE_REASON), or the set's live
+    moves cover everyone and no legal move adds coverage (FILLER_REASON)."""
+    return NO_LIVE_REASON if not live_moves(cands, vals, scores) else FILLER_REASON
 
 
 def display_move(m: str) -> str:
