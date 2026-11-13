@@ -1,4 +1,4 @@
-# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) closed on its branch, all gates green; merge on the user's go)
+# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) merged to `main` 84299da; next: the marginal-coverage candidate fix via /speckit-specify on a new branch)
 - **Feature 025 `025-h4-wide-lens-razor-claw` built 2026-11-13 on its branch from `main` 3a91eac (main checkout).** Commits
   fda56c9 (pre-feature evidence), a8f7792 (candidates: crit term, item-conditioned move value, Wide Lens and Razor Claw with
   item-conditioned extra sets, widened dominance rule, screen kinds, switch-reset Node test), 1f894e5 (`provenance.member_defaults`),
@@ -7,7 +7,7 @@
   0 defects over 36 members (run 1 had 10 helper-side "defects": a re-added item-conditioned set; helper fixed, rerun identical).
   Evidence `runs/025-evidence/` (local), copies `specs/025-h4-wide-lens-razor-claw/evidence/`. **Gates (T023, 2:12:57 to 3:57:23 PM EST): vendored diff empty, `sim` diff only the new test, sim hash and
   ledger version unchanged, platsim hash changed, Node 384 pass, full pytest 634 passed + 4 xfailed in 1 h 41 min. Closed with the
-  docs commit. Next: the merge on the user's go: `git checkout main && git merge --ff-only 025-h4-wide-lens-razor-claw
+  docs commit. **Merged to `main` 2026-11-13, about 4:05 PM EST on the user's go (fast-forward to 84299da, pushed).** The merge command was: `git checkout main && git merge --ff-only 025-h4-wide-lens-razor-claw
   && git push`. Traps found: `report/provenance.py` must not import `candidates` (circular through `optimizer.api` → `evaluate`);
   Weavile's evolution consumes a Razor Claw copy; Earthquake's data effect is `DOUBLE_DAMAGE_DIG` (secondary, not plain); the
   acceptance script's identity comparison must be called (it was defined and unused in run 1). **After the merge: the next feature
