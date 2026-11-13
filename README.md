@@ -5,6 +5,16 @@ beating Cynthia** that still clears the Elite Four plus Champion gauntlet reliab
 keeps the final level gap at 10 or less. It can also battle-test a team you already have, check its
 legality, and trace any rule back to the game source.
 
+The output is advice to a person: the moves, held items and abilities your six should carry, and
+the levels they need, **assuming you play the battles competently** (constitution v1.5.0, Principle
+VII): you know the League's teams, you switch when a matchup is bad, you take the free switch Shift
+offers after a KO, and you do not misclick. The simulated player that finds those levels is a stand-in
+for that player; it never reads the opponent's dice, and the report names which player policy
+produced every number. Your Pokemon are assumed to be **average ones, not bred or trained**: a neutral
+nature, IVs of 15 in every stat (the middle of 0 to 31), EVs of 85 in every stat (the full 510 spread
+evenly, as ordinary play does), and maximum friendship. A team with better natures or IVs needs
+slightly lower levels than the tool reports; a careless player needs higher ones.
+
 Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimizer/), mainly
 `spec.md`, `research.md` and `validation-log.md`. Principles: [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 
@@ -20,7 +30,15 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   applied at runtime.
 - **Opponents use the game's own trainer AI.** The decomp's AI script (`trainer_ai/script.s`) is run
   by an interpreter (`decomp-ai`), and that includes Cynthia's 4× Full Restore.
-- **The player uses a named look-ahead policy**, `expectimax2-v4` (the default everywhere since
+- **The player is a stand-in for a competent human** (constitution v1.5.0, Principle VII). What it
+  does well: it knows the League's parties, moves and items as the game stores them and the visible
+  battle state; it looks two turns ahead, choosing moves and switches on expected damage with the
+  game's own trainer AI sampled for the opponent's replies; it takes the Shift free switch after a KO
+  when a bench member is better placed. What it does not model: payoffs past two turns (weather,
+  Wish, Taunt, Substitute setups), Hidden Power, Magnitude and the other moves listed under feature
+  024, and the opponent's random draws (it never reads them; a human cannot either). A change to its
+  strength is a change to the levels the tool reports, which is why such changes are made
+  reference-first with the level cost stated. **The policy is `expectimax2-v4`** (the default everywhere since
   2026-11-03, feature 018): `expectimax2-v2`'s model, leaf and horizon with a smaller search budget (4 root
   samples instead of 8, 1 second-ply sample instead of 2, first-ply branches below weight 0.05 valued by the
   leaf), 1.64x faster single process. It was validated reference-first against v2 on 2,000 paired runs per team
@@ -97,8 +115,9 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     and Game Corner TMs are unlimited.
   - **No bag items in battle.** Only held items have an effect. Between battles the team is healed
     (HP, status, faints). PP carries over, except that Leppa Berries can be farmed.
-  - Every member has **IV 15, EV 85 in each stat, and a neutral nature**. NPC trades and gifts use
-    the values the game fixes for them. **No PP Ups**: every move has base PP, on both sides.
+  - Every member has **IV 15, EV 85 in each stat, a neutral nature (Hardy) and maximum friendship**:
+    the average Pokemon a player has, not a bred or trained one (constitution v1.5.0). NPC trades and
+    gifts use the values the game fixes for them. **No PP Ups**: every move has base PP, on both sides.
   - Level-up moves are **auto-learned as in the game** when a member has fewer than 4 moves.
     Otherwise the prompt is declined. Evolution is always declined.
   - Abilities: when there are two, both are tested and the better one is kept. A tie keeps the

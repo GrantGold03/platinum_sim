@@ -1,26 +1,34 @@
 <!--
 Sync Impact Report
-- Version change: 1.3.0 → 1.4.0 (MINOR: new principle added)
-- Modified principles:
-  - V. Verified Claims With Positive Controls: the "simplest design" bullet now names a
-    reference kept under Principle VI as justified complexity.
+- Version change: 1.4.0 → 1.5.0 (MINOR: new principle added; purpose paragraph corrected)
+- Modified principles: none renamed.
+- Modified sections:
+  - Purpose paragraph (under the title): names the human user (a competent player preparing
+    their own six Pokemon for the League); separates what is searched per member (starting
+    level, four moves, ability, held item) from what is fixed to simulate the average Pokemon
+    (Hardy nature, IVs 15, EVs 85, maximum friendship); states the measurement (the lowest
+    expected average team level after beating Cynthia among qualifying builds).
+  - Governance: the compliance check covers Principles I–VII.
 - Added sections:
-  - Principle VI. Reference-First Speed: Spend Development Time to Save Run Time.
-- Modified sections: Governance (the compliance check covers Principles I–VI).
+  - Principle VII. A Competent Human Player Is the User.
 - Removed sections: none
-- Reason: user decision 2026-10-14, during feature 007 (status moves and held items). The user
-  answered the run-time question with "build C first, then build a pre-filter and test it against
-  C so the end result is closer to B". They then said: "spending more time in development
-  (building an expensive model and then testing the cheaper versions against it) to achieve
-  higher accuracy in shorter end product runtimes should be the goal and should be encouraged",
-  and asked to "add it to the constitution to prefer longer development times if it results in
-  shorter simulation runtimes".
+- Reason: user clarification 2026-11-13: "On an input of 6 team members, the end goal is the
+  version of that team of 6 with the best movesets and items and abilities. The level that the
+  team is at to beat Cynthia serves as the measurement for that. We are not optimizing for an
+  algorithmic player, but for a normal player who wants to put in their team of 6 and find out
+  what moves and items they should have on that team heading into the Elite 4 and Champion
+  fight"; asked whether a casual or competent player is meant: "a competent player should be
+  expected"; and on the fixed nature, IVs and EVs: they "simulate the average pokemon".
 - Templates reviewed:
   - .specify/templates/plan-template.md (Constitution Check gates come from this file) —
-    compatible, no change
+    compatible, no change (the check enumerates principles from this document)
   - .specify/templates/spec-template.md — compatible, no change
   - .specify/templates/tasks-template.md — compatible, no change
+- Follow-ups outside this file (docs, not governance): the README's first paragraph and its
+  player description (what "competently" means; the four fixed assumptions), and the report
+  files' statement of the assumptions (Principle VII bullet 2 and the purpose paragraph).
 - Prior history:
+  - 1.4.0 (2026-10-14): Principle VI, reference-first speed.
   - 1.3.0 (2026-10-14): Spec Kit required for every behaviour change.
   - 1.2.0 (2026-10-11): Principle III, explicit off-by-default widening rules (feature 003).
   - 1.1.0 (2026-10-09): Principle IV, report files vs. views (feature 002).
@@ -30,10 +38,18 @@ Sync Impact Report
 
 # Pokemon Platinum Team Simulator Constitution
 
-The Pokemon Platinum Team Simulator takes six Pokemon species as input and produces an
-optimized team (moves, ability, nature, held item, IVs/EVs, level as applicable). Game data is
-checked against the `pokeplatinum` decompilation; battles are run with Pokemon Showdown's
-simulator.
+The Pokemon Platinum Team Simulator serves a human player preparing their own six Pokemon for
+the Elite Four and Champion. Given six species, it finds the moves, held items and abilities
+those six should carry, and the levels they need, to beat Cynthia. The measurement of "best" is
+the lowest expected average team level after beating Cynthia among builds that clear the whole
+gauntlet reliably with a bounded level gap (the objective of feature 001, stated in every
+report). Searched per member: starting level, four moves, ability, held item. Fixed, to
+simulate the average Pokemon a player has rather than a bred or trained one: a neutral nature
+(Hardy, no stat raised or lowered), IVs of 15 in every stat (the middle of the 0 to 31 range),
+EVs of 85 in every stat (the full 510 total spread evenly, as ordinary play distributes it), and
+maximum friendship (a Pokemon that has travelled with the player). These assumptions are stated
+in the README and in every report. Game data is checked against the `pokeplatinum`
+decompilation; battles are run with Pokemon Showdown's simulator.
 
 ## Core Principles
 
@@ -153,6 +169,34 @@ Rationale: users pay the run time of every optimization; development time is pai
 cheap heuristic that has never been checked against an accurate version can silently cost
 accuracy. The reference is what shows it doesn't.
 
+### VII. A Competent Human Player Is the User
+
+- The tool optimizes for a competent human player, not for the search that plays the simulated
+  battles. The simulated player is a stand-in for that human and MUST be built and judged as
+  one: it MAY use what a competent player can know (the League's parties, movesets and items as
+  the game stores them; the visible battle state; the game's rules, including the Shift battle
+  style; a general understanding of how the trainer AI behaves) and MUST NOT use what no player
+  can know (the opponent's random draws, the exact outcome of the AI's own dice, any battle
+  state the game hides).
+- The simulated player's skill is part of the measurement. The levels the tool reports are the
+  levels at which the team clears when played competently; the report files MUST name the
+  player policy that produced them, and the README MUST say what "competently" means in terms
+  the user can act on (which decisions the player makes well, and which it does not model). A
+  change to the player's strength is a change to the measurement and MUST be made
+  reference-first (Principle VI) with the level cost stated, not only the speed gain.
+- A move, item or ability MUST be offered on the human's terms: it counts only if the human can
+  obtain it (Principle III) and only if a competent player would use it as the simulated player
+  does. Decisions the simulated player makes that a human would not naturally make the same way
+  (an exact per-turn calculation, a free switch chosen by search) are acceptable when a
+  competent human, knowing the League's teams, would reach the same decision most of the time;
+  where they would not, the gap MUST be recorded as a known limitation, not hidden inside the
+  search.
+
+Rationale: the output is advice to a person. Advice calibrated to a perfect searcher sends the
+player in under-levelled; advice calibrated to a careless player wastes levels. A competent
+player who knows the League and plays carefully, with ordinary rather than bred Pokemon, is the
+standard, and the documentation must let the user judge how closely they match it.
+
 ## Technical Constraints
 
 - Sources: `pokeplatinum/` (decomp) and `pokemon-showdown/` (simulator) are vendored at the
@@ -208,6 +252,6 @@ accuracy. The reference is what shows it doesn't.
 - Versioning: MAJOR for removing or redefining a principle; MINOR for adding a principle or
   section or materially expanding guidance; PATCH for clarifications and wording.
 - Compliance: every `/speckit-plan` Constitution Check and every code review MUST verify
-  Principles I–VI. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
+  Principles I–VII. Runtime development guidance for agents lives in the user's `CLAUDE.md` files.
 
-**Version**: 1.4.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-10-14
+**Version**: 1.5.0 | **Ratified**: 2026-10-07 | **Last Amended**: 2026-11-13
