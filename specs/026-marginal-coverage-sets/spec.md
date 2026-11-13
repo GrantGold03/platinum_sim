@@ -13,6 +13,8 @@
 ### Session 2026-11-13
 
 - Q: When the diversity rule (sets at least two moves apart) and the dead-move rule conflict because a member has too few live moves, which gives way? → A: B, the dead-move rule: diversity relaxes to one move between sets whose two-apart alternative would carry a dead move.
+- Q: When none of a member's offered sets can be built on the team because other members hold the single-copy TMs those sets need, should the repair fallback obey the dead-move rule, or should the sets be built with the team's copies in mind from the start? → A: C, resource-aware candidate generation: each member's offered sets are built knowing the team's copies, so a contested single-copy TM goes where it adds the most coverage and the other members' sets are built without it (a third story; team-level TM allocation moves into scope).
+- Q: Should the player-facing report tell the user when an offered set's third or fourth move is filler (never the best choice against any League opponent because the member learns nothing better)? → A: A, yes: one line per affected member in the team text and the summary, naming the filler moves and why, so the user knows which slots are free for a move of their own.
 
 ## Overview
 
@@ -28,6 +30,12 @@ have. A tie-break alone was checked and does nothing here (every leftover pool m
 must be built that way, over every legal attack and the offered variable-power moves. Where a member has nothing live beyond its
 two strongest moves (Rotom), its sets are offered as today and the member is listed with that reason. Acceptance is the 025
 protocol on both codes, with every list difference attributed and a per-member table of dead moves before and after.
+
+A second cause of the same symptom is the team's TM copies: on the B2 team Garchomp holds the game's only Earthquake and Stone
+Edge TMs, every all-live Infernape set needs one of them, and today's repair step silently falls back to the first buildable set
+in the ranked list, dead moves and all. The owner chose to build each member's offered sets knowing the team's copies (a third
+story): a contested single-copy resource goes to the member whose coverage gains the most from it and the others are built
+without it, so the sets the screen sees are the sets a player can actually teach.
 
 Probe on main after 025 (B2 at level 48; dead moves in today's three sets, and what a greedy marginal pool changes):
 
@@ -66,7 +74,8 @@ differs from its score pool.
    their own types do not cover) is in the pool and in an offered set, and no offered set carries a dead move while a live
    replacement exists.
 3. **Given** Rotom at level 48, **When** its sets are built, **Then** its sets are today's and the candidate summary and the hand
-   check list Rotom with the reason that nothing it learns is ever the best choice beyond its two strongest moves.
+   check list Rotom with the reason that nothing it learns is ever the best choice beyond its two strongest moves; **and** when
+   Rotom is in the final team, the team text and the summary carry one line naming its filler moves and that reason.
 4. **Given** Garchomp and Staraptor at level 48, **When** their sets are built, **Then** the sets equal today's.
 5. **Given** a synthetic member whose ten highest standalone scores are all one type while a weaker move of another type is the
    best answer to some opponent, **When** its pool is built, **Then** that move is in the pool and its score-only pool is not the
@@ -104,6 +113,34 @@ merge blocked.
 
 ---
 
+### User Story 3 - Offered sets the team can actually build (Priority: P3)
+
+The player's six compete for single-copy TMs and items. Each member's offered sets are built knowing what the other members
+take, so a contested resource goes where it adds the most coverage and the others' sets are built without it; no offered set is
+silently swapped for a worse one at the repair step because a TM was already spent.
+
+**Why this priority**: on the B2 team this, not the pool, is what put Fire Punch on Infernape; without it the fix is invisible
+there. It is a separate layer (team resources) and can ship after stories 1 and 2 or as its own feature if the plan finds it
+large.
+
+**Independent Test**: the B2 team at the screen's levels: every offered set of every member is buildable together with the
+other members' first sets; the candidate summary names each contested resource and who received it with the coverage gained;
+Infernape's offered sets contain a live coverage move that it can learn on this team.
+
+**Acceptance Scenarios**:
+
+1. **Given** the B2 team where Garchomp and Infernape both want the single Earthquake and Stone Edge TMs, **When** the sets are
+   built, **Then** each TM goes to the member whose coverage gains the most from it, the other member's sets are built from its
+   remaining live moves, and the summary names the allocation.
+2. **Given** a team with no contested resource, **When** the sets are built, **Then** they equal the sets built member by member.
+3. **Given** a member whose remaining live moves after the allocation are fewer than four, **When** its sets are built, **Then**
+   the dead-move and diversity rules apply as in story 1 (one-apart sets, then dead moves only where nothing live is left) and
+   the summary says so.
+4. **Given** any team, **When** the screen's baseline and every screened option are built, **Then** the repair step has nothing to
+   replace (zero repair notes for the candidate sets), and the independent validator still checks every team.
+
+---
+
 ### Edge Cases
 
 - **Too few live moves for three distinct sets.** With five live moves (Infernape: Fire Blast, Close Combat, Earthquake, Stone
@@ -119,6 +156,12 @@ merge blocked.
 - **A move dead by value but more accurate** (Flamethrower beside Fire Blast): dead by this feature's definition; accuracy is
   already in the value, and the lens-conditioned sets of 025 cover the accuracy preference.
 - **Members with fewer than four legal attacks**: unchanged (sets of the available size, no dead-move rule applies).
+- **A contested single-copy resource** (a TM, an evolution item, a held item with one copy): it goes to the member whose coverage
+  gains the most from it, ties by slot order; the others are built without it and the summary says who got it and why.
+- **A contested resource that a member's HM requirement or the user's required moves need**: the required move keeps it (the 006
+  rule), and the allocation is made among the rest.
+- **The repair step** stays as the safety net for anything the allocation missed (levels, evolution paths), and its notes are
+  expected empty for the offered sets.
 - **The setup set** (three attacks plus a setup move): built from the same pool; the dead-move rule applies to its attacks.
 
 ## Requirements *(mandatory)*
@@ -152,6 +195,9 @@ merge blocked.
   MUST be unchanged.
 - **FR-009**: The candidate summary MUST state, per member, the dead moves in each offered set (expected none) and the
   no-live-move reason where it applies; the hand-check printout MUST show them.
+- **FR-009a**: The player-facing report (the team text and the summary) MUST carry one line per member whose chosen set holds a
+  filler move, naming the moves and the reason ("no better option: the member's two strongest moves cover every League
+  opponent"), so the user knows those slots are free for a move of their own; members without filler get no line.
 - **FR-010**: Acceptance MUST follow the 025 protocol: the pre-feature side on the branch before any code change (B2 quick with
   `--seed 014-b2`, the two identity evaluations, the candidate snapshot of the six B2 species and every B1 to B5 member), then
   the branch side (B2 quick, the identity comparison with the volatile fields removed, the equal-levels paired check on 2,000
@@ -162,9 +208,15 @@ merge blocked.
 - **FR-012**: The merge rule is 024's FR-009: a supported loss at equal levels (alpha 0.05) or an expected average final level
   more than one level above today's blocks the merge, with the cause recorded.
 - **FR-013**: The README's candidate description MUST state the pool by marginal coverage, the dead-move rule and its
-  no-live-move exception; FUTURE-FEATURES MUST record the team-level TM allocation limitation (on the B2 team Garchomp holds the
-  only Earthquake and Stone Edge TMs, so Infernape's first set cannot be built and the repair step gives it its second set) and
-  the cross-category user-conditioned dominance idea as considered and not chosen.
+  no-live-move exception, and the team-aware allocation of contested resources; FUTURE-FEATURES MUST record the cross-category
+  user-conditioned dominance idea as considered and not chosen.
+- **FR-014**: Each member's offered sets MUST be built knowing the team's copies of single-copy resources (TMs, evolution items,
+  held items): a resource wanted by more members than it has copies goes to the members whose coverage gains the most from it
+  (ties by slot order), the others' pools and sets are built without it, required moves (HMs, the user's required moves) keep
+  theirs first, and the candidate summary MUST name each contested resource, who received it and the coverage each contender
+  would have gained.
+- **FR-015**: Every offered set of every member MUST be buildable together with the other members' first sets at the screen's
+  levels; the repair step MUST report no replacement for the offered sets (its notes stay as the safety net).
 
 ### Key Entities
 
@@ -172,7 +224,10 @@ merge blocked.
 - **Live move**: a move that is the best choice against at least one opponent given the member's two strongest moves.
 - **Dead move**: a move with zero marginal contribution in its set.
 - **Pool**: the ten moves the sets are drawn from, built greedily by marginal contribution.
-- **No-live-move member**: a member whose legal attacks hold nothing live beyond its two strongest; listed with the reason.
+- **No-live-move member**: a member whose legal attacks hold nothing live beyond its two strongest; listed with the reason in
+  the candidate summary and, for the final team, in the player-facing report (filler moves named).
+- **Contested resource**: a single-copy TM, evolution item or held item that more members want than there are copies; allocated
+  by coverage gained, named in the candidate summary with the allocation.
 - **Attributed diff cause `marginal_pool`**: a move entering or leaving a pool or set by the marginal rule.
 
 ## Success Criteria *(mandatory)*
@@ -182,14 +237,17 @@ merge blocked.
 - **SC-001**: On the six B2 species at level 48, no offered set contains a dead move, except for members listed as having no
   live move; Infernape's sets contain no Fire Punch and one contains Grass Knot.
 - **SC-002**: Garchomp's and Staraptor's offered sets are identical to today's; Rotom's are identical and Rotom is listed with
-  its reason.
+  its reason in the candidate summary and, in the final report, in the team text and the summary.
 - **SC-003**: Over the 36 snapshot members (B2 at level 48 and B1 to B5), every list difference is attributed; 0 unexplained
   lines; the table of dead moves after the change shows 0 for every member not listed as no-live-move.
 - **SC-004**: The branch's B2 quick winner is not worse than today's at equal levels (no supported loss at alpha 0.05) and its
   expected average final level is at most one level above today's.
 - **SC-005**: The two unaffected teams evaluate identically on both codes once the volatile fields are removed.
 - **SC-006**: Candidate generation for the six B2 species takes at most twice today's time (the greedy pool scans every legal
-  attack ten times).
+  attack ten times; the allocation adds one pass over the contested resources).
+- **SC-008**: On the B2 team, every offered set of every member is buildable together with the others' first sets (zero repair
+  notes for the candidate sets), Infernape's offered sets contain a live coverage move it can learn on that team, and the
+  summary names the Earthquake and Stone Edge allocation.
 - **SC-007**: The Node suite and the full pytest suite pass on the final code.
 
 ## Assumptions
@@ -199,6 +257,8 @@ merge blocked.
   can be dead here and still the better click in a real battle; the screen and the battles decide between offered sets.
 - Variable-power moves become eligible for today's base sets (the user's Grass Knot example); 024's extras still append sets for
   variable moves not chosen.
+- Team-level resource allocation is in scope (story 3, the owner's decision); which member gets a contested TM is decided by
+  coverage gained, not by slot order, and the user can still force a move through the required-moves option of 006.
 - The pre-feature prefix guarantee of 024 does not hold (today's sets change where dead moves are replaced); every change is
   attributed instead, as in 025.
 - The pool size and the number of offered sets (3) are unchanged; the diversity threshold (2 moves) relaxes to 1 only where
