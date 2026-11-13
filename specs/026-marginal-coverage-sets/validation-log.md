@@ -97,3 +97,36 @@ strongest moves cover every League opponent".
 ```
 uv run pytest -q tests/unit/test_reports.py tests/unit/test_marginal_coverage.py tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py -m "not battle_sim"   → 59 passed, exit 0
 ```
+
+## T013 to T015 Team-level allocation (6:45 to 7:25 PM EST)
+
+`src/platsim/optimizer/allocation.py`: `needs` (the cheapest source per move, memoised per ledger: the source lookup was
+32.8 s uncached for the B2 team, 5.9 s cached), `contested`, `remaining`, `allocate` (step 1 first-set contention by
+coverage gained, ties by slot; step 2 resources with no copy left after the first sets are charged become unavailable to the
+other members; rebuild; loop until no first set changes, bounded). `run._build_cands` returns `(cands, record)`; the prune
+stage and the optimizer provenance carry `allocation`. On the B2 team at level 48 (`evidence/b2-candidates-branch.txt`):
+
+| Resource | Contenders (gain) | Given to | Rebuilt |
+|---|---|---|---|
+| TM26 Earthquake | Garchomp 262486, Infernape 8769 | Garchomp | Infernape |
+| TM71 Stone Edge | Garchomp 28519, Infernape 7254 | Garchomp | Infernape |
+| TM31 Brick Break | Weavile 13388, Floatzel 1785 | Weavile | Floatzel; Garchomp, Infernape (no copy left) |
+| TM40 Aerial Ace | Weavile 18394, Garchomp 1849 | Weavile | Garchomp, Infernape (no copy left) |
+| TM30 Shadow Ball | (Rotom's first set holds the copy) | | Weavile (no copy left) |
+
+Infernape without Earthquake and Stone Edge: Fire Blast / Flamethrower / Close Combat / Grass Knot (Flamethrower the filler,
+listed), Fire Blast / Focus Blast / Grass Knot / Rock Slide, Close Combat / Fire Punch / Grass Knot / Shadow Claw. Garchomp's
+first set becomes Earthquake / Dragon Claw / Stone Edge / Fire Blast (Aerial Ace to Weavile, where it gains ten times more).
+Baseline repair notes: 0; every offered set of every member (today's, the extras, the setup set) realizes beside the others'
+first sets at level 48 with no repair note (test). Coverage memoised over move subsets (`_cov`).
+
+**SC-006 as written fails**: candidate generation for the six B2 species is 1.2 s without the allocation (0.9 s on main; the
+dead-move repair of every ranked combination) and **4.8 s with it** (about a dozen rebuilds at 0.3 s each), 5.3× today's,
+against "at most twice". The allocation is the owner's story 3 (chosen after the criterion was written); 4.8 s is a few
+seconds of a seven-minute quick optimize. Recorded for the report; the docs task proposes an absolute bound instead.
+
+```
+uv run pytest -q tests/unit/test_marginal_coverage.py -m "not battle_sim"   → 20 passed, exit 0 (4 allocation tests)
+uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hms.py tests/unit/test_reports.py tests/unit/test_optimizer_candidates.py -m "not battle_sim"   → see below
+```
+60 passed in 46.38s

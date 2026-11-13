@@ -113,7 +113,7 @@ notes for the baseline. (Ordered before story 2 so the acceptance measures the w
 **Independent Test**: the B2 team's allocation record (TM26, TM71), Infernape rebuilt with a live move it can learn, zero
 baseline repairs; a no-contest team equal to member-by-member lists.
 
-- [ ] T013 [US3] Write `src/platsim/optimizer/allocation.py` (contracts/allocation.md, R6): `needs(species, variant, moveset,
+- [x] T013 [US3] Write `src/platsim/optimizer/allocation.py` (contracts/allocation.md, R6): `needs(species, variant, moveset,
       level, led) -> dict[str, int]` (the cheapest `movesources.sources` choice per move whose `uses_of` is affordable alone; a
       resource-free source needs nothing; HMs never counted, the game never consumes them), `contested(cands, consts, level,
       led) -> dict[str, list[int]]` (members whose first set needs the resource, when more than `resources.copies`),
@@ -124,9 +124,9 @@ baseline repairs; a no-contest team equal to member-by-member lists.
       a resource with zero copies left charged to other members' first sets become `unavailable` for that member; rebuild; loop
       to step 1 until no first set changes, bounded by the number of single-copy resources; `record` per resource `{copies,
       contenders: [[species, gain]], given_to, rebuilt, unavailable: {species: [moves]}}`
-- [ ] T014 [US3] `src/platsim/optimizer/run.py`: `_build_cands` returns `(cands, allocation)` through `allocate`; the prune stage
+- [x] T014 [US3] `src/platsim/optimizer/run.py`: `_build_cands` returns `(cands, allocation)` through `allocate`; the prune stage
       stores `allocation`; `_optimizer_provenance` carries it (`extra`); `checkpoint` fingerprint unchanged in shape
-- [ ] T015 [US3] `tests/unit/test_marginal_coverage.py` part 5: the B2 team at level 48: `allocation` names TM26 and TM71 with
+- [x] T015 [US3] `tests/unit/test_marginal_coverage.py` part 5: the B2 team at level 48: `allocation` names TM26 and TM71 with
       Garchomp and Infernape as contenders and gains, the loser rebuilt, Infernape's offered sets containing a live move it can
       learn on that team; for every member and every one of its offered sets (today's, the 024 extras, the 025 item-conditioned
       sets, the setup set) `resources.realize` of that set with the other five members' first sets at level 48 is not a Refusal

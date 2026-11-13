@@ -267,3 +267,100 @@ def test_optimizer_member_notes_from_candidate_summaries():
     # a chosen set that is not one of the summarised sets (repaired) gets no note
     other = (R.MemberSpec("SPECIES_ROTOM", "own", ("MOVE_THUNDERBOLT",), None),)
     assert _member_notes(FakeState(members), other, None) == []
+
+
+# ---- part 5: the team-level allocation of contested resources (FR-014, FR-015, SC-008; story 3) --------------------
+@pytest.fixture(scope="module")
+def b2_alloc(led):
+    from platsim.optimizer.run import _build_cands
+
+    consts = C.resolve_species(B2, led)
+    cands, record = _build_cands(consts, led, 48)
+    return consts, cands, record
+
+
+def _first(mcs):
+    return next(iter(mcs.values()))
+
+
+def test_b2_allocation_record_names_the_contested_tms(b2_alloc):
+    consts, cands, record = b2_alloc
+    garchomp, infernape = consts[0], consts[1]
+    for tm in ("TM26", "TM71"):  # Earthquake, Stone Edge: one copy each, both wanted by Garchomp's and Infernape's first sets
+        rec = record[tm]
+        assert rec["copies"] == 1
+        assert [x[0] for x in rec["contenders"]] == [garchomp, infernape] and rec["contenders"][0][1] > rec["contenders"][1][1]
+        assert rec["given_to"] == [garchomp] and infernape in rec["rebuilt"]
+    mc = _first(cands[1])
+    assert {"MOVE_EARTHQUAKE", "MOVE_STONE_EDGE"} <= mc.unavailable
+    assert all("MOVE_EARTHQUAKE" not in ms and "MOVE_STONE_EDGE" not in ms for ms in mc.movesets)
+    assert any("MOVE_GRASS_KNOT" in ms for ms in mc.movesets[:3])  # a live coverage move it can learn on this team
+    assert all(x[1] >= 0 for rec in record.values() for x in rec["contenders"])
+
+
+def test_b2_every_offered_set_is_buildable_beside_the_others_first_sets(b2_alloc, led):
+    from platsim.optimizer import resources as R
+
+    consts, cands, record = b2_alloc
+    firsts = [R.MemberSpec(c, "own", _first(mcs).movesets[0], None) for c, mcs in zip(consts, cands)]
+    base = R.realize(tuple(firsts), [48] * 6, led)
+    assert not isinstance(base, R.Refusal), base
+    rr = R.repair(tuple(firsts), [48] * 6, led, [_first(mcs).ranked for mcs in cands])
+    assert rr[1] == [], rr[1]  # zero repair notes for the baseline
+    for slot, mcs in enumerate(cands):
+        mc = _first(mcs)
+        sets = list(mc.movesets) + ([mc.setup_moveset] if mc.setup_moveset else [])
+        for ms in sets:
+            specs = tuple(R.MemberSpec(consts[slot], "own", ms, None) if i == slot else firsts[i] for i in range(6))
+            real = R.realize(specs, [48] * 6, led)
+            assert not isinstance(real, R.Refusal), (consts[slot], ms, real)
+            notes = R.repair(specs, [48] * 6, led, [_first(x).ranked for x in cands])[1]
+            assert notes == [], (consts[slot], ms, notes)
+
+
+def test_no_contest_team_equals_member_by_member(led):
+    from platsim.optimizer.allocation import allocate
+
+    # a two-member team whose first sets share no single-copy resource: the lists are unchanged and the record empty
+    consts = C.resolve_species(["rotom", "staraptor", "luxray", "gardevoir", "gyarados", "bronzong"], led)
+    cands = [{v.key: C.member_candidates(c, v, 48, led, team=tuple(consts)) for v in C.variants(c, led)} for c in consts]
+    out, record = allocate(consts, led, cands)
+    for mcs, mcs2 in zip(cands, out):
+        for k in mcs:
+            if mcs2[k].unavailable == frozenset():
+                assert mcs[k].movesets == mcs2[k].movesets
+    assert all(rec["contenders"] == [] or rec["given_to"] for rec in record.values())
+
+
+def test_lower_slot_wins_a_contested_tm_on_gain(led, monkeypatch):
+    from platsim.optimizer import allocation as AL
+
+    # a synthetic two-member contention where the second slot's first set loses more coverage without the TM
+    consts = ["SPECIES_A", "SPECIES_B"]
+
+    class MC:
+        def __init__(self, species, moves, pool, gain):
+            self.species, self.movesets, self.pool, self.variable_offered = species, [tuple(moves)], list(pool), []
+            self.ref_level, self.unavailable, self.ranked, self.gain = 48, frozenset(), [tuple(moves)], gain
+            self.variant = type("V", (), {"key": "own", "species": species, "options": lambda self2, led: []})()
+            self.setup_moveset = None
+
+    needs_map = {"MOVE_X": {"TM99": 1}}
+    monkeypatch.setattr(AL, "_cheapest_uses", lambda species, variant, move, level, led: dict(needs_map.get(move, {})))
+    monkeypatch.setattr(AL, "_legal", lambda variant, level, led: ["MOVE_X", "MOVE_Y"])
+    monkeypatch.setattr(AL.R, "copies", lambda r, led, team=None: 1)
+    built = {}
+
+    def fake_mc(const, variant, level, led, team=None, unavailable=frozenset()):
+        mc = MC(const, ["MOVE_Y"] if "MOVE_X" in unavailable else ["MOVE_X"], ["MOVE_X", "MOVE_Y"], 0)
+        mc.unavailable = frozenset(unavailable)
+        built[const] = mc
+        return mc
+
+    monkeypatch.setattr(AL.C, "member_candidates", fake_mc)
+    cov = {("SPECIES_A", ("MOVE_X",)): 100.0, ("SPECIES_A", ("MOVE_Y",)): 90.0, ("SPECIES_B", ("MOVE_X",)): 100.0, ("SPECIES_B", ("MOVE_Y",)): 10.0}
+    monkeypatch.setattr(AL, "_coverage_of", lambda mc, ms: cov[(mc.species, tuple(ms))])
+    cands = [{"own": MC("SPECIES_A", ["MOVE_X"], ["MOVE_X", "MOVE_Y"], 0)}, {"own": MC("SPECIES_B", ["MOVE_X"], ["MOVE_X", "MOVE_Y"], 0)}]
+    out, record = AL.allocate(consts, None, cands)
+    assert record["TM99"]["given_to"] == ["SPECIES_B"] and record["TM99"]["rebuilt"] == ["SPECIES_A"]
+    assert out[0]["own"].movesets == [("MOVE_Y",)] and out[1]["own"].movesets == [("MOVE_X",)]

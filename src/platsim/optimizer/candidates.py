@@ -565,10 +565,24 @@ def coverage(vals: list[list[float]]) -> float:
 NO_LIVE_REASON = "no better option: its two strongest moves cover every League opponent"
 
 
+_COV_CACHE: dict[tuple, float] = {}
+
+
+def _cov(moves, vals: dict[str, list[float]]) -> float:
+    """coverage() of a set of moves, memoised per value table (the dead-move repair asks for the same subsets many times)."""
+    k = (id(vals), frozenset(moves))
+    c = _COV_CACHE.get(k)
+    if c is None:
+        if len(_COV_CACHE) > 200000:
+            _COV_CACHE.clear()
+        c = _COV_CACHE[k] = coverage([vals[m] for m in moves])
+    return c
+
+
 def marginal(move: str, moveset, vals: dict[str, list[float]]) -> float:
     """A move's marginal contribution to a set: the set's coverage minus the coverage of the set without it."""
     ms = list(moveset)
-    return coverage([vals[m] for m in ms]) - coverage([vals[m] for m in ms if m != move])
+    return _cov(ms, vals) - _cov([m for m in ms if m != move], vals)
 
 
 def dead_moves(moveset, vals: dict[str, list[float]]) -> list[str]:
@@ -678,7 +692,7 @@ def pool_by_marginal(cands: list[str], vals, scores, size: int = POOL, cost_tier
 def _rank_key(combo, vals, scores):
     """Coverage, then the standalone sum, then name (today's key; a marginal-sum tie-break was tried and dropped: a filler that
     backs nothing up maximises the other moves' marginals, so it rewarded the weakest filler)."""
-    return (-coverage([vals[m] for m in combo]), -sum(scores[m] for m in combo), combo)
+    return (-_cov(combo, vals), -sum(scores[m] for m in combo), combo)
 
 
 def rank_sets(pool: list[str], vals, scores, size: int = 4) -> list[tuple[str, ...]]:
@@ -740,7 +754,7 @@ def choose_sets(ranked, k: int, cands, vals, scores, cost_tier=None):
     def dist(c):
         return min((len(set(c) ^ set(p)) // 2 for p in accepted), default=99)
 
-    cov = lambda c: coverage([vals[m] for m in c])  # noqa: E731
+    cov = lambda c: _cov(c, vals)  # noqa: E731
     while len(accepted) < k:
         best2 = next((c for c in repaired if c not in accepted and dist(c) >= 2), None)
         best1 = next((c for c in repaired if c not in accepted and dist(c) == 1 and not dead_moves(c, vals)), None)

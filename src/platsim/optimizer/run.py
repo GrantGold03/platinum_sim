@@ -244,11 +244,15 @@ def _member_extra_options(mcs: dict) -> list[tuple[str, tuple[str, tuple, str | 
     return out
 
 
-def _build_cands(consts, led, ref_level: int) -> list[dict]:
+def _build_cands(consts, led, ref_level: int) -> tuple[list[dict], dict]:
+    """Every member's candidate lists, then the team's contested single-copy resources resolved (026, story 3:
+    optimizer/allocation.py); returns (cands, allocation record)."""
+    from platsim.optimizer.allocation import allocate
+
     out = []
     for c in consts:
         out.append({v.key: C.member_candidates(c, v, ref_level, led, team=tuple(consts)) for v in C.variants(c, led)})
-    return out
+    return allocate(consts, led, out)
 
 
 def _baseline(cands, consts) -> tuple:
@@ -358,7 +362,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     # -- 1-2: candidates pass A + calibration ---------------------------------------------------
     t0 = time.perf_counter()
     prog("prune", detail="building candidates (pass A, move legality at Lv 100)")
-    cands_a = _build_cands(consts, led, 100)
+    cands_a, _ = _build_cands(consts, led, 100)
     base_a = R.repair(_baseline(cands_a, consts), [100] * 6, led, _ranked(cands_a, _baseline(cands_a, consts)), required_hms=req.required_hms)
     if isinstance(base_a, R.Refusal):
         raise InvalidRequest(f"no legal team can be formed: {base_a.reason}")
@@ -393,7 +397,7 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     u_g = cal["u_greedy"]
     ref = max(1, u_g - REF_MARGIN)
     prog("prune", detail=f"building candidates (pass B, move legality at Lv {ref}; screening level {u_g})")
-    cands = _build_cands(consts, led, ref)
+    cands, allocation = _build_cands(consts, led, ref)
     screen_levels = [max(u_g, max(mc.ref_level for mc in mcs.values())) for mcs in cands]
     b = R.repair(_baseline(cands, consts), screen_levels, led, _ranked(cands, _baseline(cands, consts)), required_hms=req.required_hms)
     if isinstance(b, R.Refusal):
@@ -402,7 +406,8 @@ def _run(req, preset, led, consts, out: Path, state: _State, pool, prog) -> bool
     if state.stage("prune") is None:
         state.done("prune", {"ref_level": ref, "screen_levels": screen_levels,
                              "members": [{k: mc.summary() for k, mc in mcs.items()} for mcs in cands],
-                             "baseline": R.spec_to_json(baseline), "baseline_repairs": base_notes})
+                             "baseline": R.spec_to_json(baseline), "baseline_repairs": base_notes,
+                             "allocation": allocation})  # 026
 
     # -- 3: abilities ----------------------------------------------------------------------------
     from platsim.optimizer.abilities import choose_ability
@@ -803,6 +808,7 @@ def _report(req, preset, led, out, state, specs, real, rep, levels, comparison, 
     rep.resources = R.resource_lines(real, led)
     rep.provenance["optimizer"] = _optimizer_provenance(req, preset, state, {
         "member_defaults": member_defaults_block(real.team),  # 025
+        "allocation": (state.stage("prune") or {}).get("allocation"),  # 026
         "final_levels_start": list(levels), "runner_up_comparison": comparison,
         "final_team_labels": [m.label() for m in (R.place_required_hms(specs, levels, led, req.required_hms)[0]
                                                   if req.required_hms else specs)]})
