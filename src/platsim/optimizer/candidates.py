@@ -31,23 +31,36 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
    power 1 (variable power / fixed damage: the screening policy greedy-v1 scores them 0, greedy.mjs),
    and conditional attacks listed in EXCLUDED_ATTACK_EFFECTS (one-hit KO, Explosion/Self-Destruct,
    Future Sight, Fake Out, Snore, Dream Eater, Last Resort, Focus Punch, False Swipe, Struggle).
-3. R8 dominance pruning: move B is dropped when another legal move A has the same type, category,
-   accuracy and priority, strictly higher power, B's effect is the plain BATTLE_EFFECT_HIT, and A's
-   effect is plain HIT or a chance-based secondary effect (effect_chance > 0, i.e. no drawback).
+3. Dominance pruning (R8, widened by feature 025): move B is dropped when another legal move A has the
+   same type and category, is at least as good on power, accuracy (0 = never misses), priority, PP and
+   effect (EFFECT_COSTS: a cost effect loses to a plain or secondary one; equal effects compare chance;
+   two different secondaries are incomparable) and strictly better on one axis; the pruned map names
+   the winner and the axes.
 4. Per-move value vs the League: v(m, o) = power x hit chance x STAB weight 1.5 (if the move's type
    is one of the member's types) x the member's base Atk or SpA (by category) x a drawback/bonus weight
    (recharge/charge-turn 0.5, recoil 0.85, user stat drop 0.75-0.95, lock-in/crash 0.8, multi-hit x3,
    hit-twice x2) x the decomp type-chart multiplier against opponent mon o's types
-   (sTypeMatchupMultipliers, battle_lib.c). Opponent weights: Elite Four mons 1, Cynthia's mons 2
-   (FR-017: the Champion dominates failures). These weights are policy/search tuning, not game facts.
+   (sTypeMatchupMultipliers, battle_lib.c) x the critical-hit term 1 + P(crit) (025: the game's stage
+   table; the move's high-crit effect and, under an item-conditioned valuation, the held item).
+   Opponent weights: Elite Four mons 1, Cynthia's mons 2 (FR-017: the Champion dominates failures).
+   These weights are policy/search tuning, not game facts. Variable-power moves (024) are valued with
+   the game's computed power per opponent.
 5. A moveset's coverage score = sum over opponent mons of weight x max over its moves of v(m, o). The
-   top `POOL` moves by individual score are combined 4 at a time; the best `K_MOVESETS` sets that differ
-   pairwise in at least 2 moves become the member's moveset candidates. The best `RANKED` combos are
-   kept in order: when a team cannot be built because an earlier member took the last copy of a TM or
-   item, `resources.repair` falls back to that member's next-best combo that can be built.
+   `POOL` moves are chosen greedily by marginal coverage (026, `pool_by_marginal`): the first by score,
+   each next the one adding the most coverage over every legal attack and offered variable move, with
+   cost moves in two tiers (a charge-turn / recharge / lock-in move only for an opponent no cost-free
+   move hits; a recoil / self-stat-drop move only for one no cost-free candidate answers), the rest by
+   score. Combos of 4 are ranked by coverage then score sum; a combo's dead moves (never the best
+   choice given its other moves) are replaced by the legal move adding the most coverage, the repaired
+   sets re-ranked, and the `K_MOVESETS` offered sets differ pairwise in 2 moves, a one-apart all-live
+   set replacing a two-apart set only when that one carries a dead move; a filler stays only when
+   nothing live is left (`dead_moves`, `no_live_reason`; the report names it). The best `RANKED` combos
+   are kept in order for `resources.repair`; team-level TM and item allocation across members is
+   `optimizer/allocation.py` (026).
 6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v2
    player models (its SELF_BOOSTS table, parsed from sim/policy/expectimax2.mjs so the two cannot
-   drift), one extra moveset = the best 3-move coverage subset + the best such boost move (score:
+   drift), one extra moveset = the best 3-move coverage subset (dead moves replaced, 026) + the best
+   such boost move (score:
    stages of the member's better attacking stat x1, Speed x0.5, defenses x0.25). greedy-v1 never uses
    status moves, so setup variants are NOT screened by greedy: they are tested with expectimax2-v2 in
    the optimizer's setup check (run.py), and kept only if significantly better.

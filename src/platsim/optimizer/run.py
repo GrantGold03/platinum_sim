@@ -10,9 +10,10 @@ Stages (each checkpointed in <out>/state.json; a re-run with the same request re
 code fingerprint matches - see _State; `--force-new` starts over)
 -------------------------------------------------------------------------------------------------
 0. resolve: species names -> SPECIES_* (candidates.resolve_species; InvalidRequest = CLI exit 2).
-1. prune / candidates (candidates.py, resources.py): source variants, legal move pools, R8 dominance
-   pruning, coverage-ranked movesets, held items; team-wide TM/item/source copy limits (a candidate
-   that breaks one is never generated: resources.repair falls back to the member's next-best set).
+1. prune / candidates (candidates.py, allocation.py, resources.py): source variants, legal move pools,
+   dominance pruning, movesets by marginal coverage, held items; contested single-copy TMs and items
+   allocated across the team by coverage gained (026) so the offered sets are buildable; team-wide copy
+   limits still enforced (resources.repair falls back to the member's next-best set as the safety net).
    Pass A uses move legality at Lv 100 to build a calibration baseline.
 2. calibrate (greedy-v1): the lowest uniform level U_g at which the baseline clears >= 50% with
    greedy-v1 (bisection; `rounds[0]` runs per point; seeds derive_seed(f"{seed}|calibrate", i, 0)),

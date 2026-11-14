@@ -775,7 +775,7 @@ src/platsim/          Python: everything that is not battle-time
   legality/           independent validator
   divergence/         Showdown-vs-decomp comparison and ledger
   sim/                Node worker pool client, seeds, Cynthia top-up
-  optimizer/          candidates, ability screen, successive-halving screen, level search, confirm (run.py)
+  optimizer/          candidates (pool by marginal coverage), team resource allocation, ability screen, successive-halving screen, level search, confirm (run.py)
   report/             result.json / xlsx / csv / team.txt writers, loss causes
   web/                FastAPI app, job process/cancel, result view, sprites, ETA + static page
   budget.py stats.py evaluate.py explain.py extract.py cli.py
