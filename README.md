@@ -113,6 +113,12 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     for any set with an attack (025; Scope Lens has no pre-Champion copy). Items are picked by hold effect from the decomp. A held
     item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
     White Herb, Mental Herb, Power Herb, Berry Juice).
+  - **Candidate move sets** (026): each member's ten-move pool is built by marginal coverage (each next move is the one
+    that is the best answer to the most League opponents the pool does not yet answer, cost-free moves first), and a set's
+    dead moves (never the best choice given the set's other moves) are replaced by live ones where the member learns any;
+    a filler stays only when nothing live is left (Staraptor's fourth slot beside Return, Close Combat and Aerial Ace) and
+    the report names it. Single-copy TMs and items wanted by several members go to the member whose coverage gains the
+    most, and the others' sets are built without them, so every offered set can be taught on that team.
   - **TMs are single-use.** Each TM has as many copies as the game gives before the Champion. Shop
     and Game Corner TMs are unlimited.
   - **No bag items in battle.** Only held items have an effect. Between battles the team is healed
@@ -653,6 +659,38 @@ identically on both codes; every difference between the pre-feature candidate li
 is attributed to a dominated move, the crit term or an appended set or item (0 unexplained). The first run's 10 "defect" lines
 were a gap in the attribution helper (a set the crit term re-ranked out and the item valuation re-added), fixed and rerun with
 identical measurements.
+
+Feature 026 (2026-11-13, `specs/026-marginal-coverage-sets/`): **candidate sets by marginal coverage, no dead fourth move,
+and the team's TMs allocated.** Found reviewing 025's B2 winner: Infernape carried Fire Blast / Flamethrower / Close Combat /
+Fire Punch, where Flamethrower and Fire Punch are dead (never the best choice against any League opponent once the other
+moves are there), because the pool was the ten highest standalone scores (five redundant Fire and Fighting moves) and
+coverage ties broke on the score sum. Now (1) the **pool is built greedily by marginal coverage**: the first move by score,
+each next the one adding the most coverage, over every legal attack and the offered variable-power moves, so Grass Knot and
+Brick Break enter where they answer someone; the rest of the pool fills by score. (2) **Dead moves are replaced** by the legal
+move adding the most coverage; a filler stays only when nothing live is left, and the player-facing report (team text,
+summary, the spreadsheet's Evaluation sheet) says so per member ("Rotom: Thunder, Ominous Wind are filler: no better
+option: its two strongest moves cover every League opponent"). Sets differ pairwise by two moves as before; a one-apart
+all-live set is offered only where the two-apart set would carry a dead move. (3) **Cost moves** (the 025 cost class) enter
+in two tiers: a charge-turn, recharge or lock-in move (Fly, Solar Beam, Giga Impact) only for an opponent no cost-free move
+hits at all; a recoil or self-stat-drop move (Close Combat, Overheat, Brave Bird) when it answers an opponent no cost-free
+candidate answers. (4) **Contested single-copy resources** are allocated across the team: a TM wanted by more first sets than
+it has copies goes to the member whose coverage gains the most from it (on B2, Earthquake and Stone Edge stay with Garchomp;
+Brick Break and Aerial Ace go to Weavile), the others' lists are rebuilt without it, and a resource with no copy left after the
+first sets is withheld from the other members' later sets, so every offered set is buildable beside the others' first sets and
+the repair step has nothing to replace at the baseline. The result on the six B2 species: Infernape offers Fire Blast / Close
+Combat / Earthquake / Grass Knot and two more all-live sets member by member (on the B2 team, without the TMs Garchomp holds,
+Fire Blast / Flamethrower / Close Combat / Grass Knot with Flamethrower named as the filler); Garchomp and Rotom unchanged;
+Staraptor takes Return (its same-type 102-power move) with Fly and Giga Impact kept out; Floatzel and Weavile gain Brick Break.
+Dead moves in offered base sets over the 36 benchmark members: 92 before, 0 after outside the 9 members listed with a reason.
+Candidate generation for six members: 0.9 s before, 1.2 s after, 4.8 s with the allocation. Checkpoints from before this
+feature do not resume.
+**Acceptance (`specs/026-marginal-coverage-sets/validation-log.md` T016 to T017, 2026-11-13).** B2 quick on both codes: the
+branch's winner starts two levels lower on average ([52, 50, 50, 50, 51, 53] against [51, 52, 52, 52, 53, 53]) with a higher
+clear rate (0.944 against 0.938), an expected average final level of 51.69 against 52.79, and at the lower levels beats today's
+team 0.9485 to 0.7555 on 2,000 paired gauntlets (p 5e-66); the two unaffected teams evaluate identically on both codes; every
+list difference over 36 benchmark members is attributed (0 unexplained); no offered set needed repair on the B2 team. The
+first run failed its own gate only because the script did not strip the new report field; fixed and rerun with identical
+measurements.
 
 Measured run times:
 

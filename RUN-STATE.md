@@ -1,4 +1,14 @@
-# START HERE (updated 2026-11-13, feature 025 `025-h4-wide-lens-razor-claw` (H4) merged to `main` 84299da; next: the marginal-coverage candidate fix via /speckit-specify on a new branch)
+# START HERE (updated 2026-11-13, feature 026 `026-marginal-coverage-sets` accepted on its branch (FR-012 pass); gates next, then merge on the user's go)
+- **Feature 026 `026-marginal-coverage-sets` built 2026-11-13 on its branch from `main` 7c466ae (main checkout).** Commits:
+  pre-feature evidence and scripts, 06ff0a4 (marginal pool, dead-move rule, cost tiers, extras), 93fe636 (filler-move note in
+  the report), ce7cc91 (team-level allocation of contested TMs). Acceptance run 2 (6:46 to 7:01 PM EST) FR-012 pass: the branch's B2 winner two levels lower on average
+  (51.69 vs 52.79 expected final), 0.9485 vs 0.7555 at equal levels (p 5e-66), 0 defects, 0 baseline repairs, identity rows
+  identical. Next: T019 gates (Node suite; full pytest about 1 h 45 min), T020 close; merge on the user's go.
+  Design corrections found at implementation (validation-log.md T003-T010): cost tiers for pool entry; a set is never dropped
+  for a lower-coverage all-live one; the marginal-sum tie-break dropped; SC-006 fails as written (4.8 s with the allocation vs
+  0.9 s), proposed bound 10 s for the owner's review. Evidence `runs/026-evidence/` (local), copies under
+  `specs/026-marginal-coverage-sets/evidence/`. Traps: never edit `src/` while an acceptance or suite runs (the snapshot and
+  the CLI subprocess tests import the code at run time); the allocation's source lookup must stay memoised (32.8 s uncached).
 - **Feature 025 `025-h4-wide-lens-razor-claw` built 2026-11-13 on its branch from `main` 3a91eac (main checkout).** Commits
   fda56c9 (pre-feature evidence), a8f7792 (candidates: crit term, item-conditioned move value, Wide Lens and Razor Claw with
   item-conditioned extra sets, widened dominance rule, screen kinds, switch-reset Node test), 1f894e5 (`provenance.member_defaults`),

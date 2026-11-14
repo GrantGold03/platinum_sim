@@ -201,7 +201,14 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   Thunderbolt and Shadow Ball; to be listed with the reason). The user-conditioned cross-category dominance alternative (power ×
   the member's own attacking stat) was offered and not chosen. Related limitation: on the B2 team Garchomp takes the only
   Earthquake and Stone Edge TMs, so Infernape's first set cannot be built and the repair step gives it its second set (team-level
-  TM allocation; separate).
+  TM allocation; separate). **Built as feature 026 (2026-11-13, `specs/026-marginal-coverage-sets/`)**, with the team-level
+  allocation included (the owner's clarify decision) and the filler-move note in the report. Found at implementation and
+  recorded there: the cost class splits into turn costs and damage costs for pool entry (Close Combat must stay offerable,
+  Fly must not displace Aerial Ace); a set is never dropped for a lower-coverage all-live one (Staraptor keeps Return / Close
+  Combat / Aerial Ace with its filler named); the marginal-sum tie-break rewards the weakest filler and was dropped; "live" is
+  set-relative (Flamethrower is live where Fire Blast is absent). Left open: the 024 variable-power and 025 item-conditioned
+  extras keep dead moves (215 entries over the benchmark; FR-007 applies only the pool and ranking rule to them), a
+  defence-aware move value, and the user-conditioned cross-category dominance idea (considered, not chosen).
 
 - Magnitude, Wring Out, Crush Grip, Punishment (and Flail, Reversal, Fling, Trump Card, Natural Gift, Present, Spit Up; feature 024's not-offered list): offer them once the strong player computes their power
   (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5). On `main` no variable-power

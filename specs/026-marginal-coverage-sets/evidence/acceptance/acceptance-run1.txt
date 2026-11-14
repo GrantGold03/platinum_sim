@@ -1,0 +1,48 @@
+start 2026-11-13 6:27:38 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 50, 50, 51, 53] clear 0.9440 [0.9203, 0.961] n 500 attempts 2 wall 481.2 s
+identity ref: DIFFERS ['member_notes'] (removed: ['divergence_ledger_version', 'divergences', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+identity b2main: DIFFERS ['member_notes'] (removed: ['divergence_ledger_version', 'divergences', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+screen: main 170 teams, branch 188 (extras {'accuracy_item': 18, 'crit_item': 18, 'item_deviation': 53, 'total': 107, 'variable_power': 18}); overlap 0 of 170
+candidate generation, six B2 species at Lv 47: 1.2 s (SC-006)
+dead moves: before 335 after 0 (members listed no-live-move: ['B2quick|SPECIES_STARAPTOR|own', 'B2quick|SPECIES_ROTOM|own', 'B1|SPECIES_STARAPTOR|own', 'B2|SPECIES_STARAPTOR|own', 'B2|SPECIES_ROTOM|own', 'B3|SPECIES_CHATOT|own', 'B3|SPECIES_STARAPTOR|own', 'B4|SPECIES_MILOTIC|own', 'B5|SPECIES_MAGNEZONE|own'])
+allocation: {"TM26": {"contenders": [["SPECIES_GARCHOMP", 262486.2], ["SPECIES_INFERNAPE", 8768.5]], "copies": 1, "given_to": ["SPECIES_GARCHOMP"], "rebuilt": ["SPECIES_INFERNAPE"], "unavailable": {"SPECIES_INFERNAPE": ["MOVE_EARTHQUAKE"]}}, "TM30": {"contenders": [], "copies": 1, "given_to": [], "rebuilt": ["SPECIES_WEAVILE"], "unavailable": {"SPECIES_WEAVILE": ["MOVE_SHADOW_BALL"]}}, "TM31": {"contenders": [["SPECIES_WEAVILE", 13387.5], ["SPECIES_FLOATZEL", 1785.0]], "copies": 1, "given_to": ["SPECIES_WEAVILE"], "rebuilt": ["SPECIES_FLOATZEL", "SPECIES_GARCHOMP", "SPECIES_INFERNAPE"], "unavailable": {"S
+baseline repairs 0; screen drops mentioning repair 0; candidate generation main 0.9 s branch 1.2 s
+diff B2quick|SPECIES_GARCHOMP|own: {'crit_term': 1, 'marginal_pool': 122, 'appended': 5}
+diff B2quick|SPECIES_INFERNAPE|own: {'marginal_pool': 174, 'appended': 8}
+diff B2quick|SPECIES_STARAPTOR|own: {'marginal_pool': 269, 'crit_term': 3, 'appended': 5}
+diff B2quick|SPECIES_ROTOM|own: {'crit_term': 1, 'marginal_pool': 121, 'appended': 3}
+diff B2quick|SPECIES_FLOATZEL|own: {'marginal_pool': 272, 'appended': 2}
+diff B2quick|SPECIES_WEAVILE|own: {'marginal_pool': 213, 'crit_term': 2, 'appended': 4}
+diff B1|SPECIES_INFERNAPE|own: {'marginal_pool': 174, 'appended': 8}
+diff B1|SPECIES_STARAPTOR|own: {'marginal_pool': 269, 'crit_term': 3, 'appended': 5}
+diff B1|SPECIES_LUXRAY|own: {'marginal_pool': 129, 'appended': 7}
+diff B1|SPECIES_GARCHOMP|own: {'marginal_pool': 211, 'crit_term': 2, 'appended': 5}
+diff B1|SPECIES_GYARADOS|own: {'marginal_pool': 211, 'appended': 4}
+diff B1|SPECIES_GARDEVOIR|own: {'marginal_pool': 296, 'appended': 7}
+diff B2|SPECIES_GARCHOMP|own: {'crit_term': 1, 'marginal_pool': 122, 'appended': 5}
+diff B2|SPECIES_INFERNAPE|own: {'marginal_pool': 174, 'appended': 8}
+diff B2|SPECIES_STARAPTOR|own: {'marginal_pool': 269, 'crit_term': 3, 'appended': 5}
+diff B2|SPECIES_ROTOM|own: {'appended': 3}
+diff B2|SPECIES_FLOATZEL|own: {'marginal_pool': 272, 'appended': 2}
+diff B2|SPECIES_WEAVILE|own: {'marginal_pool': 213, 'crit_term': 2, 'appended': 4}
+diff B3|SPECIES_INFERNAPE|own: {'marginal_pool': 174, 'appended': 2}
+diff B3|SPECIES_GARCHOMP|own: {'marginal_pool': 211, 'crit_term': 2, 'appended': 5}
+diff B3|SPECIES_GYARADOS|own: {'marginal_pool': 211, 'appended': 4}
+diff B3|SPECIES_LUCARIO|own: {'marginal_pool': 214, 'appended': 4}
+diff B3|SPECIES_CHATOT|own: {'marginal_pool': 210, 'crit_term': 2, 'appended': 1}
+diff B3|SPECIES_STARAPTOR|own: {'marginal_pool': 269, 'crit_term': 3, 'appended': 5}
+diff B4|SPECIES_ROSERADE|own: {'marginal_pool': 380, 'crit_term': 3, 'appended': 3}
+diff B4|SPECIES_BLISSEY|own: {'marginal_pool': 297, 'appended': 6}
+diff B4|SPECIES_GLISCOR|own: {'crit_term': 1, 'marginal_pool': 122, 'appended': 3}
+diff B4|SPECIES_MILOTIC|own: {'marginal_pool': 2, 'appended': 5}
+diff B4|SPECIES_BRONZONG|own: {'marginal_pool': 395, 'crit_term': 2, 'appended': 8}
+diff B4|SPECIES_LUCARIO|own: {'marginal_pool': 214, 'appended': 4}
+diff B5|SPECIES_TORTERRA|own: {'marginal_pool': 291, 'crit_term': 2, 'appended': 6}
+diff B5|SPECIES_MAGNEZONE|own: {'marginal_pool': 169, 'crit_term': 1, 'appended': 3}
+diff B5|SPECIES_CLEFABLE|own: {'marginal_pool': 478, 'appended': 4}
+diff B5|SPECIES_LUMINEON|own: {'marginal_pool': 128, 'appended': 6}
+diff B5|SPECIES_GALLADE|own: {'marginal_pool': 292, 'appended': 4}
+diff B5|SPECIES_SPIRITOMB|own: {'marginal_pool': 213, 'appended': 3}
+equal levels at [52, 50, 50, 50, 51, 53]: n 2000 A(branch) 0.9485 B(main) 0.7555 only A 470 / only B 84 p 4.66e-66 verdict A; winners' expected avg final level branch 51.69 vs main 52.79 (diff -1.10); defects 0; identity DIFFERS; baseline repairs 0; dead after 0; FR-012 pass False
+end 2026-11-13 6:43:07 PM EST
+exit=1

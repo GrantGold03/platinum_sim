@@ -145,11 +145,11 @@ baseline repairs; a no-contest team equal to member-by-member lists.
 **Independent Test**: the table complete; no `defect`; identity rows identical; zero baseline repairs; FR-012 passes or the
 merge is blocked with the cause recorded.
 
-- [ ] T016 [US2] Run the branch side alone (about 20 min): `uv run python specs/026-marginal-coverage-sets/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/026-evidence/acceptance.txt 2> runs/026-evidence/acceptance.err; echo exit=$?`;
+- [x] T016 [US2] Run the branch side alone (about 20 min): `uv run python specs/026-marginal-coverage-sets/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/026-evidence/acceptance.txt 2> runs/026-evidence/acceptance.err; echo exit=$?`;
       copy `acceptance.txt`, `acceptance-branch.json`, both winners' `result.json`/`team.txt` to `evidence/acceptance/`
-- [ ] T017 [US2] FR-012 gate: a supported loss at equal levels, a level diff above 1.0, a `DEFECT` line or a baseline repair:
+- [x] T017 [US2] FR-012 gate: a supported loss at equal levels, a level diff above 1.0, a `DEFECT` line or a baseline repair:
       no merge, record in the validation log and FUTURE-FEATURES, stop at the report to the user; else continue
-- [ ] T018 [US2] Docs: validation log (the acceptance table and reading: dead moves before and after, the allocation, the winner's
+- [x] T018 [US2] Docs: validation log (the acceptance table and reading: dead moves before and after, the allocation, the winner's
       Infernape set, the equal-levels verdict, the identity rows, the attributed diff summary); `README.md` (the candidate
       description: pool by marginal coverage, the dead-move rule and the no-live-move exception with the report note, the
       team-aware allocation; the 026 block with the acceptance); `FUTURE-FEATURES.md` (section 6 entry closed; the cross-category

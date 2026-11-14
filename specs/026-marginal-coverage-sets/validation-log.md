@@ -154,3 +154,30 @@ uv run pytest -q tests/unit/test_optimizer_resume.py tests/unit/test_required_hm
   Infernape listed 17 moves; it is now a fixed sentence ("the set's other moves already cover every League opponent").
 - FR-012 on run 1: verdict A, level diff −1.10, defects 0, baseline repairs 0, dead after 0, identity (script) → `pass False`
   by the rule as run. Run 2 follows on the fixed script and wording (the measurements are seeded; identical results expected).
+
+## T016 Branch side, run 2 (6:46:14 to 7:01:44 PM EST, alone; `runs/026-evidence/acceptance.txt`, exit 0; copies in `evidence/acceptance/`)
+
+On 000f07a (the script and the reason wording fixed; candidate code otherwise as ce7cc91). Every measurement reproduced run 1
+(seeded). Identity rows identical with `member_notes` among the volatile fields. **FR-012 pass True.**
+
+| Measure | main (7c466ae code) | branch (000f07a) |
+|---|---|---|
+| B2 quick winner levels | [51, 52, 52, 52, 53, 53] | [52, 50, 50, 50, 51, 53] |
+| clear rate [95% CI] (n 500, 2 attempts) | 0.9380 [0.9133, 0.956] | 0.9440 [0.9203, 0.961] |
+| expected average final level | 52.79 | 51.69 (diff −1.10) |
+| equal levels [52, 50, 50, 50, 51, 53], 2,000 pairs | 0.7555 | 0.9485 (only-branch 470, only-main 84, p 4.66e-66, verdict A) |
+| screened teams (cap 81 + extras) | 170 (89 extras) | 188 (107 extras: variable_power 18, accuracy_item 18, crit_item 18, item_deviation 53) |
+| screen overlap with main's list | | 0 of 170 (every member's lists changed) |
+| baseline repairs / screen drops mentioning repair | | 0 / 0 |
+| identity evaluations ref / b2main | | identical without volatile fields |
+| attributed diff, 36 members | | 0 defects (marginal_pool, appended, crit_term) |
+| dead moves in offered base sets, 36 members | 92 (335 over all sets) | 0 outside the 9 listed members |
+| candidate generation, six B2 species | 0.9 s | 1.2 s (4.8 s with the allocation; SC-006 see T013-T015) |
+| winner's Infernape | Fire Blast / Flamethrower / Close Combat / Fire Punch | Fire Blast / Flamethrower / Close Combat / Grass Knot (Flamethrower named as filler) |
+
+Reading: the new lists produce a team that clears the gauntlet two levels lower (51.69 vs 52.79 expected final average) and
+beats today's team 0.9485 to 0.7555 at the lower levels. Infernape's dead Fire Punch is gone; Staraptor runs Return and Aerial
+Ace instead of Giga Impact and U-turn; Weavile Aerial Ace and Brick Break; Floatzel Ice Punch, Crunch and Focus Blast. The
+Notes block of team.txt names Infernape's Flamethrower, Staraptor's Pluck and Rotom's Charge Beam / ThunderShock as filler.
+
+## T017 FR-012 gate: pass; continue.
