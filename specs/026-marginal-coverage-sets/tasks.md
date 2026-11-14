@@ -160,11 +160,11 @@ merge is blocked with the cause recorded.
 
 ## Phase 6: Gates and close
 
-- [ ] T019 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` empty and `git diff --stat main -- sim` empty;
+- [x] T019 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` empty and `git diff --stat main -- sim` empty;
       `sim_code_hash` and the ledger version equal to T001's, `platsim_code_hash` different; `(cd sim && node --test test/*.test.mjs)`
       green; `uv run pytest -q --durations=25 > runs/026-evidence/full.log 2>&1; echo full exit=$?` green (about 1 h 45 min);
       outputs with Eastern times into the log and `evidence/gates.txt`
-- [ ] T020 Closing commit `docs(026): gates recorded; feature closed on its branch`; push; report with the merge command
+- [x] T020 Closing commit `docs(026): gates recorded; feature closed on its branch`; push; report with the merge command
       (`git checkout main && git merge --ff-only 026-marginal-coverage-sets && git push`). Merge only on the user's go
 
 ## Dependencies

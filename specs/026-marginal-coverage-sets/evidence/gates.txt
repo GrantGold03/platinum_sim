@@ -1,0 +1,14 @@
+=== gates start 7:02:28 PM EST on dffd915
+diff main -- pokemon-showdown lines=0
+diff main -- sim lines=0
+hashes after: sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d sha256:17743363400046a8759a8c1319ac32acbf63c4d1d363131c3303f3ba35d69a57
+ledger version after: sha256:feb2a48ef2e1dd08
+before (T001): sim sha256:e968ff0f... platsim sha256:04756235... ledger sha256:feb2a48ef2e1dd08 -> sim and ledger must be equal, platsim different
+node exit=0
+# tests 384
+# pass 384
+# fail 0
+full start 7:05:01 PM EST
+full exit=0
+655 passed, 4 xfailed, 1 warning in 4891.88s (1:21:31)
+=== gates end 8:26:35 PM EST

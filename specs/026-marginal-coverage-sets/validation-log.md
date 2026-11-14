@@ -181,3 +181,28 @@ Ace instead of Giga Impact and U-turn; Weavile Aerial Ace and Brick Break; Float
 Notes block of team.txt names Infernape's Flamethrower, Staraptor's Pluck and Rotom's Charge Beam / ThunderShock as filler.
 
 ## T017 FR-012 gate: pass; continue.
+
+## T019 Gates (7:02:28 to 8:26:35 PM EST, nothing else running, on dffd915)
+
+Outputs in `runs/026-evidence/gates.txt` (copy `evidence/gates.txt`), `node.log`, `full.log` (slowest-25 table in
+`evidence/full-durations.txt`):
+
+```
+git diff --stat main -- pokemon-showdown: 0 lines (the vendored engine untouched)
+git diff --stat main -- sim: 0 lines (the battle code and its tests untouched)
+sim_code_hash after:     sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d  (= T001)
+platsim_code_hash after: sha256:17743363400046a8759a8c1319ac32acbf63c4d1d363131c3303f3ba35d69a57  (was 04756235...: pre-026 checkpoints are refused)
+divergence_ledger_version after: sha256:feb2a48ef2e1dd08  (= T001)
+(cd sim && node --test test/*.test.mjs): tests 384, pass 384, fail 0, exit 0
+uv run pytest -q --durations=25 (7:05:01 to 8:26:35 PM EST): 655 passed, 4 xfailed, 1 warning in 4891.88s (1:21:31), exit 0
+```
+
+The suite grew from 634 to 655 passed (the 19 marginal-coverage tests and the two report tests). **All gates green on the final
+code; the feature is closed on its branch. Merge on the user's go.**
+
+## T020 Close
+
+Closing commit `docs(026): gates recorded; feature closed on its branch`. Merge: `git checkout main && git merge --ff-only
+026-marginal-coverage-sets && git push` (`main` at 7c466ae has not moved). For the owner's review before the merge: the spec's
+"Amendments at implementation" (SC-006 over its bound at 4.8 s with the allocation, proposed bound 10 s; SC-002 Staraptor
+changed by Return entering its pool; the cost tiers; the one-apart rule as option B; the marginal-sum tie-break dropped).
