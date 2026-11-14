@@ -1,11 +1,13 @@
-# START HERE (updated 2026-11-13, feature 026 `026-marginal-coverage-sets` closed on its branch, all gates green; merge on the user's go)
+# START HERE (updated 2026-11-13, feature 026 `026-marginal-coverage-sets` merged to `main`; next feature: the user's choice from the FUTURE-FEATURES order)
 - **Feature 026 `026-marginal-coverage-sets` built 2026-11-13 on its branch from `main` 7c466ae (main checkout).** Commits:
   pre-feature evidence and scripts, 06ff0a4 (marginal pool, dead-move rule, cost tiers, extras), 93fe636 (filler-move note in
   the report), ce7cc91 (team-level allocation of contested TMs). Acceptance run 2 (6:46 to 7:01 PM EST) FR-012 pass: the branch's B2 winner two levels lower on average
   (51.69 vs 52.79 expected final), 0.9485 vs 0.7555 at equal levels (p 5e-66), 0 defects, 0 baseline repairs, identity rows
   identical. Gates (T019, 7:02 to 8:26 PM EST): vendored and sim diffs empty, sim hash and ledger version unchanged,
-  platsim hash changed, Node 384 pass, full pytest 655 passed + 4 xfailed in 1 h 21 min. Closed with the docs commit. Next: the
-  merge on the user's go: `git checkout main && git merge --ff-only 026-marginal-coverage-sets && git push`.
+  platsim hash changed, Node 384 pass, full pytest 655 passed + 4 xfailed in 1 h 21 min. Closed with the docs commit. **Merged to `main` 2026-11-13, about 8:35 PM EST on the user's go (fast-forward,
+  pushed).** Next: the FUTURE-FEATURES order (H4+ held-item groups: Shell Bell, King's Rock / Razor Fang, Metronome, the Choice
+  items, Lum and the resist berries; exact speedups; the v4 retune last; plain-language output); open from 026: the 024 and 025
+  extras keep dead moves (FR-007), a defence-aware move value, the user-conditioned cross-category dominance idea.
   Design corrections found at implementation (validation-log.md T003-T010): cost tiers for pool entry; a set is never dropped
   for a lower-coverage all-live one; the marginal-sum tie-break dropped; SC-006 fails as written (4.8 s with the allocation vs
   0.9 s), proposed bound 10 s for the owner's review. Evidence `runs/026-evidence/` (local), copies under
