@@ -22,7 +22,7 @@
 - SC-002: Staraptor's sets change (Return, its same-type 102-power move, enters the pool once variable moves are eligible;
   Fly and Giga Impact stay out); Garchomp's and Rotom's are unchanged as stated.
 - SC-006: candidate generation for the six B2 species is 1.2 s without the allocation and 4.8 s with it (0.9 s before), over
-  "twice today's"; proposed bound: at most 10 s for six members (a few seconds of a seven-minute quick optimize).
+  "twice today's"; the owner set the bound to 10 s for six members (2026-11-13), and SC-006 passes.
 - Edge case "too few live moves": the spec's premise that Infernape has five live moves was wrong; "live" is set-relative,
   and Infernape gets three all-live sets two apart.
 
@@ -267,9 +267,9 @@ Infernape's offered sets contain a live coverage move that it can learn on this 
 - **SC-004**: The branch's B2 quick winner is not worse than today's at equal levels (no supported loss at alpha 0.05) and its
   expected average final level is at most one level above today's.
 - **SC-005**: The two unaffected teams evaluate identically on both codes once the volatile fields are removed.
-- **SC-006**: Candidate generation for the six B2 species takes at most twice today's time, both measured in the acceptance
-  (the pre-feature side on today's code, the branch side after; the greedy pool scans every legal attack ten times and the
-  allocation adds a rebuild per member that loses a resource).
+- **SC-006**: Candidate generation for the six B2 species, with the team allocation, takes at most 10 seconds (owner's
+  decision 2026-11-13, replacing "twice today's time": the allocation rebuilds a member's lists for each resource it loses;
+  measured 4.8 s against 0.9 s before the feature).
 - **SC-007**: The Node suite and the full pytest suite pass on the final code.
 - **SC-008**: On the B2 team, every offered set of every member is buildable together with the others' first sets at the
   reference level (zero repair notes for the baseline and its single-slot deviations), Infernape's offered sets contain a live

@@ -206,3 +206,8 @@ Closing commit `docs(026): gates recorded; feature closed on its branch`. Merge:
 026-marginal-coverage-sets && git push` (`main` at 7c466ae has not moved). For the owner's review before the merge: the spec's
 "Amendments at implementation" (SC-006 over its bound at 4.8 s with the allocation, proposed bound 10 s; SC-002 Staraptor
 changed by Return entering its pool; the cost tiers; the one-apart rule as option B; the marginal-sum tie-break dropped).
+
+## SC-006 resolved (owner, 2026-11-13, after the gates)
+
+The owner set SC-006 to an absolute bound: candidate generation for the six B2 species with the allocation at most 10 s.
+Measured 4.8 s (T013-T015): **pass**. Spec SC-006 and the amendments section updated.
