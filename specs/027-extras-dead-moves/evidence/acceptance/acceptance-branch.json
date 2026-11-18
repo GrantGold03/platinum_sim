@@ -1,7 +1,7 @@
 {
  "side": "branch",
- "start": "2026-11-18 12:16:50 PM EST",
- "b2_wall_s": 522.6,
+ "start": "2026-11-18 2:11:35 PM EST",
+ "b2_wall_s": 539.1,
  "b2": {
   "dir": "b2-branch",
   "species": [
@@ -81,17 +81,17 @@
   "expected_avg_final_level": 51.69032485875706,
   "confirm_attempts": 2,
   "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
-  "platsim_code_hash": "sha256:0d58d4039390df0ea033b2a00e87cb6912206f8a4d52657594fa166f88728a73",
-  "repo_commit": "583d824d6856d6d0c9fb77e3b8610f7fa447deef"
+  "platsim_code_hash": "sha256:6dba14967a6a37f0cbaa614ab7bd2bb3b84acdab302f7b471ffbfbe43a6ab454",
+  "repo_commit": "c4977a3551052bfcc2b6a58084580e51ee89caa6"
  },
  "identity_runs": {
   "ref": {
    "dir": "/home/grant/Desktop/platinum_sim/runs/027-evidence/ident-branch/ref",
-   "wall_s": 62.1
+   "wall_s": 62.9
   },
   "b2main": {
    "dir": "/home/grant/Desktop/platinum_sim/runs/027-evidence/ident-branch/b2main",
-   "wall_s": 61.0
+   "wall_s": 62.4
   }
  },
  "b2_main": {
@@ -201,8 +201,8 @@
    },
    "removed_branch": {
     "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
-    "platsim_code_hash": "sha256:0d58d4039390df0ea033b2a00e87cb6912206f8a4d52657594fa166f88728a73",
-    "repo_commit": "583d824d6856d6d0c9fb77e3b8610f7fa447deef",
+    "platsim_code_hash": "sha256:6dba14967a6a37f0cbaa614ab7bd2bb3b84acdab302f7b471ffbfbe43a6ab454",
+    "repo_commit": "c4977a3551052bfcc2b6a58084580e51ee89caa6",
     "repo_dirty": true,
     "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
     "divergences": "<76 entries>",
@@ -243,8 +243,8 @@
    },
    "removed_branch": {
     "sim_code_hash": "sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d",
-    "platsim_code_hash": "sha256:0d58d4039390df0ea033b2a00e87cb6912206f8a4d52657594fa166f88728a73",
-    "repo_commit": "583d824d6856d6d0c9fb77e3b8610f7fa447deef",
+    "platsim_code_hash": "sha256:6dba14967a6a37f0cbaa614ab7bd2bb3b84acdab302f7b471ffbfbe43a6ab454",
+    "repo_commit": "c4977a3551052bfcc2b6a58084580e51ee89caa6",
     "repo_dirty": true,
     "divergence_ledger_version": "sha256:feb2a48ef2e1dd08",
     "divergences": "<76 entries>",
@@ -381,6 +381,17 @@
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
+     "MOVE_FLAMETHROWER",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_FIRE_PUNCH",
+     "MOVE_GRASS_KNOT"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
      "MOVE_FIRE_BLAST",
      "MOVE_CLOSE_COMBAT",
      "MOVE_FIRE_PUNCH",
@@ -398,17 +409,6 @@
      "MOVE_GRASS_KNOT"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_FLAMETHROWER",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_FIRE_PUNCH",
-     "MOVE_GRASS_KNOT"
-    ],
-    "note": "crit_item removed"
    }
   ],
   "B2quick|SPECIES_STARAPTOR|own": [
@@ -485,6 +485,39 @@
      "MOVE_RETURN",
      "MOVE_CLOSE_COMBAT",
      "MOVE_U_TURN",
+     "MOVE_QUICK_ATTACK"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_RETURN",
+     "MOVE_AERIAL_ACE",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_SECRET_POWER"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_RETURN",
+     "MOVE_AERIAL_ACE",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_U_TURN"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_RETURN",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_U_TURN",
      "MOVE_STEEL_WING"
     ],
     "note": "variable_power removed"
@@ -505,28 +538,6 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_QUICK_ATTACK"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_RETURN",
-     "MOVE_AERIAL_ACE",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_U_TURN"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_RETURN",
      "MOVE_PLUCK",
      "MOVE_WING_ATTACK",
      "MOVE_CLOSE_COMBAT"
@@ -538,22 +549,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_RETURN",
-     "MOVE_AERIAL_ACE",
+     "MOVE_WING_ATTACK",
      "MOVE_CLOSE_COMBAT",
-     "MOVE_SECRET_POWER"
-    ],
-    "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_RETURN",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_U_TURN",
      "MOVE_QUICK_ATTACK"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    }
   ],
   "B2quick|SPECIES_ROTOM|own": [
@@ -595,22 +595,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
-     "MOVE_SHADOW_BALL",
-     "MOVE_CHARGE_BEAM",
-     "MOVE_SWIFT"
-    ],
-    "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_SHADOW_BALL",
-     "MOVE_CHARGE_BEAM",
+     "MOVE_OMINOUS_WIND",
+     "MOVE_SHOCK_WAVE",
      "MOVE_RETURN"
     ],
-    "note": "crit_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -628,11 +617,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
+     "MOVE_SHADOW_BALL",
      "MOVE_OMINOUS_WIND",
-     "MOVE_SHOCK_WAVE",
-     "MOVE_RETURN"
+     "MOVE_DARK_PULSE"
     ],
-    "note": "variable_power removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -640,10 +629,21 @@
     "set": [
      "MOVE_THUNDERBOLT",
      "MOVE_SHADOW_BALL",
-     "MOVE_OMINOUS_WIND",
-     "MOVE_DARK_PULSE"
+     "MOVE_CHARGE_BEAM",
+     "MOVE_SWIFT"
     ],
     "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_SHADOW_BALL",
+     "MOVE_CHARGE_BEAM",
+     "MOVE_RETURN"
+    ],
+    "note": "crit_item removed"
    }
   ],
   "B2quick|SPECIES_FLOATZEL|own": [
@@ -709,9 +709,9 @@
      "MOVE_WATERFALL",
      "MOVE_ICE_PUNCH",
      "MOVE_CRUNCH",
-     "MOVE_BRICK_BREAK"
+     "MOVE_ROCK_TOMB"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -731,9 +731,9 @@
      "MOVE_WATERFALL",
      "MOVE_ICE_PUNCH",
      "MOVE_CRUNCH",
-     "MOVE_ROCK_TOMB"
+     "MOVE_BRICK_BREAK"
     ],
-    "note": "crit_item removed"
+    "note": "accuracy_item removed"
    }
   ],
   "B2quick|SPECIES_WEAVILE|own": [
@@ -798,10 +798,10 @@
     "set": [
      "MOVE_ICE_PUNCH",
      "MOVE_NIGHT_SLASH",
-     "MOVE_AERIAL_ACE",
-     "MOVE_SHADOW_CLAW"
+     "MOVE_RETURN",
+     "MOVE_AERIAL_ACE"
     ],
-    "note": "crit_item removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -820,8 +820,8 @@
     "set": [
      "MOVE_ICE_PUNCH",
      "MOVE_NIGHT_SLASH",
-     "MOVE_FAINT_ATTACK",
-     "MOVE_RETURN"
+     "MOVE_AERIAL_ACE",
+     "MOVE_SHADOW_CLAW"
     ],
     "note": "crit_item removed"
    },
@@ -831,10 +831,10 @@
     "set": [
      "MOVE_ICE_PUNCH",
      "MOVE_NIGHT_SLASH",
-     "MOVE_RETURN",
-     "MOVE_AERIAL_ACE"
+     "MOVE_FAINT_ATTACK",
+     "MOVE_RETURN"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    }
   ],
   "B1|SPECIES_INFERNAPE|own": [
@@ -875,6 +875,17 @@
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
+     "MOVE_FLAMETHROWER",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_FIRE_PUNCH",
+     "MOVE_GRASS_KNOT"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
      "MOVE_FIRE_BLAST",
      "MOVE_CLOSE_COMBAT",
      "MOVE_BRICK_BREAK",
@@ -892,17 +903,6 @@
      "MOVE_STONE_EDGE"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_FLAMETHROWER",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_FIRE_PUNCH",
-     "MOVE_GRASS_KNOT"
-    ],
-    "note": "crit_item removed"
    }
   ],
   "B1|SPECIES_STARAPTOR|own": [
@@ -966,8 +966,8 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_AERIAL_ACE",
+     "MOVE_PLUCK",
      "MOVE_CLOSE_COMBAT"
     ],
     "note": "accuracy_item removed"
@@ -978,10 +978,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_SECRET_POWER"
+     "MOVE_AERIAL_ACE",
+     "MOVE_STEEL_WING"
     ],
-    "note": "crit_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -999,11 +999,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_AERIAL_ACE",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_SECRET_POWER"
     ],
-    "note": "accuracy_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -1011,10 +1011,21 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_AERIAL_ACE",
-     "MOVE_STEEL_WING"
+     "MOVE_PLUCK",
+     "MOVE_CLOSE_COMBAT"
     ],
     "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_BRAVE_BIRD",
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT"
+    ],
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -1033,21 +1044,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT",
      "MOVE_SECRET_POWER"
     ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
-    ],
-    "note": "variable_power removed"
+    "note": "crit_item removed"
    }
   ],
   "B1|SPECIES_LUXRAY|own": [
@@ -1100,55 +1100,33 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER",
-     "MOVE_RETURN",
-     "MOVE_CRUNCH"
-    ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_DISCHARGE",
-     "MOVE_RETURN",
-     "MOVE_CRUNCH"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER",
-     "MOVE_RETURN",
-     "MOVE_IRON_TAIL"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_SPARK",
-     "MOVE_RETURN",
-     "MOVE_IRON_TAIL"
-    ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
      "MOVE_SPARK",
      "MOVE_RETURN",
      "MOVE_CRUNCH"
     ],
     "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_THUNDER",
+     "MOVE_RETURN",
+     "MOVE_CRUNCH"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_SPARK",
+     "MOVE_RETURN",
+     "MOVE_IRON_TAIL"
+    ],
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -1166,11 +1144,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
-     "MOVE_SPARK",
-     "MOVE_CRUNCH",
+     "MOVE_THUNDER_FANG",
+     "MOVE_RETURN",
      "MOVE_IRON_TAIL"
     ],
-    "note": "crit_item removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -1188,11 +1166,33 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER_FANG",
+     "MOVE_DISCHARGE",
+     "MOVE_RETURN",
+     "MOVE_CRUNCH"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_THUNDER",
      "MOVE_RETURN",
      "MOVE_IRON_TAIL"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_SPARK",
+     "MOVE_CRUNCH",
+     "MOVE_IRON_TAIL"
+    ],
+    "note": "crit_item removed"
    }
   ],
   "B1|SPECIES_GARCHOMP|own": [
@@ -1234,9 +1234,9 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_DRAGON_CLAW",
-     "MOVE_STONE_EDGE",
-     "MOVE_RETURN"
+     "MOVE_DRAGON_RUSH",
+     "MOVE_RETURN",
+     "MOVE_ROCK_SLIDE"
     ],
     "note": "variable_power removed"
    },
@@ -1245,9 +1245,9 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_DRAGON_RUSH",
-     "MOVE_RETURN",
-     "MOVE_ROCK_SLIDE"
+     "MOVE_DRAGON_CLAW",
+     "MOVE_STONE_EDGE",
+     "MOVE_RETURN"
     ],
     "note": "variable_power removed"
    },
@@ -1394,6 +1394,17 @@
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
+     "MOVE_FLAMETHROWER",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_FIRE_PUNCH",
+     "MOVE_GRASS_KNOT"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
      "MOVE_FIRE_BLAST",
      "MOVE_CLOSE_COMBAT",
      "MOVE_FIRE_PUNCH",
@@ -1411,17 +1422,6 @@
      "MOVE_GRASS_KNOT"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_FLAMETHROWER",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_FIRE_PUNCH",
-     "MOVE_GRASS_KNOT"
-    ],
-    "note": "crit_item removed"
    }
   ],
   "B2|SPECIES_STARAPTOR|own": [
@@ -1485,8 +1485,8 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_AERIAL_ACE",
+     "MOVE_PLUCK",
      "MOVE_CLOSE_COMBAT"
     ],
     "note": "accuracy_item removed"
@@ -1497,10 +1497,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_SECRET_POWER"
+     "MOVE_AERIAL_ACE",
+     "MOVE_STEEL_WING"
     ],
-    "note": "crit_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -1518,11 +1518,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_AERIAL_ACE",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_SECRET_POWER"
     ],
-    "note": "accuracy_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -1530,10 +1530,21 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_AERIAL_ACE",
-     "MOVE_STEEL_WING"
+     "MOVE_PLUCK",
+     "MOVE_CLOSE_COMBAT"
     ],
     "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_BRAVE_BIRD",
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT"
+    ],
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -1552,21 +1563,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT",
      "MOVE_SECRET_POWER"
     ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
-    ],
-    "note": "variable_power removed"
+    "note": "crit_item removed"
    }
   ],
   "B2|SPECIES_ROTOM|own": [
@@ -1598,6 +1598,17 @@
     "set": [
      "MOVE_THUNDERBOLT",
      "MOVE_SHADOW_BALL",
+     "MOVE_DARK_PULSE",
+     "MOVE_SWIFT"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_SHADOW_BALL",
      "MOVE_DISCHARGE",
      "MOVE_SHOCK_WAVE"
     ],
@@ -1609,18 +1620,7 @@
     "set": [
      "MOVE_THUNDERBOLT",
      "MOVE_SHADOW_BALL",
-     "MOVE_DARK_PULSE",
-     "MOVE_SWIFT"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_SHADOW_BALL",
-     "MOVE_DISCHARGE",
-     "MOVE_SHOCK_WAVE",
+     "MOVE_THUNDER",
      "MOVE_RETURN"
     ],
     "note": "variable_power removed"
@@ -1651,9 +1651,9 @@
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
-     "MOVE_THUNDERBOLT",
      "MOVE_SHADOW_BALL",
-     "MOVE_THUNDER",
+     "MOVE_DISCHARGE",
+     "MOVE_SHOCK_WAVE",
      "MOVE_RETURN"
     ],
     "note": "variable_power removed"
@@ -1722,9 +1722,9 @@
      "MOVE_WATERFALL",
      "MOVE_ICE_PUNCH",
      "MOVE_CRUNCH",
-     "MOVE_BRICK_BREAK"
+     "MOVE_ROCK_TOMB"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -1744,9 +1744,9 @@
      "MOVE_WATERFALL",
      "MOVE_ICE_PUNCH",
      "MOVE_CRUNCH",
-     "MOVE_ROCK_TOMB"
+     "MOVE_BRICK_BREAK"
     ],
-    "note": "crit_item removed"
+    "note": "accuracy_item removed"
    }
   ],
   "B2|SPECIES_WEAVILE|own": [
@@ -1799,9 +1799,31 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_ICE_PUNCH",
+     "MOVE_AVALANCHE",
+     "MOVE_RETURN",
+     "MOVE_SHADOW_CLAW"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_ICE_PUNCH",
      "MOVE_FAINT_ATTACK",
      "MOVE_AERIAL_ACE",
      "MOVE_BRICK_BREAK"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_ICE_PUNCH",
+     "MOVE_NIGHT_SLASH",
+     "MOVE_RETURN",
+     "MOVE_AERIAL_ACE"
     ],
     "note": "accuracy_item removed"
    },
@@ -1815,28 +1837,6 @@
      "MOVE_BRICK_BREAK"
     ],
     "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_ICE_PUNCH",
-     "MOVE_NIGHT_SLASH",
-     "MOVE_AERIAL_ACE",
-     "MOVE_SHADOW_CLAW"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_ICE_PUNCH",
-     "MOVE_AVALANCHE",
-     "MOVE_RETURN",
-     "MOVE_SHADOW_CLAW"
-    ],
-    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -1855,8 +1855,8 @@
     "set": [
      "MOVE_ICE_PUNCH",
      "MOVE_NIGHT_SLASH",
-     "MOVE_FAINT_ATTACK",
-     "MOVE_RETURN"
+     "MOVE_AERIAL_ACE",
+     "MOVE_SHADOW_CLAW"
     ],
     "note": "crit_item removed"
    },
@@ -1866,10 +1866,10 @@
     "set": [
      "MOVE_ICE_PUNCH",
      "MOVE_NIGHT_SLASH",
-     "MOVE_RETURN",
-     "MOVE_AERIAL_ACE"
+     "MOVE_FAINT_ATTACK",
+     "MOVE_RETURN"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    }
   ],
   "B3|SPECIES_INFERNAPE|own": [
@@ -1910,6 +1910,17 @@
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
+     "MOVE_FLAMETHROWER",
+     "MOVE_CLOSE_COMBAT",
+     "MOVE_FIRE_PUNCH",
+     "MOVE_GRASS_KNOT"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
      "MOVE_FIRE_BLAST",
      "MOVE_CLOSE_COMBAT",
      "MOVE_FIRE_PUNCH",
@@ -1927,17 +1938,6 @@
      "MOVE_GRASS_KNOT"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_FLAMETHROWER",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_FIRE_PUNCH",
-     "MOVE_GRASS_KNOT"
-    ],
-    "note": "crit_item removed"
    }
   ],
   "B3|SPECIES_GARCHOMP|own": [
@@ -1979,9 +1979,9 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_DRAGON_CLAW",
-     "MOVE_STONE_EDGE",
-     "MOVE_RETURN"
+     "MOVE_DRAGON_RUSH",
+     "MOVE_RETURN",
+     "MOVE_ROCK_SLIDE"
     ],
     "note": "variable_power removed"
    },
@@ -1990,9 +1990,9 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_DRAGON_RUSH",
-     "MOVE_RETURN",
-     "MOVE_ROCK_SLIDE"
+     "MOVE_DRAGON_CLAW",
+     "MOVE_STONE_EDGE",
+     "MOVE_RETURN"
     ],
     "note": "variable_power removed"
    },
@@ -2038,10 +2038,10 @@
     "set": [
      "MOVE_CLOSE_COMBAT",
      "MOVE_EARTHQUAKE",
-     "MOVE_FLASH_CANNON",
-     "MOVE_RETURN"
+     "MOVE_ICE_PUNCH",
+     "MOVE_SHADOW_BALL"
     ],
-    "note": "variable_power removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -2049,10 +2049,10 @@
     "set": [
      "MOVE_CLOSE_COMBAT",
      "MOVE_EARTHQUAKE",
-     "MOVE_ICE_PUNCH",
-     "MOVE_SHADOW_BALL"
+     "MOVE_FLASH_CANNON",
+     "MOVE_RETURN"
     ],
-    "note": "accuracy_item removed"
+    "note": "variable_power removed"
    }
   ],
   "B3|SPECIES_CHATOT|own": [
@@ -2083,9 +2083,42 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_HYPER_VOICE",
-     "MOVE_CHATTER",
+     "MOVE_AIR_CUTTER",
+     "MOVE_RETURN",
+     "MOVE_AERIAL_ACE"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYPER_VOICE",
+     "MOVE_RETURN",
      "MOVE_PLUCK",
+     "MOVE_SWIFT"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYPER_VOICE",
+     "MOVE_CHATTER",
+     "MOVE_RETURN",
      "MOVE_STEEL_WING"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYPER_VOICE",
+     "MOVE_CHATTER",
+     "MOVE_AERIAL_ACE",
+     "MOVE_SWIFT"
     ],
     "note": "crit_item removed"
    },
@@ -2096,6 +2129,17 @@
      "MOVE_HYPER_VOICE",
      "MOVE_AIR_CUTTER",
      "MOVE_RETURN",
+     "MOVE_STEEL_WING"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYPER_VOICE",
+     "MOVE_CHATTER",
+     "MOVE_AERIAL_ACE",
      "MOVE_STEEL_WING"
     ],
     "note": "accuracy_item removed"
@@ -2116,33 +2160,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_HYPER_VOICE",
-     "MOVE_AIR_CUTTER",
-     "MOVE_RETURN",
-     "MOVE_AERIAL_ACE"
-    ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYPER_VOICE",
      "MOVE_CHATTER",
-     "MOVE_AERIAL_ACE",
-     "MOVE_SWIFT"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYPER_VOICE",
-     "MOVE_CHATTER",
-     "MOVE_AERIAL_ACE",
+     "MOVE_PLUCK",
      "MOVE_STEEL_WING"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -2154,28 +2176,6 @@
      "MOVE_PLUCK"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYPER_VOICE",
-     "MOVE_RETURN",
-     "MOVE_PLUCK",
-     "MOVE_SWIFT"
-    ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYPER_VOICE",
-     "MOVE_CHATTER",
-     "MOVE_RETURN",
-     "MOVE_STEEL_WING"
-    ],
-    "note": "variable_power removed"
    }
   ],
   "B3|SPECIES_STARAPTOR|own": [
@@ -2239,8 +2239,8 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_AERIAL_ACE",
+     "MOVE_PLUCK",
      "MOVE_CLOSE_COMBAT"
     ],
     "note": "accuracy_item removed"
@@ -2251,10 +2251,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_SECRET_POWER"
+     "MOVE_AERIAL_ACE",
+     "MOVE_STEEL_WING"
     ],
-    "note": "crit_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2272,11 +2272,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_BRAVE_BIRD",
-     "MOVE_AERIAL_ACE",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_SECRET_POWER"
     ],
-    "note": "accuracy_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2284,10 +2284,21 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_AERIAL_ACE",
-     "MOVE_STEEL_WING"
+     "MOVE_PLUCK",
+     "MOVE_CLOSE_COMBAT"
     ],
     "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_BRAVE_BIRD",
+     "MOVE_RETURN",
+     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT"
+    ],
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -2306,21 +2317,10 @@
     "set": [
      "MOVE_BRAVE_BIRD",
      "MOVE_RETURN",
-     "MOVE_WING_ATTACK",
+     "MOVE_CLOSE_COMBAT",
      "MOVE_SECRET_POWER"
     ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_BRAVE_BIRD",
-     "MOVE_RETURN",
-     "MOVE_PLUCK",
-     "MOVE_CLOSE_COMBAT"
-    ],
-    "note": "variable_power removed"
+    "note": "crit_item removed"
    }
   ],
   "B4|SPECIES_ROSERADE|own": [
@@ -2397,20 +2397,9 @@
      "MOVE_GRASS_KNOT",
      "MOVE_SLUDGE_BOMB",
      "MOVE_SWIFT",
-     "MOVE_POISON_JAB"
-    ],
-    "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_GRASS_KNOT",
-     "MOVE_SLUDGE_BOMB",
-     "MOVE_SHADOW_BALL",
      "MOVE_RETURN"
     ],
-    "note": "crit_item removed"
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2422,17 +2411,6 @@
      "MOVE_MEGA_DRAIN"
     ],
     "note": "accuracy_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_GRASS_KNOT",
-     "MOVE_GIGA_DRAIN",
-     "MOVE_SLUDGE_BOMB",
-     "MOVE_MEGA_DRAIN"
-    ],
-    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2444,17 +2422,6 @@
      "MOVE_MEGA_DRAIN"
     ],
     "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_GRASS_KNOT",
-     "MOVE_SLUDGE_BOMB",
-     "MOVE_SWIFT",
-     "MOVE_RETURN"
-    ],
-    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2466,33 +2433,44 @@
      "MOVE_SLUDGE_BOMB"
     ],
     "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_GRASS_KNOT",
+     "MOVE_SLUDGE_BOMB",
+     "MOVE_SHADOW_BALL",
+     "MOVE_RETURN"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_GRASS_KNOT",
+     "MOVE_GIGA_DRAIN",
+     "MOVE_SLUDGE_BOMB",
+     "MOVE_MEGA_DRAIN"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_GRASS_KNOT",
+     "MOVE_SLUDGE_BOMB",
+     "MOVE_SWIFT",
+     "MOVE_POISON_JAB"
+    ],
+    "note": "accuracy_item removed"
    }
   ],
   "B4|SPECIES_BLISSEY|own": [],
   "B4|SPECIES_GLISCOR|own": [],
   "B4|SPECIES_MILOTIC|own": [
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_SURF",
-     "MOVE_ICE_BEAM",
-     "MOVE_WATER_PULSE",
-     "MOVE_RETURN"
-    ],
-    "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYDRO_PUMP",
-     "MOVE_SURF",
-     "MOVE_BLIZZARD",
-     "MOVE_RETURN"
-    ],
-    "note": "variable_power removed"
-   },
    {
     "kind": "extra",
     "cause": "extras_rule",
@@ -2503,17 +2481,6 @@
      "MOVE_WATER_GUN"
     ],
     "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_HYDRO_PUMP",
-     "MOVE_ICE_BEAM",
-     "MOVE_DRAGON_PULSE",
-     "MOVE_RETURN"
-    ],
-    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2536,6 +2503,39 @@
      "MOVE_WATER_PULSE"
     ],
     "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYDRO_PUMP",
+     "MOVE_SURF",
+     "MOVE_BLIZZARD",
+     "MOVE_RETURN"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_HYDRO_PUMP",
+     "MOVE_ICE_BEAM",
+     "MOVE_DRAGON_PULSE",
+     "MOVE_RETURN"
+    ],
+    "note": "variable_power removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_SURF",
+     "MOVE_ICE_BEAM",
+     "MOVE_WATER_PULSE",
+     "MOVE_RETURN"
+    ],
+    "note": "variable_power removed"
    },
    {
     "kind": "extra",
@@ -2610,22 +2610,22 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_PSYCHIC",
+     "MOVE_ZEN_HEADBUTT",
      "MOVE_RETURN",
      "MOVE_GRASS_KNOT"
     ],
-    "note": "crit_item removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
     "cause": "extras_rule",
     "set": [
      "MOVE_EARTHQUAKE",
-     "MOVE_ZEN_HEADBUTT",
+     "MOVE_PSYCHIC",
      "MOVE_RETURN",
      "MOVE_GRASS_KNOT"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -2668,10 +2668,10 @@
     "set": [
      "MOVE_CLOSE_COMBAT",
      "MOVE_EARTHQUAKE",
-     "MOVE_FLASH_CANNON",
-     "MOVE_RETURN"
+     "MOVE_ICE_PUNCH",
+     "MOVE_SHADOW_BALL"
     ],
-    "note": "variable_power removed"
+    "note": "accuracy_item removed"
    },
    {
     "kind": "extra",
@@ -2679,10 +2679,10 @@
     "set": [
      "MOVE_CLOSE_COMBAT",
      "MOVE_EARTHQUAKE",
-     "MOVE_ICE_PUNCH",
-     "MOVE_SHADOW_BALL"
+     "MOVE_FLASH_CANNON",
+     "MOVE_RETURN"
     ],
-    "note": "accuracy_item removed"
+    "note": "variable_power removed"
    }
   ],
   "B5|SPECIES_TORTERRA|own": [
@@ -2736,6 +2736,17 @@
     "set": [
      "MOVE_EARTHQUAKE",
      "MOVE_WOOD_HAMMER",
+     "MOVE_RAZOR_LEAF",
+     "MOVE_RETURN"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_EARTHQUAKE",
+     "MOVE_WOOD_HAMMER",
      "MOVE_STONE_EDGE",
      "MOVE_GRASS_KNOT"
     ],
@@ -2762,17 +2773,6 @@
      "MOVE_RAZOR_LEAF"
     ],
     "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_EARTHQUAKE",
-     "MOVE_WOOD_HAMMER",
-     "MOVE_RAZOR_LEAF",
-     "MOVE_RETURN"
-    ],
-    "note": "accuracy_item removed"
    }
   ],
   "B5|SPECIES_MAGNEZONE|own": [
@@ -2803,9 +2803,20 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
+     "MOVE_THUNDER",
      "MOVE_FLASH_CANNON",
-     "MOVE_SHOCK_WAVE",
-     "MOVE_TRI_ATTACK"
+     "MOVE_ZAP_CANNON"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
+     "MOVE_THUNDER",
+     "MOVE_DISCHARGE",
+     "MOVE_FLASH_CANNON"
     ],
     "note": "crit_item removed"
    },
@@ -2825,6 +2836,17 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
+     "MOVE_FLASH_CANNON",
+     "MOVE_SHOCK_WAVE",
+     "MOVE_TRI_ATTACK"
+    ],
+    "note": "crit_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_THUNDERBOLT",
      "MOVE_DISCHARGE",
      "MOVE_FLASH_CANNON",
      "MOVE_TRI_ATTACK"
@@ -2836,9 +2858,9 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
+     "MOVE_THUNDER",
      "MOVE_FLASH_CANNON",
-     "MOVE_TRI_ATTACK",
-     "MOVE_RETURN"
+     "MOVE_GYRO_BALL"
     ],
     "note": "variable_power removed"
    },
@@ -2848,30 +2870,8 @@
     "set": [
      "MOVE_THUNDERBOLT",
      "MOVE_FLASH_CANNON",
-     "MOVE_ZAP_CANNON",
-     "MOVE_MIRROR_SHOT"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER",
-     "MOVE_DISCHARGE",
-     "MOVE_FLASH_CANNON"
-    ],
-    "note": "crit_item removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER",
-     "MOVE_FLASH_CANNON",
-     "MOVE_GYRO_BALL"
+     "MOVE_TRI_ATTACK",
+     "MOVE_RETURN"
     ],
     "note": "variable_power removed"
    },
@@ -2891,11 +2891,11 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_THUNDERBOLT",
-     "MOVE_THUNDER",
      "MOVE_FLASH_CANNON",
-     "MOVE_ZAP_CANNON"
+     "MOVE_ZAP_CANNON",
+     "MOVE_MIRROR_SHOT"
     ],
-    "note": "accuracy_item removed"
+    "note": "crit_item removed"
    }
   ],
   "B5|SPECIES_CLEFABLE|own": [],
@@ -3015,11 +3015,22 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_SURF",
-     "MOVE_WATERFALL",
-     "MOVE_ICE_BEAM",
+     "MOVE_BRINE",
+     "MOVE_BLIZZARD",
      "MOVE_AIR_CUTTER"
     ],
     "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_SURF",
+     "MOVE_ICE_BEAM",
+     "MOVE_WATER_PULSE",
+     "MOVE_RETURN"
+    ],
+    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -3037,8 +3048,8 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_SURF",
-     "MOVE_BRINE",
-     "MOVE_BLIZZARD",
+     "MOVE_WATERFALL",
+     "MOVE_ICE_BEAM",
      "MOVE_AIR_CUTTER"
     ],
     "note": "accuracy_item removed"
@@ -3053,17 +3064,6 @@
      "MOVE_ICY_WIND"
     ],
     "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_SURF",
-     "MOVE_ICE_BEAM",
-     "MOVE_WATER_PULSE",
-     "MOVE_RETURN"
-    ],
-    "note": "crit_item removed"
    },
    {
     "kind": "extra",
@@ -3116,6 +3116,17 @@
     "cause": "extras_rule",
     "set": [
      "MOVE_CLOSE_COMBAT",
+     "MOVE_EARTHQUAKE",
+     "MOVE_ICE_PUNCH",
+     "MOVE_LEAF_BLADE"
+    ],
+    "note": "accuracy_item removed"
+   },
+   {
+    "kind": "extra",
+    "cause": "extras_rule",
+    "set": [
+     "MOVE_CLOSE_COMBAT",
      "MOVE_ICE_PUNCH",
      "MOVE_LEAF_BLADE",
      "MOVE_GRASS_KNOT"
@@ -3132,17 +3143,6 @@
      "MOVE_GRASS_KNOT"
     ],
     "note": "variable_power removed"
-   },
-   {
-    "kind": "extra",
-    "cause": "extras_rule",
-    "set": [
-     "MOVE_CLOSE_COMBAT",
-     "MOVE_EARTHQUAKE",
-     "MOVE_ICE_PUNCH",
-     "MOVE_LEAF_BLADE"
-    ],
-    "note": "accuracy_item removed"
    }
   ],
   "B5|SPECIES_SPIRITOMB|own": []
@@ -3545,8 +3545,8 @@
    "team": "4.7"
   },
   "branch": {
-   "members": "1.7",
-   "team": "6.9"
+   "members": "1.8",
+   "team": "7.3"
   }
  },
  "defects": 0,
@@ -3569,9 +3569,9 @@
    53
   ],
   "player": "expectimax2-v4",
-  "wall_s": 323.0
+  "wall_s": 331.2
  },
  "level_diff_branch_minus_main": 0.0,
  "pass": true,
- "end": "2026-11-18 12:34:01 PM EST"
+ "end": "2026-11-18 2:29:14 PM EST"
 }

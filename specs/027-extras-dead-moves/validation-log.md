@@ -91,3 +91,9 @@ and `_LEGAL_CACHE` hold `(ledger, value)` likewise. Regression tests `test_cover
 `test_allocation_caches_are_per_ledger_object` fail before the fix (2 failed) and pass after; the candidate batch 98 passed, exit 0.
 Hand check rerun on the fixed code (`evidence/b2-candidates-branch.txt`). Next: the branch acceptance and the full suite on the
 fixed code.
+
+## T010 Branch side, run 2 on the fixed code (2:11:35 to 2:29:14 PM EST, alone, exit 0; on c4977a3)
+
+Every measurement reproduced run 1: the B2 winner identical (levels [52, 50, 50, 50, 51, 53], clear 0.9440), equal levels 0.9485
+vs 0.9485 with 0 discordant pairs, identity rows identical, 0 defects, dead moves in extras 208 → 56 all with filler reasons,
+extras 324 → 271, screen 173 teams. Team build with the allocation 7.3 s (bound 10 s). Merge gate: pass.

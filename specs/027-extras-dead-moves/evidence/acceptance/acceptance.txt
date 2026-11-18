@@ -1,12 +1,12 @@
-start 2026-11-18 12:16:50 PM EST side branch
-b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 50, 50, 51, 53] clear 0.9440 [0.9203, 0.961] n 500 attempts 2 wall 522.6 s
+start 2026-11-18 2:11:35 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 50, 50, 51, 53] clear 0.9440 [0.9203, 0.961] n 500 attempts 2 wall 539.1 s
 identity ref: identical (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
 identity b2main: identical (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
 screen: main 188 teams, branch 173 (extras {'accuracy_item': 14, 'crit_item': 18, 'item_deviation': 46, 'total': 92, 'variable_power': 14}); overlap 145 of 188
-candidate generation, six B2 species at Lv 47: 1.7 s (SC-006)
-full team build with the allocation, B2 at Lv 47: 6.9 s (SC-006, at most 10 s)
+candidate generation, six B2 species at Lv 47: 1.8 s (SC-006)
+full team build with the allocation, B2 at Lv 47: 7.3 s (SC-006, at most 10 s)
 dead moves in extras: before 208 after 56 (without a filler reason 0); extras 324 -> 271
-generation main {'members': '1.2', 'team': '4.7'} branch {'members': '1.7', 'team': '6.9'} (s); baseline repairs 0
+generation main {'members': '1.2', 'team': '4.7'} branch {'members': '1.8', 'team': '7.3'} (s); baseline repairs 0
 diff B2quick|SPECIES_GARCHOMP|own: {'extras_rule': 6}
 diff B2quick|SPECIES_INFERNAPE|own: {'extras_rule': 6}
 diff B2quick|SPECIES_STARAPTOR|own: {'extras_rule': 13}
@@ -43,6 +43,6 @@ diff B5|SPECIES_CLEFABLE|own: identical
 diff B5|SPECIES_LUMINEON|own: {'extras_rule': 16}
 diff B5|SPECIES_GALLADE|own: {'extras_rule': 6}
 diff B5|SPECIES_SPIRITOMB|own: identical
-equal levels at [52, 50, 50, 50, 51, 53]: n 2000 A(branch) 0.9485 B(main) 0.9485 only A 0 / only B 0 p 1 verdict indistinguishable; winners' expected avg final level branch 51.69 vs main 51.69 (diff +0.00); defects 0; identity ok; dead in extras without a reason 0; team build 6.9 s; pass True
-end 2026-11-18 12:34:01 PM EST
+equal levels at [52, 50, 50, 50, 51, 53]: n 2000 A(branch) 0.9485 B(main) 0.9485 only A 0 / only B 0 p 1 verdict indistinguishable; winners' expected avg final level branch 51.69 vs main 51.69 (diff +0.00); defects 0; identity ok; dead in extras without a reason 0; team build 7.3 s; pass True
+end 2026-11-18 2:29:14 PM EST
 exit=0
