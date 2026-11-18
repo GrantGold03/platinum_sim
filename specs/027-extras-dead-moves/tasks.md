@@ -19,7 +19,8 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
       set, base-set item list or setup set difference is `defect`; extra-set differences are `extras_rule` when the branch's
       extra is all-live under its own valuation or carries a `filler_reasons` entry, else `defect`), `equal_levels.py` (master
       `027-equal|B2`), `hand_check.py` (each B2 member's extras with kind, item, dead moves under own valuation,
-      `dropped_extras`, generation time)
+      `dropped_extras`, the generation time of `member_candidates` for six and of the full team build with the allocation,
+      `run._build_cands`, SC-006); `acceptance.py` also times the full team build on both sides
 - [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/027-extras-dead-moves/scripts/acceptance.py --side main --workers 16 > runs/027-evidence/acceptance-main.txt 2> runs/027-evidence/acceptance-main.err; echo exit=$?`;
       copy the outputs, the winner's `result.json`/`team.txt` and the snapshot to `evidence/pre/`; log; Commit 1
       `docs(027): pre-feature evidence and scripts`; push
@@ -59,12 +60,15 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
 - [ ] T008 [US1] `tests/unit/test_extras_dead_moves.py` part 2: B2 at level 48: Infernape's extras contain no Fire Punch and no
       dead move with a live replacement (own valuation); every Garchomp variable-power extra carries a live variable move; a
       synthetic member whose repaired extra duplicates a base set gets it excluded and the shortfall recorded; a synthetic
-      filler extra carries its `filler_reasons` entry; the six B2 members' base sets, base-set items and setup sets equal
-      `specs/026-marginal-coverage-sets/evidence/candidates-branch.json` (026's branch snapshot, same calls); `_member_notes`
+      filler extra carries its `filler_reasons` entry; every record of this feature's pre-feature snapshot
+      `specs/027-extras-dead-moves/evidence/candidates-main.json` (T002, today's code; 36 members), recomputed with its stored
+      call arguments (B2 at the quick job's reference level, not a fixed 48), has base sets, base-set items and setup set equal
+      to the snapshot's; `_member_notes`
       uses a set's own filler reason; run with `test_marginal_coverage.py test_h4_items.py test_variable_power.py test_optimizer_candidates.py`
       (exit code kept) and record
 - [ ] T009 [US1] Hand check `uv run python specs/027-extras-dead-moves/scripts/hand_check.py > runs/027-evidence/b2-candidates-branch.txt`
-      (copy to `evidence/`), the offline attributed diff over the 36 members (0 defects; dead moves in extras before/after), the
+      (copy to `evidence/`; both timings against T002's, SC-006 at most 10 s with the allocation), the offline attributed diff
+      over the 36 members (0 defects; dead moves in extras before/after, the before count from the T002 snapshot, SC-001), the
       fast suite `uv run pytest -q -m "not battle_sim" > runs/027-evidence/fast.log 2>&1; echo exit=$?`; log; Commit 2
       `feat(027): extra sets under the dead-move rule; dead-defining extras dropped; per-set filler reasons`; push
 
