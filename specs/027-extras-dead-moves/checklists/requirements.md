@@ -31,5 +31,4 @@
 
 ## Notes
 
-- Two defaults are stated rather than marked (FR-005: a dead-defining or item-changes-nothing extra is not offered; the owner may
-  choose to keep it as a filler set): the expected `/speckit-clarify` questions.
+- FR-005's default (a dead-defining or item-changes-nothing extra is not offered) was confirmed at clarify (2026-11-18, option A).

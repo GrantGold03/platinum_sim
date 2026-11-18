@@ -28,6 +28,12 @@ started feature 026, and Garchomp's Return set carries Return itself dead. The e
 each dead move wastes a screened option and, if such a set wins, reaches the player. Fixing the rule before the next item groups
 lets each inherit it.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: When an extra set's defining feature adds nothing (a variable move dead with no live alternative, or an item that ranks the set no differently from the base sets), should the tool drop that extra set or keep it with the useless move named as filler? → A: A, drop it: not offered, listed in the candidate summary with the reason.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Extra sets earn their slots too (Priority: P1)
@@ -44,8 +50,8 @@ screen spends runs on every extra.
 
 1. **Given** Infernape at level 48 on the B2 team, **When** its extra sets are built, **Then** no extra set contains Fire Punch
    and no extra set contains a dead move (under its own valuation) while a live replacement exists.
-2. **Given** Garchomp's variable-power extra whose Return is dead, **When** its extras are built, **Then** that set is either made
-   to carry a live variable move or not offered, and the candidate summary says which.
+2. **Given** Garchomp's variable-power extra whose Return is dead, **When** its extras are built, **Then** that set carries a live
+   variable move if one can be made live, and is otherwise not offered, the candidate summary listing it with the reason.
 3. **Given** an extra that after repair equals a base set or an earlier extra, **When** the extras are built, **Then** it is not
    offered twice.
 4. **Given** a member whose extra keeps a dead move because nothing live is left, **When** the summary is read, **Then** the move is
@@ -78,10 +84,10 @@ the merge is blocked with the cause recorded.
 ### Edge Cases
 
 - **A variable-power extra whose variable move is dead** (Garchomp's Return beside Earthquake, Dragon Claw, Stone Edge): if
-  another offered variable move can be made live in the set, it takes the slot; otherwise the set is not offered (default; the
-  owner may choose at clarify to keep it as a named filler set).
+  another offered variable move can be made live in the set, it takes the slot; otherwise the set is not offered and is
+  listed with the reason (owner's decision 2026-11-18).
 - **An item-conditioned extra whose item changes nothing** (its repaired set ranks the same under the item as without it, or it
-  equals a base set): not offered (default, same owner choice).
+  equals a base set): not offered, listed with the reason (owner's decision 2026-11-18).
 - **A repaired extra equal to a base set or an earlier extra**: dropped; the next ranked extra of that kind is considered.
 - **Too few live moves for extras two apart**: the 026 one-apart rule applies among the extras of one kind.
 - **A member with nothing live beyond its two strongest** (Rotom): extras that keep dead moves are listed with the 026 reason, as
@@ -101,8 +107,8 @@ the merge is blocked with the cause recorded.
   carry a dead move (026 FR-004a).
 - **FR-004**: An extra equal after repair to a base set or to an extra already offered MUST NOT be offered again.
 - **FR-005**: A variable-power extra MUST carry at least one offered variable move that is live in it; an item-conditioned extra
-  MUST rank differently from the base sets under its item's valuation; an extra failing its check is not offered (default,
-  subject to clarify).
+  MUST rank differently from the base sets under its item's valuation; an extra failing its check is not offered (owner's
+  decision 2026-11-18: dropped, never kept as a filler set).
 - **FR-006**: The candidate summary's dead moves, filler reason and one-apart record MUST cover the extras; extras dropped under
   FR-004 or FR-005 MUST be listed with the reason.
 - **FR-007**: The base sets, their items, the setup set, the extras' items and kinds, the screen's rule for screening extras
