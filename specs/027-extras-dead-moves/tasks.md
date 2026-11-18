@@ -10,7 +10,7 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/027-extras-dead-moves/validation-log.md` (before-values: `sim_code_hash`, `platsim_code_hash`, the ledger
+- [x] T001 Start `specs/027-extras-dead-moves/validation-log.md` (before-values: `sim_code_hash`, `platsim_code_hash`, the ledger
       version; `git diff --stat main -- src sim tests pyproject.toml` empty) and adapt 026's scripts into
       `specs/027-extras-dead-moves/scripts/`: `acceptance.py` (`runs/027-evidence`, identity seed `027-ident`, `member_notes` among
       the volatile fields; the snapshot records per extra set its kind, item and dead moves under its own valuation, using the
@@ -21,7 +21,7 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
       `027-equal|B2`), `hand_check.py` (each B2 member's extras with kind, item, dead moves under own valuation,
       `dropped_extras`, the generation time of `member_candidates` for six and of the full team build with the allocation,
       `run._build_cands`, SC-006); `acceptance.py` also times the full team build on both sides
-- [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/027-extras-dead-moves/scripts/acceptance.py --side main --workers 16 > runs/027-evidence/acceptance-main.txt 2> runs/027-evidence/acceptance-main.err; echo exit=$?`;
+- [x] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/027-extras-dead-moves/scripts/acceptance.py --side main --workers 16 > runs/027-evidence/acceptance-main.txt 2> runs/027-evidence/acceptance-main.err; echo exit=$?`;
       copy the outputs, the winner's `result.json`/`team.txt` and the snapshot to `evidence/pre/`; log; Commit 1
       `docs(027): pre-feature evidence and scripts`; push
 

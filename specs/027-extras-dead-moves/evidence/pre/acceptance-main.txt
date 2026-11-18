@@ -1,0 +1,6 @@
+start 2026-11-18 11:47:59 AM EST side main
+b2-main: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 50, 50, 51, 53] clear 0.9440 [0.9203, 0.961] n 500 attempts 2 wall 517.5 s
+candidate generation, six B2 species at Lv 47: 1.2 s (SC-006)
+full team build with the allocation, B2 at Lv 47: 4.7 s (SC-006, at most 10 s)
+end 2026-11-18 11:59:24 AM EST
+exit=0
