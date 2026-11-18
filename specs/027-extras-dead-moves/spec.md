@@ -28,6 +28,18 @@ started feature 026, and Garchomp's Return set carries Return itself dead. The e
 each dead move wastes a screened option and, if such a set wins, reaches the player. Fixing the rule before the next item groups
 lets each inherit it.
 
+## Defect found by the gates (2026-11-18, owner's decision: fix in this feature)
+
+The full test suite (T013) failed one test, the base-set pin, for B1's Gyarados only; it passed alone. Cause: the coverage cache
+added in feature 026 (`candidates._cov`) and the allocation's two caches keyed entries on the Python object id of the value
+table or the ledger, and Python reuses an id once the object is freed, so a new table could be served a freed table's cached
+coverage (19,999 stale reads in 20,000 trials of a direct test). A collision needs the same move set valued twice in one process
+(the same species at two levels: B1 and B3 Gyarados; the optimizer's level-100 and reference-level passes). Fix: each entry keeps
+its object and is used only for that same object, which also prevents the id's reuse while the entry lives. Two regression tests
+fail before the fix and pass after. A recomputation of the 36 benchmark members with the corrected cache patched in changed no
+base set or extra in that process, so earlier acceptance results are very likely unaffected (unverifiable after the fact: a
+collision depends on memory layout).
+
 ## Clarifications
 
 ### Session 2026-11-18

@@ -75,3 +75,19 @@ variable move or item that adds nothing); the screen spends 15 fewer runs; the B
 so it is unchanged, as expected when only the extras change.
 
 ## T011 Merge gate: pass; continue.
+
+## T013 Gates, run 1 (12:34:36 PM to 2:04:47 PM EST, on d46e707; `runs/027-evidence/gates-run1.txt`, `full-run1.log`)
+
+Vendored and sim diffs empty; sim hash and ledger version unchanged; platsim hash changed; Node 384 pass. **Full pytest: 1 failed,
+662 passed, 4 xfailed (1:27:21), exit 1**: `test_base_sets_items_and_setup_equal_the_pre_feature_snapshot` for `B1|SPECIES_GYARADOS`
+(base sets and items differed); the same test passed alone and in the 96-test batch.
+
+Diagnosis: the id-keyed caches (see the spec's "Defect found by the gates"). A direct test: 19,999 stale coverage reads in 20,000
+trials. A recomputation of all 36 members with an identity-checked cache patched in at runtime: 0 base-set and 0 extra differences
+from the current code in that process, and 0 from the pre-feature snapshot. The owner chose to fix it in this feature (option A).
+
+Fix: `candidates._cov` entries hold `(table, coverage)` and are used only when the table is the same object; `allocation._USES_CACHE`
+and `_LEGAL_CACHE` hold `(ledger, value)` likewise. Regression tests `test_coverage_cache_never_returns_a_stale_value` and
+`test_allocation_caches_are_per_ledger_object` fail before the fix (2 failed) and pass after; the candidate batch 98 passed, exit 0.
+Hand check rerun on the fixed code (`evidence/b2-candidates-branch.txt`). Next: the branch acceptance and the full suite on the
+fixed code.

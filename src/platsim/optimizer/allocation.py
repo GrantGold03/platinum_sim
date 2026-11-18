@@ -27,33 +27,36 @@ from platsim.optimizer import candidates as C
 from platsim.optimizer import resources as R
 
 
-_USES_CACHE: dict[tuple, dict[str, int]] = {}
-_LEGAL_CACHE: dict[tuple, list[str]] = {}
+# 027: entries keep their ledger object and are used only for that same object (id reuse of a freed ledger; T013)
+_USES_CACHE: dict[tuple, tuple[object, dict[str, int]]] = {}
+_LEGAL_CACHE: dict[tuple, tuple[object, list[str]]] = {}
 
 
 def _legal(variant, level: int, led) -> list[str]:
     k = (id(led), variant.species, variant.key, level)
-    if k not in _LEGAL_CACHE:
-        _LEGAL_CACHE[k] = C.legal_moves(variant, level, led)
-    return _LEGAL_CACHE[k]
+    e = _LEGAL_CACHE.get(k)
+    if e is None or e[0] is not led:
+        e = _LEGAL_CACHE[k] = (led, C.legal_moves(variant, level, led))
+    return e[1]
 
 
 def _cheapest_uses(species: str, variant, move: str, level: int, led) -> dict[str, int]:
     """The resources of the cheapest source of `move` for this member: none if any source consumes nothing (memoised per
     ledger object: the source lookup is the expensive part of the allocation)."""
     k = (id(led), species, variant.key, move, level)
-    if k in _USES_CACHE:
-        return dict(_USES_CACHE[k])
+    e = _USES_CACHE.get(k)
+    if e is not None and e[0] is led:
+        return dict(e[1])
     best: dict[str, int] | None = None
     for opt in variant.options(led):
         for choice in MS.sources(species, move, level, led, opt):
             uses = {r: n for r, n in MS.uses_of(choice).items() if R.copies(r, led) != R.UNLIMITED}
             if not uses:
-                _USES_CACHE[k] = {}
+                _USES_CACHE[k] = (led, {})
                 return {}
             if best is None or sum(uses.values()) < sum(best.values()):
                 best = uses
-    _USES_CACHE[k] = dict(best or {})
+    _USES_CACHE[k] = (led, dict(best or {}))
     return dict(best or {})
 
 

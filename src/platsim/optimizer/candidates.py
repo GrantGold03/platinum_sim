@@ -578,17 +578,22 @@ def coverage(vals: list[list[float]]) -> float:
 NO_LIVE_REASON = "no better option: its two strongest moves cover every League opponent"
 
 
-_COV_CACHE: dict[tuple, float] = {}
+_COV_CACHE: dict[tuple, tuple[dict, float]] = {}
 
 
 def _cov(moves, vals: dict[str, list[float]]) -> float:
-    """coverage() of a set of moves, memoised per value table (the dead-move repair asks for the same subsets many times)."""
+    """coverage() of a set of moves, memoised per value table (the dead-move repair asks for the same subsets many times).
+    027: each entry keeps its table and is used only for that same object; the live reference also stops Python reusing the
+    table's id while the entry exists (keyed on id alone, a freed table's entry was served to a new one: found by the full
+    suite, T013)."""
     k = (id(vals), frozenset(moves))
-    c = _COV_CACHE.get(k)
-    if c is None:
-        if len(_COV_CACHE) > 200000:
-            _COV_CACHE.clear()
-        c = _COV_CACHE[k] = coverage([vals[m] for m in moves])
+    e = _COV_CACHE.get(k)
+    if e is not None and e[0] is vals:
+        return e[1]
+    if len(_COV_CACHE) > 200000:
+        _COV_CACHE.clear()
+    c = coverage([vals[m] for m in moves])
+    _COV_CACHE[k] = (vals, c)
     return c
 
 

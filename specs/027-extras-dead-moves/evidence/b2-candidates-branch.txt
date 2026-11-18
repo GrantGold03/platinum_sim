@@ -1,5 +1,5 @@
-member_candidates, six B2 species at Lv 48: 1.7 s
-full team build with the allocation at Lv 48: 6.8 s (SC-006, at most 10 s)
+member_candidates, six B2 species at Lv 48: 2.0 s
+full team build with the allocation at Lv 48: 7.1 s (SC-006, at most 10 s)
 SPECIES_GARCHOMP base ['EARTHQUAKE / DRAGON_CLAW / STONE_EDGE / AERIAL_ACE', 'EARTHQUAKE / STONE_EDGE / DRAGON_PULSE / FIRE_BLAST', 'EARTHQUAKE / DRAGON_CLAW / ROCK_SLIDE / FIRE_BLAST']
   extra[variable_power]: EARTHQUAKE / STONE_EDGE / RETURN / AERIAL_ACE  dead []
   extra[variable_power]: EARTHQUAKE / RETURN / ROCK_SLIDE / FIRE_BLAST  dead []

@@ -143,3 +143,30 @@ def test_member_notes_use_the_sets_own_filler_reason():
                         "filler_reasons": {key: C.FILLER_REASON}}}]
     notes = _member_notes(FakeState(members), (R.MemberSpec("SPECIES_ROTOM", "own", ms, None),), None)
     assert notes == [f"Rotom: Thunder is filler: {C.FILLER_REASON}"]
+
+
+# ---- part 3: the id-keyed caches must not serve a freed table's entry (defect found by the full-suite gate, T013) -------
+def test_coverage_cache_never_returns_a_stale_value():
+    C._COV_CACHE.clear()
+    stale = 0
+    for i in range(5000):
+        v = {"A": [float(i), 0.0], "B": [0.0, float(i)]}
+        stale += C._cov(["A", "B"], v) != 2.0 * i
+        del v
+    assert stale == 0
+
+
+def test_allocation_caches_are_per_ledger_object():
+    from platsim.optimizer import allocation as AL
+
+    class Led:  # two distinct ledger stand-ins; the second may reuse the first's id once it is freed
+        pass
+
+    calls = []  # counts lookups without keeping the ledger objects alive (a live object's id cannot be reused)
+    v = type("V", (), {"key": "own", "species": "S", "options": lambda self, led: calls.append(1) or []})()
+    AL._USES_CACHE.clear()
+    for _ in range(200):
+        led = Led()
+        AL._cheapest_uses("S", v, "MOVE_X", 50, led)
+        del led
+    assert len(calls) == 200  # every new ledger object is looked up, never served from a freed one's entry
