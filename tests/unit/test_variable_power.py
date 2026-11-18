@@ -105,7 +105,9 @@ def test_todays_candidates_differ_from_024s_only_by_attributed_causes(snapshot_a
         assert 1 <= n <= C.K_MOVESETS, key
         assert sum(mc.extras_by_kind.values()) == mc.extras, key
         if mc.variable_offered:
-            assert mc.extras_by_kind.get("variable_power", 0) >= 1, key
+            # 027 (FR-005, owner's decision): a variable-power extra needs a live variable move; when none can be made live
+            # (Rotom: Return never beats Thunderbolt or Shadow Ball) the kind offers none and the shortfall is recorded
+            assert mc.extras_by_kind.get("variable_power", 0) >= 1 or "variable_power" in mc.dropped_extras, key
             for extra in mc.movesets[n:]:
                 if mc.extra_kind.get(extra) == "variable_power":
                     assert any(m in C.OFFERED_VARIABLE for m in extra), (key, extra)

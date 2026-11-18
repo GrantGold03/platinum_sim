@@ -243,7 +243,7 @@ def test_extras_still_follow_their_kinds(b2):
         assert sum(mc.extras_by_kind.values()) == mc.extras
         for ms, item in mc.item_extras.items():
             assert mc.items[ms][0] == item
-        assert set(mc.dead_moves) == set(_base(mc))
+        assert set(mc.dead_moves) == set(mc.movesets)  # 027: the extras too, under their own valuation
 
 
 # ---- part 4b: the optimizer's filler-move note from the prune stage's summaries (FR-009a, T012) ---------------------

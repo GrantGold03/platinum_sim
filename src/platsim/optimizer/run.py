@@ -787,10 +787,12 @@ def _member_notes(state: _State, specs, led) -> list[str]:
     out = []
     for slot, sp in enumerate(specs):
         summ = (members[slot] if slot < len(members) else {}).get(sp.variant) or {}
-        dead = summ.get("dead_moves", {}).get("|".join(sp.moves)) or []
-        if dead and summ.get("no_live_reason"):
+        key = "|".join(sp.moves)
+        dead = summ.get("dead_moves", {}).get(key) or []
+        reason = (summ.get("filler_reasons") or {}).get(key) or summ.get("no_live_reason")  # 027: the set's own reason first
+        if dead and reason:
             names = ", ".join(C.display_move(m) for m in dead)
-            out.append(f"{C.display_name(sp.species)}: {names} {'are' if len(dead) > 1 else 'is'} filler: {summ['no_live_reason']}")
+            out.append(f"{C.display_name(sp.species)}: {names} {'are' if len(dead) > 1 else 'is'} filler: {reason}")
     return out
 
 

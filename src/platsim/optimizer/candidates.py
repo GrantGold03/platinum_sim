@@ -747,12 +747,14 @@ def display_move(m: str) -> str:
     return load_moves()[m].name if m in load_moves() else m
 
 
-def choose_sets(ranked, k: int, cands, vals, scores, cost_tier=None):
+def choose_sets(ranked, k: int, cands, vals, scores, cost_tier=None, exclude=frozenset(), require=None, stats=None):
     """(sets, one_apart, reason) (R2, revised at implementation): every ranked combo has its dead moves replaced where a live
     legal move exists (a replacement raises coverage); the repaired sets are re-ranked by coverage; the next offered set is the
     best one at least two moves apart from those offered, unless an all-live set one move apart has strictly higher coverage
     (FR-004a). A set keeps a dead move only when no live replacement exists (filler, listed with `reason`); a set is never
-    dropped for a lower-coverage all-live one."""
+    dropped for a lower-coverage all-live one. 027: repaired sets in `exclude` (sets already offered) and sets for which
+    `require(set)` is false are never accepted; `stats` (a dict) counts them as "excluded" and "required". Omitted, the call
+    is exactly the base-set selection of 026."""
     repaired: list[tuple[str, ...]] = []
     seen: set[tuple[str, ...]] = set()
     for combo in ranked:
@@ -762,6 +764,18 @@ def choose_sets(ranked, k: int, cands, vals, scores, cost_tier=None):
             repaired.append(c)
     repaired.sort(key=lambda c: _rank_key(c, vals, scores))
     repaired = [c for c in repaired if len(c) == len(ranked[0])] if ranked else repaired
+    if exclude or require is not None:
+        kept = []
+        for c in repaired:
+            if c in exclude:
+                if stats is not None:
+                    stats["excluded"] = stats.get("excluded", 0) + 1
+            elif require is not None and not require(c):
+                if stats is not None:
+                    stats["required"] = stats.get("required", 0) + 1
+            else:
+                kept.append(c)
+        repaired = kept
     accepted: list[tuple[str, ...]] = []
     one_apart: list[tuple[str, ...]] = []
 
@@ -818,6 +832,8 @@ class MemberCandidates:
     no_live_reason: str | None = None  # 026: set when a set with dead moves was accepted (FR-005)
     one_apart: list[tuple[str, ...]] = field(default_factory=list)  # 026: sets accepted one move apart (FR-004a)
     unavailable: frozenset = frozenset()  # 026: moves the team allocation took away (story 3)
+    filler_reasons: dict[tuple[str, ...], str] = field(default_factory=dict)  # 027: per offered set keeping a dead move
+    dropped_extras: dict[str, dict] = field(default_factory=dict)  # 027: per extra kind offered fewer than k: {offered, reason}
 
     def summary(self) -> dict:
         return {"species": self.species, "variant": self.variant.key, "ref_level": self.ref_level,
@@ -825,6 +841,8 @@ class MemberCandidates:
                 "dead_moves": {"|".join(k): v for k, v in self.dead_moves.items()},
                 "no_live_reason": self.no_live_reason, "one_apart": [list(x) for x in self.one_apart],
                 "unavailable": sorted(self.unavailable),
+                "filler_reasons": {"|".join(k): v for k, v in self.filler_reasons.items()},
+                "dropped_extras": dict(self.dropped_extras),
                 "extras_by_kind": dict(self.extras_by_kind),
                 "items_extra": {"|".join(k): v for k, v in self.items_extra.items()},
                 "item_extras": {"|".join(k): v for k, v in self.item_extras.items()},
@@ -957,16 +975,32 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     # themselves only and not already offered (026: a variable move may already be in a base set).
     extras: list[tuple[str, ...]] = []
     extra_combos: list[tuple[str, ...]] = []
+    extra_vals: dict[tuple[str, ...], dict] = {}  # 027: each extra's own valuation
+    extra_reason: dict[tuple[str, ...], str] = {}
+    dropped_extras: dict[str, dict] = {}
+    extra_one_apart: list[tuple[str, ...]] = []
     if variable and size == 4:
         wide = sorted(set(pool) | set(variable))
         ranked_extra = [c for c in itertools.combinations(wide, 4) if any(m in OFFERED_VARIABLE for m in c)]
         ranked_extra.sort(key=lambda c: _rank_key(c, vals, scores))
         extra_combos = [c for c in ranked_extra if c not in set(chosen)]
-        for combo in extra_combos:
-            if all(len(set(combo) ^ set(c)) // 2 >= 2 for c in extras):
-                extras.append(combo)
-            if len(extras) >= k:
-                break
+        # 027 (FR-001 to FR-005): the 026 rule under the plain valuation; a variable-power extra keeps a live offered
+        # variable move, sets already offered are excluded
+        def has_live_variable(c, _v=vals):
+            dead_c = set(dead_moves(c, _v))
+            return any(m in OFFERED_VARIABLE and m not in dead_c for m in c)
+        st: dict = {}
+        extras, oa, why = choose_sets(extra_combos, k, cands, vals, scores, exclude=frozenset(chosen),
+                                      require=has_live_variable, stats=st)
+        extra_one_apart += oa
+        for c in extras:
+            extra_vals[c] = vals
+            if why and dead_moves(c, vals):
+                extra_reason[c] = why
+        if len(extras) < k:
+            dropped_extras["variable_power"] = {"offered": len(extras), "reason": (
+                "no further set whose variable move is live" if st.get("required") else
+                "only duplicates of offered sets remain" if st.get("excluded") else "no further set")}
     # 025 (H4, FR-001a): item-conditioned extra sets. For each conditioning item the member can hold, re-value every attack
     # under the item, cut a pool and rank the four-move sets as today, and append up to k sets not already offered, diverse
     # among themselves; each is paired with the item. Lens-conditioned sets come before claw-conditioned ones.
@@ -989,14 +1023,26 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
             sc_i = {m: sum(v) for m, v in vals_i.items()}
             pool_i = pool_by_marginal(cands, vals_i, sc_i)  # 026: the same pool and ranking rule under the item valuation
             ranked_i = rank_sets(pool_i, vals_i, sc_i, 4)
-            picked: list[tuple[str, ...]] = []
-            for c in ranked_i:
-                if c in existing or any(len(set(c) ^ set(p)) // 2 < 2 for p in picked):
-                    continue
-                picked.append(c)
-                if len(picked) >= k:
-                    break
+            # 027: the 026 rule under the item valuation; the set must hold a move the item changes (Wide Lens: one that can
+            # miss; Razor Claw: any attack, so only the duplicate rule can drop a claw set); sets already offered excluded
+            if effect == ACCURACY_UP_EFFECT:
+                def item_matters(c, _mv=mv):
+                    return any(0 < _mv[m].accuracy < 100 for m in c)
+            else:
+                def item_matters(c, _mv=mv):
+                    return any(is_attack(_mv[m]) or m in OFFERED_VARIABLE for m in c)
+            st = {}
+            picked, oa, why = choose_sets(ranked_i, k, cands, vals_i, sc_i, exclude=frozenset(existing),
+                                          require=item_matters, stats=st)
+            extra_one_apart += oa
+            if len(picked) < k:
+                dropped_extras[kind] = {"offered": len(picked), "reason": (
+                    "no further set the item changes" if st.get("required") else
+                    "only duplicates of offered sets remain" if st.get("excluded") else "no further set")}
             for c in picked:
+                extra_vals[c] = vals_i
+                if why and dead_moves(c, vals_i):
+                    extra_reason[c] = why
                 item_sets.append((c, item, kind))
                 existing.add(c)
                 extra_kind[c] = kind
@@ -1010,7 +1056,13 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
     if setup:
         setup = tuple(sorted(setup, key=lambda m: (-scores.get(m, 0), m)))
     ranked = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for *_, c in combos[:RANKED]]
-    dead = {tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))): dead_moves(c, vals) for c in chosen}
+    order = lambda c: tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m)))  # noqa: E731
+    dead = {order(c): dead_moves(c, vals) for c in chosen}
+    filler_reasons = {order(c): no_live_reason for c in chosen if no_live_reason and dead[order(c)]}
+    for c, v in extra_vals.items():  # 027: extras under their own valuation
+        dead[order(c)] = dead_moves(c, v)
+        if c in extra_reason:
+            filler_reasons[order(c)] = extra_reason[c]
     ranked += [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extra_combos]  # 024: prefix unchanged
     movesets = chosen + extras + [c for c, _, _ in item_sets]
     items = {ms: held_item_candidates(const, ms, led, team, level) for ms in chosen + extras + ([setup] if setup else [])}
@@ -1028,8 +1080,8 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
                             variable_offered=variable, extras=len(extras) + len(item_sets),
                             items_extra=items_extra, item_extras=item_extras, extra_kind=extra_kind, extras_by_kind=by_kind,
                             dead_moves=dead, no_live_reason=no_live_reason,
-                            one_apart=[tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in one_apart],
-                            unavailable=frozenset(unavailable))
+                            one_apart=[tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in one_apart + extra_one_apart],
+                            unavailable=frozenset(unavailable), filler_reasons=filler_reasons, dropped_extras=dropped_extras)
 
 
 __all__ = ["MemberCandidates", "Variant", "candidate_move_consts", "choose_sets", "coverage", "dead_moves", "display_name", "dominates",

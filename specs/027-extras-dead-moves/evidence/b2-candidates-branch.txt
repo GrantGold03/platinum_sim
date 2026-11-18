@@ -1,0 +1,58 @@
+member_candidates, six B2 species at Lv 48: 1.7 s
+full team build with the allocation at Lv 48: 6.8 s (SC-006, at most 10 s)
+SPECIES_GARCHOMP base ['EARTHQUAKE / DRAGON_CLAW / STONE_EDGE / AERIAL_ACE', 'EARTHQUAKE / STONE_EDGE / DRAGON_PULSE / FIRE_BLAST', 'EARTHQUAKE / DRAGON_CLAW / ROCK_SLIDE / FIRE_BLAST']
+  extra[variable_power]: EARTHQUAKE / STONE_EDGE / RETURN / AERIAL_ACE  dead []
+  extra[variable_power]: EARTHQUAKE / RETURN / ROCK_SLIDE / FIRE_BLAST  dead []
+  extra[variable_power]: EARTHQUAKE / RETURN / DRAGON_PULSE / CRUNCH  dead []
+  extra[accuracy_item/wide_lens]: EARTHQUAKE / DRAGON_CLAW / STONE_EDGE / FIRE_BLAST  dead []
+  extra[accuracy_item/wide_lens]: EARTHQUAKE / STONE_EDGE / DRAGON_PULSE / AERIAL_ACE  dead []
+  extra[accuracy_item/wide_lens]: EARTHQUAKE / DRAGON_CLAW / ROCK_SLIDE / AERIAL_ACE  dead []
+  extra[crit_item/razor_claw]: EARTHQUAKE / DRAGON_CLAW / STONE_EDGE / CRUNCH  dead []
+  extra[crit_item/razor_claw]: EARTHQUAKE / STONE_EDGE / AERIAL_ACE / FIRE_BLAST  dead []
+  extra[crit_item/razor_claw]: EARTHQUAKE / STONE_EDGE / RETURN / DRAGON_PULSE  dead []
+SPECIES_INFERNAPE base ['FIRE_BLAST / CLOSE_COMBAT / EARTHQUAKE / GRASS_KNOT', 'FLAMETHROWER / CLOSE_COMBAT / STONE_EDGE / GRASS_KNOT', 'FIRE_BLAST / FOCUS_BLAST / STONE_EDGE / GRASS_KNOT']
+  extra[variable_power]: FIRE_BLAST / CLOSE_COMBAT / STONE_EDGE / GRASS_KNOT  dead []
+  extra[variable_power]: FLAMETHROWER / CLOSE_COMBAT / EARTHQUAKE / GRASS_KNOT  dead []
+  extra[variable_power]: FIRE_BLAST / EARTHQUAKE / FOCUS_BLAST / GRASS_KNOT  dead []
+  extra[accuracy_item/wide_lens]: FIRE_BLAST / EARTHQUAKE / STONE_EDGE / GRASS_KNOT  dead []
+  extra[accuracy_item/wide_lens]: FLAMETHROWER / CLOSE_COMBAT / EARTHQUAKE / STONE_EDGE  dead []
+  extra[accuracy_item/wide_lens]: FLAMETHROWER / FOCUS_BLAST / STONE_EDGE / GRASS_KNOT  dead []
+  extra[crit_item/razor_claw]: FIRE_BLAST / CLOSE_COMBAT / GRASS_KNOT / SHADOW_CLAW  dead []
+  extra[crit_item/razor_claw]: FIRE_BLAST / CLOSE_COMBAT / EARTHQUAKE / STONE_EDGE  dead []
+  extra[crit_item/razor_claw]: FLAMETHROWER / EARTHQUAKE / STONE_EDGE / GRASS_KNOT  dead []
+SPECIES_STARAPTOR base ['RETURN / AERIAL_ACE / PLUCK / CLOSE_COMBAT', 'RETURN / WING_ATTACK / CLOSE_COMBAT / SECRET_POWER', 'AERIAL_ACE / CLOSE_COMBAT / SECRET_POWER / U_TURN']
+  extra[variable_power]: RETURN / AERIAL_ACE / WING_ATTACK / CLOSE_COMBAT  dead ['WING_ATTACK']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[variable_power]: RETURN / PLUCK / CLOSE_COMBAT / SECRET_POWER  dead ['SECRET_POWER']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[accuracy_item/wide_lens]: RETURN / AERIAL_ACE / CLOSE_COMBAT / STEEL_WING  dead ['STEEL_WING']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[accuracy_item/wide_lens]: RETURN / PLUCK / CLOSE_COMBAT / AIR_CUTTER  dead ['AIR_CUTTER']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[accuracy_item/wide_lens]: CLOSE_COMBAT / SECRET_POWER / U_TURN / AIR_CUTTER  dead []
+  extra[crit_item/razor_claw]: RETURN / PLUCK / WING_ATTACK / CLOSE_COMBAT  dead ['WING_ATTACK']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[crit_item/razor_claw]: RETURN / AERIAL_ACE / CLOSE_COMBAT / SECRET_POWER  dead ['SECRET_POWER']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[crit_item/razor_claw]: PLUCK / CLOSE_COMBAT / SECRET_POWER / U_TURN  dead []
+  dropped_extras: {'variable_power': {'offered': 2, 'reason': 'only duplicates of offered sets remain'}}
+SPECIES_ROTOM base ['THUNDERBOLT / SHADOW_BALL / THUNDER / OMINOUS_WIND', 'THUNDERBOLT / SHADOW_BALL / SHOCK_WAVE / DARK_PULSE', 'THUNDERBOLT / SHADOW_BALL / CHARGE_BEAM / THUNDER_SHOCK']
+  extra[accuracy_item/wide_lens]: THUNDERBOLT / SHADOW_BALL / THUNDER / SHOCK_WAVE  dead ['THUNDER', 'SHOCK_WAVE']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[accuracy_item/wide_lens]: THUNDERBOLT / SHADOW_BALL / OMINOUS_WIND / CHARGE_BEAM  dead ['OMINOUS_WIND', 'CHARGE_BEAM']  filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+  extra[crit_item/razor_claw]: THUNDERBOLT / SHADOW_BALL / THUNDER / DARK_PULSE  dead ['THUNDER', 'DARK_PULSE']  filler: no better option: its two strongest moves cover every League opponent
+  extra[crit_item/razor_claw]: THUNDERBOLT / SHADOW_BALL / OMINOUS_WIND / SHOCK_WAVE  dead ['OMINOUS_WIND', 'SHOCK_WAVE']  filler: no better option: its two strongest moves cover every League opponent
+  extra[crit_item/razor_claw]: THUNDERBOLT / SHADOW_BALL / CHARGE_BEAM / SWIFT  dead ['CHARGE_BEAM', 'SWIFT']  filler: no better option: its two strongest moves cover every League opponent
+  dropped_extras: {'variable_power': {'offered': 0, 'reason': 'no further set whose variable move is live'}, 'accuracy_item': {'offered': 2, 'reason': 'no further set the item changes'}}
+SPECIES_FLOATZEL base ['WATERFALL / ICE_BEAM / CRUNCH / BRICK_BREAK', 'WATERFALL / ICE_PUNCH / RETURN / CRUNCH', 'WATERFALL / ICE_BEAM / RETURN / ROCK_TOMB']
+  extra[variable_power]: WATERFALL / ICE_BEAM / RETURN / CRUNCH  dead []
+  extra[variable_power]: WATERFALL / ICE_PUNCH / RETURN / BRICK_BREAK  dead []
+  extra[variable_power]: SURF / ICE_PUNCH / RETURN / CRUNCH  dead []
+  extra[accuracy_item/wide_lens]: WATERFALL / ICE_BEAM / CRUNCH / ROCK_TOMB  dead []
+  extra[accuracy_item/wide_lens]: WATERFALL / BLIZZARD / CRUNCH / BRICK_BREAK  dead []
+  extra[accuracy_item/wide_lens]: WATERFALL / ICE_PUNCH / BRICK_BREAK / ROCK_TOMB  dead []
+  extra[crit_item/razor_claw]: WATERFALL / ICE_PUNCH / CRUNCH / BRICK_BREAK  dead []
+  extra[crit_item/razor_claw]: WATERFALL / ICE_BEAM / RETURN / BRICK_BREAK  dead []
+  extra[crit_item/razor_claw]: SURF / ICE_BEAM / CRUNCH / BRICK_BREAK  dead []
+SPECIES_WEAVILE base ['ICE_PUNCH / NIGHT_SLASH / AERIAL_ACE / BRICK_BREAK', 'ICE_PUNCH / FAINT_ATTACK / RETURN / BRICK_BREAK', 'ICE_PUNCH / NIGHT_SLASH / RETURN / SHADOW_CLAW']
+  extra[variable_power]: ICE_PUNCH / NIGHT_SLASH / RETURN / BRICK_BREAK  dead []
+  extra[variable_power]: ICE_PUNCH / FAINT_ATTACK / RETURN / AERIAL_ACE  dead []
+  extra[variable_power]: ICE_PUNCH / RETURN / SHADOW_CLAW / ASSURANCE  dead []
+  extra[crit_item/razor_claw]: ICE_PUNCH / NIGHT_SLASH / SHADOW_CLAW / BRICK_BREAK  dead []
+  extra[crit_item/razor_claw]: ICE_PUNCH / NIGHT_SLASH / RETURN / AERIAL_ACE  dead []
+  extra[crit_item/razor_claw]: ICE_PUNCH / FAINT_ATTACK / AERIAL_ACE / BRICK_BREAK  dead []
+  dropped_extras: {'accuracy_item': {'offered': 0, 'reason': 'no further set the item changes'}}
+dead moves in B2 extras: 16
