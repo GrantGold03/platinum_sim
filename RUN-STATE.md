@@ -1,11 +1,12 @@
-# START HERE (updated 2026-11-18, feature 027 `027-extras-dead-moves` closed on its branch, all gates green; merge on the user's go)
+# START HERE (updated 2026-11-18, feature 027 `027-extras-dead-moves` merged to `main`; next feature: the user's choice)
 - **Feature 027 `027-extras-dead-moves` built 2026-11-18 on its branch from `main` 63d6329.** Commits: pre-feature evidence and
   scripts, 583d824 (extras under the dead-move rule), then the acceptance and docs commit. Acceptance (12:17 to 12:34 PM EST):
   the B2 winner identical on both codes (0 discordant pairs), 0 defects (base sets unchanged), dead moves in extras 208 → 56 all
   with filler reasons, 53 extras no longer offered, team build 6.9 s. The first full suite found a defect from 026 (id-keyed caches serving a freed
   object's entry); fixed in c4977a3 with two regression tests, acceptance rerun identical. Gates run 2 (2:29 to 3:57 PM EST):
-  Node 384 pass, full pytest 665 passed + 4 xfailed. Merge on the user's go: `git checkout main && git merge --ff-only
-  027-extras-dead-moves && git push`. Assessment `precomputed-movesets` (2026-11-18, `.specify/assessments/`): kill
+  Node 384 pass, full pytest 665 passed + 4 xfailed. **Merged to `main` 2026-11-18, about 4:05 PM EST on the user's go (fast-forward
+  to 4fa68e4, pushed).** Next: the FUTURE-FEATURES order (H4+ groups, Shell Bell first; speedups before the next long run;
+  the v4 retune last). Assessment `precomputed-movesets` (2026-11-18, `.specify/assessments/`): kill
   (candidate building about 3% of a quick run; sets vary with level and team).
 - **RESUME (after the reboot).** `main` is checked out in the main checkout, clean apart from the pre-existing untracked
   files (`.specify/assessments/`, `.specify/extensions*`, `.claude/skills/speckit-assess-*`, `held_items.md`, the deleted
