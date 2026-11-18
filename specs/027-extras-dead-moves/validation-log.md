@@ -56,3 +56,22 @@ uv run pytest -q tests/unit/test_extras_dead_moves.py tests/unit/test_marginal_c
   → 96 passed, exit 0
 uv run pytest -q -m "not battle_sim" (12:05:23 to 12:16:27 PM EST) → 631 passed, 32 deselected, 4 xfailed, exit 0
 ```
+
+## T010 Branch side (12:16:50 to 12:34:01 PM EST, alone, exit 0; on 583d824; copies in `evidence/acceptance/`)
+
+| Measure | main (63d6329 code) | branch (583d824) |
+|---|---|---|
+| B2 quick winner | levels [52, 50, 50, 50, 51, 53], clear 0.9440 | **identical team, moves, items and levels**, clear 0.9440 |
+| equal levels, 2,000 pairs | 0.9485 | 0.9485 (0 discordant pairs, verdict indistinguishable) |
+| expected average final level | 51.69 | 51.69 |
+| screened teams | 188 (107 extras) | 173 (92 extras: variable_power 14, accuracy_item 14, crit_item 18, item_deviation 46); overlap 145 of 188 |
+| identity evaluations ref / b2main | | identical without volatile fields |
+| attributed diff, 36 members | | 0 defects (base sets, items, setup sets unchanged) |
+| dead moves in extra sets | 208 in 324 extras | 56 in 271, all with a recorded filler reason |
+| generation (six members / team with allocation) | 1.2 s / 4.7 s | 1.7 s / 6.9 s (SC-006 bound 10 s) |
+
+Reading: the extras now carry no dead move with a live replacement; 53 extras are no longer offered (duplicates, or a defining
+variable move or item that adds nothing); the screen spends 15 fewer runs; the B2 winner does not use an extra set on either code,
+so it is unchanged, as expected when only the extras change.
+
+## T011 Merge gate: pass; continue.

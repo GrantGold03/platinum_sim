@@ -78,11 +78,11 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
 
 ## Phase 4: User Story 2 - Not worse on B2, measured on both codes (Priority: P2)
 
-- [ ] T010 [US2] Branch side alone (about 20 min): `uv run python specs/027-extras-dead-moves/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/027-evidence/acceptance.txt 2> runs/027-evidence/acceptance.err; echo exit=$?`;
+- [x] T010 [US2] Branch side alone (about 20 min): `uv run python specs/027-extras-dead-moves/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/027-evidence/acceptance.txt 2> runs/027-evidence/acceptance.err; echo exit=$?`;
       copy outputs and both winners' `result.json`/`team.txt` to `evidence/acceptance/`
-- [ ] T011 [US2] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect, a base-set difference or a dead move in
+- [x] T011 [US2] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect, a base-set difference or a dead move in
       an extra without a recorded filler: no merge, record and stop at the report to the user; else continue
-- [ ] T012 [US2] Docs: validation log (the acceptance table and reading); `README.md` (026 block: the dead-move rule now covers the
+- [x] T012 [US2] Docs: validation log (the acceptance table and reading); `README.md` (026 block: the dead-move rule now covers the
       extras; a 027 block with the acceptance); `FUTURE-FEATURES.md` (section 6: the extras item closed); `RUN-STATE.md`; Commit 3
       `feat(027): acceptance (B2 quick on both codes, equal levels, attributed diff); docs`; push
 

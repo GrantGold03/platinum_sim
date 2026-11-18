@@ -208,7 +208,10 @@ Budget: about 110 h of one-time runs in total for 007 + this work, 32.2 h used. 
   Combat / Aerial Ace with its filler named); the marginal-sum tie-break rewards the weakest filler and was dropped; "live" is
   set-relative (Flamethrower is live where Fire Blast is absent). Left open: the 024 variable-power and 025 item-conditioned
   extras keep dead moves (215 entries over the benchmark; FR-007 applies only the pool and ranking rule to them), a
-  defence-aware move value, and the user-conditioned cross-category dominance idea (considered, not chosen).
+  defence-aware move value, and the user-conditioned cross-category dominance idea (considered, not chosen). **The extras item
+  was built as feature 027 (2026-11-18, `specs/027-extras-dead-moves/`)**: dead moves in extras 208 → 56, all named fillers;
+  dead-defining extras dropped (owner's decision); the B2 winner unchanged. Still open: a defence-aware move value and the
+  cross-category dominance idea.
 
 - Magnitude, Wring Out, Crush Grip, Punishment (and Flail, Reversal, Fling, Trump Card, Natural Gift, Present, Spit Up; feature 024's not-offered list): offer them once the strong player computes their power
   (neither expectimax2-v2 nor 007's v3 does; found in feature 010, research R5). On `main` no variable-power

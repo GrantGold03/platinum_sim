@@ -1,4 +1,9 @@
-# START HERE (updated 2026-11-13, end of session: features 025 and 026 merged to `main`; next feature: the user's choice)
+# START HERE (updated 2026-11-18, feature 027 `027-extras-dead-moves` accepted on its branch; gates next, then merge on the user's go)
+- **Feature 027 `027-extras-dead-moves` built 2026-11-18 on its branch from `main` 63d6329.** Commits: pre-feature evidence and
+  scripts, 583d824 (extras under the dead-move rule), then the acceptance and docs commit. Acceptance (12:17 to 12:34 PM EST):
+  the B2 winner identical on both codes (0 discordant pairs), 0 defects (base sets unchanged), dead moves in extras 208 → 56 all
+  with filler reasons, 53 extras no longer offered, team build 6.9 s. Next: T013 gates (Node suite; full pytest about 1 h 25
+  min), T014 close; merge on the user's go: `git checkout main && git merge --ff-only 027-extras-dead-moves && git push`.
 - **RESUME (after the reboot).** `main` is checked out in the main checkout, clean apart from the pre-existing untracked
   files (`.specify/assessments/`, `.specify/extensions*`, `.claude/skills/speckit-assess-*`, `held_items.md`, the deleted
   `.claude/scheduled_tasks.lock`), in sync with origin (the end-of-session docs commit is the head). No measurement, suite or

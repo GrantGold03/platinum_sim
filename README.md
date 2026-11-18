@@ -692,6 +692,17 @@ list difference over 36 benchmark members is attributed (0 unexplained); no offe
 first run failed its own gate only because the script did not strip the new report field; fixed and rerun with identical
 measurements.
 
+Feature 027 (2026-11-18, `specs/027-extras-dead-moves/`): **the dead-move rule now covers the extra sets** (026 left them out):
+the variable-power extras and the Wide Lens / Razor Claw extras get the same replacement of dead moves, each judged under its
+own valuation (with its item for an item set), and keep a filler only when nothing live is left. An extra must also earn its
+kind: a variable-power set keeps a live variable move (Rotom gets none: Return never beats Thunderbolt or Shadow Ball), and a
+Wide Lens set holds a move that can miss; an extra that adds nothing or repeats another set is not offered, and the candidate
+summary records the shortfall. Over the 36 benchmark members dead moves in extras fell from 208 to 56, all 56 named fillers
+(Staraptor, Rotom and the like), and 53 extras are no longer offered; base sets are unchanged. **Acceptance
+(`specs/027-extras-dead-moves/validation-log.md`, 2026-11-18)**: the B2 quick winner is the identical team on both codes
+(0 discordant pairs at equal levels), the screen spends 15 fewer runs, and the two unaffected teams evaluate identically.
+Candidate generation with the allocation: 6.9 s for six members (4.7 s before).
+
 Measured run times:
 
 | Run | Wall time |

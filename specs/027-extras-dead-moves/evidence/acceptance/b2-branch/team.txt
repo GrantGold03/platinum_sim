@@ -1,0 +1,70 @@
+Garchomp @ Sitrus Berry
+Ability: Sand Veil
+Level: 52
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Earthquake
+- Dragon Claw
+- Rock Slide
+- Crunch
+
+Infernape @ Expert Belt
+Ability: Blaze
+Level: 50
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Fire Blast
+- Flamethrower
+- Close Combat
+- Grass Knot
+
+Staraptor @ Sitrus Berry
+Ability: Intimidate
+Level: 50
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Return
+- Aerial Ace
+- Pluck
+- Close Combat
+
+Rotom @ Wise Glasses
+Ability: Levitate
+Level: 50
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Thunderbolt
+- Shadow Ball
+- Charge Beam
+- ThunderShock
+
+Floatzel @ Sitrus Berry
+Ability: Swift Swim
+Level: 51
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Waterfall
+- Ice Punch
+- Crunch
+- Focus Blast
+
+Weavile @ Icicle Plate
+Ability: Pressure
+Level: 53
+EVs: 85 HP / 85 Atk / 85 Def / 85 SpA / 85 SpD / 85 Spe
+Hardy Nature
+IVs: 15 HP / 15 Atk / 15 Def / 15 SpA / 15 SpD / 15 Spe
+- Ice Punch
+- Night Slash
+- Aerial Ace
+- Brick Break
+
+Notes:
+Infernape: Flamethrower is filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+Staraptor: Pluck is filler: no live replacement left: the set's other moves already cover every League opponent; nothing else it learns is the best choice against any of them
+Rotom: Charge Beam, ThunderShock are filler: no better option: its two strongest moves cover every League opponent
