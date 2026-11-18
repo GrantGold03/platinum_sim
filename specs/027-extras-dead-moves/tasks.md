@@ -90,10 +90,10 @@ acceptance or suite runs; evidence under `runs/027-evidence/` (local) with small
 
 ## Phase 5: Gates and close
 
-- [ ] T013 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` and `-- sim` empty; sim hash and ledger version
+- [x] T013 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` and `-- sim` empty; sim hash and ledger version
       equal to T001's, platsim hash changed; `(cd sim && node --test test/*.test.mjs)` green; `uv run pytest -q --durations=25 > runs/027-evidence/full.log 2>&1; echo full exit=$?`
       green (about 1 h 25 min); into the log and `evidence/gates.txt`
-- [ ] T014 Closing commit `docs(027): gates recorded; feature closed on its branch`; push; report with the merge command
+- [x] T014 Closing commit `docs(027): gates recorded; feature closed on its branch`; push; report with the merge command
       (`git checkout main && git merge --ff-only 027-extras-dead-moves && git push`); merge only on the user's go
 
 ## Dependencies

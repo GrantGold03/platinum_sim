@@ -1,0 +1,13 @@
+=== gates run 2 start 2:29:36 PM EST on 83aef9c
+diff main -- pokemon-showdown lines=0
+diff main -- sim lines=0
+hashes after: sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d sha256:6dba14967a6a37f0cbaa614ab7bd2bb3b84acdab302f7b471ffbfbe43a6ab454
+ledger version after: sha256:feb2a48ef2e1dd08 (b2-branch result: sha256:feb2a48ef2e1dd08)
+node exit=0
+# tests 384
+# pass 384
+# fail 0
+full start 2:32:15 PM EST
+full exit=0
+665 passed, 4 xfailed, 1 warning in 5091.80s (1:24:51)
+=== gates end 3:57:10 PM EST

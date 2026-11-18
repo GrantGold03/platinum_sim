@@ -97,3 +97,23 @@ fixed code.
 Every measurement reproduced run 1: the B2 winner identical (levels [52, 50, 50, 50, 51, 53], clear 0.9440), equal levels 0.9485
 vs 0.9485 with 0 discordant pairs, identity rows identical, 0 defects, dead moves in extras 208 → 56 all with filler reasons,
 extras 324 → 271, screen 173 teams. Team build with the allocation 7.3 s (bound 10 s). Merge gate: pass.
+
+## T013 Gates, run 2 (2:29:36 to 3:57:10 PM EST, nothing else running except read-only assessment notes; on 83aef9c)
+
+```
+git diff --stat main -- pokemon-showdown: 0 lines; -- sim: 0 lines
+sim_code_hash after:     sha256:e968ff0f403539460e6c0260db6253ad971d1a3eb7c02feaa8c9fbe393e74b7d  (= T001)
+platsim_code_hash after: sha256:6dba14967a6a37f0cbaa614ab7bd2bb3b84acdab302f7b471ffbfbe43a6ab454  (was 844bb323...: pre-027 checkpoints are refused)
+divergence_ledger_version after: sha256:feb2a48ef2e1dd08  (= T001)
+(cd sim && node --test test/*.test.mjs): tests 384, pass 384, fail 0, exit 0
+uv run pytest -q --durations=25 (2:32:15 to 3:57:10 PM EST): 665 passed, 4 xfailed, 1 warning in 5091.80s (1:24:51), exit 0
+```
+
+The suite grew from 655 to 665 passed (the 10 tests of `test_extras_dead_moves.py`); the base-set pin that failed in run 1 passes.
+During this run the owner's `precomputed-movesets` assessment wrote notes under `.specify/assessments/` (file reads and one light
+species count; no timing measurement). **All gates green on the final code; the feature is closed on its branch. Merge on the
+user's go.**
+
+## T014 Close
+
+Merge: `git checkout main && git merge --ff-only 027-extras-dead-moves && git push` (`main` at 63d6329 has not moved).
