@@ -107,10 +107,13 @@ the merge is blocked with the cause recorded.
   carry a dead move (026 FR-004a).
 - **FR-004**: An extra equal after repair to a base set or to an extra already offered MUST NOT be offered again.
 - **FR-005**: A variable-power extra MUST carry at least one offered variable move that is live in it; an item-conditioned extra
-  MUST rank differently from the base sets under its item's valuation; an extra failing its check is not offered (owner's
+  MUST contain a move whose value its item changes (Wide Lens: a move that can miss; Razor Claw: any attack, so for Razor Claw
+  only the duplicate rule of FR-004 can drop a set); an extra failing its check is not offered (owner's
   decision 2026-11-18: dropped, never kept as a filler set).
-- **FR-006**: The candidate summary's dead moves, filler reason and one-apart record MUST cover the extras; extras dropped under
-  FR-004 or FR-005 MUST be listed with the reason.
+- **FR-006**: The candidate summary's dead moves, filler reason and one-apart record MUST cover the extras; for each kind that
+  offers fewer than its usual number of extras, the summary MUST record how many it offered and why (no further set whose
+  variable move is live, no further set the item changes, or only duplicates left). Individual rejected candidates are not
+  listed: hundreds are rejected per member.
 - **FR-007**: The base sets, their items, the setup set, the extras' items and kinds, the screen's rule for screening extras
   beyond the cap, the dominance rule, the item rules, the team allocation, the player, the damage model and what qualifies MUST be
   unchanged.
@@ -133,14 +136,16 @@ the merge is blocked with the cause recorded.
 
 ### Measurable Outcomes
 
-- **SC-001**: Over the 36 benchmark members, dead moves in offered extra sets fall from 208 to 0, except members listed with a
-  reason.
+- **SC-001**: Over the 36 benchmark members, dead moves in offered extra sets fall from the count in the pre-feature snapshot
+  (taken by the acceptance at each member's recorded level; the 208 of the Overview is the motivating recount at level 48) to
+  0, except sets with a recorded filler reason.
 - **SC-002**: No extra set offered to Infernape on B2 at level 48 contains Fire Punch.
 - **SC-003**: Every base set, base-set item list and setup set of the 36 members is identical to main's.
 - **SC-004**: The branch's B2 quick winner is not worse at equal levels (no supported loss at alpha 0.05) and its expected average
   final level is at most one level above today's.
 - **SC-005**: The two unaffected teams evaluate identically on both codes once volatile fields are removed.
-- **SC-006**: Candidate generation for the six B2 species, with the team allocation, stays within 10 seconds.
+- **SC-006**: Building the six B2 species' candidates including the team allocation stays within 10 seconds, measured on both
+  codes.
 - **SC-007**: The Node suite and the full pytest suite pass on the final code.
 
 ## Assumptions

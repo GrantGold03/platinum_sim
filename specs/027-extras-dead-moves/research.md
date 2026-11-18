@@ -10,7 +10,8 @@
 - **Decision**: `choose_sets(..., exclude=frozenset(), require=None)`: repaired sets in `exclude` are skipped; `require(set) ->
   bool` filters candidates before acceptance. Defaults reproduce the base call exactly (a unit test pins base sets, items and
   setup set against `specs/026-marginal-coverage-sets/evidence/candidates-branch.json`, the 026 snapshot, and the acceptance
-  re-checks all 36 members). Variable-power extras: `choose_sets(ranked_extra, k, cands, vals, scores, exclude=set(chosen),
+  re-checks all 36 members). The base-set pin compares with this feature's own pre-feature snapshot (T002, today's code),
+  calling each record with its stored arguments (B2 at the quick job's reference level, 47, not a fixed 48). Variable-power extras: `choose_sets(ranked_extra, k, cands, vals, scores, exclude=set(chosen),
   require=has_live_variable)`. Item extras: `choose_sets(ranked_i, k, cands, vals_i, sc_i, exclude=chosen ∪ extras ∪ picked,
   require=item_matters)` under the item valuation.
 - **Alternatives**: a separate extras selector (duplicates 026's logic; rejected).
@@ -21,7 +22,8 @@
   repair may replace a dead variable move by a live non-variable move; such a set then fails the check and is not offered (its
   coverage is a non-variable set already available to the base walk).
 - **Item**: `item_matters(set)` ⇔ the set contains a move whose value the item changes: Wide Lens, a move with 0 < accuracy <
-  100; Razor Claw, any damaging move (the crit term always moves). "Ranks no differently from the base sets" is made testable
+  100; Razor Claw, any damaging move (the crit term always moves, so for Razor Claw the check always passes and only the
+  duplicate rule can drop a set). "Ranks no differently from the base sets" is made testable
   this way, plus FR-004's duplicate rule (a repaired item set equal to a base set is excluded).
 - **Dropped extras**: every ranked candidate that `require` rejects or that duplicates an offered set is not recorded (there are
   hundreds); what is recorded is each kind's shortfall: `dropped_extras[kind] = {"offered": n, "reason": ...}` when fewer than `k`
