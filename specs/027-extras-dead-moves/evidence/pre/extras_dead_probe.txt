@@ -1,0 +1,8 @@
+variable_power  sets  108  dead (no item)   71  dead (own valuation)   71  sets with a dead move   46
+accuracy_item   sets  108  dead (no item)   67  dead (own valuation)   67  sets with a dead move   46
+crit_item       sets  108  dead (no item)   77  dead (own valuation)   70  sets with a dead move   48
+members (of 36) with a dead move in an extra set: 29
+  e.g. ('SPECIES_GARCHOMP', 'variable_power', ['EARTHQUAKE', 'DRAGON_CLAW', 'STONE_EDGE', 'RETURN'], ['RETURN'])
+  e.g. ('SPECIES_INFERNAPE', 'accuracy_item', ['FIRE_BLAST', 'FLAMETHROWER', 'CLOSE_COMBAT', 'GRASS_KNOT'], ['FLAMETHROWER'])
+  e.g. ('SPECIES_INFERNAPE', 'accuracy_item', ['FIRE_BLAST', 'CLOSE_COMBAT', 'FIRE_PUNCH', 'STONE_EDGE'], ['FIRE_PUNCH'])
+  e.g. ('SPECIES_INFERNAPE', 'crit_item', ['FLAMETHROWER', 'CLOSE_COMBAT', 'FIRE_PUNCH', 'GRASS_KNOT'], ['FIRE_PUNCH'])
