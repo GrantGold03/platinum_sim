@@ -56,7 +56,10 @@ Move candidates (research R8 "Prune" + a coverage heuristic)
    set replacing a two-apart set only when that one carries a dead move; a filler stays only when
    nothing live is left (`dead_moves`, `no_live_reason`; the report names it). The best `RANKED` combos
    are kept in order for `resources.repair`; team-level TM and item allocation across members is
-   `optimizer/allocation.py` (026).
+   `optimizer/allocation.py` (026). The extra sets appended after these (024 variable-power, 025 Wide Lens /
+   Razor Claw) go through the same selection under their own valuation (027): a variable-power extra keeps a
+   live variable move, an item extra a move its item changes, duplicates are skipped, and a kind that runs
+   short records why (`dropped_extras`); fillers carry a per-set reason (`filler_reasons`).
 6. Setup variant: if the member can legally learn a self-boosting status move that the expectimax2-v2
    player models (its SELF_BOOSTS table, parsed from sim/policy/expectimax2.mjs so the two cannot
    drift), one extra moveset = the best 3-move coverage subset (dead moves replaced, 026) + the best
