@@ -110,7 +110,8 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     Expert Belt, and Wise Glasses or Muscle Band to match the strongest attack's category (014; Expert Belt and
     Wise Glasses have 1 copy each, Muscle Band none); then **Wide Lens** (accuracy x1.1, unlimited copies) for a set
     with an attack that can miss and **Razor Claw** (+1 critical-hit stage, 2 copies; Weavile's evolution uses one)
-    for any set with an attack (025; Scope Lens has no pre-Champion copy). Items are picked by hold effect from the decomp. A held
+    for any set with an attack (025; Scope Lens has no pre-Champion copy), then **Shell Bell** (heals 1/8 of the damage dealt,
+    1 copy; the battle player models it) for any set with an attack (028). Items are picked by hold effect from the decomp. A held
     item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
     White Herb, Mental Herb, Power Herb, Berry Juice).
   - **Candidate move sets** (026): each member's ten-move pool is built by marginal coverage (each next move is the one

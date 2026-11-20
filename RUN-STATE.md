@@ -16,21 +16,21 @@
   to 4fa68e4, pushed).** Next: the FUTURE-FEATURES order (H4+ groups, Shell Bell first; speedups before the next long run;
   the v4 retune last). Assessment `precomputed-movesets` (2026-11-18, `.specify/assessments/`): kill
   (candidate building about 3% of a quick run; sets vary with level and team).
-- **RESUME (after the reboot; updated 2026-11-18 end of session).** `main` is checked out in the main checkout, clean apart
+- **RESUME (after the reboot; updated 2026-11-20 end of session).** `main` is checked out in the main checkout, clean apart
   from the pre-existing untracked files (`.specify/assessments/`, `.specify/extensions*`, `.claude/skills/speckit-assess-*`,
   `held_items.md`, the deleted `.claude/scheduled_tasks.lock`), in sync with origin (the end-of-session docs commit is the
-  head). No measurement, suite or server is running; no stash. Merged: 025 (2026-11-13, 84299da), 026 (2026-11-13, fb0e09f),
-  027 (2026-11-18, 4fa68e4: extras under the dead-move rule, and the fix for 026's id-keyed caches). Assessments closed:
-  `dominance-list` (kill, 2026-11-13), `precomputed-movesets` (kill, 2026-11-18: candidate building about 3% of a quick run;
-  sets vary with level and team). Next feature: the user's choice from the FUTURE-FEATURES order; my suggestion on record is
-  Shell Bell as the next H4 group (the smallest battle-player change), speedups right before the next long run, the v4
-  retune last; open from 026/027: a defence-aware move value and the cross-category dominance idea. Start with
-  `git checkout -b 028-<name>` from `main`, then `/speckit-specify`. Session scratchpad copy:
-  `runs/scratchpad-session-550e51a5/` (local). Standing traps: never pipe a gating command into tail; never amend or
-  force-push; measurements alone on the machine; never edit `src/` while an acceptance or suite runs; a new report field goes
-  on the acceptance script's volatile list (025 member_defaults, 026/027 member_notes); **never key a cache on `id()` alone**
-  (a freed object's id is reused: keep the object in the entry and check identity, 027); the allocation's source lookup must
-  stay memoised; a test that must catch id reuse must not keep the objects alive; Earthquake's data effect is
+  head). No measurement, suite or server is running; no stash. Merged: 025 (84299da), 026 (fb0e09f), 027 (4fa68e4, with the
+  fix for 026's id-keyed caches), 028 (269897f, Shell Bell: player model, offered by hold effect, ledger
+  `mech-shell-bell-substitute`). Assessments closed: `dominance-list` (kill), `precomputed-movesets` (kill). Next feature: the
+  user's choice; the remaining H4 groups each need player work: King's Rock / Razor Fang (flinch odds, move order), Metronome
+  (consecutive use), Lum and the resist berries (single-use triggers), the Choice items last (move locking); then the speedups
+  before the next long run, the v4 retune, plain-language output. Start with `git checkout -b 029-<name>` from `main`, then
+  `/speckit-specify`. Session scratchpad copy: `runs/scratchpad-session-550e51a5/` (local). Standing traps: never pipe a gating
+  command into tail; never amend or force-push; measurements alone; never edit `src/` or `sim/` while an acceptance, check or
+  suite runs; new report fields go on the acceptance script's volatile list; never key a cache on `id()` alone; a test that
+  must catch id reuse must not keep the objects alive; **feature 018's `paired_policies.py` plays Set (it sends no battle
+  style): use feature 028's copy with `--battle-style`**, and add a conditions control (a known team's clear rate) to any
+  paired check; Showdown writes split log lines twice, so dedupe before counting in engine tests; Earthquake's data effect is
   DOUBLE_DAMAGE_DIG; Weavile's evolution consumes a Razor Claw copy.
 - **Feature 026 `026-marginal-coverage-sets` built 2026-11-13 on its branch from `main` 7c466ae (main checkout).** Commits:
   pre-feature evidence and scripts, 06ff0a4 (marginal pool, dead-move rule, cost tiers, extras), 93fe636 (filler-move note in
