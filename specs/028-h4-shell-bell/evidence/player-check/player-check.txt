@@ -1,0 +1,7 @@
+start 2026-11-20 10:32:02 EST
+file:runs/028-evidence/teams/b2-shellbell.json: n 200  A expectimax2-v4 0.5450 [0.4758, 0.6125]  B expectimax2-v4 0.5450 [0.4758, 0.6125]  only A 0 / only B 0  p 1  verdict indistinguishable  speed A 10.37 B 12.91 gauntlets/s
+pairing control: 0 discordant pairs, OK
+self exit=0
+file:runs/028-evidence/teams/b2-shellbell.json: n 2000  A expectimax2-v4 0.4960 [0.4741, 0.5179]  B expectimax2-v4?shellBell=0 0.5175 [0.4956, 0.5393]  only A 327 / only B 370  p 0.112  verdict indistinguishable  speed A 13.04 B 13.62 gauntlets/s
+check exit=0
+end 2026-11-20 10:39:02 EST

@@ -26,7 +26,7 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 2: Foundational
 
-- [ ] T003 Engine-versus-game checks (FR-003, R2) in `sim/test/shell_bell.test.mjs` part 1, against the vendored engine on
+- [x] T003 Engine-versus-game checks (FR-003, R2) in `sim/test/shell_bell.test.mjs` part 1, against the vendored engine on
       constructed battles built the way `sim/test/switch_reset.test.mjs` and `sim/test/expectimax2.test.mjs` build them (the
       worker's battle setup on fixed teams with the needed moves: Substitute, U-turn, a multi-hit move, a recoil move;
       expected values: U-turn heals like the game): (a) a hit into a substitute: does the holder heal floor(damage to the substitute / 8)? (b) a multi-hit
@@ -38,16 +38,16 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 3: User Story 1 - The battle player knows Shell Bell heals (Priority: P1) 🎯 MVP
 
-- [ ] T004 [US1] `sim/policy/expectimax2.mjs` `applyHit`: after the Life Orb line and before `afterHpLoss(X, u)`, `if (opts.shellBell && dmg > 0 && u.item && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_RESTORE_ON_DMG' && u.hp > 0 && u.hp < u.maxhp) u.hp = Math.min(u.maxhp, u.hp + Math.max(1, Math.floor(dmg / 8)))`
+- [x] T004 [US1] `sim/policy/expectimax2.mjs` `applyHit`: after the Life Orb line and before `afterHpLoss(X, u)`, `if (opts.shellBell && dmg > 0 && u.item && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_RESTORE_ON_DMG' && u.hp > 0 && u.hp < u.maxhp) u.hp = Math.min(u.maxhp, u.hp + Math.max(1, Math.floor(dmg / 8)))`
       with `shellBell` an option of the v4 policy (default on), reachable from `applyHit`; the header comment's held-items list
       gains Shell Bell with its decomp citation
-- [ ] T005 [US1] `sim/gauntlet.mjs` v4 candidate knobs: `shellBell=0|1` (any other value an `invalid_policy` error); the reference
+- [x] T005 [US1] `sim/gauntlet.mjs` v4 candidate knobs: `shellBell=0|1` (any other value an `invalid_policy` error); the reference
       arm `expectimax2-v4?shellBell=0`
-- [ ] T006 [US1] `sim/test/shell_bell.test.mjs` part 2 (contract): on constructed player states, holder at 50% HP dealing 80 heals
+- [x] T006 [US1] `sim/test/shell_bell.test.mjs` part 2 (contract): on constructed player states, holder at 50% HP dealing 80 heals
       10; at full HP 0; 7 damage heals 1; fainted by recoil 0; the knob off 0; an invalid knob value refused; then the Node suite
       `(cd sim && node --test test/*.test.mjs)` with `replay.test.mjs` byte-identical; record; confirm greedy-v1 needs no change
       (FR-004: it scores moves, not HP; cite the function) and record
-- [ ] T007 [US1] Player check, alone (FR-008, about 15 min): `make_check_team.py`, then `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py`
+- [x] T007 [US1] Player check, alone (FR-008, about 15 min): `make_check_team.py`, then `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py`
       `--a expectimax2-v4 --b 'expectimax2-v4?shellBell=0' --teams file:runs/028-evidence/teams/b2-shellbell.json --runs 2000 --workers 16 --out runs/028-evidence/pairs`,
       preceded by the pairing control `--self` on the same team (0 discordant pairs required); record clear rates, discordant
       pairs, exact McNemar p; **a supported loss stops the feature** (report to the user); Commit 2 `feat(028): the player models Shell Bell; v4 knob shellBell; engine checks; player check`; push

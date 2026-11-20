@@ -1,0 +1,9 @@
+start 2026-11-20 10:41:31 EST
+file:runs/028-evidence/teams/b2-sitrus.json: n 200  A expectimax2-v4 0.9450 [0.9042, 0.9690]  B expectimax2-v4?shellBell=0 0.9450 [0.9042, 0.9690]  only A 0 / only B 0  p 1  verdict indistinguishable  speed A 11.44 B 15.32 gauntlets/s
+sitrus control exit=0
+file:runs/028-evidence/teams/b2-shellbell.json: n 200  A expectimax2-v4 0.9650 [0.9295, 0.9829]  B expectimax2-v4 0.9650 [0.9295, 0.9829]  only A 0 / only B 0  p 1  verdict indistinguishable  speed A 10.28 B 13.44 gauntlets/s
+pairing control: 0 discordant pairs, OK
+self exit=0
+file:runs/028-evidence/teams/b2-shellbell.json: n 2000  A expectimax2-v4 0.9565 [0.9467, 0.9646]  B expectimax2-v4?shellBell=0 0.9515 [0.9412, 0.9601]  only A 65 / only B 55  p 0.411  verdict indistinguishable  speed A 13.50 B 14.87 gauntlets/s
+check exit=0
+end 2026-11-20 10:49:24 EST

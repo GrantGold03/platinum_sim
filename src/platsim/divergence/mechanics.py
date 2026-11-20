@@ -270,6 +270,23 @@ _ENTRIES: list[dict] = [
             "engine (feature 024)."),
         "test_id": "sim/test/variable_power.test.mjs (the boundary case: Flareon 250 -> 40)",
     },
+    {
+        "id": "mech-shell-bell-substitute",
+        "area": "mechanics",
+        "description": (
+            "Shell Bell's heal from damage dealt to a substitute. Game: the damage counted for Shell Bell includes the HP "
+            "a substitute loses, so a hit into (or breaking) a substitute heals the holder by that damage / 8, at least 1. "
+            "Showdown: the heal uses move.totalDamage, which a hit on a substitute does not add to, so no heal."),
+        "decomp_ref": (
+            "pokeplatinum/src/battle/battle_controller_player.c:3361-3366 (shellBellDamageDealt += substitute HP lost), "
+            ":4738 (AFTER_MOVE_HIT_STATE_SHELL_BELL)"),
+        "showdown_ref": "pokemon-showdown/data/items.ts:5650-5660 (shellbell onAfterMoveSecondarySelf, move.totalDamage)",
+        "resolution": "accepted",
+        "impact": (
+            "None in the League gauntlet: no Elite Four or Champion Pokemon knows Substitute (data/generated/trainers.json), "
+            "and the player's model does not model Substitute; Shell Bell itself is offered from feature 028 on."),
+        "test_id": "sim/test/shell_bell.test.mjs (engine: damage to a substitute; the engine heals nothing)",
+    },
 ]
 
 

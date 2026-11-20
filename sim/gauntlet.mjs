@@ -60,6 +60,7 @@ const CANDIDATE_KEYS = {
   kPly2: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 32 ? +v : undefined),
   beam: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 5 ? +v : undefined),
   floor: (v) => (/^\d+(\.\d+)?$/.test(v) && +v >= 0 && +v <= 0.5 ? +v : undefined),
+  shellBell: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 028: the reference arm of the player check
 };
 function parseCandidate(name) {
   const query = name.slice(EXPECTIMAX2_V4.length + 1);

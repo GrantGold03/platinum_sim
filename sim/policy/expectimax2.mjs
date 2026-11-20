@@ -139,7 +139,8 @@
 //   EVA_UP*, Belly Drum), target stat drops (*_DOWN, *_DOWN_2), sleep / paralysis / poison /
 //   toxic / burn (with type and ability immunities), Yawn, Rest, half-HP heals, Reflect,
 //   Light Screen, Protect / Detect (moving first blocks the foe's move; 1/2 after a success).
-//   held items: Sitrus Berry (effect_param % at <= 1/2 HP), Leftovers 1/16, Focus Sash, Life Orb.
+//   held items: Sitrus Berry (effect_param % at <= 1/2 HP), Leftovers 1/16, Focus Sash, Life Orb, Shell Bell (028: damage
+//   dealt / effect_param, at least 1, holder hurt and standing; battle_controller_player.c:4738).
 //   residual: burn and poison 1/8 (subscript_burn_damage.s, subscript_poison_damage.s), toxic n/16,
 //   sandstorm / hail 1/16.
 //   Intimidate on a modelled switch-in.
@@ -779,6 +780,13 @@ function applyHit(X, S, side, rec, e, dmgIn) {
   if (dmg > 0 && u.item && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_DRAIN_ON_ATK' && ua !== 'ABILITY_MAGIC_GUARD') {
     u.hp = Math.max(0, u.hp - Math.max(1, Math.floor(u.maxhp / 10)));
   }
+  // 028: Shell Bell heals the holder by the HP the target lost / the item's param (8), at least 1, while the holder is below
+  // max HP and still standing (battle_controller_player.c AFTER_MOVE_HIT_STATE_SHELL_BELL :4738; BattleSystem_Divide
+  // battle_lib.c:3599); on by default, off for the reference arm `expectimax2-v4?shellBell=0` (gauntlet.mjs).
+  if (X.opts.shellBell !== false && dmg > 0 && u.item && u.hp > 0 && u.hp < u.maxhp
+      && holdEffect(X, u.item) === 'HOLD_EFFECT_HP_RESTORE_ON_DMG') {
+    u.hp = Math.min(u.maxhp, u.hp + Math.max(1, Math.floor(dmg / (itemParam(X, u.item) || 8))));
+  }
   if (USER_DROPS_ON_HIT[e]) addBoosts(u, USER_DROPS_ON_HIT[e]);
   if (e === 'RECHARGE_AFTER' && t.hp > 0) u.recharge = true;
   afterHpLoss(X, u);
@@ -1289,7 +1297,7 @@ export function scoreShift(ctx, opts, name, foeIdx) {
 }
 
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState, applyHit };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {
