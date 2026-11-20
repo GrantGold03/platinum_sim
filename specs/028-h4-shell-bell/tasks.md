@@ -11,7 +11,7 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/028-h4-shell-bell/validation-log.md` (before-values: `sim_code_hash`, `platsim_code_hash`, the ledger
+- [x] T001 Start `specs/028-h4-shell-bell/validation-log.md` (before-values: `sim_code_hash`, `platsim_code_hash`, the ledger
       version; `git diff --stat main -- src sim tests pyproject.toml` empty) and adapt 027's scripts into
       `specs/028-h4-shell-bell/scripts/`: `acceptance.py` (`runs/028-evidence`, identity seed `028-ident`, `NEW_ITEMS = {"shell_bell"}`
       reported per winner as 025 did; the 027 snapshot plus each record's `items_extra`; branch side: the attributed diff where
@@ -19,7 +19,7 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
       `attribution.py` (027's plus the items_extra rule), `equal_levels.py` (master `028-equal|B2`), `hand_check.py` (each B2
       member's `items_extra` per set), `make_check_team.py` (writes `runs/028-evidence/teams/b2-shellbell.json`: the 027 B2 winner's
       team with Garchomp's item replaced by `shell_bell`, validated by `load_and_validate`)
-- [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/028-h4-shell-bell/scripts/acceptance.py --side main --workers 16 > runs/028-evidence/acceptance-main.txt 2> runs/028-evidence/acceptance-main.err; echo exit=$?`;
+- [x] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/028-h4-shell-bell/scripts/acceptance.py --side main --workers 16 > runs/028-evidence/acceptance-main.txt 2> runs/028-evidence/acceptance-main.err; echo exit=$?`;
       copy outputs and the snapshot to `evidence/pre/`; log; Commit 1 `docs(028): pre-feature evidence and scripts`; push
 
 ---
