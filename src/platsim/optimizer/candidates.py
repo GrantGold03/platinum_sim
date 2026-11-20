@@ -172,6 +172,7 @@ CRIT_STAGE_RATES: tuple[int, ...] = _crit_stage_rates()
 MAX_CRIT_STAGE = 4
 ACCURACY_UP_EFFECT = "HOLD_EFFECT_ACCURACY_UP"
 CRITRATE_UP_EFFECT = "HOLD_EFFECT_CRITRATE_UP"
+HP_RESTORE_ON_DMG_EFFECT = "HOLD_EFFECT_HP_RESTORE_ON_DMG"  # 028: Shell Bell
 ACCURACY_UP_PARAM_DEFAULT = 10  # Wide Lens's decomp param; used only if no ACCURACY_UP item is in the data
 
 
@@ -883,7 +884,9 @@ def _item_for_effect(effect: str, led) -> str | None:
 
 def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> list[str]:
     """025 (H4): items appended after today's candidates for a moveset: the ACCURACY_UP item when any attack can miss
-    (0 < accuracy < 100), then the CRITRATE_UP item when the set has an attack; each only with a pre-Champion copy."""
+    (0 < accuracy < 100), then the CRITRATE_UP item when the set has an attack; each only with a pre-Champion copy.
+    028: then the HP_RESTORE_ON_DMG item (Shell Bell) when the set has an attack; it heals in proportion to damage dealt,
+    so it re-ranks no move and gets no item-conditioned extra sets."""
     mv = load_moves()
     attacks = [m for m in moveset if is_attack(mv[m]) or m in OFFERED_VARIABLE]
     out: list[str] = []
@@ -893,6 +896,9 @@ def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> l
             out.append(it)
     if attacks:
         it = _item_for_effect(CRITRATE_UP_EFFECT, led)
+        if it:
+            out.append(it)
+        it = _item_for_effect(HP_RESTORE_ON_DMG_EFFECT, led)  # 028
         if it:
             out.append(it)
     return out

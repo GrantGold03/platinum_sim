@@ -73,3 +73,18 @@ also cleared only 0.44 under that script (0 discordant pairs between the arms: t
 
 The Sitrus team's 0.945 matches the optimizer's own 0.944 for that team, so the conditions are right. **Verdict: not worse (no
 supported loss); point estimate +0.5 points.** Gate passed (clarify decision: a gain is reported, not required).
+
+## T008 to T010 The optimizer offers Shell Bell (10:50 to 11:05 AM EST)
+
+`candidates.py`: `HP_RESTORE_ON_DMG_EFFECT`; `extra_item_candidates` appends `_item_for_effect(HP_RESTORE_ON_DMG_EFFECT)` after
+the claw for every set with an attack (no item-conditioned extras; docstring says why). `tests/unit/test_shell_bell.py`: the item
+is `shell_bell` with 1 copy; last in `items_extra` exactly for the B2 sets with an attack and never among the existing candidates;
+over the 36 snapshot members the only differences are `appended` (base sets, extras and existing items unchanged; 0 defects); a
+second Shell Bell on a team is refused by `resources.realize`. Two 025 pins in `test_h4_items.py` updated to the new lists
+(`[lens, claw, bell]`, `[claw, bell]`). Hand check (`evidence/b2-candidates-branch.txt`): Shell Bell on all 18 B2 base sets;
+generation 1.9 s for six members, 6.9 s with the allocation.
+
+```
+candidate, item, report and resume tests → 102 passed, exit 0
+uv run pytest -q -m "not battle_sim" (10:54:16 to 11:05:31 AM EST) → 637 passed, 32 deselected, 4 xfailed, exit 0
+```

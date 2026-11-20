@@ -56,12 +56,12 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 4: User Story 2 - The optimizer offers Shell Bell (Priority: P2)
 
-- [ ] T008 [US2] `src/platsim/optimizer/candidates.py` `extra_item_candidates`: after the Razor Claw entry, append
+- [x] T008 [US2] `src/platsim/optimizer/candidates.py` `extra_item_candidates`: after the Razor Claw entry, append
       `_item_for_effect("HOLD_EFFECT_HP_RESTORE_ON_DMG", led)` when the set has an attack and the item has a copy; docstring updated
-- [ ] T009 [US2] `tests/unit/test_shell_bell.py`: Shell Bell last in `items_extra` for every B2 set with an attack (level 48);
+- [x] T009 [US2] `tests/unit/test_shell_bell.py`: Shell Bell last in `items_extra` for every B2 set with an attack (level 48);
       existing entries unchanged against T002's snapshot; base sets and extras unchanged (the 027 helper, 0 defects over 36 members);
       `resources.realize` refuses a second Shell Bell on a team; run with the candidate tests (exit code kept) and record
-- [ ] T010 [US2] Hand check and the fast suite `uv run pytest -q -m "not battle_sim" > runs/028-evidence/fast.log 2>&1; echo exit=$?`; log;
+- [x] T010 [US2] Hand check and the fast suite `uv run pytest -q -m "not battle_sim" > runs/028-evidence/fast.log 2>&1; echo exit=$?`; log;
       Commit 3 `feat(028): Shell Bell offered by hold effect, appended after each set's items`; push
 
 ---
