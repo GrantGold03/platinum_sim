@@ -20,7 +20,7 @@ player change is measured on its own first (reference-first, constitution Princi
 | Source | Heal | When |
 |---|---|---|
 | Game (decomp) | damage the holder dealt that move / 8, at least 1 | after a move that hit; holder below max HP and above 0; U-turn heals on a separate path before the switch; damage to a substitute counts |
-| Battle engine (Showdown) | the move's total damage / 8, truncated, at least 1 | after the move; skipped when a forced switch is pending (U-turn) |
+| Battle engine (Showdown) | the move's total damage / 8, truncated, at least 1 | after the move; skipped only when a forced switch is pending (Roar-style moves); U-turn sets a different flag, so the engine is expected to heal on U-turn like the game (confirmed by T003) |
 | Our player today | none | not modelled |
 
 ## Clarifications
@@ -98,7 +98,8 @@ cause recorded.
 - **Holder fainted by recoil, Life Orb or the target's counter-effects before the heal**: no heal.
 - **A multi-hit move**: the heal uses the total damage of the move (game and engine agree on the total; confirmed or recorded).
 - **Damage absorbed by a substitute**: the game counts it; whether the engine does is checked and recorded.
-- **U-turn**: the game heals before the switch; the engine skips the heal; recorded as a divergence with its impact if confirmed.
+- **U-turn**: the game heals before the switch; the engine is expected to heal too (its skip applies to forced switches, not
+  U-turn); confirmed or recorded as a divergence with its impact by the engine checks.
 - **Opponent holding Shell Bell**: none in the League; the model applies symmetrically anyway.
 - **Shell Bell and another single-copy item on the same member**: one held item per member, as today.
 
@@ -108,7 +109,8 @@ cause recorded.
 
 - **FR-001**: The battle player MUST, after its own model of a damaging move, heal a Shell Bell holder by max(1, floor(damage the
   target lost / 8)) when the holder is below its maximum HP and above 0, on either side.
-- **FR-002**: The battle player's decisions for teams without Shell Bell MUST be byte-identical to today's (the replay test).
+- **FR-002**: The battle player's decisions for teams without Shell Bell MUST be byte-identical to today's: shown on the replay
+  test's teams and the two identity evaluation teams; in general the heal branch runs only when the holder has the item.
 - **FR-003**: Each difference between the battle engine's Shell Bell and the game's (U-turn timing, substitute damage, rounding)
   MUST be checked against the decomp and either confirmed equal or recorded as a divergence ledger entry with its impact.
 - **FR-004**: The screening player MUST be confirmed to need no change (it scores moves, not HP), with the check recorded.
@@ -139,7 +141,8 @@ cause recorded.
 ### Measurable Outcomes
 
 - **SC-001**: The heal matches the four constructed cases exactly (10, 0, 1, 0).
-- **SC-002**: Teams without Shell Bell get byte-identical player decisions (the replay test green).
+- **SC-002**: The replay test's teams and the two identity evaluation teams (none holds Shell Bell) get byte-identical player
+  decisions and results.
 - **SC-003**: With the model, the player clears the fixed Shell Bell team at least as often as without (no supported loss over
   2,000 paired gauntlets).
 - **SC-004**: Every one of the 36 benchmark members' base sets, extra sets and existing item candidates is unchanged; Shell Bell is

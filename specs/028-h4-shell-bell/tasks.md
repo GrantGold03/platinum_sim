@@ -27,7 +27,9 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 ## Phase 2: Foundational
 
 - [ ] T003 Engine-versus-game checks (FR-003, R2) in `sim/test/shell_bell.test.mjs` part 1, against the vendored engine on
-      constructed battles: (a) a hit into a substitute: does the holder heal floor(damage to the substitute / 8)? (b) a multi-hit
+      constructed battles built the way `sim/test/switch_reset.test.mjs` and `sim/test/expectimax2.test.mjs` build them (the
+      worker's battle setup on fixed teams with the needed moves: Substitute, U-turn, a multi-hit move, a recoil move;
+      expected values: U-turn heals like the game): (a) a hit into a substitute: does the holder heal floor(damage to the substitute / 8)? (b) a multi-hit
       move: heal from the total; (c) U-turn: heal before the switch; (d) a holder fainted by its own recoil: no heal; (e) rounding: 7
       damage heals 1; record each result in the log against the decomp (`battle_controller_player.c:3361-3430, 4738`,
       `battle_lib.c:3599, 7345`); add a divergence ledger entry for each confirmed difference with its impact; run and record
@@ -46,9 +48,9 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
       `(cd sim && node --test test/*.test.mjs)` with `replay.test.mjs` byte-identical; record; confirm greedy-v1 needs no change
       (FR-004: it scores moves, not HP; cite the function) and record
 - [ ] T007 [US1] Player check, alone (FR-008, about 15 min): `make_check_team.py`, then `uv run python specs/018-expectimax2-v4/scripts/paired_policies.py`
-      with policies `expectimax2-v4` and `expectimax2-v4?shellBell=0` on `file:runs/028-evidence/teams/b2-shellbell.json`, 2,000
-      pairs, out `runs/028-evidence/pairs` (exact flags from the script's usage); record clear rates, discordant pairs, exact
-      McNemar p; **a supported loss stops the feature** (report to the user); Commit 2 `feat(028): the player models Shell Bell; v4 knob shellBell; engine checks; player check`; push
+      `--a expectimax2-v4 --b 'expectimax2-v4?shellBell=0' --teams file:runs/028-evidence/teams/b2-shellbell.json --runs 2000 --workers 16 --out runs/028-evidence/pairs`,
+      preceded by the pairing control `--self` on the same team (0 discordant pairs required); record clear rates, discordant
+      pairs, exact McNemar p; **a supported loss stops the feature** (report to the user); Commit 2 `feat(028): the player models Shell Bell; v4 knob shellBell; engine checks; player check`; push
 
 ---
 
@@ -71,7 +73,9 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
       record and stop at the report; else continue
 - [ ] T013 [US3] Docs: validation log (the player check and the acceptance table with which member took Shell Bell); `README.md`
       (H4 block: Shell Bell modelled and offered, the engine checks, the remaining groups and why they wait; the player-change note
-      on `expectimax2-v4`); `FUTURE-FEATURES.md` section 0; spec Overview table amended for U-turn (R2); `RUN-STATE.md`; Commit 4
+      on `expectimax2-v4` stating its measurement cost (Principle VII): no change for teams without Shell Bell, shown by the replay
+      and identity evaluations; for a holder, the clear-rate difference measured by the player check); `FUTURE-FEATURES.md`
+      section 0; the spec's U-turn statements finalised from T003's result; `RUN-STATE.md`; Commit 4
       `feat(028): acceptance and player check; docs`; push
 
 ---
