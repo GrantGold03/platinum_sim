@@ -82,9 +82,9 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 6: Gates and close
 
-- [ ] T014 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` empty; `sim_code_hash` changed (the player),
+- [x] T014 Gates, nothing else running: `git diff --stat main -- pokemon-showdown` empty; `sim_code_hash` changed (the player),
       ledger version changed only if T003 added an entry; Node suite green; `uv run pytest -q --durations=25 > runs/028-evidence/full.log 2>&1; echo full exit=$?` green; log and `evidence/gates.txt`
-- [ ] T015 Closing commit `docs(028): gates recorded; feature closed on its branch`; push; report with the merge command; merge only on the user's go
+- [x] T015 Closing commit `docs(028): gates recorded; feature closed on its branch`; push; report with the merge command; merge only on the user's go
 
 ## Dependencies
 

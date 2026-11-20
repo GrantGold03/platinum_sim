@@ -1,0 +1,27 @@
+============================= slowest 25 durations =============================
+1528.23s call     tests/integration/test_optimize_adaptive.py::test_quick_optimize_with_adaptive_confirmation_is_deterministic_and_records_the_mix
+1240.49s call     tests/integration/test_optimize_small.py::test_optimize_quick_deterministic_and_legal
+824.04s call     tests/integration/test_policy_strength.py::test_expectimax2_beats_greedy_paired
+390.10s call     tests/integration/test_evaluate.py::test_v7_reference_team_2000_runs
+222.17s call     tests/integration/test_extract.py::test_extract_twice_identical_check_and_corruption
+199.87s call     tests/integration/test_evaluate_adaptive.py::test_adaptive_sampling_switches_is_deterministic_and_equals_full_at_floor_1
+138.45s call     tests/integration/test_evaluate_shift.py::test_default_is_shift_and_the_set_flag_names_set
+102.78s call     tests/integration/test_evaluate.py::test_determinism_fast
+95.55s call     tests/integration/test_evaluate_shift.py::test_shift_is_deterministic_across_worker_counts_and_named_in_the_report
+93.71s call     tests/integration/test_policy_strength.py::test_expectimax2_v2_not_worse_than_greedy_on_reversal_team
+89.87s call     tests/integration/test_extract.py::test_real_default_dir_is_current
+61.14s call     tests/integration/test_web_process_determinism.py::test_child_process_matches_in_process
+44.19s call     tests/integration/test_extract.py::test_known_values_in_output
+41.18s call     tests/integration/test_evaluate.py::test_egg_move_team_exits_2_without_the_flag
+41.03s call     tests/integration/test_evaluate.py::test_illegal_fixture_exits_2
+40.64s call     tests/unit/test_validator.py::test_validator_does_not_import_optimizer
+39.64s setup    tests/browser/test_page.py::test_page_walkthrough
+21.18s call     tests/browser/test_page.py::test_page_walkthrough
+11.88s call     tests/integration/test_web.py::test_full_name_search_returns_that_pokemon_first
+8.50s call     tests/unit/test_shell_bell.py::test_only_the_appended_items_change_over_the_36_members
+8.44s call     tests/unit/test_extras_dead_moves.py::test_base_sets_items_and_setup_equal_the_pre_feature_snapshot
+8.44s call     tests/integration/test_pool.py::test_64_gauntlets_on_4_workers_match_single_worker
+8.19s call     tests/integration/test_champion_topup.py::test_deterministic_for_fixed_seed
+7.22s setup    tests/unit/test_marginal_coverage.py::test_b2_allocation_record_names_the_contested_tms
+6.78s call     tests/unit/test_optimizer_candidates.py::test_member_candidates_and_full_team_validate
+669 passed, 4 xfailed, 1 warning in 5386.08s (1:29:46)

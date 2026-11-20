@@ -102,3 +102,18 @@ uv run pytest -q -m "not battle_sim" (10:54:16 to 11:05:31 AM EST) → 637 passe
 
 ## T012 Merge gate: pass. T013 docs: README 028 block (with the Principle VII measurement statement), FUTURE-FEATURES section 0,
 the spec's U-turn statements finalised (both heal), RUN-STATE.
+
+## T014 Gates (11:24:10 AM to 12:56:39 PM EST, nothing else running, on 940d825)
+
+```
+git diff --stat main -- pokemon-showdown: 0 lines (the vendored engine untouched)
+git diff --stat main -- sim: sim/gauntlet.mjs (+1), sim/policy/expectimax2.mjs (+12/-2), sim/test/shell_bell.test.mjs (new)
+sim_code_hash after:     sha256:6c038ef7601b38e3b400c96159a24968a7c0998d915f0586a50dcd1f0fa472d1  (was e968ff0f...: the player changed)
+platsim_code_hash after: sha256:4e8673d95a2ff503a0b7325977601ac4cc128f962f868d6426f236e799de842b  (was 85fa0353...)
+divergence_ledger_version after: sha256:821f33356f6a61bb  (was feb2a48ef2e1dd08: one entry added, mech-shell-bell-substitute)
+(cd sim && node --test test/*.test.mjs): tests 395, pass 395, fail 0, exit 0
+uv run pytest -q --durations=25 (11:26:50 AM to 12:56:39 PM EST): 669 passed, 4 xfailed, 1 warning in 5386.08s (1:29:46), exit 0
+```
+
+All gates green; pre-028 optimizer checkpoints are refused (both code hashes and the ledger version changed). **The feature is
+closed on its branch. Merge on the user's go:** `git checkout main && git merge --ff-only 028-h4-shell-bell && git push`.

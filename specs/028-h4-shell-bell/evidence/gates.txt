@@ -1,0 +1,18 @@
+=== gates start 11:24:10 AM EST on 940d825
+diff main -- pokemon-showdown lines=0
+diff main -- sim:
+ sim/gauntlet.mjs             |   1 +
+ sim/policy/expectimax2.mjs   |  12 +++-
+ sim/test/shell_bell.test.mjs | 136 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 147 insertions(+), 2 deletions(-)
+hashes after: sha256:6c038ef7601b38e3b400c96159a24968a7c0998d915f0586a50dcd1f0fa472d1 sha256:4e8673d95a2ff503a0b7325977601ac4cc128f962f868d6426f236e799de842b
+ledger version after: sha256:821f33356f6a61bb
+before (T001): sim sha256:e968ff0f... platsim sha256:85fa0353... ledger sha256:feb2a48ef2e1dd08 -> sim and ledger change (player, one entry), platsim changes
+node exit=0
+# tests 395
+# pass 395
+# fail 0
+full start 11:26:50 AM EST
+full exit=0
+669 passed, 4 xfailed, 1 warning in 5386.08s (1:29:46)
+=== gates end 12:56:39 PM EST
