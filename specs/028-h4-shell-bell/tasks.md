@@ -68,10 +68,10 @@ acceptance, check or suite runs; never key a cache on `id()` alone; evidence und
 
 ## Phase 5: User Story 3 - Measured on both codes (Priority: P3)
 
-- [ ] T011 [US3] Branch side alone (about 20 min): `uv run python specs/028-h4-shell-bell/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/028-evidence/acceptance.txt 2> runs/028-evidence/acceptance.err; echo exit=$?`; copy evidence
-- [ ] T012 [US3] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect, or a non-identical identity row: no merge,
+- [x] T011 [US3] Branch side alone (about 20 min): `uv run python specs/028-h4-shell-bell/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/028-evidence/acceptance.txt 2> runs/028-evidence/acceptance.err; echo exit=$?`; copy evidence
+- [x] T012 [US3] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect, or a non-identical identity row: no merge,
       record and stop at the report; else continue
-- [ ] T013 [US3] Docs: validation log (the player check and the acceptance table with which member took Shell Bell); `README.md`
+- [x] T013 [US3] Docs: validation log (the player check and the acceptance table with which member took Shell Bell); `README.md`
       (H4 block: Shell Bell modelled and offered, the engine checks, the remaining groups and why they wait; the player-change note
       on `expectimax2-v4` stating its measurement cost (Principle VII): no change for teams without Shell Bell, shown by the replay
       and identity evaluations; for a holder, the clear-rate difference measured by the player check); `FUTURE-FEATURES.md`

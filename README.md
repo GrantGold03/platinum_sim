@@ -703,6 +703,20 @@ summary records the shortfall. Over the 36 benchmark members dead moves in extra
 (0 discordant pairs at equal levels), the screen spends 15 fewer runs, and the two unaffected teams evaluate identically.
 Candidate generation with the allocation: 6.9 s for six members (4.7 s before).
 
+Feature 028 (2026-11-20, `specs/028-h4-shell-bell/`): **Shell Bell**, the first held item the battle player had to learn.
+Shell Bell (one pre-Champion copy, the Hearthome City gift) heals its holder after a move that hits by the damage dealt / 8, at
+least 1, while the holder is hurt and standing. **The player now models the heal** (`expectimax2`, both v2 and v4), and the
+optimizer offers Shell Bell by hold effect, appended after each moveset's existing items for every set with an attack (it heals in
+proportion to damage, so it re-ranks no move). The engine was checked against the game: they agree on ordinary hits, full HP,
+U-turn and a holder knocked out by its own recoil; they differ on damage that hits a substitute (the game heals, the engine does
+not), recorded as ledger entry `mech-shell-bell-substitute` with no effect in the League (no League Pokemon knows Substitute).
+**What this changes in the measurement** (constitution Principle VII): nothing for a team without Shell Bell (the replay test and
+both identity evaluations are byte-identical); for a holder, a reference-first check on the B2 team with Shell Bell on Garchomp
+measured 0.9565 with the model against 0.9515 without over 2,000 paired gauntlets (p 0.41, not worse). The policy keeps the name
+`expectimax2-v4`. **Acceptance**: on B2 quick Shell Bell was offered and screened (32 more teams beyond the cap) and not chosen;
+the winner is the identical team on both codes. Remaining item groups, each needing more player work: King's Rock / Razor Fang
+(flinch odds), Metronome (consecutive use), Lum and the resist berries (single-use triggers), the Choice items (move locking).
+
 Measured run times:
 
 | Run | Wall time |

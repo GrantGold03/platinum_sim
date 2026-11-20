@@ -20,7 +20,7 @@ player change is measured on its own first (reference-first, constitution Princi
 | Source | Heal | When |
 |---|---|---|
 | Game (decomp) | damage the holder dealt that move / 8, at least 1 | after a move that hit; holder below max HP and above 0; U-turn heals on a separate path before the switch; damage to a substitute counts |
-| Battle engine (Showdown) | the move's total damage / 8, truncated, at least 1 | after the move; skipped only when a forced switch is pending (Roar-style moves); U-turn sets a different flag, so the engine is expected to heal on U-turn like the game (confirmed by T003) |
+| Battle engine (Showdown) | the move's total damage / 8, truncated, at least 1 | after the move; skipped only when a forced switch is pending (Roar-style moves); heals on U-turn like the game (confirmed, T003); does not count damage to a substitute (ledger `mech-shell-bell-substitute`) |
 | Our player today | none | not modelled |
 
 ## Clarifications
@@ -98,8 +98,7 @@ cause recorded.
 - **Holder fainted by recoil, Life Orb or the target's counter-effects before the heal**: no heal.
 - **A multi-hit move**: the heal uses the total damage of the move (game and engine agree on the total; confirmed or recorded).
 - **Damage absorbed by a substitute**: the game counts it; whether the engine does is checked and recorded.
-- **U-turn**: the game heals before the switch; the engine is expected to heal too (its skip applies to forced switches, not
-  U-turn); confirmed or recorded as a divergence with its impact by the engine checks.
+- **U-turn**: the game and the engine both heal (confirmed by the engine checks, T003).
 - **Opponent holding Shell Bell**: none in the League; the model applies symmetrically anyway.
 - **Shell Bell and another single-copy item on the same member**: one held item per member, as today.
 

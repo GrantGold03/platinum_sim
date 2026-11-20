@@ -1,4 +1,11 @@
-# START HERE (updated 2026-11-18, feature 027 `027-extras-dead-moves` merged to `main`; next feature: the user's choice)
+# START HERE (updated 2026-11-20, feature 028 `028-h4-shell-bell` accepted on its branch; gates next, then merge on the user's go)
+- **Feature 028 `028-h4-shell-bell` built 2026-11-20 on its branch from `main` 634e270.** Commits: pre-feature evidence and
+  scripts, 6d49591 (player models Shell Bell, v4 knob `shellBell`, engine checks, ledger `mech-shell-bell-substitute`, player
+  check), 9c58e3c (Shell Bell offered by hold effect), then the acceptance and docs commit. Player check under Shift: 0.9565 vs
+  0.9515 (p 0.41, not worse). Acceptance (11:06 to 11:23 AM EST): offered and not chosen; the B2 winner identical; 0 defects;
+  identity identical. Next: T014 gates (Node suite; full pytest about 1 h 25 min), T015 close; merge on the user's go:
+  `git checkout main && git merge --ff-only 028-h4-shell-bell && git push`. Trap: feature 018's `paired_policies.py` sends no
+  battle style, so it plays Set; use 028's copy with `--battle-style`.
 - **Feature 027 `027-extras-dead-moves` built 2026-11-18 on its branch from `main` 63d6329.** Commits: pre-feature evidence and
   scripts, 583d824 (extras under the dead-move rule), then the acceptance and docs commit. Acceptance (12:17 to 12:34 PM EST):
   the B2 winner identical on both codes (0 discordant pairs), 0 defects (base sets unchanged), dead moves in extras 208 → 56 all

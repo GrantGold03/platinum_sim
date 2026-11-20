@@ -88,3 +88,17 @@ generation 1.9 s for six members, 6.9 s with the allocation.
 candidate, item, report and resume tests → 102 passed, exit 0
 uv run pytest -q -m "not battle_sim" (10:54:16 to 11:05:31 AM EST) → 637 passed, 32 deselected, 4 xfailed, exit 0
 ```
+
+## T011 Branch side (11:05:53 to 11:23:28 AM EST, alone, exit 0; on 9c58e3c; copies in `evidence/acceptance/`)
+
+| Measure | main (634e270 code) | branch (9c58e3c) |
+|---|---|---|
+| B2 quick winner | levels [52, 50, 50, 50, 51, 53], clear 0.9440 | identical team, moves, items and levels; no Shell Bell holder |
+| equal levels, 2,000 pairs | 0.9505 | 0.9505 (0 discordant pairs) |
+| screened teams | 173 | 205 (item deviations 46 → 78: Shell Bell on base sets); overlap 173 of 173 |
+| identity evaluations | | identical without volatile fields (the player change is invisible without the item) |
+| attributed diff, 36 members | | 0 defects; only `appended` (Shell Bell at the end of the appended-item lists) |
+| generation (six members / with allocation) | 1.7 s / 7.2 s | 1.7 s / 7.2 s |
+
+## T012 Merge gate: pass. T013 docs: README 028 block (with the Principle VII measurement statement), FUTURE-FEATURES section 0,
+the spec's U-turn statements finalised (both heal), RUN-STATE.

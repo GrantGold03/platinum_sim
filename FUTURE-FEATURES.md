@@ -42,9 +42,13 @@ Built from the decomp and `main`, not from the 007-010 archive.
   Waterfall > Dive, Rock Climb > Take Down; Cut no longer drops Tackle); `provenance.member_defaults`. Refinement left open:
   an item-conditioned extra set may contain no move the item affects (it is the next-best set under the item's valuation);
   a "must contain a missable move" filter for the lens sets was not specified.
+- **H4 Shell Bell** (feature 028, built 2026-11-20): the player models the heal (reference-first check not worse, +0.5
+  points, p 0.41); offered by hold effect; engine differs from the game only on substitute damage (ledger, no League impact);
+  offered and not chosen on B2. The 018 paired-policies script sends no battle style (Set); feature 028's copy passes
+  `--battle-style` and should be the one reused.
 - **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
   (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome,
-  King's Rock / Razor Fang, Shell Bell, then Lum Berry and the resist berries. Life Orb has no
+  King's Rock / Razor Fang, then Lum Berry and the resist berries. Life Orb has no
   pre-Champion copy. Reusable checks: `specs/014-damage-boost-items/scripts/` (B1-B5 candidate snapshot, B2
   equal-levels comparison), plus feature 024's candidate snapshot and prefix test (`specs/024-variable-power-moves/`)
   and its acceptance protocol (B2 quick on both codes, equal levels, identity evaluations). **Rules from the dominance

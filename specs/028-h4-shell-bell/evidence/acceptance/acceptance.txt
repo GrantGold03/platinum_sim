@@ -1,0 +1,48 @@
+start 2026-11-20 11:05:53 AM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 50, 50, 51, 53] clear 0.9440 [0.9203, 0.961] n 500 attempts 2 wall 552.4 s; Shell Bell members {}
+identity ref: identical (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+identity b2main: identical (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+screen: main 173 teams, branch 205 (extras {'accuracy_item': 14, 'crit_item': 18, 'item_deviation': 78, 'total': 124, 'variable_power': 14}); overlap 173 of 173
+candidate generation, six B2 species at Lv 47: 1.7 s (SC-006)
+full team build with the allocation, B2 at Lv 47: 7.2 s (SC-006, at most 10 s)
+dead moves in extras: before 56 after 56 (without a filler reason 0); extras 271 -> 271
+generation main {'members': '1.7', 'team': '7.2'} branch {'members': '1.7', 'team': '7.2'} (s); baseline repairs 0
+diff B2quick|SPECIES_GARCHOMP|own: {'appended': 6}
+diff B2quick|SPECIES_INFERNAPE|own: {'appended': 6}
+diff B2quick|SPECIES_STARAPTOR|own: {'appended': 5}
+diff B2quick|SPECIES_ROTOM|own: {'appended': 3}
+diff B2quick|SPECIES_FLOATZEL|own: {'appended': 6}
+diff B2quick|SPECIES_WEAVILE|own: {'appended': 6}
+diff B1|SPECIES_INFERNAPE|own: {'appended': 6}
+diff B1|SPECIES_STARAPTOR|own: {'appended': 3}
+diff B1|SPECIES_LUXRAY|own: {'appended': 6}
+diff B1|SPECIES_GARCHOMP|own: {'appended': 6}
+diff B1|SPECIES_GYARADOS|own: {'appended': 6}
+diff B1|SPECIES_GARDEVOIR|own: {'appended': 6}
+diff B2|SPECIES_GARCHOMP|own: {'appended': 6}
+diff B2|SPECIES_INFERNAPE|own: {'appended': 6}
+diff B2|SPECIES_STARAPTOR|own: {'appended': 3}
+diff B2|SPECIES_ROTOM|own: {'appended': 3}
+diff B2|SPECIES_FLOATZEL|own: {'appended': 6}
+diff B2|SPECIES_WEAVILE|own: {'appended': 6}
+diff B3|SPECIES_INFERNAPE|own: {'appended': 6}
+diff B3|SPECIES_GARCHOMP|own: {'appended': 6}
+diff B3|SPECIES_GYARADOS|own: {'appended': 6}
+diff B3|SPECIES_LUCARIO|own: {'appended': 6}
+diff B3|SPECIES_CHATOT|own: {'appended': 1}
+diff B3|SPECIES_STARAPTOR|own: {'appended': 3}
+diff B4|SPECIES_ROSERADE|own: {'appended': 6}
+diff B4|SPECIES_BLISSEY|own: {'appended': 6}
+diff B4|SPECIES_GLISCOR|own: {'appended': 6}
+diff B4|SPECIES_MILOTIC|own: {'appended': 1}
+diff B4|SPECIES_BRONZONG|own: {'appended': 6}
+diff B4|SPECIES_LUCARIO|own: {'appended': 6}
+diff B5|SPECIES_TORTERRA|own: {'appended': 6}
+diff B5|SPECIES_MAGNEZONE|own: {'appended': 1}
+diff B5|SPECIES_CLEFABLE|own: {'appended': 6}
+diff B5|SPECIES_LUMINEON|own: {'appended': 6}
+diff B5|SPECIES_GALLADE|own: {'appended': 6}
+diff B5|SPECIES_SPIRITOMB|own: {'appended': 6}
+equal levels at [52, 50, 50, 50, 51, 53]: n 2000 A(branch) 0.9505 B(main) 0.9505 only A 0 / only B 0 p 1 verdict indistinguishable; winners' expected avg final level branch 51.69 vs main 51.69 (diff +0.00); defects 0; identity ok; dead in extras without a reason 0; team build 7.2 s; pass True
+end 2026-11-20 11:23:28 AM EST
+exit=0
