@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Defaults stated rather than marked: the player check needs "not worse" (a measured gain is not required); Shell Bell is offered
-  on every moveset with an attack. Both are the expected `/speckit-clarify` questions.
+- The player check's bar ("not worse", a gain reported but not required) was confirmed at clarify (2026-11-20). Shell Bell is
+  offered on every moveset with an attack (default kept).

@@ -23,6 +23,12 @@ player change is measured on its own first (reference-first, constitution Princi
 | Battle engine (Showdown) | the move's total damage / 8, truncated, at least 1 | after the move; skipped when a forced switch is pending (U-turn) |
 | Our player today | none | not modelled |
 
+## Clarifications
+
+### Session 2026-11-20
+
+- Q: For the battle player's Shell Bell model to be accepted, is it enough that the player does not get worse on a team holding Shell Bell, or must it show a measurable improvement? → A: A, not worse: no supported loss at alpha 0.05 over 2,000 pairs; the gain is reported, whatever it is.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle player knows Shell Bell heals (Priority: P1)
@@ -112,7 +118,8 @@ cause recorded.
   moves rank); base sets, extra sets and other item candidates MUST be unchanged.
 - **FR-007**: The screen MUST screen Shell Bell on a moveset as an item deviation beyond the cap, as feature 025 does for its items.
 - **FR-008**: A reference-first player check MUST run before the optimizer change: 2,000 paired gauntlets on a fixed team in which
-  one member holds Shell Bell, played with and without the model, by the default player; a supported loss blocks the feature.
+  one member holds Shell Bell, played with and without the model, by the default player; a supported loss (alpha 0.05) blocks
+  the feature; a gain is reported but not required (owner's decision 2026-11-20).
 - **FR-009**: Acceptance MUST follow feature 025's protocol on both codes (the pre-feature side on the branch before the optimizer
   change; B2 quick with the 014 seed; the identity evaluations; the equal-levels paired check on 2,000 gauntlets; which member took
   Shell Bell; the attributed diff with base sets and extras unchanged), alone on the machine with Eastern times.
