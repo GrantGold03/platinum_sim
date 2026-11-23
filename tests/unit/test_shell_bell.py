@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import importlib.util
 import json
 import sys
@@ -44,7 +45,8 @@ def test_appended_last_for_every_set_with_an_attack_on_b2(led):
         mc = C.member_candidates(c, C.variants(c, led)[0], 48, led, team=tuple(consts))
         for ms, extra in mc.items_extra.items():
             has_attack = any(C.is_attack(C.load_moves()[m]) or m in C.OFFERED_VARIABLE for m in ms)
-            assert (extra[-1:] == ["shell_bell"]) == has_attack, (c, ms, extra)
+            plain = [i for i in extra if not i.endswith("_berry")]  # 029 appends resist berries after the bell
+            assert (plain[-1:] == ["shell_bell"]) == has_attack, (c, ms, extra)
             assert "shell_bell" not in mc.items[ms]  # never among the existing candidates
 
 
@@ -53,7 +55,9 @@ def test_only_the_appended_items_change_over_the_36_members(led):
     snap = json.loads(SNAPSHOT.read_text())
     assert len(snap) == 36
     for key, rec in snap.items():
-        recs = A.attribute(rec, A.recompute(rec, led))
+        mc = A.recompute(rec, led)  # 029: resist berries appended after the bell are 029's change, checked in its own test
+        mc = dataclasses.replace(mc, items_extra={k: [i for i in v if not i.endswith("_berry")] for k, v in mc.items_extra.items()})
+        recs = A.attribute(rec, mc)
         defects = [r for r in recs if r["cause"] == "defect"]
         assert not defects, (key, defects)
         assert all(r["cause"] in ("appended",) for r in recs), (key, recs)

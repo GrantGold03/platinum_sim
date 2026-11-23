@@ -15,6 +15,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+RESIST_BERRIES = ['babiri_berry', 'charti_berry', 'chilan_berry', 'chople_berry', 'coba_berry', 'colbur_berry', 'haban_berry', 'kasib_berry', 'kebia_berry', 'occa_berry', 'passho_berry', 'payapa_berry', 'rindo_berry', 'shuca_berry', 'tanga_berry', 'wacan_berry', 'yache_berry']  # 029: the 17 resist berries
+
 REPO = Path(__file__).resolve().parents[3]
 if str(REPO / "src") not in sys.path:
     sys.path.insert(0, str(REPO / "src"))

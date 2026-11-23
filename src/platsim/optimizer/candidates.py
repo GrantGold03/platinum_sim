@@ -954,7 +954,8 @@ def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> l
     """025 (H4): items appended after today's candidates for a moveset: the ACCURACY_UP item when any attack can miss
     (0 < accuracy < 100), then the CRITRATE_UP item when the set has an attack; each only with a pre-Champion copy.
     028: then the HP_RESTORE_ON_DMG item (Shell Bell) when the set has an attack; it heals in proportion to damage dealt,
-    so it re-ranks no move and gets no item-conditioned extra sets."""
+    so it re-ranks no move and gets no item-conditioned extra sets. 029: then the member's top two resist berries
+    (`resist_berry_ranking`); defensive, so they re-rank no move either."""
     mv = load_moves()
     attacks = [m for m in moveset if is_attack(mv[m]) or m in OFFERED_VARIABLE]
     out: list[str] = []
@@ -969,6 +970,8 @@ def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> l
         it = _item_for_effect(HP_RESTORE_ON_DMG_EFFECT, led)  # 028
         if it:
             out.append(it)
+        # 029: the member's top resist berries by the League damage they would block (none when nothing threatens it)
+        out.extend(k for k, _ in resist_berry_ranking(const_member, 100, led)[:RESIST_BERRY_COUNT])
     return out
 
 

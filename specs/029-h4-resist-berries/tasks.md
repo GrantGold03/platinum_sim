@@ -48,18 +48,18 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 4: User Story 2 - The optimizer offers the right berries (Priority: P2)
 
-- [ ] T008 [US2] `src/platsim/optimizer/candidates.py`: `resist_berry_ranking(const_member, level, led) -> list[tuple[str, float]]` (R5:
+- [x] T008 [US2] `src/platsim/optimizer/candidates.py`: `resist_berry_ranking(const_member, level, led) -> list[tuple[str, float]]` (R5:
       the League's stored damaging moves from `trainers.json`, weights as `league_opponents`, threat = power × accuracy × the opponent's
       STAB weight × its base attacking stat by category × type multiplier against the member ÷ the member's base Defense (physical) or
       base Special Defense (special); per mon and type the largest; per berry
       type the weighted sum halved; Chilan from Normal moves at any effectiveness; ties by type name; only berries with a copy);
       `extra_item_candidates` appends the top two after Shell Bell for every moveset with an attack (a member with no threat gets none)
-- [ ] T009 [US2] `tests/unit/test_resist_berries.py`: the ranking on known members (e.g. Garchomp: Ice first; a member with no
+- [x] T009 [US2] `tests/unit/test_resist_berries.py`: the ranking on known members (e.g. Garchomp: Ice first; a member with no
       super-effective threat: empty); the defences rule on a synthetic member (high Defense, low Special Defense: with an equally strong
       physical and special super-effective threat of two types, the special threat's berry ranks first; swapped stats, the reverse); the berries last in `items_extra` and after `shell_bell`; over the 36 snapshot members only
       `appended` differences (028's attribution); update pins in `tests/unit/test_h4_items.py` and `tests/unit/test_shell_bell.py` that
       compare whole lists; run with the candidate tests (exit code kept) and record
-- [ ] T010 [US2] Hand check and the fast suite (`runs/029-evidence/fast.log`, exit code kept); log; Commit 3
+- [x] T010 [US2] Hand check and the fast suite (`runs/029-evidence/fast.log`, exit code kept); log; Commit 3
       `feat(029): resist berries ranked by blocked League damage, two per member, appended`; push
 
 ## Phase 5: User Story 3 - Measured on both codes (Priority: P3)

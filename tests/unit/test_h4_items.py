@@ -116,9 +116,9 @@ BELL = "shell_bell"  # 028: appended after the claw for every set with an attack
 def test_item_rules_on_fixed_movesets(led):
     # Stone Edge misses (80): the lens is offered; every attacker gets the claw; order accuracy then crit
     out = C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_STONE_EDGE"), led)
-    assert out == [LENS, CLAW, BELL]
+    assert out[:3] == [LENS, CLAW, BELL] and all(i.endswith("_berry") for i in out[3:])  # 029: berries after
     # every attack hits: no lens, the claw stays
-    assert C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), led) == [CLAW, BELL]
+    assert C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), led) == [CLAW, BELL, "yache_berry", "haban_berry"]
     # a never-miss move (accuracy 0 in the data) is not "missing"
     assert LENS not in C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_AERIAL_ACE",), led)
     # no attack: nothing
@@ -162,7 +162,7 @@ def test_item_conditioned_extras_follow_the_rule(led):
         else:
             seen_none = True
         for ms in base:
-            assert set(mc.items_extra.get(ms, [])) <= {LENS, CLAW, BELL}
+            assert {i for i in mc.items_extra.get(ms, []) if not i.endswith("_berry")} <= {LENS, CLAW, BELL}  # 029: berries
     assert seen_extra, "no B2 member gained an item-conditioned extra set"
     # the no-extra branch may legitimately not occur on B2; it is covered by the constructed case below
     _ = seen_none

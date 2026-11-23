@@ -73,3 +73,21 @@ loss).** Only four battles of 2,000 differ: the berry fires at most once per bat
 comparison; the controls show the first run of each pool is slower whatever the policy (11.32 vs 14.85 with identical play on the
 unchanged team), so the berry model's own cost is not separable here; stated in the README as at most about 8%. The berry team clears
 less than the unchanged team (0.857 vs 0.970) because the plate was Weavile's damage item; the optimizer decides that trade, not the player.
+
+## T008 to T010 The optimizer offers two resist berries (11:46 AM to 12:10 PM EST)
+
+`candidates.py`: `resist_berry_ranking(const_member, level, led)` (research R5; each threat divided by the member's base Defense for a
+physical move or Special Defense for a special one; a type skipped when every ability of the species is immune to it: Levitate,
+Flash Fire, Volt Absorb, Motor Drive, Water Absorb, Dry Skin, from `battle_lib.c`); `extra_item_candidates` appends the top two
+(`RESIST_BERRY_COUNT = 2`) after Shell Bell for every set with an attack. Found at the first look at the ranking: Rotom (Levitate) was
+offered Shuca first; fixed by the ability rule above, now Colbur, Kasib.
+
+B2 ranking (hand check): Garchomp Yache, Haban; Infernape Shuca, Payapa; Staraptor Charti, Wacan; Rotom Colbur, Kasib; Floatzel Rindo,
+Wacan; Weavile Chople, Occa. Defensive controls: Skarmory (Def 140, SpD 70) Occa first (special Fire); Blissey (Def 10, SpD 135)
+Chople first (physical Fighting).
+
+`tests/unit/test_resist_berries.py` (7 tests): every berry offerable by hold effect; known members; the defences rule on a synthetic
+Grass member against equal-strength Ice Punch (physical) and Signal Beam (special): Def 150 / SpD 50 ranks Tanga (Bug) first at three
+times Yache's value, swapped stats rank Yache first; the top two last after Shell Bell on B2; the 36 snapshot members change only by
+appended berries (029 attribution). 028 and 025 pins updated (berries after the bell). The attribution script's berry set was missing
+at first (an insertion anchor did not match); fixed. Item tests 22 passed; fast suite **643 passed, 32 deselected, 4 xfailed**, exit 0.
