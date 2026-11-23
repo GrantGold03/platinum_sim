@@ -26,6 +26,12 @@ held-item flinch chance), which follow as feature 031.
 | Our player today | never models flinch |
 | League | 10 flinch movers: Aaron's Yanmega (Air Slash), Scizor (Iron Head), Drapion (Ice Fang); Bertha's Whiscash (Zen Headbutt), Gliscor (Ice, Fire, Thunder Fang); Flint's Houndoom (Dark Pulse); Cynthia's Spiritomb (Dark Pulse), Roserade (Extrasensory), Togekiss (Air Slash, ability Hustle), Garchomp (Dragon Rush). Gallade and Lucario have Steadfast. None has Inner Focus or Serene Grace |
 
+## Clarifications
+
+### Session 2026-11-23
+
+- Q: If modelling flinch makes the battle player slower, how much slowdown is acceptable before the feature has to be redesigned or stopped? → A: B, at most 25% slower (fewer gauntlets per second); over that, prune or stop for the owner's decision. Owner's addition: when the Pokemon with the flinch move moves second, no flinch chance is considered at all, because the Pokemon that already moved cannot be flinched.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle player knows flinch (Priority: P1)
@@ -43,7 +49,9 @@ show the model's expected outcome includes the lost move with the game's chance;
 
 1. **Given** a faster foe whose flinch move hits the player's member, **When** the player evaluates the turn, **Then** with the
    move's chance the member's move that turn does not happen.
-2. **Given** a slower foe with a flinch move, **When** it hits after the member has moved, **Then** no flinch is expected.
+2. **Given** a slower foe with a flinch move, **When** it hits after the member has moved, **Then** no flinch is expected and
+   the player does not consider a flinch chance for that turn at all (owner's rule, 2026-11-23: a Pokemon that has already moved
+   cannot be flinched); the same holds for the player's own slower member.
 3. **Given** the player's faster member uses a flinch move on a foe, **When** it hits, **Then** with the move's chance the foe loses
    its move that turn.
 4. **Given** the target is behind a substitute, has Inner Focus, or has already moved, **When** a flinch move hits, **Then** no
@@ -113,6 +121,9 @@ snapshot.
   a damaging flinch move hits a target that has not moved yet this turn, is not behind a substitute and lacks Inner Focus; the
   flinched Pokemon's move that turn MUST NOT happen in the model.
 - **FR-002**: The rule MUST apply on both sides: foes flinching the player's members and the player's members flinching foes.
+- **FR-012**: A flinch chance MUST be considered only when the flinch move's user moves before its target in that turn's order
+  (priority first, then Speed; a Speed tie counts each order with its own weight). When the flinch move's user moves second, the
+  player MUST NOT consider any flinch chance for that hit (owner's rule, 2026-11-23), so no extra outcome is evaluated.
 - **FR-003**: Steadfast MUST raise the flinched Pokemon's Speed by one stage in the model.
 - **FR-004**: Fake Out MUST follow the game: it flinches only on its user's first turn out and fails otherwise.
 - **FR-005**: The battle engine's flinch handling MUST be checked against the game for each condition in FR-001 to FR-004; each
@@ -124,7 +135,8 @@ snapshot.
 - **FR-009**: The README MUST state what flinch modelling changes in the measurement (clear rate per team, speed cost) and what the
   player still does not model (Principle VII).
 - **FR-010**: The optimizer and its candidate lists MUST NOT change.
-- **FR-011**: Merge only if Story 2 shows no supported loss on any team and Story 3's equal-level comparison passes.
+- **FR-011**: Merge only if Story 2 shows no supported loss on any team, the player with flinch is at most 25% slower than
+  without (SC-004), and Story 3's equal-level comparison passes.
 
 ### Key Entities
 
@@ -140,7 +152,9 @@ snapshot.
 - **SC-002**: With the switch off, the replay test and the 028/029 player tests are unchanged.
 - **SC-003**: On each of the three teams, 2,000 paired gauntlets show no supported loss for the flinch model; the per-team clear
   rates and their difference are reported.
-- **SC-004**: The player's speed with flinch is reported against without; the README states it.
+- **SC-004**: The player with flinch plays at least 75% as many gauntlets per second as without (at most 25% slower), measured
+  on the paired runs of Story 2 with the pool's start-up excluded; the README states the figure. Over the bound: the plan prunes the
+  flinch outcomes or the feature stops for the owner's decision.
 - **SC-005**: The candidate snapshot is identical on both codes; the B2 comparison passes the merge rule.
 - **SC-006**: The Node and full Python suites pass.
 
