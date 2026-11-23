@@ -111,7 +111,9 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     Wise Glasses have 1 copy each, Muscle Band none); then **Wide Lens** (accuracy x1.1, unlimited copies) for a set
     with an attack that can miss and **Razor Claw** (+1 critical-hit stage, 2 copies; Weavile's evolution uses one)
     for any set with an attack (025; Scope Lens has no pre-Champion copy), then **Shell Bell** (heals 1/8 of the damage dealt,
-    1 copy; the battle player models it) for any set with an attack (028). Items are picked by hold effect from the decomp. A held
+    1 copy; the battle player models it) for any set with an attack (028), then the member's two best **resist berries** (Occa,
+    Passho, Wacan, Rindo, Yache, Chople, Kebia, Shuca, Coba, Payapa, Tanga, Charti, Kasib, Haban, Colbur, Babiri and Chilan;
+    unlimited copies; the battle player models them) for any set with an attack (029). Items are picked by hold effect from the decomp. A held
     item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
     White Herb, Mental Herb, Power Herb, Berry Juice).
   - **Candidate move sets** (026): each member's ten-move pool is built by marginal coverage (each next move is the one
@@ -717,6 +719,23 @@ measured 0.9565 with the model against 0.9515 without over 2,000 paired gauntlet
 `expectimax2-v4`. **Acceptance**: on B2 quick Shell Bell was offered and screened (32 more teams beyond the cap) and not chosen;
 the winner is the identical team on both codes. Remaining item groups, each needing more player work: King's Rock / Razor Fang
 (flinch odds), Metronome (consecutive use), Lum and the resist berries (single-use triggers), the Choice items (move locking).
+
+Feature 029 (2026-11-23, `specs/029-h4-resist-berries/`): **resist berries**. Each of the 16 type berries halves the first
+super-effective hit of its type and is used up; Chilan Berry does the same for any Normal hit. **The player now models them**
+(`expectimax2`): a halved hit can turn a knockout into a survival, and the berry is gone afterwards. The model applies only where
+the hit lands: the player's other judgements that read raw damage (which member to switch in, how threatening a foe is) still see
+the unhalved hit. The engine was checked against the game on the halving and its rounding, substitutes, multi-hit moves, Chilan on a
+resisted hit and Normalize: no difference. **What the optimizer offers**: per member, the berries are ranked by the League damage they
+would block (every Elite Four and Cynthia move that hits the member super-effectively, Cynthia's counted twice), each threat weighed
+against the member's own Defense for a physical move or Special Defense for a special one, so a Pokemon with high Defense and low
+Special Defense ranks special threats first; a type its abilities make it immune to (Levitate against Ground) is skipped; the top two
+are offered after Shell Bell. On B2: Garchomp Yache, Haban; Infernape Shuca, Payapa; Staraptor Charti, Wacan; Rotom Colbur, Kasib;
+Floatzel Rindo, Wacan; Weavile Chople, Occa. **What this changes in the measurement** (constitution Principle VII): nothing for a
+team without a resist berry (the replay test and both identity evaluations are byte-identical); for a holder, a reference-first check
+on the B2 team with Chople Berry on Weavile measured 0.8570 with the model against 0.8560 without over 2,000 paired gauntlets (3
+against 1 differing, p 0.63, not worse); the cost in speed is at most about 8%. The policy keeps the name `expectimax2-v4`.
+**Acceptance**: on B2 quick the berries were offered and screened (64 more teams beyond the cap) and none was chosen; the winner is
+the identical team on both codes.
 
 Measured run times:
 

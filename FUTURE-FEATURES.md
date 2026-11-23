@@ -46,9 +46,13 @@ Built from the decomp and `main`, not from the 007-010 archive.
   points, p 0.41); offered by hold effect; engine differs from the game only on substitute damage (ledger, no League impact);
   offered and not chosen on B2. The 018 paired-policies script sends no battle style (Set); feature 028's copy passes
   `--battle-style` and should be the one reused.
+- **H4 resist berries** (feature 029, built 2026-11-23): the player models the 17 berries (halve the first super-effective hit
+  of the type, Chilan any Normal hit; consumed); engine equal to the game; the top two per member offered, ranked by blocked League
+  damage weighed against the member's Defense or Special Defense, ability immunities skipped; check not worse (0.857 vs 0.856,
+  p 0.63); offered and not chosen on B2. Not modelled: the player's switch-in and threat judgements ignore the berry.
 - **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
   (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome,
-  King's Rock / Razor Fang, then Lum Berry and the resist berries. Life Orb has no
+  King's Rock / Razor Fang, then Lum Berry (resist berries done in 029). Life Orb has no
   pre-Champion copy. Reusable checks: `specs/014-damage-boost-items/scripts/` (B1-B5 candidate snapshot, B2
   equal-levels comparison), plus feature 024's candidate snapshot and prefix test (`specs/024-variable-power-moves/`)
   and its acceptance protocol (B2 quick on both codes, equal levels, identity evaluations). **Rules from the dominance

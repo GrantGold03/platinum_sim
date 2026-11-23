@@ -91,3 +91,18 @@ Grass member against equal-strength Ice Punch (physical) and Signal Beam (specia
 times Yache's value, swapped stats rank Yache first; the top two last after Shell Bell on B2; the 36 snapshot members change only by
 appended berries (029 attribution). 028 and 025 pins updated (berries after the bell). The attribution script's berry set was missing
 at first (an insertion anchor did not match); fixed. Item tests 22 passed; fast suite **643 passed, 32 deselected, 4 xfailed**, exit 0.
+
+## T011 and T012 Branch acceptance (12:00:40 to 12:19:18 PM EST, alone, exit 0) and the merge gate
+
+| Measure | main | branch |
+|---|---|---|
+| B2 quick winner | levels [52, 50, 50, 50, 51, 53], clear 0.9440 | identical, clear 0.9440; resist-berry holders: none |
+| Teams screened | 205 | 269 (item deviations 78 → 142: the berries) |
+| Identity (ref, b2main) | | identical after the volatile fields |
+| Equal levels, 2,000 pairs | 0.9450 | 0.9450 (0 / 0, p 1); level diff +0.00 |
+| Attribution, 36 members | | every difference `appended` (35 members) or identical (Spiritomb: no threat to block); 0 defects |
+| Dead moves in extras | 56 | 56 (all with a filler reason) |
+| Generation, B2 at Lv 47 | 1.6 s members, 7.0 s team | 1.7 s, 7.4 s (SC-006: at most 10 s) |
+
+**Gate (FR-010): pass.** Docs: README (items bullet names the berries; 029 block with the Principle VII statement and the partial
+model of FR-012), FUTURE-FEATURES section 0, RUN-STATE.

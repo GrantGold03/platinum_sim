@@ -64,10 +64,10 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 5: User Story 3 - Measured on both codes (Priority: P3)
 
-- [ ] T011 [US3] Branch side alone: `uv run python specs/029-h4-resist-berries/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/029-evidence/acceptance.txt 2> runs/029-evidence/acceptance.err; echo exit=$?`; copy evidence
-- [ ] T012 [US3] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect or a non-identical identity row: no merge, record
+- [x] T011 [US3] Branch side alone: `uv run python specs/029-h4-resist-berries/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/029-evidence/acceptance.txt 2> runs/029-evidence/acceptance.err; echo exit=$?`; copy evidence
+- [x] T012 [US3] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect or a non-identical identity row: no merge, record
       and stop at the report; else continue
-- [ ] T013 [US3] Docs: validation log (player check, acceptance table, which members took which berry); `README.md` (029 block with the
+- [x] T013 [US3] Docs: validation log (player check, acceptance table, which members took which berry); `README.md` (029 block with the
       Principle VII measurement statement and the partial-model note of FR-012; the items bullet names the berries); `FUTURE-FEATURES.md` section 0; `RUN-STATE.md`; Commit 4
       `feat(029): acceptance and player check; docs`; push
 
