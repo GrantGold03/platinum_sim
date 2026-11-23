@@ -10,14 +10,14 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/029-h4-resist-berries/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
+- [x] T001 Start `specs/029-h4-resist-berries/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
       main -- src sim tests pyproject.toml` empty) and adapt 028's scripts into `specs/029-h4-resist-berries/scripts/`: `acceptance.py`
       (`runs/029-evidence`, identity seed `029-ident`, `NEW_ITEMS` = the 17 resist berry keys, holders reported per winner),
       `attribution.py` (028's, the appended rule generalised: an appended-items list may only gain resist berries at its end, after
       `shell_bell`, cause `appended`), `equal_levels.py` (master `029-equal|B2`), `hand_check.py` (each B2 member's berry ranking and
       appended items), `make_check_team.py` (the pre-feature B2 winner with the top-ranked berry on the member whose top berry blocks the
       most, replacing its item; validated; written to `runs/029-evidence/teams/b2-berry.json`; the unmodified team to `b2-plain.json`)
-- [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/029-h4-resist-berries/scripts/acceptance.py --side main --workers 16 > runs/029-evidence/acceptance-main.txt 2> runs/029-evidence/acceptance-main.err; echo exit=$?`;
+- [x] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/029-h4-resist-berries/scripts/acceptance.py --side main --workers 16 > runs/029-evidence/acceptance-main.txt 2> runs/029-evidence/acceptance-main.err; echo exit=$?`;
       copy outputs and the snapshot to `evidence/pre/`; log; Commit 1 `docs(029): pre-feature evidence and scripts`; push
 
 ## Phase 2: Foundational
