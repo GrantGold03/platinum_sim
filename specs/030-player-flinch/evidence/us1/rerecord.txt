@@ -1,0 +1,57 @@
+1/40 lost   5 battles
+2/40 cleared 5 battles
+3/40 cleared 5 battles
+4/40 lost   5 battles
+5/40 cleared 5 battles
+6/40 cleared 5 battles
+7/40 cleared 5 battles
+8/40 cleared 5 battles
+9/40 cleared 5 battles
+10/40 cleared 5 battles
+11/40 lost   5 battles
+12/40 cleared 5 battles
+13/40 cleared 5 battles
+14/40 cleared 5 battles
+15/40 cleared 5 battles
+16/40 cleared 5 battles
+17/40 cleared 5 battles
+18/40 cleared 5 battles
+19/40 cleared 5 battles
+20/40 lost   5 battles
+21/40 cleared 5 battles
+22/40 cleared 5 battles
+23/40 cleared 5 battles
+24/40 cleared 5 battles
+25/40 cleared 5 battles
+26/40 cleared 5 battles
+27/40 cleared 5 battles
+28/40 cleared 5 battles
+29/40 cleared 5 battles
+30/40 cleared 5 battles
+31/40 cleared 5 battles
+32/40 cleared 5 battles
+33/40 cleared 5 battles
+34/40 cleared 5 battles
+35/40 cleared 5 battles
+36/40 cleared 5 battles
+37/40 cleared 5 battles
+38/40 cleared 5 battles
+39/40 cleared 5 battles
+40/40 cleared 5 battles
+bench: recorded expectimax2-v4 into sim/test/replay_prof_a.json
+policy               expectimax2-v4
+set                  block a, n 20, teams bench,ref, trainers aaron,bertha,flint,lucian,cynthia
+gauntlets / cleared  40 / 36
+battles / turns      200 / 2676
+wall                 21.123 s
+gauntlets/s          1.8936
+decisions            2852
+ms/decision          5.964
+AI calls/decision    18.12
+AI draws             348933
+interpreter steps    6637394
+interpreter dispatches 501674
+CHECK mode           off
+digest_full          1b5acef8c5e8c3fb289f2245edb4120d583ac862bd6bbb5ce7ed041e269312a9
+digest_logs          c634cf5d2af9ce01610684260cd9e43fc3090c665df8425dd506569a8d83a6a7
+sim_code_hash        sha256:015992ec7660bd11bd1ead36fabcfbacdd1194610bfcb3036e4e74105d810c44

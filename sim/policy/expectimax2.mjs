@@ -151,8 +151,12 @@
 //   - Every other status move (weather, hazards, Taunt, Encore, Substitute, Baton Pass, Trick
 //     Room, confusion, Leech Seed, ...) is modelled as having NO effect: scored conservatively,
 //     so the policy only picks one when nothing else is better.
-//   - Secondary effect chances of damaging moves (burn 10%, flinch, stat drops on the target,
-//     confusion) are ignored. Confusion, infatuation, flinch are not modelled.
+//   - Secondary effect chances of damaging moves (burn 10%, stat drops on the target, confusion) are
+//     ignored. Confusion and infatuation are not modelled. Flinch is modelled in v4 only (030; off in v1/v2
+//     and with `expectimax2-v4?flinch=0`): a landing flinch move whose target still moves this turn flinches
+//     it with the move's chance (x2 Serene Grace; not through a substitute or Inner Focus unless Mold
+//     Breaker); the flinched Pokemon loses its move, Steadfast +1 Speed; Fake Out fails after its user's
+//     first turn out (activeTurns > 1). No flinch is considered when the flinch move's user moves second (owner's rule).
 //   - Weather never changes inside the search (Sunny Day / Sandstorm / Sand Stream have no
 //     modelled effect); weather turns do not expire.
 //   - Entry hazards, Pursuit, U-turn's switch, Baton Pass, Roar are not modelled.
@@ -202,7 +206,7 @@ export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 // (p 0.0065) and is excluded, so the beam stays 2. The combination 4 / 1 / 2 / 0.05 passed on all four teams
 // (deficits 0.3 to 1.05 points, p 0.33 to 0.71, none supported) at about 1.55x v2 in the pool.
 export const EXPECTIMAX2_V4 = 'expectimax2-v4';
-export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05 });
+export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05, flinch: true }); // 030: flinch in v4 only
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0, floored: 0 }; // speedInfo: 017 calls; floored: 018 leaf-valued branches
@@ -560,6 +564,30 @@ function damageTable(X, S, u, t, rec) {
   return d;
 }
 
+// 030: the move effects that can flinch (decomp BATTLE_EFFECT_*; all single-hit moves).
+const FLINCH_EFFECTS = new Set(['FLINCH_HIT', 'FLINCH_BURN_HIT', 'FLINCH_FREEZE_HIT', 'FLINCH_PARALYZE_HIT',
+  'FLINCH_DOUBLE_DAMAGE_FLY_OR_BOUNCE', 'FLINCH_MINIMIZE_DOUBLE_HIT', 'CHARGE_TURN_HIGH_CRIT_FLINCH', 'ALWAYS_FLINCH_FIRST_TURN_ONLY']);
+
+// 030: the chance that this landing hit flinches its target (subscript_flinch_mon.s; battle_script.c:8369 Serene
+// Grace). Zero unless the target still moves this turn (foeMovesLater: the owner's rule, a Pokemon that has moved
+// cannot be flinched), survived, is not behind a substitute and lacks Inner Focus (Mold Breaker gets through).
+function flinchChance(X, S, side, rec, e, foeMovesLater) {
+  if (!X.opts.flinch || !foeMovesLater || !FLINCH_EFFECTS.has(e)) return 0;
+  const u = activeOf(S, side), t = activeOf(S, 1 - side);
+  if (!u || !t || t.hp <= 0) return 0;
+  if (!t.fresh && t.ref.volatiles && t.ref.volatiles.substitute) return 0;
+  const ua = staticInfo(X, u).ability;
+  if (staticInfo(X, t).ability === 'ABILITY_INNER_FOCUS' && ua !== 'ABILITY_MOLD_BREAKER') return 0;
+  return Math.min(100, (rec.effect_chance || 0) * (ua === 'ABILITY_SERENE_GRACE' ? 2 : 1)) / 100;
+}
+
+// 030: a flinched Pokemon loses its move (battle_controller_player.c:2528); Steadfast +1 Speed (subscript_flinched.s).
+function flinchStop(X, u) {
+  u.flinched = false;
+  u.lastMoveOk = false;
+  if (staticInfo(X, u).ability === 'ABILITY_STEADFAST') u.boosts.spe = clampStage(u.boosts.spe + 1);
+}
+
 const HITS = { MULTI_HIT: [[2, 3 / 8], [3, 3 / 8], [4, 1 / 8], [5, 1 / 8]], HIT_TWICE: [[2, 1]], POISON_MULTI_HIT: [[2, 1]] };
 
 // 029: a type-resist berry (HOLD_EFFECT_WEAKEN_SE_<TYPE>; FIGHTING is spelled FIGHT) halves a super-effective hit of its type,
@@ -707,12 +735,16 @@ function doMove(X, br, side, act, foeAct, foeMovesLater) {
     u.slp -= staticInfo(X, u).ability === 'ABILITY_EARLY_BIRD' ? 2 : 1;
     if (u.slp > 0) { u.lastMoveOk = false; return [br]; }
     u.status = ''; u.slp = 0;
+    if (u.flinched) { flinchStop(X, u); return [br]; } // 030: the game checks flinch after sleep
     pre.push(br);
   } else if (u.status === 'frz') {
     const thaw = { p: br.p * 0.2, S: cloneState(S) };
     activeOf(thaw.S, side).status = '';
     br.p *= 0.8;
     return [br, ...doMove(X, thaw, side, act, foeAct, foeMovesLater)];
+  } else if (u.flinched) { // 030: after sleep and freeze, before paralysis (the game's status-check order)
+    flinchStop(X, u);
+    return [br];
   } else if (u.status === 'par') {
     const moves = { p: br.p * 0.75, S: cloneState(S) };
     br.p *= 0.25;
@@ -744,6 +776,9 @@ function execMove(X, br, side, act, foeAct, foeMovesLater) {
     return [br];
   }
   u.charging = -1;
+  // 030: Fake Out works only on its user's first turn out (battle_lib.c:3558). Showdown counts activeTurns at the start of
+  // each turn (a lead's first decision reads 1; a replacement reads 0 or 1), and endOfTurn here adds 1: more than 1 = a later turn.
+  if (e === 'ALWAYS_FLINCH_FIRST_TURN_ONLY' && X.opts.flinch && u.activeTurns > 1) { u.lastMoveOk = false; return [br]; }
   if (rec.category === 'CLASS_STATUS') return statusMove(X, br, side, act, e, wasProtecting, foeMovesLater);
   if (!t || t.hp <= 0) { u.lastMoveOk = false; return [br]; }
   if (t.protecting && rec.flags.includes('MOVE_FLAG_CAN_PROTECT')) { u.lastMoveOk = false; return [br]; }
@@ -770,6 +805,12 @@ function execMove(X, br, side, act, foeAct, foeMovesLater) {
     const last = i === outcomes.length - 1;
     const b = last ? { p: br.p * hc * o.p, S } : { p: br.p * hc * o.p, S: cloneState(S) };
     applyHit(X, b.S, side, rec, e, o.dmg, o.berry);
+    const pf = o.dmg > 0 ? flinchChance(X, b.S, side, rec, e, foeMovesLater) : 0; // 030
+    if (pf > 0) {
+      if (pf < 1) out.push(...selfKO(X, { p: b.p * (1 - pf), S: cloneState(b.S) }, side, e));
+      b.p *= pf;
+      activeOf(b.S, 1 - side).flinched = true;
+    }
     out.push(...selfKO(X, b, side, e));
   });
   return out;
@@ -893,6 +934,7 @@ function endOfTurn(X, S) {
       if (m.yawn === 0 && !m.status && m.hp > 0) { m.status = 'slp'; m.slp = 3; }
     }
     m.protecting = false;
+    m.flinched = false; // 030: flinch lasts the turn (battle_lib.c:2234)
     m.activeTurns++;
   }
   for (const sd of S.sides) {
@@ -1316,7 +1358,7 @@ export function scoreShift(ctx, opts, name, foeIdx) {
 }
 
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState, applyHit, damageOutcomes };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState, applyHit, damageOutcomes, flinchChance, moveAct };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {

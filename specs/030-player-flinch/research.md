@@ -55,7 +55,9 @@
 
 ## R6b. Where the model is on (analyze finding C1)
 
-- The replay test (`sim/test/replay.test.mjs`, fixture `replay_prof_a.json`) plays `expectimax2-v1` and `expectimax2-v2` only. The flinch
+- The replay test (`sim/test/replay.test.mjs`, fixture `replay_prof_a.json`) plays `expectimax2-v1`, `expectimax2-v2` and
+  `expectimax2-v4` (corrected at implementation; the analyze finding said v1 and v2 only, from the header comment). v1 and v2 stay
+  byte-identical; v4's entry is re-recorded, the fixture's own rule for an intended decision change. The flinch
   option is therefore off in the base options and on in `V4_OPTS` only (`flinch: true`), so v1 and v2 play exactly as today and the
   replay stays a real byte-identity check. For v4 itself: before any code change, `node sim/bench.mjs --policy expectimax2-v4` records
   a digest on `main` (T002); on the branch, `expectimax2-v4?flinch=0` must give the same digest (T006).

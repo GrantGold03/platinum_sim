@@ -23,7 +23,7 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 2: Foundational
 
-- [ ] T003 Engine-versus-game checks (FR-005, R4) in `sim/test/flinch.test.mjs` part 1 (029's pattern: `leagueBattle`, `turn()` with
+- [x] T003 Engine-versus-game checks (FR-005, R4) in `sim/test/flinch.test.mjs` part 1 (029's pattern: `leagueBattle`, `turn()` with
       duplicate lines dropped, seeds chosen so the roll succeeds): (a) a faster flinch move flinches a slower target (`|cant|...|flinch`,
       no move by the target); (b) a slower flinch move never flinches; (c) Inner Focus blocks; (d) a substitute blocks; (e) Steadfast
       raises Speed one stage; (f) Fake Out fails on its user's second turn out and works on the first; record each against the decomp
@@ -31,23 +31,23 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 3: User Story 1 - The battle player knows flinch (Priority: P1) 🎯 MVP
 
-- [ ] T004 [US1] `sim/policy/expectimax2.mjs`: `FLINCH_EFFECTS` (R2: the eight effect names); in `execMove`, for each landing outcome
+- [x] T004 [US1] `sim/policy/expectimax2.mjs`: `FLINCH_EFFECTS` (R2: the eight effect names); in `execMove`, for each landing outcome
       when `X.opts.flinch !== false`, `foeMovesLater` is true, the move's effect is in `FLINCH_EFFECTS` and is not on a charge turn, the
       target survives, has no substitute (`!t.fresh && t.ref.volatiles.substitute`) and lacks Inner Focus (unless the user has Mold
       Breaker, spec FR-001); the option is on in `V4_OPTS` only (`flinch: true`), off in the base options so v1 and v2 are unchanged
       (spec FR-006): split the branch with p = min(1, `rec.effect_chance` x (2 if the user has Serene Grace)) / 100 into a flinched copy
       (`t.flinched = true`) and the rest; data-model: "`flinched` (boolean, false by default; set only within a turn by a landing flinch
       move whose target moves later; cleared when the target's move is lost, and at end of turn)"
-- [ ] T005 [US1] `sim/policy/expectimax2.mjs`: in `doMove`, after the sleep and freeze checks and before paralysis (the game's status-
+- [x] T005 [US1] `sim/policy/expectimax2.mjs`: in `doMove`, after the sleep and freeze checks and before paralysis (the game's status-
       check order): a flinched Pokemon clears the mark, sets `lastMoveOk = false`, gains +1 Speed stage with Steadfast (`clampStage`),
       and loses its move; `endOfTurn` clears any mark; Fake Out (`ALWAYS_FLINCH_FIRST_TURN_ONLY`) fails when its user has been out a full
       turn (`activeTurns > 0`, R3; confirm against T003 (f); the game's rule decides, an engine difference is ledgered, FR-004); the header's "flinch not modelled" line updated; `sim/gauntlet.mjs`: v4 knob
       `flinch=0|1` (029's pattern)
-- [ ] T006 [US1] `sim/test/flinch.test.mjs` part 2 (the model's cases, spec US1 scenarios 1 to 8): faster foe's Air Slash: a flinched
+- [x] T006 [US1] `sim/test/flinch.test.mjs` part 2 (the model's cases, spec US1 scenarios 1 to 8): faster foe's Air Slash: a flinched
       branch with p 0.30 where the member's move does not happen; slower foe: no flinched branch at all (FR-012); the player's faster
       member: the foe flinches; substitute, Inner Focus, already moved: none; Serene Grace doubles; Steadfast +1 Speed; Fake Out first
-      turn only; knob off: outcome lists identical to today's; then the Node suite (the replay test, v1 and v2, green and never
-      re-recorded); the v4 bench digest of `expectimax2-v4?flinch=0` equal to T002's `main` digest (FR-006, SC-002); greedy-v1
+      turn only; knob off: outcome lists identical to today's; then the Node suite (the replay test's v1 and v2 entries green and never
+      re-recorded; its v4 entry re-recorded, corrected at implementation); the v4 bench digest of `expectimax2-v4?flinch=0` equal to T002's `main` digest (FR-006, SC-002); greedy-v1
       unchanged; record; Commit 2 `feat(030): the player models flinch; v4 knob; engine checks`; push
 
 ## Phase 4: User Story 2 - The change is measured reference-first (Priority: P2)

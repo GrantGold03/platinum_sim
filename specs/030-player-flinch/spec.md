@@ -130,8 +130,9 @@ snapshot.
   decides: if the engine differs, the difference is ledgered (FR-005) and the player models the game.
 - **FR-005**: The battle engine's flinch handling MUST be checked against the game for each condition in FR-001 to FR-004; each
   difference MUST be recorded in the divergence ledger with its effect on the League.
-- **FR-006**: The flinch model MUST be on only in the v4 player; the older v1 and v2 players MUST play exactly as today (the replay
-  test, which plays v1 and v2, stays byte-identical). The v4 player with the switch off MUST play exactly as `main`'s v4: a v4 bench
+- **FR-006**: The flinch model MUST be on only in the v4 player; the older v1 and v2 players MUST play exactly as today (their replay
+  fixture entries stay byte-identical). The replay fixture also holds v4 (corrected at implementation: analyze finding C1 said v1 and
+  v2 only, from the test file's header comment); its v4 entry is re-recorded, because flinch intentionally changes v4's decisions. The v4 player with the switch off MUST play exactly as `main`'s v4: a v4 bench
   digest recorded on `main` before any code change MUST equal the branch's digest with the switch off.
 - **FR-007**: The greedy player MUST stay unchanged.
 - **FR-008**: The change MUST be measured reference-first (Story 2) before acceptance; a statistically supported loss on any of the
@@ -153,7 +154,7 @@ snapshot.
 
 - **SC-001**: In constructed positions, the player's expected outcome includes a lost move with exactly the game's chance (10%, 20%,
   30% or 100% for Fake Out, doubled for Serene Grace), and none when the target has moved, is behind a substitute or has Inner Focus.
-- **SC-002**: The replay test (v1, v2) and the 028/029 player tests pass unchanged; the v4 bench digest with the switch off equals
+- **SC-002**: The replay test's v1 and v2 entries and the 028/029 player tests pass unchanged (the v4 entry re-recorded); the v4 bench digest with the switch off equals
   `main`'s v4 digest.
 - **SC-003**: On each of the three teams, 2,000 paired gauntlets show no supported loss for the flinch model; the per-team clear
   rates and their difference are reported.

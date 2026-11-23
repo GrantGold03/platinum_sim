@@ -19,7 +19,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { DIVERGENCES_PATH, GENERATED_DIR, loadGameData } from './gamedata.mjs';
-import { OPPONENT_POLICIES, PLAYER_POLICIES, RequestError, runGauntlet } from './gauntlet.mjs';
+import { OPPONENT_POLICIES, PLAYER_POLICIES, RequestError, playerPolicyFor, runGauntlet } from './gauntlet.mjs';
 import { STATS } from './policy/expectimax2.mjs';
 import { DECOMP_AI, stateFor } from './ai/opponent.mjs';
 import { CHECK_STATS } from './ai/adapter.mjs';
@@ -76,7 +76,7 @@ let recSeq = 0;
  * the opponent's j-th choice of the gauntlet (battles concatenated; 0 baseline before its state exists).
  */
 export function runRecorded(gd, req) {
-  const player = PLAYER_POLICIES.get(req.player_policy ?? 'placeholder-default');
+  const player = playerPolicyFor(req.player_policy ?? 'placeholder-default'); // 030: also expectimax2-v4 candidates
   if (!player) throw new RequestError('internal', `unknown player_policy ${req.player_policy}`);
   const opp = OPPONENT_POLICIES.get(req.opponent_policy ?? DECOMP_AI);
   if (!opp) throw new RequestError('internal', `unknown opponent_policy ${req.opponent_policy}`);
@@ -157,6 +157,7 @@ const statsDelta = (a, b) => Object.fromEntries(Object.keys(b).map((k) => [k, b[
 
 /** Runs a set and returns the report object (contracts/bench-tool.md "JSON output") plus the records. */
 export function runBench(gd, { policy = 'expectimax2-v2', block = 'a', n = 20, teams = ['bench', 'ref'], trainers = LEAGUE } = {}, onGauntlet) {
+  playerPolicyFor(policy); // 030: accepts v4 candidates; throws for an unknown name
   if (!PLAYER_POLICIES.has(policy)) throw new RequestError('internal', `unknown player_policy ${policy} (known: ${[...PLAYER_POLICIES.keys()].filter((k) => !k.includes('+rec'))})`);
   const reqs = benchRequests({ block, n, teams, trainers, policy });
   const teamOf = reqs.map((r) => r.seed.split('-')[2]);

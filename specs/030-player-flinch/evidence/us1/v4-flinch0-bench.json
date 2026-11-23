@@ -1,0 +1,46 @@
+{
+ "policy": "expectimax2-v4?flinch=0",
+ "block": "a",
+ "n": 20,
+ "teams": [
+  "bench",
+  "ref"
+ ],
+ "trainers": [
+  "aaron",
+  "bertha",
+  "flint",
+  "lucian",
+  "cynthia"
+ ],
+ "gauntlets": 40,
+ "cleared": 37,
+ "battles": 200,
+ "turns": 2667,
+ "wall_s": 20.666,
+ "gauntlets_per_s": 1.9356,
+ "decisions": 2853,
+ "ms_per_decision": 5.793,
+ "ai_calls_per_decision": 17.77,
+ "ai_draws": 343327,
+ "interp_steps": 6526653,
+ "interp_dispatches": 494991,
+ "check_stats": null,
+ "digest_full": "dd5876d44c612f991986f8577d3f6bd9b72679b3ecd100b462607c750d83a379",
+ "digest_logs": "624cbb4c5220d58621890b46c50c622626612d273b290002b923de853c284840",
+ "stats": {
+  "decisions": 2853,
+  "aiCalls": 50701,
+  "turns": 185610,
+  "leaves": 594844,
+  "ms": 16527.113935999918,
+  "aiMs": 7293.332533999813,
+  "viewMs": 1099.3530019998857,
+  "aiDraws": 343327,
+  "speedInfo": 46789,
+  "floored": 8259
+ },
+ "sim_code_hash": "sha256:015992ec7660bd11bd1ead36fabcfbacdd1194610bfcb3036e4e74105d810c44",
+ "node": "v22.22.1",
+ "date": "2026-11-23T21:10:46.010Z"
+}

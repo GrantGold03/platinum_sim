@@ -1,0 +1,2499 @@
+TAP version 13
+# Subtest: constants: generated enums number from 0 in file order (positive controls)
+ok 1 - constants: generated enums number from 0 in file order (positive controls)
+  ---
+  duration_ms: 3.930328
+  type: 'test'
+  ...
+# Subtest: decomp move/item/species tables
+ok 2 - decomp move/item/species tables
+  ---
+  duration_ms: 81.011913
+  type: 'test'
+  ...
+# Subtest: every decomp move/ability matches Showdown by num; every Showdown-known item too
+ok 3 - every decomp move/ability matches Showdown by num; every Showdown-known item too
+  ---
+  duration_ms: 705.283358
+  type: 'test'
+  ...
+# Subtest: battler ids, BattleMon fields and turn counters track Showdown
+ok 4 - battler ids, BattleMon fields and turn counters track Showdown
+  ---
+  duration_ms: 63.985476
+  type: 'test'
+  ...
+# Subtest: Showdown status and volatiles map to condition.h bits
+ok 5 - Showdown status and volatiles map to condition.h bits
+  ---
+  duration_ms: 4.584253
+  type: 'test'
+  ...
+# Subtest: 015 damageInput: deep-equals fromShowdown for every pair and move; cached within a decision; fresh after beginDecision
+ok 6 - 015 damageInput: deep-equals fromShowdown for every pair and move; cached within a decision; fresh after beginDecision
+  ---
+  duration_ms: 28.198803
+  type: 'test'
+  ...
+# Subtest: 015 freeze guard: with PLATSIM_AI_FREEZE=1 a write to a cached struct throws TypeError; without it, it does not (control)
+ok 7 - 015 freeze guard: with PLATSIM_AI_FREEZE=1 a write to a cached struct throws TypeError; without it, it does not (control)
+  ---
+  duration_ms: 2945.811328
+  type: 'test'
+  ...
+# Subtest: 016 preVariance / typeChartPlan: equal to the direct computation on the cached inputs; memoised per decision; dropped by beginDecision
+ok 8 - 016 preVariance / typeChartPlan: equal to the direct computation on the cached inputs; memoised per decision; dropped by beginDecision
+  ---
+  duration_ms: 7.783277
+  type: 'test'
+  ...
+# Subtest: 016 CHECK mode: one Aaron battle per policy compares every memo hit (checks > 0, 0 mismatches); a corrupted memo is reported; off by default
+ok 9 - 016 CHECK mode: one Aaron battle per policy compares every memo hit (checks > 0, 0 mismatches); a corrupted memo is reported; off by default
+  ---
+  duration_ms: 17341.651205
+  type: 'test'
+  ...
+# Subtest: 015 Constants.get fast path: a cold instance and a warmed one agree on every symbol; errors unchanged
+ok 10 - 015 Constants.get fast path: a cold instance and a warmed one agree on every symbol; errors unchanged
+  ---
+  duration_ms: 24.398895
+  type: 'test'
+  ...
+# Subtest: 016 shared mappers: shared == fresh over every engine identifier the decomp knows; same errors; one set per dex
+ok 11 - 016 shared mappers: shared == fresh over every engine identifier the decomp knows; same errors; one set per dex
+  ---
+  duration_ms: 57.012916
+  type: 'test'
+  ...
+# Subtest: 017 CHECK covers the battler and field structs: a corrupted struct or a changed side is reported; off by default
+ok 12 - 017 CHECK covers the battler and field structs: a corrupted struct or a changed side is reported; off by default
+  ---
+  duration_ms: 6024.241974
+  type: 'test'
+  ...
+# Subtest: 017 speedPair memo: built once, hit after, dropped by beginDecision; frozen under FREEZE; compared under CHECK
+ok 13 - 017 speedPair memo: built once, hit after, dropped by beginDecision; frozen under FREEZE; compared under CHECK
+  ---
+  duration_ms: 5559.311563
+  type: 'test'
+  ...
+# Subtest: AIRng is BattleSystem_RandNext: u32 LCG *1103515245 +24691, returns state/65536 (battle_system.c:1308-1312, math_util.h:8-10)
+ok 14 - AIRng is BattleSystem_RandNext: u32 LCG *1103515245 +24691, returns state/65536 (battle_system.c:1308-1312, math_util.h:8-10)
+  ---
+  duration_ms: 18.669943
+  type: 'test'
+  ...
+# Subtest: AI seed derivation: first 4 bytes of sha256(`${battle.prngSeed}|trainer-ai`), deterministic, seed-sensitive
+ok 15 - AI seed derivation: first 4 bytes of sha256(`${battle.prngSeed}|trainer-ai`), deterministic, seed-sensitive
+  ---
+  duration_ms: 0.637043
+  type: 'test'
+  ...
+# Subtest: thinkingMaskOf: League flags from trainers.json -> FlagTable bits (Lucian adds SETUP_FIRST_TURN, bit 3)
+ok 16 - thinkingMaskOf: League flags from trainers.json -> FlagTable bits (Lucian adds SETUP_FIRST_TURN, bit 3)
+  ---
+  duration_ms: 0.643386
+  type: 'test'
+  ...
+# Subtest: BL tables parsed from battle_lib.c (gravity / heal block move lists)
+ok 17 - BL tables parsed from battle_lib.c (gravity / heal block move lists)
+  ---
+  duration_ms: 0.419906
+  type: 'test'
+  ...
+# Subtest: CheckInvalidMoves (BL:2255-2318): 0 PP, Taunt (power 0 moves), Encore
+ok 18 - CheckInvalidMoves (BL:2255-2318): 0 PP, Taunt (power 0 moves), Encore
+  ---
+  duration_ms: 157.94341
+  type: 'test'
+  ...
+# Subtest: TrainerAI_Init (TAI:211-256): scores 100, invalid -> 0, four rolls 100 - RandNext % 16 in slot order
+ok 19 - TrainerAI_Init (TAI:211-256): scores 100, invalid -> 0, four rolls 100 - RandNext % 16 in slot order
+  ---
+  duration_ms: 10.850206
+  type: 'test'
+  ...
+# Subtest: TrainerAI_RecordLastMove (TAI:2705-2717): appends movePrevByBattler[defender] once
+ok 20 - TrainerAI_RecordLastMove (TAI:2705-2717): appends movePrevByBattler[defender] once
+  ---
+  duration_ms: 10.921143
+  type: 'test'
+  ...
+# Subtest: TrainerAI_MainSingles tie break: one RandNext % numMaxScoreMoves over the tied slots (TAI:311-336)
+ok 21 - TrainerAI_MainSingles tie break: one RandNext % numMaxScoreMoves over the tied slots (TAI:311-336)
+  ---
+  duration_ms: 29.224843
+  type: 'test'
+  ...
+# Subtest: s8 moveScore wrap (trap 1) is real in the handler, and unreachable for the League flags
+ok 22 - s8 moveScore wrap (trap 1) is real in the handler, and unreachable for the League flags
+  ---
+  duration_ms: 19.023031
+  type: 'test'
+  ...
+# Subtest: full decision draws in C order: Init 4, script draws, then 1 tie-break draw
+ok 23 - full decision draws in C order: Init 4, script draws, then 1 tie-break draw
+  ---
+  duration_ms: 11.521927
+  type: 'test'
+  ...
+# Subtest: battler.mjs exports exactly the 31 "battler" opcodes of OPCODES.md, all wired into HANDLERS
+ok 24 - battler.mjs exports exactly the 31 "battler" opcodes of OPCODES.md, all wired into HANDLERS
+  ---
+  duration_ms: 3.919477
+  type: 'test'
+  ...
+# Subtest: IfHPPercent*: curHP*100/maxHP truncates (u32); boundary at 50% after Super Fang
+ok 25 - IfHPPercent*: curHP*100/maxHP truncates (u32); boundary at 50% after Super Fang
+  ---
+  duration_ms: 134.154436
+  type: 'test'
+  ...
+# Subtest: IfStatus / IfNotStatus read the defender status mask after Thunder Wave
+ok 26 - IfStatus / IfNotStatus read the defender status mask after Thunder Wave
+  ---
+  duration_ms: 8.863411
+  type: 'test'
+  ...
+# Subtest: IfVolatileStatus / IfNotVolatileStatus: Focus Energy, and Torment (bit 31, negative int32 mask)
+ok 27 - IfVolatileStatus / IfNotVolatileStatus: Focus Energy, and Torment (bit 31, negative int32 mask)
+  ---
+  duration_ms: 14.102532
+  type: 'test'
+  ...
+# Subtest: IfMoveEffect / IfNotMoveEffect: Leech Seed on the defender
+ok 28 - IfMoveEffect / IfNotMoveEffect: Leech Seed on the defender
+  ---
+  duration_ms: 20.009045
+  type: 'test'
+  ...
+# Subtest: LoadTypeFrom: battler types, table move type (Hidden Power stays Normal), partner in singles
+ok 29 - LoadTypeFrom: battler types, table move type (Hidden Power stays Normal), partner in singles
+  ---
+  duration_ms: 4.410219
+  type: 'test'
+  ...
+# Subtest: IfSpeedCompareEqualTo: faster/slower without RNG, equal speed draws one RandNext
+ok 30 - IfSpeedCompareEqualTo: faster/slower without RNG, equal speed draws one RandNext
+  ---
+  duration_ms: 15.969116
+  type: 'test'
+  ...
+# Subtest: IfSpeedCompareEqualTo: Quick Claw uses speedRand[battler] % (100 / 20) and needs it supplied
+ok 31 - IfSpeedCompareEqualTo: Quick Claw uses speedRand[battler] % (100 / 20) and needs it supplied
+  ---
+  duration_ms: 2.863539
+  type: 'test'
+  ...
+# Subtest: LoadBattlerAbility: attacker real; defender from AI memory, trap abilities, or a coin flip
+ok 32 - LoadBattlerAbility: attacker real; defender from AI memory, trap abilities, or a coin flip
+  ---
+  duration_ms: 4.559385
+  type: 'test'
+  ...
+# Subtest: LoadBattlerAbility: Arena Trap is read from the truth; a one-ability species draws nothing
+ok 33 - LoadBattlerAbility: Arena Trap is read from the truth; a one-ability species draws nothing
+  ---
+  duration_ms: 3.43656
+  type: 'test'
+  ...
+# Subtest: CheckBattlerAbility: AI_HAVE / AI_NOT_HAVE / AI_UNKNOWN without RNG
+ok 34 - CheckBattlerAbility: AI_HAVE / AI_NOT_HAVE / AI_UNKNOWN without RNG
+  ---
+  duration_ms: 6.921752
+  type: 'test'
+  ...
+# Subtest: IfStatStage*: stages 0..12 in BATTLE_STAT order (SPEED is index 3)
+ok 35 - IfStatStage*: stages 0..12 in BATTLE_STAT order (SPEED is index 3)
+  ---
+  duration_ms: 13.350047
+  type: 'test'
+  ...
+# Subtest: SumPositiveStatStages / DiffStatStages
+ok 36 - SumPositiveStatStages / DiffStatStages
+  ---
+  duration_ms: 18.414873
+  type: 'test'
+  ...
+# Subtest: IfBattlerUnderEffect: Disable and Encore turn counters
+ok 37 - IfBattlerUnderEffect: Disable and Encore turn counters
+  ---
+  duration_ms: 6.000894
+  type: 'test'
+  ...
+# Subtest: LoadHeldItem (truth) vs LoadHeldItemEffect / IfHeldItemEqualTo (AI memory for the player)
+ok 38 - LoadHeldItem (truth) vs LoadHeldItemEffect / IfHeldItemEqualTo (AI memory for the player)
+  ---
+  duration_ms: 2.305707
+  type: 'test'
+  ...
+# Subtest: LoadFlingPower: item fling power, 0 under Embargo
+ok 39 - LoadFlingPower: item fling power, 0 under Embargo
+  ---
+  duration_ms: 3.520019
+  type: 'test'
+  ...
+# Subtest: LoadGender / LoadStockpileCount / LoadRecycleItem
+ok 40 - LoadGender / LoadStockpileCount / LoadRecycleItem
+  ---
+  duration_ms: 13.107862
+  type: 'test'
+  ...
+# Subtest: LoadProtectChain: protectSuccessTurns only while the last move is Protect/Detect/Endure
+ok 41 - LoadProtectChain: protectSuccessTurns only while the last move is Protect/Detect/Endure
+  ---
+  duration_ms: 15.70002
+  type: 'test'
+  ...
+# Subtest: IfLevel / IfTargetIsNotTaunted
+ok 42 - IfLevel / IfTargetIsNotTaunted
+  ---
+  duration_ms: 22.061447
+  type: 'test'
+  ...
+# Subtest: 017 speed pair: memo == direct over >= 1,000 real views x three caller shapes (result, monSpeedValues, draws); one build per view; positive control
+ok 43 - 017 speed pair: memo == direct over >= 1,000 real views x three caller shapes (result, monSpeedValues, draws); one build per view; positive control
+  ---
+  duration_ms: 4817.74026
+  type: 'test'
+  ...
+# speed pair: 1001 views (91 fainted-active), 3003 comparisons, 0 differences; coverage {"stages":119,"par":0,"speedItem":0,"quickClaw":0,"trickRoom":0,"weather":287,"fainted":137,"bothFainted":1,"ties":0,"draws":0}
+# Subtest: battle fixture stats (inputs to the hand arithmetic)
+ok 44 - battle fixture stats (inputs to the hand arithmetic)
+  ---
+  duration_ms: 716.033061
+  type: 'test'
+  ...
+# Subtest: tables parsed from the decomp (positive controls)
+ok 45 - tables parsed from the decomp (positive controls)
+  ---
+  duration_ms: 4.921462
+  type: 'test'
+  ...
+# Subtest: drawMoveDamageRolls: 100 - RandNext() % 16 for each of 4 slots (TAI:236-241)
+ok 46 - drawMoveDamageRolls: 100 - RandNext() % 16 for each of 4 slots (TAI:236-241)
+  ---
+  duration_ms: 0.334072
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: Explosion has a value but is excluded by CalcAllDamage (TAI:31-45, 2808-2836)
+ok 47 - TrainerAI_CalcDamage: Explosion has a value but is excluded by CalcAllDamage (TAI:31-45, 2808-2836)
+  ---
+  duration_ms: 9.761385
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: Hidden Power power/type from the IVs argument (TAI:2973-2993)
+ok 48 - TrainerAI_CalcDamage: Hidden Power power/type from the IVs argument (TAI:2973-2993)
+  ---
+  duration_ms: 5.490964
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: Hidden Power power is exact (sensitive to +-1 power)
+ok 49 - TrainerAI_CalcDamage: Hidden Power power is exact (sensitive to +-1 power)
+  ---
+  duration_ms: 4.114371
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: Gyro Ball uses monSpeedValues (TAI:2995-3003)
+ok 50 - TrainerAI_CalcDamage: Gyro Ball uses monSpeedValues (TAI:2995-3003)
+  ---
+  duration_ms: 6.663977
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: fixed damage ignores STAB/effectiveness but not immunity (TAI:3005-3016, 3093, 3104)
+ok 51 - TrainerAI_CalcDamage: fixed damage ignores STAB/effectiveness but not immunity (TAI:3005-3016, 3093, 3104)
+  ---
+  duration_ms: 5.591808
+  type: 'test'
+  ...
+# Subtest: TrainerAI_CalcDamage: Low Kick / Grass Knot power from defender weight (TAI:3055-3072)
+ok 52 - TrainerAI_CalcDamage: Low Kick / Grass Knot power from defender weight (TAI:3055-3072)
+  ---
+  duration_ms: 5.639189
+  type: 'test'
+  ...
+# Subtest: FlagMoveDamageScore (TAI:1012-1066), script.s:62
+ok 53 - FlagMoveDamageScore (TAI:1012-1066), script.s:62
+  ---
+  duration_ms: 2.899668
+  type: 'test'
+  ...
+# Subtest: FlagMoveDamageScore: a tie counts as highest ("no move does strictly more")
+ok 54 - FlagMoveDamageScore: a tie counts as highest ("no move does strictly more")
+  ---
+  duration_ms: 1.572389
+  type: 'test'
+  ...
+# Subtest: IfCurrentMoveKills (TAI:1525-1567), script.s:6358, kill check at low HP
+ok 55 - IfCurrentMoveKills (TAI:1525-1567), script.s:6358, kill check at low HP
+  ---
+  duration_ms: 2.040268
+  type: 'test'
+  ...
+# Subtest: IfCurrentMoveKills with ROLL_FOR_DAMAGE uses moveDamageRolls[moveSlot]
+ok 56 - IfCurrentMoveKills with ROLL_FOR_DAMAGE uses moveDamageRolls[moveSlot]
+  ---
+  duration_ms: 83.286622
+  type: 'test'
+  ...
+# Subtest: IfMoveEffectivenessEquals (TAI:1311-1346): BASE, IMMUNE, DOUBLE, mapped STAB*2 and STAB/2
+ok 57 - IfMoveEffectivenessEquals (TAI:1311-1346): BASE, IMMUNE, DOUBLE, mapped STAB*2 and STAB/2
+  ---
+  duration_ms: 5.266784
+  type: 'test'
+  ...
+# Subtest: IfPartyMemberDealsMoreDamage (TAI:2106-2174), script.s:5118
+ok 58 - IfPartyMemberDealsMoreDamage (TAI:2106-2174), script.s:5118
+  ---
+  duration_ms: 4.095084
+  type: 'test'
+  ...
+# Subtest: IfHasSuperEffectiveMove (TAI:2176-2185, AI_HasSuperEffectiveMove TAI:3560)
+ok 59 - IfHasSuperEffectiveMove (TAI:2176-2185, AI_HasSuperEffectiveMove TAI:3560)
+  ---
+  duration_ms: 2.307071
+  type: 'test'
+  ...
+# Subtest: IfBattlerDealsMoreDamage (TAI:2187-2241), script.s:5528: defender = AI_CONTEXT.defender (trap 4)
+ok 60 - IfBattlerDealsMoreDamage (TAI:2187-2241), script.s:5528: defender = AI_CONTEXT.defender (trap 4)
+  ---
+  duration_ms: 15.616971
+  type: 'test'
+  ...
+# Subtest: 015 cacheStats: builds per decision do not grow with the number of samples; hits do (positive control)
+ok 61 - 015 cacheStats: builds per decision do not grow with the number of samples; hits do (positive control)
+  ---
+  duration_ms: 2.201899
+  type: 'test'
+  ...
+# Subtest: 015 effectSet: equals names.some(K(n) === v) for every value; one hit and one miss per table; resolved once
+ok 62 - 015 effectSet: equals names.some(K(n) === v) for every value; one hit and one miss per table; resolved once
+  ---
+  duration_ms: 18.261839
+  type: 'test'
+  ...
+# Subtest: 016 preVariance per decision: builds independent of K, hits grow; values equal the by-hand TAI:3081-3109 computation
+ok 63 - 016 preVariance per decision: builds independent of K, hits grow; values equal the by-hand TAI:3081-3109 computation
+  ---
+  duration_ms: 3.017444
+  type: 'test'
+  ...
+# Subtest: flow.mjs exports exactly the OPCODES.md "flow" rows, all wired into HANDLERS
+ok 64 - flow.mjs exports exactly the OPCODES.md "flow" rows, all wired into HANDLERS
+  ---
+  duration_ms: 3.851467
+  type: 'test'
+  ...
+# Subtest: AddToMoveScore: s8 add, wrap past 127, clamp below 0 (TAI:576; trap 1)
+ok 65 - AddToMoveScore: s8 add, wrap past 127, clamp below 0 (TAI:576; trap 1)
+  ---
+  duration_ms: 0.836988
+  type: 'test'
+  ...
+# Subtest: IfLoadedLessThan (TAI:762)
+ok 66 - IfLoadedLessThan (TAI:762)
+  ---
+  duration_ms: 0.564344
+  type: 'test'
+  ...
+# Subtest: IfLoadedGreaterThan (TAI:774)
+ok 67 - IfLoadedGreaterThan (TAI:774)
+  ---
+  duration_ms: 0.498106
+  type: 'test'
+  ...
+# Subtest: IfLoadedEqualTo (TAI:786)
+ok 68 - IfLoadedEqualTo (TAI:786)
+  ---
+  duration_ms: 0.309965
+  type: 'test'
+  ...
+# Subtest: IfLoadedNotEqualTo (TAI:798)
+ok 69 - IfLoadedNotEqualTo (TAI:798)
+  ---
+  duration_ms: 0.296639
+  type: 'test'
+  ...
+# Subtest: IfLoadedMask (TAI:810)
+ok 70 - IfLoadedMask (TAI:810)
+  ---
+  duration_ms: 0.457409
+  type: 'test'
+  ...
+# Subtest: IfLoadedNotMask (TAI:822)
+ok 71 - IfLoadedNotMask (TAI:822)
+  ---
+  duration_ms: 0.301159
+  type: 'test'
+  ...
+# Subtest: IfLoadedinTable (TAI:858): scans prog.image to TABLE_END
+ok 72 - IfLoadedinTable (TAI:858): scans prog.image to TABLE_END
+  ---
+  duration_ms: 1.533585
+  type: 'test'
+  ...
+# Subtest: IfLoadedNotinTable (TAI:876): jump only when no entry matches
+ok 73 - IfLoadedNotinTable (TAI:876): jump only when no entry matches
+  ---
+  duration_ms: 0.722277
+  type: 'test'
+  ...
+# Subtest: IfTempEqualTo (TAI:1078)
+ok 74 - IfTempEqualTo (TAI:1078)
+  ---
+  duration_ms: 0.319583
+  type: 'test'
+  ...
+# Subtest: GoTo (TAI:2561)
+ok 75 - GoTo (TAI:2561)
+  ---
+  duration_ms: 0.346836
+  type: 'test'
+  ...
+# Subtest: PopOrEnd (TAI:2568): pop the return stack, else end this move
+ok 76 - PopOrEnd (TAI:2568): pop the return stack, else end this move
+  ---
+  duration_ms: 0.300216
+  type: 'test'
+  ...
+# Subtest: runSection: ScoreMinus10 (script.s:1591-1593) subtracts 10 and ends via PopOrEnd
+ok 77 - runSection: ScoreMinus10 (script.s:1591-1593) subtracts 10 and ends via PopOrEnd
+  ---
+  duration_ms: 0.327169
+  type: 'test'
+  ...
+# Subtest: all 14 misc opcodes from OPCODES.md are implemented in misc.mjs and reachable via HANDLERS
+ok 78 - all 14 misc opcodes from OPCODES.md are implemented in misc.mjs and reachable via HANDLERS
+  ---
+  duration_ms: 2.97308
+  type: 'test'
+  ...
+# Subtest: IfRandomLessThan (TAI:528): one u16 draw per run, jump iff draw % 256 < i
+ok 79 - IfRandomLessThan (TAI:528): one u16 draw per run, jump iff draw % 256 < i
+  ---
+  duration_ms: 848.992612
+  type: 'test'
+  ...
+# Subtest: IfSideCondition (TAI:732): side of AIScript_Battler, real Light Screen / Stealth Rock
+ok 80 - IfSideCondition (TAI:732): side of AIScript_Battler, real Light Screen / Stealth Rock
+  ---
+  duration_ms: 26.216756
+  type: 'test'
+  ...
+# Subtest: LoadTurnCount (TAI:931): calcTemp = totalTurns (0 on the first decision)
+ok 81 - LoadTurnCount (TAI:931): calcTemp = totalTurns (0 on the first decision)
+  ---
+  duration_ms: 10.602871
+  type: 'test'
+  ...
+# Subtest: CountAlivePartyBattlers (TAI:1126): non-active, HP != 0 party members
+ok 82 - CountAlivePartyBattlers (TAI:1126): non-active, HP != 0 party members
+  ---
+  duration_ms: 13.743352
+  type: 'test'
+  ...
+# Subtest: IfPartyMemberStatus (TAI:1348): statused, alive, non-active party member
+ok 83 - IfPartyMemberStatus (TAI:1348): statused, alive, non-active party member
+  ---
+  duration_ms: 29.145921
+  type: 'test'
+  ...
+# Subtest: LoadCurrentWeather (TAI:1414): real rain / sun / hail / sand, then precedence
+ok 84 - LoadCurrentWeather (TAI:1414): real rain / sun / hail / sand, then precedence
+  ---
+  duration_ms: 20.919443
+  type: 'test'
+  ...
+# Subtest: LoadIsFirstTurnInBattle (TAI:2480): !(fakeOutTurnNumber < totalTurns)
+ok 85 - LoadIsFirstTurnInBattle (TAI:2480): !(fakeOutTurnNumber < totalTurns)
+  ---
+  duration_ms: 7.886034
+  type: 'test'
+  ...
+# Subtest: LoadBattleType (TAI:2504): calcTemp = battleType
+ok 86 - LoadBattleType (TAI:2504): calcTemp = battleType
+  ---
+  duration_ms: 2.071388
+  type: 'test'
+  ...
+# Subtest: IfTargetIsPartner (TAI:2630): attacker & 1 == defender & 1
+ok 87 - IfTargetIsPartner (TAI:2630): attacker & 1 == defender & 1
+  ---
+  duration_ms: 2.117396
+  type: 'test'
+  ...
+# Subtest: IfFieldConditionsMask (TAI:1936): real Trick Room and Gravity
+ok 88 - IfFieldConditionsMask (TAI:1936): real Trick Room and Gravity
+  ---
+  duration_ms: 20.450172
+  type: 'test'
+  ...
+# Subtest: LoadSpikesLayers (TAI:1948): spikes / toxic spikes layers; other args leave calcTemp
+ok 89 - LoadSpikesLayers (TAI:1948): spikes / toxic spikes layers; other args leave calcTemp
+  ---
+  duration_ms: 12.947454
+  type: 'test'
+  ...
+# Subtest: IfAnyPartyMemberIsWounded (TAI:1968): non-active slot with hp != maxHP (fainted counts)
+ok 90 - IfAnyPartyMemberIsWounded (TAI:1968): non-active slot with hp != maxHP (fainted counts)
+  ---
+  duration_ms: 13.9609
+  type: 'test'
+  ...
+# Subtest: IfAnyPartyMemberUsedPP (TAI:1987): non-active slot with pp != maxPP
+ok 91 - IfAnyPartyMemberUsedPP (TAI:1987): non-active slot with pp != maxPP
+  ---
+  duration_ms: 17.82477
+  type: 'test'
+  ...
+# Subtest: LoadBattlerTurnCount (TAI:2096): totalTurns - fakeOutTurnNumber
+ok 92 - LoadBattlerTurnCount (TAI:2096): totalTurns - fakeOutTurnNumber
+  ---
+  duration_ms: 15.855598
+  type: 'test'
+  ...
+# Subtest: Dummy3E / Dummy3F (TAI:1881-1889) throw instead of hanging; unreachable ops are ai_unimplemented
+ok 93 - Dummy3E / Dummy3F (TAI:1881-1889) throw instead of hanging; unreachable ops are ai_unimplemented
+  ---
+  duration_ms: 5.747648
+  type: 'test'
+  ...
+# Subtest: moves.mjs implements exactly the 14 OPCODES.md "moves" rows, and HANDLERS uses them
+ok 94 - moves.mjs implements exactly the 14 OPCODES.md "moves" rows, and HANDLERS uses them
+  ---
+  duration_ms: 5.167864
+  type: 'test'
+  ...
+# Subtest: constants used below (positive controls against the decomp lists)
+ok 95 - constants used below (positive controls against the decomp lists)
+  ---
+  duration_ms: 0.235993
+  type: 'test'
+  ...
+# Subtest: IfMoveEqualTo (TAI:834) script.s:57 MOVE_FISSURE -> Basic_CheckForImmunity
+ok 96 - IfMoveEqualTo (TAI:834) script.s:57 MOVE_FISSURE -> Basic_CheckForImmunity
+  ---
+  duration_ms: 883.186177
+  type: 'test'
+  ...
+# Subtest: IfAttackerHasNoDamagingMoves (TAI:913) script.s:2688
+ok 97 - IfAttackerHasNoDamagingMoves (TAI:913) script.s:2688
+  ---
+  duration_ms: 16.326283
+  type: 'test'
+  ...
+# Subtest: LoadBattlerPreviousMove (TAI:1068) script.s:1913 DEFENDER reads movePrevByBattler
+ok 98 - LoadBattlerPreviousMove (TAI:1068) script.s:1913 DEFENDER reads movePrevByBattler
+  ---
+  duration_ms: 22.944331
+  type: 'test'
+  ...
+# Subtest: LoadCurrentMoveEffect (TAI:1164) script.s:6425
+ok 99 - LoadCurrentMoveEffect (TAI:1164) script.s:6425
+  ---
+  duration_ms: 5.580617
+  type: 'test'
+  ...
+# Subtest: IfCurrentMoveEffectEqualTo (TAI:1441) script.s:134 BATTLE_EFFECT_STATUS_SLEEP
+ok 100 - IfCurrentMoveEffectEqualTo (TAI:1441) script.s:134 BATTLE_EFFECT_STATUS_SLEEP
+  ---
+  duration_ms: 1.806219
+  type: 'test'
+  ...
+# Subtest: IfMoveKnown (TAI:1627): DEFENDER reads AI memory (script.s:1438), ATTACKER the real moves (script.s:2852)
+ok 101 - IfMoveKnown (TAI:1627): DEFENDER reads AI memory (script.s:1438), ATTACKER the real moves (script.s:2852)
+  ---
+  duration_ms: 6.424277
+  type: 'test'
+  ...
+# Subtest: IfMoveNotKnown (TAI:1683): ATTACKER script.s:2994, DEFENDER script.s:3730
+ok 102 - IfMoveNotKnown (TAI:1683): ATTACKER script.s:2994, DEFENDER script.s:3730
+  ---
+  duration_ms: 6.141755
+  type: 'test'
+  ...
+# Subtest: IfMoveEffectKnown (TAI:1739): ATTACKER script.s:1816, DEFENDER script.s:3964
+ok 103 - IfMoveEffectKnown (TAI:1739): ATTACKER script.s:1816, DEFENDER script.s:3964
+  ---
+  duration_ms: 4.393577
+  type: 'test'
+  ...
+# Subtest: IfMoveEffectNotKnown (TAI:1781) script.s:2670 DEFENDER BATTLE_EFFECT_STEAL_STATUS_MOVE
+ok 104 - IfMoveEffectNotKnown (TAI:1781) script.s:2670 DEFENDER BATTLE_EFFECT_STEAL_STATUS_MOVE
+  ---
+  duration_ms: 1.977377
+  type: 'test'
+  ...
+# Subtest: LoadPowerOfLoadedMove (TAI:2526) script.s:2039
+ok 105 - LoadPowerOfLoadedMove (TAI:2526) script.s:2039
+  ---
+  duration_ms: 1.785108
+  type: 'test'
+  ...
+# Subtest: LoadEffectOfLoadedMove (TAI:2532) script.s:3016
+ok 106 - LoadEffectOfLoadedMove (TAI:2532) script.s:3016
+  ---
+  duration_ms: 9.182414
+  type: 'test'
+  ...
+# Subtest: LoadCurrentMovePP (TAI:2024) script.s:5327 reads attacker ppCur[moveSlot]
+ok 107 - LoadCurrentMovePP (TAI:2024) script.s:5327 reads attacker ppCur[moveSlot]
+  ---
+  duration_ms: 15.625687
+  type: 'test'
+  ...
+# Subtest: IfCanUseLastResort (TAI:2030) script.s:1422 ATTACKER
+ok 108 - IfCanUseLastResort (TAI:2030) script.s:1422 ATTACKER
+  ---
+  duration_ms: 20.976343
+  type: 'test'
+  ...
+# Subtest: LoadDefenderLastUsedMoveClass (TAI:2050) script.s:2041
+ok 109 - LoadDefenderLastUsedMoveClass (TAI:2050) script.s:2041
+  ---
+  duration_ms: 7.892337
+  type: 'test'
+  ...
+# Subtest: test/ai_fixtures.mjs
+ok 8 - test/ai_fixtures.mjs
+  ---
+  duration_ms: 1818.171438
+  type: 'test'
+  ...
+# Subtest: 200 full gauntlets with decomp-ai: no ai_unimplemented, deterministic per seed
+ok 111 - 200 full gauntlets with decomp-ai: no ai_unimplemented, deterministic per seed
+  ---
+  duration_ms: 48171.197074
+  type: 'test'
+  ...
+# throughput: 200 gauntlets (1000 battles) in 36.8 s = 5.44 gauntlets/s, one process
+# cleared 12/200; AI decisions {"decisions":14770,"moves":9752,"replacements":3966,"items":914,"switches":125,"locked":13}
+# Subtest: golden A1 Aaron Yanmega turn 1 -> Double Team
+ok 112 - golden A1 Aaron Yanmega turn 1 -> Double Team
+  ---
+  duration_ms: 122.49177
+  type: 'test'
+  ...
+# Subtest: golden A2 Aaron Drapion vs Gengar -> Ice Fang
+ok 113 - golden A2 Aaron Drapion vs Gengar -> Ice Fang
+  ---
+  duration_ms: 9.13885
+  type: 'test'
+  ...
+# Subtest: golden B1 Bertha Whiscash vs Gyarados -> tie broken to Sandstorm
+ok 114 - golden B1 Bertha Whiscash vs Gyarados -> tie broken to Sandstorm
+  ---
+  duration_ms: 7.506836
+  type: 'test'
+  ...
+# Subtest: golden B2 Bertha Rhyperior KO bonus -> Earthquake
+ok 115 - golden B2 Bertha Rhyperior KO bonus -> Earthquake
+  ---
+  duration_ms: 8.555399
+  type: 'test'
+  ...
+# Subtest: golden F1 Flint Houndoom vs Vaporeon -> tie broken to Sunny Day
+ok 116 - golden F1 Flint Houndoom vs Vaporeon -> tie broken to Sunny Day
+  ---
+  duration_ms: 5.084594
+  type: 'test'
+  ...
+# Subtest: golden F2 Flint Flareon vs Flash Fire Heatran -> Quick Attack
+ok 117 - golden F2 Flint Flareon vs Flash Fire Heatran -> Quick Attack
+  ---
+  duration_ms: 3.782253
+  type: 'test'
+  ...
+# Subtest: golden L1 Lucian Mr. Mime turn 1: SETUP_FIRST_TURN -> Reflect
+ok 118 - golden L1 Lucian Mr. Mime turn 1: SETUP_FIRST_TURN -> Reflect
+  ---
+  duration_ms: 4.05107
+  type: 'test'
+  ...
+# Subtest: golden L2 Lucian Mr. Mime turn 2: no first-turn bonus
+ok 119 - golden L2 Lucian Mr. Mime turn 2: no first-turn bonus
+  ---
+  duration_ms: 2.999951
+  type: 'test'
+  ...
+# Subtest: golden L3 Lucian Bronzong turn 1 -> Calm Mind
+ok 120 - golden L3 Lucian Bronzong turn 1 -> Calm Mind
+  ---
+  duration_ms: 19.948759
+  type: 'test'
+  ...
+# Subtest: golden C1 Cynthia Spiritomb vs Lucario -> Psychic
+ok 121 - golden C1 Cynthia Spiritomb vs Lucario -> Psychic
+  ---
+  duration_ms: 11.460829
+  type: 'test'
+  ...
+# Subtest: golden C2 Cynthia Garchomp KO bonus -> Dragon Rush
+ok 122 - golden C2 Cynthia Garchomp KO bonus -> Dragon Rush
+  ---
+  duration_ms: 3.527904
+  type: 'test'
+  ...
+# Subtest: golden C3 Cynthia Milotic at 24% -> Full Restore
+ok 123 - golden C3 Cynthia Milotic at 24% -> Full Restore
+  ---
+  duration_ms: 2.60378
+  type: 'test'
+  ...
+# Subtest: golden C4 Cynthia Milotic at 26% -> no item, Ice Beam
+ok 124 - golden C4 Cynthia Milotic at 26% -> no item, Ice Beam
+  ---
+  duration_ms: 3.343891
+  type: 'test'
+  ...
+# Subtest: golden P1 post-KO switch-in (Flint vs Scizor, u8 overflow) -> Infernape
+ok 125 - golden P1 post-KO switch-in (Flint vs Scizor, u8 overflow) -> Infernape
+  ---
+  duration_ms: 23.3444
+  type: 'test'
+  ...
+# Subtest: golden P2 post-KO stage 2 (Cynthia vs Spiritomb) -> Lucario by u8 damage
+ok 126 - golden P2 post-KO stage 2 (Cynthia vs Spiritomb) -> Lucario by u8 damage
+  ---
+  duration_ms: 9.017917
+  type: 'test'
+  ...
+# Subtest: golden S1 Flint Houndoom hit by Fire switches to Flash Fire Flareon (switch before item)
+ok 127 - golden S1 Flint Houndoom hit by Fire switches to Flash Fire Flareon (switch before item)
+  ---
+  duration_ms: 15.124746
+  type: 'test'
+  ...
+# Subtest: golden T1 Taunt + Full Restore (Cynthia Roserade taunted at 20 HP) -> item, healed in battle
+ok 128 - golden T1 Taunt + Full Restore (Cynthia Roserade taunted at 20 HP) -> item, healed in battle
+  ---
+  duration_ms: 15.338947
+  type: 'test'
+  ...
+# Subtest: golden E1 Encore: FIGHT under Encore uses the encored move without running TrainerAI_Main
+ok 129 - golden E1 Encore: FIGHT under Encore uses the encored move without running TrainerAI_Main
+  ---
+  duration_ms: 11.531034
+  type: 'test'
+  ...
+# Subtest: 017 full trace: one entry per dispatched effect-check run; default trace unchanged (fixture A1)
+ok 130 - 017 full trace: one entry per dispatched effect-check run; default trace unchanged (fixture A1)
+  ---
+  duration_ms: 22.069181
+  type: 'test'
+  ...
+# Subtest: 017 structure: 13 runs on the real script, no splits, tables on runs >= 2, one repeated value (first wins), every instruction indexed
+ok 131 - 017 structure: 13 runs on the real script, no splits, tables on runs >= 2, one repeated value (first wins), every instruction indexed
+  ---
+  duration_ms: 54.391993
+  type: 'test'
+  ...
+# Subtest: 017 exhaustive equivalence: every table x every defined effect value (+2 undefined) equals the step-by-step walk
+ok 132 - 017 exhaustive equivalence: every table x every defined effect value (+2 undefined) equals the step-by-step walk
+  ---
+  duration_ms: 14.433768
+  type: 'test'
+  ...
+# dispatch equivalence: 10 tables x 279 effect values = 2790 comparisons, 0 mismatches
+# Subtest: 017 positive controls: a retargeted or deleted table entry is detected by the walk
+ok 133 - 017 positive controls: a retargeted or deleted table entry is detected by the walk
+  ---
+  duration_ms: 3.380752
+  type: 'test'
+  ...
+# Subtest: 017 split: a label inside a run splits it into two runs whose tables agree with the walk from each entry
+ok 134 - 017 split: a label inside a run splits it into two runs whose tables agree with the walk from each entry
+  ---
+  duration_ms: 4.322681
+  type: 'test'
+  ...
+# Subtest: 017 arguments by name: same values, same errors for a missing argument or jump target (FR-005)
+ok 135 - 017 arguments by name: same values, same errors for a missing argument or jump target (FR-005)
+  ---
+  duration_ms: 1.264649
+  type: 'test'
+  ...
+# Subtest: 017 runtime: one golden decision dispatches runs and stays far below a stepped evaluation
+ok 136 - 017 runtime: one golden decision dispatches runs and stays far below a stepped evaluation
+  ---
+  duration_ms: 127.557108
+  type: 'test'
+  ...
+# one Aaron decision: 151 interpreter steps, 10 dispatched runs
+# Subtest: InitAI compacts the bag into trainerItems, counts never decrement (battle_controller_player.c:4796-4817)
+ok 137 - InitAI compacts the bag into trainerItems, counts never decrement (battle_controller_player.c:4796-4817)
+  ---
+  duration_ms: 109.425728
+  type: 'test'
+  ...
+# Subtest: Full Restore threshold: curHP < maxHP / 4 (integer) and curHP != 0 (TAI:4099-4104)
+ok 138 - Full Restore threshold: curHP < maxHP / 4 (integer) and curHP != 0 (TAI:4099-4104)
+  ---
+  duration_ms: 6.941791
+  type: 'test'
+  ...
+# Subtest: slot rule and no-break double consumption (TAI:4091-4196)
+ok 139 - slot rule and no-break double consumption (TAI:4091-4196)
+  ---
+  duration_ms: 7.858351
+  type: 'test'
+  ...
+# Subtest: Embargo blocks trainer items (TAI:4076-4078)
+ok 140 - Embargo blocks trainer items (TAI:4076-4078)
+  ---
+  duration_ms: 3.670008
+  type: 'test'
+  ...
+# Subtest: Dex patches are installed (positive control for the live tests below)
+ok 141 - Dex patches are installed (positive control for the live tests below)
+  ---
+  duration_ms: 0.774428
+  type: 'test'
+  ...
+# Subtest: Taunt + Full Restore: the item is used under Taunt; Taunt still blocks real status moves
+ok 142 - Taunt + Full Restore: the item is used under Taunt; Taunt still blocks real status moves
+  ---
+  duration_ms: 46.301677
+  type: 'test'
+  ...
+# Subtest: Encore + Full Restore: no OverrideAction, the encore stays, the encored move is not used that turn
+ok 143 - Encore + Full Restore: no OverrideAction, the encore stays, the encored move is not used that turn
+  ---
+  duration_ms: 18.061525
+  type: 'test'
+  ...
+# Subtest: sleep / paralysis / confusion cannot stop the item, and it cures them (subscript_use_full_restore.s)
+ok 144 - sleep / paralysis / confusion cannot stop the item, and it cures them (subscript_use_full_restore.s)
+  ---
+  duration_ms: 35.40953
+  type: 'test'
+  ...
+# Subtest: Pressure: no PP is deducted from the item user; Heal Block does not stop the heal
+ok 145 - Pressure: no PP is deducted from the item user; Heal Block does not stop the heal
+  ---
+  duration_ms: 7.932754
+  type: 'test'
+  ...
+# Subtest: Sucker Punch fails against the item user (Battler_SelectedMove is MOVE_NONE, battle_script.c:7385-7400)
+ok 146 - Sucker Punch fails against the item user (Battler_SelectedMove is MOVE_NONE, battle_script.c:7385-7400)
+  ---
+  duration_ms: 4.969193
+  type: 'test'
+  ...
+# Subtest: PickCommand order: switch before item before fight (TAI:3989-4040)
+ok 147 - PickCommand order: switch before item before fight (TAI:3989-4040)
+  ---
+  duration_ms: 28.639238
+  type: 'test'
+  ...
+# Subtest: negative control: run as an ordinary move, the pseudo-move does not heal (it throws), so the heals above came from beforeTurnCallback
+ok 148 - negative control: run as an ordinary move, the pseudo-move does not heal (it throws), so the heals above came from beforeTurnCallback
+  ---
+  duration_ms: 3.927863
+  type: 'test'
+  ...
+# Subtest: opcode table has 109 commands (include/data/scripts/aicmd.h:8-116, research R6)
+ok 149 - opcode table has 109 commands (include/data/scripts/aicmd.h:8-116, research R6)
+  ---
+  duration_ms: 2.849202
+  type: 'test'
+  ...
+# Subtest: every command macro maps to exactly one opcode and every opcode has a macro
+ok 150 - every command macro maps to exactly one opcode and every opcode has a macro
+  ---
+  duration_ms: 2.161871
+  type: 'test'
+  ...
+# Subtest: parses the full script
+ok 151 - parses the full script
+  ---
+  duration_ms: 1.892424
+  type: 'test'
+  ...
+# Subtest: section labels are at their script.s lines
+ok 152 - section labels are at their script.s lines
+  ---
+  duration_ms: 0.289125
+  type: 'test'
+  ...
+# Subtest: gTrainerAITable flag offsets resolve to the sections, bit i = generated/ai_flags.txt name i+1
+ok 153 - gTrainerAITable flag offsets resolve to the sections, bit i = generated/ai_flags.txt name i+1
+  ---
+  duration_ms: 0.575225
+  type: 'test'
+  ...
+# Subtest: known instructions decode with the right opcode and arguments
+ok 154 - known instructions decode with the right opcode and arguments
+  ---
+  duration_ms: 0.418293
+  type: 'test'
+  ...
+# Subtest: unknown macros and unknown symbols fail loudly (negative controls)
+ok 155 - unknown macros and unknown symbols fail loudly (negative controls)
+  ---
+  duration_ms: 15.52796
+  type: 'test'
+  ...
+# Subtest: League sections: reachable opcodes and usage counts
+ok 156 - League sections: reachable opcodes and usage counts
+  ---
+  duration_ms: 45.752452
+  type: 'test'
+  ...
+# Subtest: BattleSystem_TypeMatchupMultiplier (BL:3009-3029): 40 * mul / 10 per matching chart row
+ok 157 - BattleSystem_TypeMatchupMultiplier (BL:3009-3029): 40 * mul / 10 per matching chart row
+  ---
+  duration_ms: 3.42113
+  type: 'test'
+  ...
+# Subtest: BattleSystem_CalcEffectiveness (BL:2681-2743): Levitate, chart order, Wonder Guard
+ok 158 - BattleSystem_CalcEffectiveness (BL:2681-2743): Levitate, chart order, Wonder Guard
+  ---
+  duration_ms: 123.814079
+  type: 'test'
+  ...
+# Subtest: PostKOSwitchIn stage 1 keeps the u8 overflow bug: 320 becomes 64 (Flint vs Scizor)
+ok 159 - PostKOSwitchIn stage 1 keeps the u8 overflow bug: 320 becomes 64 (Flint vs Scizor)
+  ---
+  duration_ms: 24.822879
+  type: 'test'
+  ...
+# Subtest: PostKOSwitchIn stage 2: no stage-1 candidate has a super-effective move -> highest u8 damage (Cynthia vs Spiritomb)
+ok 160 - PostKOSwitchIn stage 2: no stage-1 candidate has a super-effective move -> highest u8 damage (Cynthia vs Spiritomb)
+  ---
+  duration_ms: 15.523932
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: Flash Fire absorber on the bench after a Fire hit (AI_HasAbsorbAbilityInParty, TAI:3640-3714)
+ok 161 - ShouldSwitch: Flash Fire absorber on the bench after a Fire hit (AI_HasAbsorbAbilityInParty, TAI:3640-3714)
+  ---
+  duration_ms: 12.572384
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: trapped (Mean Look) never switches (TAI:3906-3913)
+ok 162 - ShouldSwitch: trapped (Mean Look) never switches (TAI:3906-3913)
+  ---
+  duration_ms: 14.404502
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: only ineffective moves -> bench member with a super-effective move (TAI:3361-3546)
+ok 163 - ShouldSwitch: only ineffective moves -> bench member with a super-effective move (TAI:3361-3546)
+  ---
+  duration_ms: 8.532916
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: Wonder Guard with no super-effective move -> bench member that has one (TAI:3286-3350)
+ok 164 - ShouldSwitch: Wonder Guard with no super-effective move -> bench member that has one (TAI:3286-3350)
+  ---
+  duration_ms: 2.092428
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: AI_IsHeavilyStatBoosted (+4 or more) blocks the resist-switch (TAI:3967-3970)
+ok 165 - ShouldSwitch: AI_IsHeavilyStatBoosted (+4 or more) blocks the resist-switch (TAI:3967-3970)
+  ---
+  duration_ms: 4.231026
+  type: 'test'
+  ...
+# Subtest: ShouldSwitch: asleep Natural Cure above half HP, nothing hit it yet -> post-KO style switch (TAI:3817-3859)
+ok 166 - ShouldSwitch: asleep Natural Cure above half HP, nothing hit it yet -> post-KO style switch (TAI:3817-3859)
+  ---
+  duration_ms: 4.20226
+  type: 'test'
+  ...
+# Subtest: benchRequests: the default set is the spec's fixed set (40 requests, prof-a seeds, stop_on_loss off)
+ok 167 - benchRequests: the default set is the spec's fixed set (40 requests, prof-a seeds, stop_on_loss off)
+  ---
+  duration_ms: 6.539157
+  type: 'test'
+  ...
+# Subtest: digestLogs: contract line format; one changed log_hash changes the digest (positive control)
+ok 168 - digestLogs: contract line format; one changed log_hash changes the digest (positive control)
+  ---
+  duration_ms: 0.988619
+  type: 'test'
+  ...
+# Subtest: runRecorded: result byte-identical to a plain run; choices and per-decision draw counts recorded
+ok 169 - runRecorded: result byte-identical to a plain run; choices and per-decision draw counts recorded
+  ---
+  duration_ms: 523.276116
+  type: 'test'
+  ...
+# Subtest: diffRecorded: identical records give no differences; one altered choice or draw count is reported
+ok 170 - diffRecorded: identical records give no differences; one altered choice or draw count is reported
+  ---
+  duration_ms: 58.931651
+  type: 'test'
+  ...
+# Subtest: 017 interpreter steps in the report: runBench reports INTERP_STATS deltas (one Aaron battle, expectimax2-v2)
+ok 171 - 017 interpreter steps in the report: runBench reports INTERP_STATS deltas (one Aaron battle, expectimax2-v2)
+  ---
+  duration_ms: 894.978853
+  type: 'test'
+  ...
+# \# damage cross-check: 109 combinations, 102 exact 16-roll matches, 7 known divergences, 6 zero-damage (immunity) cases
+# Subtest: type chart parsed from battle_lib.c:2399 has 112 rows incl. sentinels
+ok 172 - type chart parsed from battle_lib.c:2399 has 112 rows incl. sentinels
+  ---
+  duration_ms: 3.948653
+  type: 'test'
+  ...
+# Subtest: decomp move/item data loaded from res/
+ok 173 - decomp move/item data loaded from res/
+  ---
+  duration_ms: 2.320557
+  type: 'test'
+  ...
+# Subtest: hand-computed base damage (no Showdown): sequential type truncation
+ok 174 - hand-computed base damage (no Showdown): sequential type truncation
+  ---
+  duration_ms: 2.310608
+  type: 'test'
+  ...
+# Subtest: hand-computed divergence arithmetic (port side = decomp integer math)
+ok 175 - hand-computed divergence arithmetic (port side = decomp integer math)
+  ---
+  duration_ms: 1.154226
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Infernape (STAB, x2)
+ok 176 - damage: Garchomp EQ vs Infernape (STAB, x2)
+  ---
+  duration_ms: 588.942129
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Garchomp Dragon Rush vs player Garchomp (x2)
+ok 177 - damage: Cynthia Garchomp Dragon Rush vs player Garchomp (x2)
+  ---
+  duration_ms: 20.9226
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Garchomp EQ vs Magnezone (x4)
+ok 178 - damage: Cynthia Garchomp EQ vs Magnezone (x4)
+  ---
+  duration_ms: 21.43284
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Lucario Aura Sphere vs Tyranitar (x4 special)
+ok 179 - damage: Cynthia Lucario Aura Sphere vs Tyranitar (x4 special)
+  ---
+  duration_ms: 21.912751
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Milotic Ice Beam vs Garchomp (x4)
+ok 180 - damage: Cynthia Milotic Ice Beam vs Garchomp (x4)
+  ---
+  duration_ms: 13.24742
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Roserade Energy Ball vs Rhyperior Lightningrod (x4)
+ok 181 - damage: Cynthia Roserade Energy Ball vs Rhyperior Lightningrod (x4)
+  ---
+  duration_ms: 14.150174
+  type: 'test'
+  ...
+# Subtest: damage: Cynthia Garchomp Flamethrower vs Kingdra (x0.25)
+ok 182 - damage: Cynthia Garchomp Flamethrower vs Kingdra (x0.25)
+  ---
+  duration_ms: 10.392578
+  type: 'test'
+  ...
+# Subtest: damage: Aaron Scizor X-Scissor vs Infernape (x0.25)
+ok 183 - damage: Aaron Scizor X-Scissor vs Infernape (x0.25)
+  ---
+  duration_ms: 15.209408
+  type: 'test'
+  ...
+# Subtest: damage: Lucario Aura Sphere vs Togekiss (x0.5)
+ok 184 - damage: Lucario Aura Sphere vs Togekiss (x0.5)
+  ---
+  duration_ms: 11.10724
+  type: 'test'
+  ...
+# Subtest: damage: Lucario Stone Edge vs Gyarados (x2 non-STAB)
+ok 185 - damage: Lucario Stone Edge vs Gyarados (x2 non-STAB)
+  ---
+  duration_ms: 5.340536
+  type: 'test'
+  ...
+# Subtest: damage: Milotic Surf vs Snorlax (neutral STAB special)
+ok 186 - damage: Milotic Surf vs Snorlax (neutral STAB special)
+  ---
+  duration_ms: 15.232292
+  type: 'test'
+  ...
+# Subtest: damage: Spiritomb Shadow Ball vs Alakazam (x2 STAB)
+ok 187 - damage: Spiritomb Shadow Ball vs Alakazam (x2 STAB)
+  ---
+  duration_ms: 5.421822
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp Giga Impact vs Lucario (x0.5 STAB)
+ok 188 - damage: Garchomp Giga Impact vs Lucario (x0.5 STAB)
+  ---
+  duration_ms: 4.467149
+  type: 'test'
+  ...
+# Subtest: damage: Togekiss Air Slash vs Lucario (x2 then x0.5 in table order)
+ok 189 - damage: Togekiss Air Slash vs Lucario (x2 then x0.5 in table order)
+  ---
+  duration_ms: 4.373439
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp Flamethrower vs Ludicolo (x0.5 then x2 in table order)
+ok 190 - damage: Garchomp Flamethrower vs Ludicolo (x0.5 then x2 in table order)
+  ---
+  duration_ms: 6.039919
+  type: 'test'
+  ...
+# Subtest: damage: Milotic Ice Beam vs Gyarados (x0.5 then x2 in table order)
+ok 191 - damage: Milotic Ice Beam vs Gyarados (x0.5 then x2 in table order)
+  ---
+  duration_ms: 4.090225
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Togekiss (x0 Flying)
+ok 192 - damage: Garchomp EQ vs Togekiss (x0 Flying)
+  ---
+  duration_ms: 2.100735
+  type: 'test'
+  ...
+# Subtest: damage: Lucario Extreme Speed vs Spiritomb (x0 Ghost)
+ok 193 - damage: Lucario Extreme Speed vs Spiritomb (x0 Ghost)
+  ---
+  duration_ms: 1.995111
+  type: 'test'
+  ...
+# Subtest: damage: Alakazam Psychic vs Spiritomb (x0 Dark)
+ok 194 - damage: Alakazam Psychic vs Spiritomb (x0 Dark)
+  ---
+  duration_ms: 1.781061
+  type: 'test'
+  ...
+# Subtest: damage: Togekiss Shock Wave vs Garchomp (x0 Ground)
+ok 195 - damage: Togekiss Shock Wave vs Garchomp (x0 Ground)
+  ---
+  duration_ms: 4.218361
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Bronzong Levitate
+ok 196 - damage: Garchomp EQ vs Bronzong Levitate
+  ---
+  duration_ms: 3.816569
+  type: 'test'
+  ...
+# Subtest: damage: Rampardos (Mold Breaker) EQ vs Bronzong Levitate
+ok 197 - damage: Rampardos (Mold Breaker) EQ vs Bronzong Levitate
+  ---
+  duration_ms: 4.645
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Togekiss under Gravity
+ok 198 - damage: Garchomp EQ vs Togekiss under Gravity
+  ---
+  duration_ms: 10.458885
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Togekiss holding Iron Ball
+ok 199 - damage: Garchomp EQ vs Togekiss holding Iron Ball
+  ---
+  duration_ms: 5.631104
+  type: 'test'
+  ...
+# Subtest: damage: Garchomp EQ vs Magnezone with Magnet Rise
+ok 200 - damage: Garchomp EQ vs Magnezone with Magnet Rise
+  ---
+  duration_ms: 2.644378
+  type: 'test'
+  ...
+# Subtest: damage: Lucario Extreme Speed vs Spiritomb under Foresight
+ok 201 - damage: Lucario Extreme Speed vs Spiritomb under Foresight
+  ---
+  duration_ms: 7.959495
+  type: 'test'
+  ...
+# Subtest: damage: Kangaskhan (Scrappy) Return vs Gengar
+ok 202 - damage: Kangaskhan (Scrappy) Return vs Gengar
+  ---
+  duration_ms: 7.886645
+  type: 'test'
+  ...
+# Subtest: damage: Crit: Garchomp EQ vs Infernape
+ok 203 - damage: Crit: Garchomp EQ vs Infernape
+  ---
+  duration_ms: 8.796392
+  type: 'test'
+  ...
+# Subtest: damage: Crit: Milotic Surf vs Rhyperior special
+ok 204 - damage: Crit: Milotic Surf vs Rhyperior special
+  ---
+  duration_ms: 7.039949
+  type: 'test'
+  ...
+# Subtest: damage: Crit ignores -2 Atk
+ok 205 - damage: Crit ignores -2 Atk
+  ---
+  duration_ms: 5.418476
+  type: 'test'
+  ...
+# Subtest: damage: Crit keeps +2 Atk
+ok 206 - damage: Crit keeps +2 Atk
+  ---
+  duration_ms: 4.397635
+  type: 'test'
+  ...
+# Subtest: damage: Crit ignores +2 Def
+ok 207 - damage: Crit ignores +2 Def
+  ---
+  duration_ms: 5.534368
+  type: 'test'
+  ...
+# Subtest: damage: Crit keeps -1 SpD
+ok 208 - damage: Crit keeps -1 SpD
+  ---
+  duration_ms: 2.33809
+  type: 'test'
+  ...
+# Subtest: damage: Crit ignores Reflect
+ok 209 - damage: Crit ignores Reflect
+  ---
+  duration_ms: 3.768938
+  type: 'test'
+  ...
+# Subtest: damage: Crit vs Battle Armor Drapion (no crit)
+ok 210 - damage: Crit vs Battle Armor Drapion (no crit)
+  ---
+  duration_ms: 16.578467
+  type: 'test'
+  ...
+# Subtest: damage: Sniper Drapion crit (x3)
+ok 211 - damage: Sniper Drapion crit (x3)
+  ---
+  duration_ms: 8.153898
+  type: 'test'
+  ...
+# Subtest: damage: +6 Atk Garchomp EQ
+ok 212 - damage: +6 Atk Garchomp EQ
+  ---
+  duration_ms: 4.076749
+  type: 'test'
+  ...
+# Subtest: damage: -6 Atk Garchomp EQ
+ok 213 - damage: -6 Atk Garchomp EQ
+  ---
+  duration_ms: 4.824214
+  type: 'test'
+  ...
+# Subtest: damage: +1 SpA vs -1 SpD Milotic Surf
+ok 214 - damage: +1 SpA vs -1 SpD Milotic Surf
+  ---
+  duration_ms: 6.806411
+  type: 'test'
+  ...
+# Subtest: damage: +3 Def defender
+ok 215 - damage: +3 Def defender
+  ---
+  duration_ms: 4.570197
+  type: 'test'
+  ...
+# Subtest: damage: Burned Garchomp EQ
+ok 216 - damage: Burned Garchomp EQ
+  ---
+  duration_ms: 6.116105
+  type: 'test'
+  ...
+# Subtest: damage: Burned Garchomp Flamethrower (special unaffected)
+ok 217 - damage: Burned Garchomp Flamethrower (special unaffected)
+  ---
+  duration_ms: 7.651303
+  type: 'test'
+  ...
+# Subtest: damage: Guts Heracross burned Megahorn
+ok 218 - damage: Guts Heracross burned Megahorn
+  ---
+  duration_ms: 6.307603
+  type: 'test'
+  ...
+# Subtest: damage: Marvel Scale Milotic (paralyzed) vs EQ
+ok 219 - damage: Marvel Scale Milotic (paralyzed) vs EQ
+  ---
+  duration_ms: 6.091007
+  type: 'test'
+  ...
+# Subtest: damage: Choice Band Garchomp EQ
+ok 220 - damage: Choice Band Garchomp EQ
+  ---
+  duration_ms: 5.576168
+  type: 'test'
+  ...
+# Subtest: damage: Choice Specs Alakazam Psychic
+ok 221 - damage: Choice Specs Alakazam Psychic
+  ---
+  duration_ms: 4.723441
+  type: 'test'
+  ...
+# Subtest: damage: Life Orb Garchomp EQ
+ok 222 - damage: Life Orb Garchomp EQ
+  ---
+  duration_ms: 5.413946
+  type: 'test'
+  ...
+# Subtest: damage: Life Orb Alakazam Psychic
+ok 223 - damage: Life Orb Alakazam Psychic
+  ---
+  duration_ms: 5.215135
+  type: 'test'
+  ...
+# Subtest: damage: Expert Belt Lucario Aura Sphere vs Tyranitar
+ok 224 - damage: Expert Belt Lucario Aura Sphere vs Tyranitar
+  ---
+  duration_ms: 5.324194
+  type: 'test'
+  ...
+# Subtest: damage: Muscle Band Garchomp Dragon Rush
+ok 225 - damage: Muscle Band Garchomp Dragon Rush
+  ---
+  duration_ms: 5.105715
+  type: 'test'
+  ...
+# Subtest: damage: Wise Glasses Milotic Surf
+ok 226 - damage: Wise Glasses Milotic Surf
+  ---
+  duration_ms: 4.001585
+  type: 'test'
+  ...
+# Subtest: damage: Mystic Water Milotic Surf
+ok 227 - damage: Mystic Water Milotic Surf
+  ---
+  duration_ms: 3.654688
+  type: 'test'
+  ...
+# Subtest: damage: Charcoal Magmortar Flamethrower
+ok 228 - damage: Charcoal Magmortar Flamethrower
+  ---
+  duration_ms: 4.380151
+  type: 'test'
+  ...
+# Subtest: damage: Splash Plate (Mystic-equivalent) Milotic Surf
+ok 229 - damage: Splash Plate (Mystic-equivalent) Milotic Surf
+  ---
+  duration_ms: 3.700917
+  type: 'test'
+  ...
+# Subtest: damage: Klutz Lopunny Choice Band (ignored)
+ok 230 - damage: Klutz Lopunny Choice Band (ignored)
+  ---
+  duration_ms: 4.029117
+  type: 'test'
+  ...
+# Subtest: damage: Thick Club Marowak
+ok 231 - damage: Thick Club Marowak
+  ---
+  duration_ms: 3.94206
+  type: 'test'
+  ...
+# Subtest: damage: Light Ball Pikachu Thunderbolt
+ok 232 - damage: Light Ball Pikachu Thunderbolt
+  ---
+  duration_ms: 7.067592
+  type: 'test'
+  ...
+# Subtest: damage: Adamant Orb Dialga Dragon Pulse
+ok 233 - damage: Adamant Orb Dialga Dragon Pulse
+  ---
+  duration_ms: 4.661351
+  type: 'test'
+  ...
+# Subtest: damage: Sun Magmortar Flamethrower
+ok 234 - damage: Sun Magmortar Flamethrower
+  ---
+  duration_ms: 8.542455
+  type: 'test'
+  ...
+# Subtest: damage: Sun Milotic Surf (halved)
+ok 235 - damage: Sun Milotic Surf (halved)
+  ---
+  duration_ms: 4.2961
+  type: 'test'
+  ...
+# Subtest: damage: Rain Milotic Surf
+ok 236 - damage: Rain Milotic Surf
+  ---
+  duration_ms: 4.247216
+  type: 'test'
+  ...
+# Subtest: damage: Rain Magmortar Flamethrower (halved)
+ok 237 - damage: Rain Magmortar Flamethrower (halved)
+  ---
+  duration_ms: 4.258377
+  type: 'test'
+  ...
+# Subtest: damage: Sandstorm Rock SpD boost: Milotic Surf vs Rhyperior
+ok 238 - damage: Sandstorm Rock SpD boost: Milotic Surf vs Rhyperior
+  ---
+  duration_ms: 4.496855
+  type: 'test'
+  ...
+# Subtest: damage: Solar Beam in rain (halved)
+ok 239 - damage: Solar Beam in rain (halved)
+  ---
+  duration_ms: 6.502357
+  type: 'test'
+  ...
+# Subtest: damage: Cloud Nine Golduck in sun: Flamethrower unboosted
+ok 240 - damage: Cloud Nine Golduck in sun: Flamethrower unboosted
+  ---
+  duration_ms: 4.454845
+  type: 'test'
+  ...
+# Subtest: damage: Reflect vs Garchomp EQ
+ok 241 - damage: Reflect vs Garchomp EQ
+  ---
+  duration_ms: 5.766404
+  type: 'test'
+  ...
+# Subtest: damage: Light Screen vs Milotic Surf
+ok 242 - damage: Light Screen vs Milotic Surf
+  ---
+  duration_ms: 10.806473
+  type: 'test'
+  ...
+# Subtest: damage: Thick Fat Snorlax vs Flamethrower
+ok 243 - damage: Thick Fat Snorlax vs Flamethrower
+  ---
+  duration_ms: 6.029229
+  type: 'test'
+  ...
+# Subtest: damage: Thick Fat Snorlax vs Ice Beam
+ok 244 - damage: Thick Fat Snorlax vs Ice Beam
+  ---
+  duration_ms: 2.192771
+  type: 'test'
+  ...
+# Subtest: damage: Huge Power Azumarill Waterfall
+ok 245 - damage: Huge Power Azumarill Waterfall
+  ---
+  duration_ms: 2.591627
+  type: 'test'
+  ...
+# Subtest: damage: Technician Scizor Bullet Punch
+ok 246 - damage: Technician Scizor Bullet Punch
+  ---
+  duration_ms: 4.970285
+  type: 'test'
+  ...
+# Subtest: damage: Technician Scizor Aerial Ace (60 BP boundary)
+ok 247 - damage: Technician Scizor Aerial Ace (60 BP boundary)
+  ---
+  duration_ms: 7.439086
+  type: 'test'
+  ...
+# Subtest: damage: Technician Scizor X-Scissor (80 BP, no boost)
+ok 248 - damage: Technician Scizor X-Scissor (80 BP, no boost)
+  ---
+  duration_ms: 10.786795
+  type: 'test'
+  ...
+# Subtest: damage: Adaptability Porygon-Z Tri Attack
+ok 249 - damage: Adaptability Porygon-Z Tri Attack
+  ---
+  duration_ms: 13.525083
+  type: 'test'
+  ...
+# Subtest: damage: Solid Rock Rhyperior vs Energy Ball (x4)
+ok 250 - damage: Solid Rock Rhyperior vs Energy Ball (x4)
+  ---
+  duration_ms: 6.934047
+  type: 'test'
+  ...
+# Subtest: damage: Solid Rock Rhyperior vs Surf (x4)
+ok 251 - damage: Solid Rock Rhyperior vs Surf (x4)
+  ---
+  duration_ms: 5.467099
+  type: 'test'
+  ...
+# Subtest: damage: Filter Mr. Mime vs Shadow Ball (x2)
+ok 252 - damage: Filter Mr. Mime vs Shadow Ball (x2)
+  ---
+  duration_ms: 7.354693
+  type: 'test'
+  ...
+# Subtest: damage: Mold Breaker Rampardos vs Filter Mr. Mime
+ok 253 - damage: Mold Breaker Rampardos vs Filter Mr. Mime
+  ---
+  duration_ms: 3.912414
+  type: 'test'
+  ...
+# Subtest: damage: Tinted Lens Yanmega Bug Buzz vs Infernape (x0.25)
+ok 254 - damage: Tinted Lens Yanmega Bug Buzz vs Infernape (x0.25)
+  ---
+  duration_ms: 7.884522
+  type: 'test'
+  ...
+# Subtest: damage: Heatproof Bronzong vs Flamethrower
+ok 255 - damage: Heatproof Bronzong vs Flamethrower
+  ---
+  duration_ms: 7.419398
+  type: 'test'
+  ...
+# Subtest: damage: Dry Skin Toxicroak vs Flamethrower
+ok 256 - damage: Dry Skin Toxicroak vs Flamethrower
+  ---
+  duration_ms: 4.807292
+  type: 'test'
+  ...
+# Subtest: damage: Flash Fire active Houndoom Flamethrower
+ok 257 - damage: Flash Fire active Houndoom Flamethrower
+  ---
+  duration_ms: 5.065668
+  type: 'test'
+  ...
+# Subtest: damage: Blaze Infernape at 1/3 HP Flare Blitz
+ok 258 - damage: Blaze Infernape at 1/3 HP Flare Blitz
+  ---
+  duration_ms: 6.443174
+  type: 'test'
+  ...
+# Subtest: damage: Blaze Infernape just above 1/3 HP
+ok 259 - damage: Blaze Infernape just above 1/3 HP
+  ---
+  duration_ms: 3.80662
+  type: 'test'
+  ...
+# Subtest: damage: Swarm Heracross low HP Megahorn
+ok 260 - damage: Swarm Heracross low HP Megahorn
+  ---
+  duration_ms: 5.868911
+  type: 'test'
+  ...
+# Subtest: damage: Torrent Empoleon low HP Surf
+ok 261 - damage: Torrent Empoleon low HP Surf
+  ---
+  duration_ms: 7.494863
+  type: 'test'
+  ...
+# Subtest: damage: Overgrow Torterra low HP Wood Hammer
+ok 262 - damage: Overgrow Torterra low HP Wood Hammer
+  ---
+  duration_ms: 14.07052
+  type: 'test'
+  ...
+# Subtest: damage: Hustle Togekiss physical (Giga Impact)
+ok 263 - damage: Hustle Togekiss physical (Giga Impact)
+  ---
+  duration_ms: 7.146223
+  type: 'test'
+  ...
+# Subtest: damage: Iron Fist Hitmonchan Thunder Punch
+ok 264 - damage: Iron Fist Hitmonchan Thunder Punch
+  ---
+  duration_ms: 12.376388
+  type: 'test'
+  ...
+# Subtest: damage: Rivalry same gender Luxray
+ok 265 - damage: Rivalry same gender Luxray
+  ---
+  duration_ms: 4.987218
+  type: 'test'
+  ...
+# Subtest: damage: Rivalry opposite gender Luxray
+ok 266 - damage: Rivalry opposite gender Luxray
+  ---
+  duration_ms: 3.309565
+  type: 'test'
+  ...
+# Subtest: damage: Simple Bibarel +1 Atk
+ok 267 - damage: Simple Bibarel +1 Atk
+  ---
+  duration_ms: 3.918686
+  type: 'test'
+  ...
+# Subtest: damage: Unaware defender vs +2 Atk
+ok 268 - damage: Unaware defender vs +2 Atk
+  ---
+  duration_ms: 3.907955
+  type: 'test'
+  ...
+# Subtest: damage: Normalize Delcatty Thunderbolt->Normal
+ok 269 - damage: Normalize Delcatty Thunderbolt->Normal
+  ---
+  duration_ms: 3.865022
+  type: 'test'
+  ...
+# Subtest: damage: Charge Magnezone Thunderbolt
+ok 270 - damage: Charge Magnezone Thunderbolt
+  ---
+  duration_ms: 8.407095
+  type: 'test'
+  ...
+# Subtest: damage: Explosion Golem (defense halved)
+ok 271 - damage: Explosion Golem (defense halved)
+  ---
+  duration_ms: 3.800018
+  type: 'test'
+  ...
+# Subtest: damage: Level 100 Garchomp vs level 5 Bidoof
+ok 272 - damage: Level 100 Garchomp vs level 5 Bidoof
+  ---
+  duration_ms: 3.666611
+  type: 'test'
+  ...
+# Subtest: damage: Technician + Muscle Band Scizor Bullet Punch
+ok 273 - damage: Technician + Muscle Band Scizor Bullet Punch
+  ---
+  duration_ms: 3.630862
+  type: 'test'
+  ...
+# Subtest: damage: Huge Power + Choice Band Azumarill Waterfall
+ok 274 - damage: Huge Power + Choice Band Azumarill Waterfall
+  ---
+  duration_ms: 3.564755
+  type: 'test'
+  ...
+# Subtest: damage: Choice Band +1 Atk Garchomp EQ
+ok 275 - damage: Choice Band +1 Atk Garchomp EQ
+  ---
+  duration_ms: 3.255551
+  type: 'test'
+  ...
+# Subtest: damage: Choice Band -1 Atk Garchomp EQ
+ok 276 - damage: Choice Band -1 Atk Garchomp EQ
+  ---
+  duration_ms: 9.071461
+  type: 'test'
+  ...
+# Subtest: damage: Life Orb crit Garchomp EQ
+ok 277 - damage: Life Orb crit Garchomp EQ
+  ---
+  duration_ms: 4.354883
+  type: 'test'
+  ...
+# Subtest: damage: Life Orb + Expert Belt-free SE: Alakazam Focus Blast vs Tyranitar
+ok 278 - damage: Life Orb + Expert Belt-free SE: Alakazam Focus Blast vs Tyranitar
+  ---
+  duration_ms: 3.747507
+  type: 'test'
+  ...
+# Subtest: damage: Expert Belt vs Filter Mr. Mime
+ok 279 - damage: Expert Belt vs Filter Mr. Mime
+  ---
+  duration_ms: 7.375223
+  type: 'test'
+  ...
+# Subtest: damage: Metronome item (2 consecutive) Garchomp Dragon Rush
+ok 280 - damage: Metronome item (2 consecutive) Garchomp Dragon Rush
+  ---
+  duration_ms: 7.538898
+  type: 'test'
+  ...
+# Subtest: damage: Mystic Water in rain Milotic Surf
+ok 281 - damage: Mystic Water in rain Milotic Surf
+  ---
+  duration_ms: 14.214587
+  type: 'test'
+  ...
+# Subtest: damage: Burn + Reflect + crit-free Lucario Stone Edge
+ok 282 - damage: Burn + Reflect + crit-free Lucario Stone Edge
+  ---
+  duration_ms: 5.529569
+  type: 'test'
+  ...
+# Subtest: damage: Flash Fire + sun Houndoom Flamethrower
+ok 283 - damage: Flash Fire + sun Houndoom Flamethrower
+  ---
+  duration_ms: 5.104944
+  type: 'test'
+  ...
+# Subtest: damage: Low-level 1-damage floor
+ok 284 - damage: Low-level 1-damage floor
+  ---
+  duration_ms: 4.411832
+  type: 'test'
+  ...
+# Subtest: summary
+ok 285 - summary
+  ---
+  duration_ms: 3.286902
+  type: 'test'
+  ...
+# Subtest: 016 equivalence: applyTypeChart (plan + replay) == applyTypeChartDirect over 20000 synthetic and 1500 real-data matchups x 16 rolls
+ok 286 - 016 equivalence: applyTypeChart (plan + replay) == applyTypeChartDirect over 20000 synthetic and 1500 real-data matchups x 16 rolls
+  ---
+  duration_ms: 5780.521289
+  type: 'test'
+  ...
+# seed 16c0de, 20000 synthetic + 1500 real matchups, 5.8 s; coverage {"wonderGuard":498,"notVeryEffective":2653,"superEffective":2311,"seedMask":2428,"typeOverride":6447,"ignoreTypeChecks":5035,"struggle":674,"stab":1365,"tintedLens":278,"normalize":1263,"foresightScrappy":412,"zeroDamage":1253,"levitate":183,"miracleEye":505,"magnetRise":467,"immune":779,"roost":707,"filterSolidRock":293,"groundedFlying":538,"adaptability":344,"expertBelt":274}
+# Subtest: 016 positive control: a plan with one multiplier step removed, or STAB flipped, is detected against the direct result
+ok 287 - 016 positive control: a plan with one multiplier step removed, or STAB flipped, is detected against the direct result
+  ---
+  duration_ms: 27.622305
+  type: 'test'
+  ...
+# Subtest: 016 calcDamage (one plan per call) equals the 16-fold direct computation, normal and critical, over 300 synthetic matchups
+ok 288 - 016 calcDamage (one plan per call) equals the 16-fold direct computation, normal and critical, over 300 synthetic matchups
+  ---
+  duration_ms: 223.761476
+  type: 'test'
+  ...
+# Subtest: 016 DAMAGE_STATS: one calcDamage call builds one plan and replays it 16 times; the reference is not called
+ok 289 - 016 DAMAGE_STATS: one calcDamage call builds one plan and replays it 16 times; the reference is not called
+  ---
+  duration_ms: 10.035953
+  type: 'test'
+  ...
+# Subtest: greedy-v1: same request twice is byte-identical; another seed differs
+ok 290 - greedy-v1: same request twice is byte-identical; another seed differs
+  ---
+  duration_ms: 2315.74775
+  type: 'test'
+  ...
+# Subtest: expectimax2-v1: same request twice is byte-identical; another seed differs
+ok 291 - expectimax2-v1: same request twice is byte-identical; another seed differs
+  ---
+  duration_ms: 19514.263432
+  type: 'test'
+  ...
+# Subtest: expectimax2-v2: same request twice is byte-identical; another seed differs
+ok 292 - expectimax2-v2: same request twice is byte-identical; another seed differs
+  ---
+  duration_ms: 8961.617843
+  type: 'test'
+  ...
+# Subtest: expectimax2-v4: same request twice is byte-identical; another seed differs
+ok 293 - expectimax2-v4: same request twice is byte-identical; another seed differs
+  ---
+  duration_ms: 2741.097751
+  type: 'test'
+  ...
+# Subtest: positive control: a policy that draws from the battle PRNG is caught by the fingerprint
+ok 294 - positive control: a policy that draws from the battle PRNG is caught by the fingerprint
+  ---
+  duration_ms: 27.843901
+  type: 'test'
+  ...
+# Subtest: greedy-v1: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+ok 295 - greedy-v1: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+  ---
+  duration_ms: 16838.984397
+  type: 'test'
+  ...
+# greedy-v1: 200 gauntlets, 15294 p1 choices, cleared 34, 16.8 s
+# Subtest: expectimax2-v1: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+ok 296 - expectimax2-v1: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+  ---
+  duration_ms: 47957.357533
+  type: 'test'
+  ...
+# expectimax2-v1: 200 gauntlets, 17689 p1 choices, cleared 105, 48.0 s
+# Subtest: expectimax2-v2: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+ok 297 - expectimax2-v2: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+  ---
+  duration_ms: 34101.660881
+  type: 'test'
+  ...
+# expectimax2-v2: 200 gauntlets, 15022 p1 choices, cleared 175, 34.1 s
+# Subtest: expectimax2-v4: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+ok 298 - expectimax2-v4: 200 gauntlets, every p1 choice is move/switch and the live battle is untouched
+  ---
+  duration_ms: 25502.437191
+  type: 'test'
+  ...
+# expectimax2-v4: 200 gauntlets, 15332 p1 choices, cleared 169, 25.5 s
+# Subtest: data sanity: values the cases below rely on
+ok 299 - data sanity: values the cases below rely on
+  ---
+  duration_ms: 3.195046
+  type: 'test'
+  ...
+# Subtest: case 1: one participant, trainer battle
+ok 300 - case 1: one participant, trainer battle
+  ---
+  duration_ms: 0.745181
+  type: 'test'
+  ...
+# Subtest: case 2: two participants split, a bystander gets nothing
+ok 301 - case 2: two participants split, a bystander gets nothing
+  ---
+  duration_ms: 0.264187
+  type: 'test'
+  ...
+# Subtest: case 3: Exp. Share holder that did not participate
+ok 302 - case 3: Exp. Share holder that did not participate
+  ---
+  duration_ms: 0.254068
+  type: 'test'
+  ...
+# Subtest: case 4: participant that also holds Exp. Share gets both parts
+ok 303 - case 4: participant that also holds Exp. Share gets both parts
+  ---
+  duration_ms: 0.406491
+  type: 'test'
+  ...
+# Subtest: case 5: Lucky Egg then trainer bonus
+ok 304 - case 5: Lucky Egg then trainer bonus
+  ---
+  duration_ms: 0.251543
+  type: 'test'
+  ...
+# Subtest: case 6: traded Lucky Egg holder (same language)
+ok 305 - case 6: traded Lucky Egg holder (same language)
+  ---
+  duration_ms: 0.360642
+  type: 'test'
+  ...
+# Subtest: case 7: traded, different language: x1.7
+ok 306 - case 7: traded, different language: x1.7
+  ---
+  duration_ms: 0.238117
+  type: 'test'
+  ...
+# Subtest: case 8: fainted participant is not counted and gets nothing
+ok 307 - case 8: fainted participant is not counted and gets nothing
+  ---
+  duration_ms: 0.714371
+  type: 'test'
+  ...
+# Subtest: case 9: minimum 1 for gained and shared
+ok 308 - case 9: minimum 1 for gained and shared
+  ---
+  duration_ms: 0.782032
+  type: 'test'
+  ...
+# Subtest: case 10: a max-level participant still counts in the split but gains nothing
+ok 309 - case 10: a max-level participant still counts in the split but gains nothing
+  ---
+  duration_ms: 0.315556
+  type: 'test'
+  ...
+# Subtest: case 11: u16 truncation of base*level/7
+ok 310 - case 11: u16 truncation of base*level/7
+  ---
+  duration_ms: 0.166489
+  type: 'test'
+  ...
+# Subtest: case 12: multi-level gain and max-exp cap
+ok 311 - case 12: multi-level gain and max-exp cap
+  ---
+  duration_ms: 0.31783
+  type: 'test'
+  ...
+# Subtest: case 13: KO in battle -> exp, mid-battle level-up, HP raised by the max-HP gain
+ok 312 - case 13: KO in battle -> exp, mid-battle level-up, HP raised by the max-HP gain
+  ---
+  duration_ms: 39.284791
+  type: 'test'
+  ...
+# Subtest: case 13b: with 4 moves the level-up move is declined (prompt -> keep moves)
+ok 313 - case 13b: with 4 moves the level-up move is declined (prompt -> keep moves)
+  ---
+  duration_ms: 7.07672
+  type: 'test'
+  ...
+# Subtest: case 14: Exp. Share holder in the back levels up off-field; participation mask
+ok 314 - case 14: Exp. Share holder in the back levels up off-field; participation mask
+  ---
+  duration_ms: 6.397957
+  type: 'test'
+  ...
+# Subtest: case 15: a mon switched in while the foe is up joins the mask (battle_lib.c:1461-1479)
+ok 315 - case 15: a mon switched in while the foe is up joins the mask (battle_lib.c:1461-1479)
+  ---
+  duration_ms: 11.640153
+  type: 'test'
+  ...
+# Subtest: case 16: a Build whose source is an NPC trade is traded (FR-008a), same language -> x1.5
+ok 316 - case 16: a Build whose source is an NPC trade is traded (FR-008a), same language -> x1.5
+  ---
+  duration_ms: 7.276794
+  type: 'test'
+  ...
+# Subtest: case 17: Brave Bird KO + recoil KO of the attacker -> no exp (both faint)
+ok 317 - case 17: Brave Bird KO + recoil KO of the attacker -> no exp (both faint)
+  ---
+  duration_ms: 6.059426
+  type: 'test'
+  ...
+# Subtest: case 18: Double-Edge KO + recoil KO of the attacker -> no exp
+ok 318 - case 18: Double-Edge KO + recoil KO of the attacker -> no exp
+  ---
+  duration_ms: 4.377567
+  type: 'test'
+  ...
+# Subtest: case 19: recoil KO where the attacker survives -> exp
+ok 319 - case 19: recoil KO where the attacker survives -> exp
+  ---
+  duration_ms: 4.755452
+  type: 'test'
+  ...
+# Subtest: case 20: Life Orb KO of the attacker -> no exp; Life Orb with HP to spare -> exp
+ok 320 - case 20: Life Orb KO of the attacker -> no exp; Life Orb with HP to spare -> exp
+  ---
+  duration_ms: 8.661223
+  type: 'test'
+  ...
+# Subtest: case 21: residual KO is paid before the next residual step (burn, enemy faster)
+ok 321 - case 21: residual KO is paid before the next residual step (burn, enemy faster)
+  ---
+  duration_ms: 5.380062
+  type: 'test'
+  ...
+# Subtest: AI on a shadow of the current state == AI on the live battle (same seeds)
+ok 322 - AI on a shadow of the current state == AI on the live battle (same seeds)
+  ---
+  duration_ms: 15625.246227
+  type: 'test'
+  ...
+# shadow==live 664/664; 1-HP control changed the AI choice in 140/166 positions
+# Subtest: hand position: finite scores for every action; the super-effective move is chosen
+ok 323 - hand position: finite scores for every action; the super-effective move is chosen
+  ---
+  duration_ms: 255.645835
+  type: 'test'
+  ...
+# Subtest: v2 takes the KO that v1 delays by switching (horizon fix); v1 still switches (control)
+ok 324 - v2 takes the KO that v1 delays by switching (horizon fix); v1 still switches (control)
+  ---
+  duration_ms: 76.996793
+  type: 'test'
+  ...
+# Subtest: v2 options: koStop and the fitted leaf weights; v1 options are the recorded ones
+ok 325 - v2 options: koStop and the fitted leaf weights; v1 options are the recorded ones
+  ---
+  duration_ms: 0.292462
+  type: 'test'
+  ...
+# Subtest: 017 damage inputs from the root adapter's memo: at most one conversion per live Pokemon and one field per side per decision; dropped between decisions; fromShowdown not imported
+ok 326 - 017 damage inputs from the root adapter's memo: at most one conversion per live Pokemon and one field per side per decision; dropped between decisions; fromShowdown not imported
+  ---
+  duration_ms: 118.4407
+  type: 'test'
+  ...
+# Subtest: 017 speedInfo once per state: calls <= ply-2 nodes + root actions + 1; one speed pair on the root adapter
+ok 327 - 017 speedInfo once per state: calls <= ply-2 nodes + root actions + 1; one speed pair on the root adapter
+  ---
+  duration_ms: 32.90526
+  type: 'test'
+  ...
+# Subtest: 018 version options: v1/v2 unchanged, V4_OPTS, the floor counter, root samples and beam bounds
+ok 328 - 018 version options: v1/v2 unchanged, V4_OPTS, the floor counter, root samples and beam bounds
+  ---
+  duration_ms: 1118.791898
+  type: 'test'
+  ...
+# Subtest: engine: a faster Dark Pulse flinches a slower target on some seed; the target then does not move
+ok 329 - engine: a faster Dark Pulse flinches a slower target on some seed; the target then does not move
+  ---
+  duration_ms: 843.243793
+  type: 'test'
+  ...
+# Subtest: engine: a slower flinch move never flinches (the target already moved)
+ok 330 - engine: a slower flinch move never flinches (the target already moved)
+  ---
+  duration_ms: 189.850624
+  type: 'test'
+  ...
+# Subtest: engine: Inner Focus blocks the flinch; Steadfast raises Speed one stage when flinched
+ok 331 - engine: Inner Focus blocks the flinch; Steadfast raises Speed one stage when flinched
+  ---
+  duration_ms: 494.272367
+  type: 'test'
+  ...
+# Subtest: engine: Fake Out flinches on its user's first turn out and fails on the second
+ok 332 - engine: Fake Out flinches on its user's first turn out and fails on the second
+  ---
+  duration_ms: 4.82756
+  type: 'test'
+  ...
+# Subtest: player: a faster foe's Dark Pulse flinches the slower member with p 0.20; off, never
+ok 333 - player: a faster foe's Dark Pulse flinches the slower member with p 0.20; off, never
+  ---
+  duration_ms: 20.947708
+  type: 'test'
+  ...
+# Subtest: player: the member's faster Air Slash flinches the foe with p 0.30 x hit chance
+ok 334 - player: the member's faster Air Slash flinches the foe with p 0.30 x hit chance
+  ---
+  duration_ms: 11.022046
+  type: 'test'
+  ...
+# Subtest: player: no flinch chance at all when the flinch move's user moves second (owner's rule, FR-012)
+ok 335 - player: no flinch chance at all when the flinch move's user moves second (owner's rule, FR-012)
+  ---
+  duration_ms: 20.37663
+  type: 'test'
+  ...
+# Subtest: player: substitute, Inner Focus (not against Mold Breaker) and Serene Grace
+ok 336 - player: substitute, Inner Focus (not against Mold Breaker) and Serene Grace
+  ---
+  duration_ms: 24.259387
+  type: 'test'
+  ...
+# Subtest: player: Steadfast gains +1 Speed when flinched; the mark is gone at the end of the turn
+ok 337 - player: Steadfast gains +1 Speed when flinched; the mark is gone at the end of the turn
+  ---
+  duration_ms: 7.695137
+  type: 'test'
+  ...
+# Subtest: player: Fake Out flinches on the first turn out and fails afterwards
+ok 338 - player: Fake Out flinches on the first turn out and fails afterwards
+  ---
+  duration_ms: 11.407938
+  type: 'test'
+  ...
+# Subtest: deterministic: same request -> byte-identical result; other seed differs (positive control)
+ok 339 - deterministic: same request -> byte-identical result; other seed differs (positive control)
+  ---
+  duration_ms: 697.071167
+  type: 'test'
+  ...
+# Subtest: result shape, placeholder policies named, levels/exp/PP carry over
+ok 340 - result shape, placeholder policies named, levels/exp/PP carry over
+  ---
+  duration_ms: 216.387435
+  type: 'test'
+  ...
+# Subtest: start_state resumes from a recorded state (op 4)
+ok 341 - start_state resumes from a recorded state (op 4)
+  ---
+  duration_ms: 615.268164
+  type: 'test'
+  ...
+# Subtest: stop_on_loss stops at the first loss; a turn limit counts as a loss
+ok 342 - stop_on_loss stops at the first loss; a turn limit counts as a loss
+  ---
+  duration_ms: 16.770937
+  type: 'test'
+  ...
+# Subtest: pp_restore_between_battles from availability data restores PP
+ok 343 - pp_restore_between_battles from availability data restores PP
+  ---
+  duration_ms: 448.246281
+  type: 'test'
+  ...
+# Subtest: invalid team and unknown policy are reported with the contract error kinds
+ok 344 - invalid team and unknown policy are reported with the contract error kinds
+  ---
+  duration_ms: 4.140641
+  type: 'test'
+  ...
+# Subtest: 018 candidate policy names: resolve and cache, reject bad ones, and equal the plain name with the same knobs
+ok 345 - 018 candidate policy names: resolve and cache, reject bad ones, and equal the plain name with the same knobs
+  ---
+  duration_ms: 4914.808278
+  type: 'test'
+  ...
+# Subtest: greedy-v1 is registered next to placeholder-default
+ok 346 - greedy-v1 is registered next to placeholder-default
+  ---
+  duration_ms: 2.637144
+  type: 'test'
+  ...
+# Subtest: hand-computed position: Surf beats Hydro Pump on expected damage
+ok 347 - hand-computed position: Surf beats Hydro Pump on expected damage
+  ---
+  duration_ms: 35.938606
+  type: 'test'
+  ...
+# Subtest: forced switch goes to the living bench member with the best expected damage
+ok 348 - forced switch goes to the living bench member with the best expected damage
+  ---
+  duration_ms: 41.667267
+  type: 'test'
+  ...
+# Subtest: full gauntlet end-to-end with greedy-v1 (opponents placeholder-default)
+ok 349 - full gauntlet end-to-end with greedy-v1 (opponents placeholder-default)
+  ---
+  duration_ms: 1070.766631
+  type: 'test'
+  ...
+# Subtest: fixture: both policies, the fixed set, the main digest for expectimax2-v2
+ok 350 - fixture: both policies, the fixed set, the main digest for expectimax2-v2
+  ---
+  duration_ms: 5.400651
+  type: 'test'
+  ...
+# Subtest: positive control: an altered choice, draw count or digest is reported by the comparison
+ok 351 - positive control: an altered choice, draw count or digest is reported by the comparison
+  ---
+  duration_ms: 14.289752
+  type: 'test'
+  ...
+# Subtest: replay: 3 policies x 40 gauntlets reproduce the fixture (digests, choices, AI draws per decision)
+ok 352 - replay: 3 policies x 40 gauntlets reproduce the fixture (digests, choices, AI draws per decision)
+  ---
+  duration_ms: 34965.82526
+  type: 'test'
+  ...
+# replay: 120 gauntlets, 8996 player decisions, 16 workers, 34.9 s
+# \# super-effective: HP lost with berry 19, without 38 (same seed)
+# Subtest: engine: a super-effective hit of the berry type is weakened and the berry eaten; the plain holder takes more
+ok 353 - engine: a super-effective hit of the berry type is weakened and the berry eaten; the plain holder takes more
+  ---
+  duration_ms: 285.329068
+  type: 'test'
+  ...
+# Subtest: engine: a neutral hit leaves the berry in place
+ok 354 - engine: a neutral hit leaves the berry in place
+  ---
+  duration_ms: 7.85236
+  type: 'test'
+  ...
+# Subtest: player: a super-effective hit of the berry type is halved and the berry consumed when it lands
+ok 355 - player: a super-effective hit of the berry type is halved and the berry consumed when it lands
+  ---
+  duration_ms: 13.651385
+  type: 'test'
+  ...
+# Subtest: player: a hit of another type is not halved and the berry stays
+ok 356 - player: a hit of another type is not halved and the berry stays
+  ---
+  duration_ms: 5.791111
+  type: 'test'
+  ...
+# Subtest: player: after the berry is used, the next super-effective hit is not halved
+ok 357 - player: after the berry is used, the next super-effective hit is not halved
+  ---
+  duration_ms: 6.790671
+  type: 'test'
+  ...
+# Subtest: player: Chilan halves a Normal hit at any effectiveness; the knob off halves nothing
+ok 358 - player: Chilan halves a Normal hit at any effectiveness; the knob off halves nothing
+  ---
+  duration_ms: 8.109764
+  type: 'test'
+  ...
+# Subtest: known vector and format
+ok 359 - known vector and format
+  ---
+  duration_ms: 3.490513
+  type: 'test'
+  ...
+# Subtest: Showdown accepts a derived seed and replays identically
+ok 360 - Showdown accepts a derived seed and replays identically
+  ---
+  duration_ms: 216.10896
+  type: 'test'
+  ...
+# \# substitute: hit the substitute true; engine healed false (game: heals, battle_controller_player.c:3361)
+# \# u-turn: engine healed true (game: heals, battle_lib.c:7345)
+# Subtest: engine: a hurt holder heals floor(damage / 8) after a damaging hit
+ok 361 - engine: a hurt holder heals floor(damage / 8) after a damaging hit
+  ---
+  duration_ms: 853.77111
+  type: 'test'
+  ...
+# Subtest: engine: a holder at full HP does not heal
+ok 362 - engine: a holder at full HP does not heal
+  ---
+  duration_ms: 20.33422
+  type: 'test'
+  ...
+# Subtest: engine: damage to a substitute (records whether the engine heals from it)
+ok 363 - engine: damage to a substitute (records whether the engine heals from it)
+  ---
+  duration_ms: 28.000491
+  type: 'test'
+  ...
+# Subtest: engine: U-turn heals (records it; the game heals on the pivot path)
+ok 364 - engine: U-turn heals (records it; the game heals on the pivot path)
+  ---
+  duration_ms: 15.834398
+  type: 'test'
+  ...
+# Subtest: engine: a holder knocked out by its own recoil does not heal
+ok 365 - engine: a holder knocked out by its own recoil does not heal
+  ---
+  duration_ms: 22.984559
+  type: 'test'
+  ...
+# Subtest: player: a holder at half HP dealing 80 damage heals 10
+ok 366 - player: a holder at half HP dealing 80 damage heals 10
+  ---
+  duration_ms: 18.679271
+  type: 'test'
+  ...
+# Subtest: player: a holder at full HP heals 0
+ok 367 - player: a holder at full HP heals 0
+  ---
+  duration_ms: 13.252049
+  type: 'test'
+  ...
+# Subtest: player: a 7-damage hit heals 1
+ok 368 - player: a 7-damage hit heals 1
+  ---
+  duration_ms: 4.455426
+  type: 'test'
+  ...
+# Subtest: player: the heal uses the HP the target lost, not the raw damage
+ok 369 - player: the heal uses the HP the target lost, not the raw damage
+  ---
+  duration_ms: 7.616697
+  type: 'test'
+  ...
+# Subtest: player: a holder fainted by recoil heals 0
+ok 370 - player: a holder fainted by recoil heals 0
+  ---
+  duration_ms: 8.807814
+  type: 'test'
+  ...
+# Subtest: player: no Shell Bell, no heal; the knob off, no heal
+ok 371 - player: no Shell Bell, no heal; the knob off, no heal
+  ---
+  duration_ms: 15.894203
+  type: 'test'
+  ...
+# Subtest: hand-walk: Scizor KOs Flint's lead; the offer names Infernape; the switch costs no move and resets boosts
+ok 372 - hand-walk: Scizor KOs Flint's lead; the offer names Infernape; the switch costs no move and resets boosts
+  ---
+  duration_ms: 738.703867
+  type: 'test'
+  ...
+# Subtest: hand-walk: the foe faints from poison at the end of the turn; the offer still fires (any cause)
+ok 373 - hand-walk: the foe faints from poison at the end of the turn; the offer still fires (any cause)
+  ---
+  duration_ms: 12.574518
+  type: 'test'
+  ...
+# Subtest: exclusion: both actives faint in the same turn -> both replace, no offer
+ok 374 - exclusion: both actives faint in the same turn -> both replace, no offer
+  ---
+  duration_ms: 12.756157
+  type: 'test'
+  ...
+# Subtest: exclusion: only the player's active faints -> forced replacement, no offer
+ok 375 - exclusion: only the player's active faints -> forced replacement, no offer
+  ---
+  duration_ms: 5.252386
+  type: 'test'
+  ...
+# Subtest: exclusion: the player has no bench member with HP -> no offer, no log line
+ok 376 - exclusion: the player has no bench member with HP -> no offer, no log line
+  ---
+  duration_ms: 10.26349
+  type: 'test'
+  ...
+# Subtest: exclusion: the trainer's last Pokemon faints -> the battle is over, no request, no offer
+ok 377 - exclusion: the trainer's last Pokemon faints -> the battle is over, no request, no offer
+  ---
+  duration_ms: 17.742242
+  type: 'test'
+  ...
+# Subtest: illegal answers are refused: the active member, a fainted member, a bad string
+ok 378 - illegal answers are refused: the active member, a fainted member, a bad string
+  ---
+  duration_ms: 16.622441
+  type: 'test'
+  ...
+# Subtest: through runGauntlet: Set never calls the hook and matches a hookless run; Shift calls it and records the mix
+ok 379 - through runGauntlet: Set never calls the hook and matches a hookless run; Shift calls it and records the mix
+  ---
+  duration_ms: 1638.087189
+  type: 'test'
+  ...
+# Subtest: greedy-v1: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+ok 380 - greedy-v1: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+  ---
+  duration_ms: 18.554401
+  type: 'test'
+  ...
+# Subtest: greedy-v1: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+ok 381 - greedy-v1: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+  ---
+  duration_ms: 16.462234
+  type: 'test'
+  ...
+# Subtest: greedy-v1: the same position twice gives the same answer and the same draw count
+ok 382 - greedy-v1: the same position twice gives the same answer and the same draw count
+  ---
+  duration_ms: 20.920375
+  type: 'test'
+  ...
+# Subtest: expectimax2-v1: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+ok 383 - expectimax2-v1: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+  ---
+  duration_ms: 78.403724
+  type: 'test'
+  ...
+# Subtest: expectimax2-v1: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+ok 384 - expectimax2-v1: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+  ---
+  duration_ms: 38.900253
+  type: 'test'
+  ...
+# Subtest: expectimax2-v1: the same position twice gives the same answer and the same draw count
+ok 385 - expectimax2-v1: the same position twice gives the same answer and the same draw count
+  ---
+  duration_ms: 95.32544
+  type: 'test'
+  ...
+# Subtest: expectimax2-v2: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+ok 386 - expectimax2-v2: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+  ---
+  duration_ms: 50.883835
+  type: 'test'
+  ...
+# Subtest: expectimax2-v2: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+ok 387 - expectimax2-v2: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+  ---
+  duration_ms: 48.182227
+  type: 'test'
+  ...
+# Subtest: expectimax2-v2: the same position twice gives the same answer and the same draw count
+ok 388 - expectimax2-v2: the same position twice gives the same answer and the same draw count
+  ---
+  duration_ms: 113.624401
+  type: 'test'
+  ...
+# Subtest: expectimax2-v4: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+ok 389 - expectimax2-v4: must switch (Roserade's Poison moves into Lucario; Infernape on the bench)
+  ---
+  duration_ms: 44.063819
+  type: 'test'
+  ...
+# Subtest: expectimax2-v4: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+ok 390 - expectimax2-v4: must stay (Infernape's Flare Blitz on Roserade; Blissey on the bench)
+  ---
+  duration_ms: 44.79837
+  type: 'test'
+  ...
+# Subtest: expectimax2-v4: the same position twice gives the same answer and the same draw count
+ok 391 - expectimax2-v4: the same position twice gives the same answer and the same draw count
+  ---
+  duration_ms: 54.522754
+  type: 'test'
+  ...
+# Subtest: a one-trainer gauntlet under Shift with v4 records at least one offer with a reason
+ok 392 - a one-trainer gauntlet under Shift with v4 records at least one offer with a reason
+  ---
+  duration_ms: 1928.423483
+  type: 'test'
+  ...
+# Subtest: a modelled switch clears the stages of the member switching out and the one switching in
+ok 393 - a modelled switch clears the stages of the member switching out and the one switching in
+  ---
+  duration_ms: 248.994332
+  type: 'test'
+  ...
+# Subtest: a modelled replacement after a faint enters with zero stages
+ok 394 - a modelled replacement after a faint enters with zero stages
+  ---
+  duration_ms: 36.116487
+  type: 'test'
+  ...
+# Subtest: the opponent side resets stages on its modelled switch too
+ok 395 - the opponent side resets stages on its modelled switch too
+  ---
+  duration_ms: 3.943623
+  type: 'test'
+  ...
+# {"league_unmapped":[],"unmapped_species":[],"unmapped_moves":[],"unmapped_abilities":[],"unmapped_items_total":242,"unmapped_items_with_hold_effect":["amulet_coin:HOLD_EFFECT_MONEY_UP","cleanse_tag:HOLD_EFFECT_ENCOUNTERS_DOWN","everstone:HOLD_EFFECT_NO_EVOLVE","exp_share:HOLD_EFFECT_EXP_SHARE","luck_incense:HOLD_EFFECT_MONEY_UP","lucky_egg:HOLD_EFFECT_EXP_UP","pure_incense:HOLD_EFFECT_ENCOUNTERS_DOWN","smoke_ball:HOLD_EFFECT_FLEE","soothe_bell:HOLD_EFFECT_FRIENDSHIP_UP"],"renamed_moves":[["faint_attack","feintattack"],["hi_jump_kick","highjumpkick"],["smelling_salt","smellingsalts"],["vice_grip","visegrip"]],"num_mismatch":{"items":[],"abilities":[]}}
+# Subtest: player builds: Showdown stats == JS port == Python calc_stats
+ok 396 - player builds: Showdown stats == JS port == Python calc_stats
+  ---
+  duration_ms: 2517.405999
+  type: 'test'
+  ...
+# Subtest: every League opponent: Showdown stats == Python calc_stats; IV 30, EV 0
+ok 397 - every League opponent: Showdown stats == Python calc_stats; IV 30, EV 0
+  ---
+  duration_ms: 4096.931769
+  type: 'test'
+  ...
+# Subtest: opponent nature/ability/gender come from trainers.json personality
+ok 398 - opponent nature/ability/gender come from trainers.json personality
+  ---
+  duration_ms: 2.794977
+  type: 'test'
+  ...
+# Subtest: Dark Pulse has base PP 15 on Cynthia's Spiritomb and on a player build (no PP Ups)
+ok 399 - Dark Pulse has base PP 15 on Cynthia's Spiritomb and on a player build (no PP Ups)
+  ---
+  duration_ms: 35.673737
+  type: 'test'
+  ...
+# Subtest: carried PP from start_state is applied
+ok 400 - carried PP from start_state is applied
+  ---
+  duration_ms: 2.530419
+  type: 'test'
+  ...
+# Subtest: id mapping: every League mon and every species/move/ability maps; unmapped items listed
+ok 401 - id mapping: every League mon and every species/move/ability maps; unmapped items listed
+  ---
+  duration_ms: 2.61928
+  type: 'test'
+  ...
+# Subtest: WEIGHT_TO_POWER is the decomp table
+ok 402 - WEIGHT_TO_POWER is the decomp table
+  ---
+  duration_ms: 3.134048
+  type: 'test'
+  ...
+# Subtest: weightTierPower: every tier, both sides of every limit (the game gives the LOWER tier on a limit)
+ok 403 - weightTierPower: every tier, both sides of every limit (the game gives the LOWER tier on a limit)
+  ---
+  duration_ms: 0.521061
+  type: 'test'
+  ...
+# Subtest: speciesWeightHg: Snorlax 4600, Pikachu 60, Flareon 250 (exactly on the 250 limit: game 40, Showdown 60)
+ok 404 - speciesWeightHg: Snorlax 4600, Pikachu 60, Flareon 250 (exactly on the 250 limit: game 40, Showdown 60)
+  ---
+  duration_ms: 0.862176
+  type: 'test'
+  ...
+# Subtest: returnPower / frustrationPower at friendship 255 and 0
+ok 405 - returnPower / frustrationPower at friendship 255 and 0
+  ---
+  duration_ms: 0.248026
+  type: 'test'
+  ...
+# Subtest: gyroBallPower: the trainer-AI test values, the cap, a faster attacker, zero speed
+ok 406 - gyroBallPower: the trainer-AI test values, the cap, a faster attacker, zero speed
+  ---
+  duration_ms: 0.251182
+  type: 'test'
+  ...
+# Subtest: greedy expectedDamage scores the four moves at the computed power (Flint's Houndoom, then Bertha's Rhyperior)
+ok 407 - greedy expectedDamage scores the four moves at the computed power (Flint's Houndoom, then Bertha's Rhyperior)
+  ---
+  duration_ms: 329.729814
+  type: 'test'
+  ...
+# Subtest: Rhyperior is in the 120 tier and Flareon in the 40 tier through the helper
+ok 408 - Rhyperior is in the 120 tier and Flareon in the 40 tier through the helper
+  ---
+  duration_ms: 0.421359
+  type: 'test'
+  ...
+# Subtest: greedy still scores Frustration and Magnitude 0
+ok 409 - greedy still scores Frustration and Magnitude 0
+  ---
+  duration_ms: 5.226727
+  type: 'test'
+  ...
+# Subtest: greedy.choose picks Return (102, STAB) over Tackle for a Snorlax with return/tackle/rest/yawn
+ok 410 - greedy.choose picks Return (102, STAB) over Tackle for a Snorlax with return/tackle/rest/yawn
+  ---
+  duration_ms: 7.258239
+  type: 'test'
+  ...
+# Subtest: sim code file set: *.mjs + package.json, no tests or spikes
+ok 411 - sim code file set: *.mjs + package.json, no tests or spikes
+  ---
+  duration_ms: 6.745254
+  type: 'test'
+  ...
+# Subtest: sim code hash is stable and well formed
+ok 412 - sim code hash is stable and well formed
+  ---
+  duration_ms: 11.865366
+  type: 'test'
+  ...
+1..412
+# tests 412
+# suites 0
+# pass 412
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 161108.509863
