@@ -73,9 +73,9 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 6: Gates and close
 
-- [ ] T014 Gates, nothing else running: engine diff empty; `sim` diff only the player, the knob and the test; hashes and ledger version
+- [x] T014 Gates, nothing else running: engine diff empty; `sim` diff only the player, the knob and the test; hashes and ledger version
       as expected; Node suite; `uv run pytest -q --durations=25 > runs/029-evidence/full.log 2>&1; echo full exit=$?`; log and `evidence/gates.txt`
-- [ ] T015 Closing commit `docs(029): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
+- [x] T015 Closing commit `docs(029): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
 
 ## Dependencies
 

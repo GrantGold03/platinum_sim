@@ -106,3 +106,10 @@ at first (an insertion anchor did not match); fixed. Item tests 22 passed; fast 
 
 **Gate (FR-010): pass.** Docs: README (items bullet names the berries; 029 block with the Principle VII statement and the partial
 model of FR-012), FUTURE-FEATURES section 0, RUN-STATE.
+
+## T014 Gates (12:20:01 PM to 1:57:17 PM EST, alone)
+
+Vendored engine diff against `main`: empty. `sim` diff: only the player (`expectimax2.mjs`), the knob (`gauntlet.mjs`) and the new
+test. Hashes: sim sha256:913f9f0c… and platsim sha256:f3271a01… (both changed, as expected); ledger version unchanged at
+sha256:821f33356f6a61bb (no entry needed). Node suite: **402 pass, 0 fail**, exit 0. Full pytest: **675 passed, 4 xfailed**, exit 0
+(1:34:23; 669 + 4 xfailed before, plus the 7 new tests less 1 already counted). Evidence: `evidence/gates.txt`, `evidence/full-durations.txt`.

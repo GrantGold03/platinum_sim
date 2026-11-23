@@ -1,0 +1,19 @@
+start 12:20:01 PM EST
+== engine diff (vendored pokemon-showdown) vs main:
+== sim diff vs main:
+ sim/gauntlet.mjs                 |   1 +
+ sim/policy/expectimax2.mjs       |  43 ++++++++++-----
+ sim/test/resist_berries.test.mjs | 109 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 141 insertions(+), 12 deletions(-)
+== hashes:
+sha256:913f9f0c381b70c19212477c76b55c78b72aa48ebd282463315485c29985b048 sha256:f3271a011f8a55146cccdac95b0b5baeecb638885f83dd0d4b4f493c16f2b974
+ledger sha256:821f33356f6a61bb
+node exit=0
+# tests 402
+# pass 402
+# fail 0
+full exit=0
+7.97s call     tests/integration/test_pool.py::test_64_gauntlets_on_4_workers_match_single_worker
+6.99s setup    tests/unit/test_marginal_coverage.py::test_b2_allocation_record_names_the_contested_tms
+675 passed, 4 xfailed, 1 warning in 5663.01s (1:34:23)
+end 1:57:17 PM EST

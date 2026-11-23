@@ -1,10 +1,10 @@
-# START HERE (updated 2026-11-23, feature 029 `029-h4-resist-berries` built on its branch; awaiting the gates and the user's merge)
+# START HERE (updated 2026-11-23, feature 029 `029-h4-resist-berries` built on its branch; gates passed; awaiting the user's merge)
 - **Feature 029 `029-h4-resist-berries` built 2026-11-23 on its branch from `main` 58f1570.** Commits: pre-feature evidence and
   scripts; the player models resist berries (v4 knob `resistBerries`, engine checks: no difference, so no ledger entry; player
   check under Shift 0.8570 vs 0.8560, p 0.63, not worse); the ranking (Defense or Special Defense per threat, ability immunities)
   and the top two appended after Shell Bell; then acceptance and docs. Acceptance (12:00 to 12:19 PM EST): berries offered (item
-  deviations 142, 64 more teams screened) and none chosen; the B2 winner identical; 0 defects; identity identical. Next: the gates,
-  then the user's merge. Traps found: the paired script takes `file:<path>` for a team file; the damage input's move record has no
+  deviations 142, 64 more teams screened) and none chosen; the B2 winner identical; 0 defects; identity identical. Gates (12:20 to 1:57 PM EST): Node 402 pass,
+  full pytest 675 passed + 4 xfailed. Next: the user's merge. Traps found: the paired script takes `file:<path>` for a team file; the damage input's move record has no
   type (take it from the move record).
 - **Feature 028 `028-h4-shell-bell` built 2026-11-20 on its branch from `main` 634e270.** Commits: pre-feature evidence and
   scripts, 6d49591 (player models Shell Bell, v4 knob `shellBell`, engine checks, ledger `mech-shell-bell-substitute`, player
