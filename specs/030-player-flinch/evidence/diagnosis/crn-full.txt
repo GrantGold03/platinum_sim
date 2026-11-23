@@ -1,0 +1,4 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:fa7a61f8dc21a6afb46c237e38b1dd1010bc583829884249653ca616c93d2938
+paired_policies: expectimax2-v4?crn=1 on file:runs/030-evidence/teams/b2-main.json: 1861/2000 cleared, 136.5 s, 14.65 gauntlets/s
+paired_policies: cache hit file_runs_030-evidence_teams_b2-main.json__expectimax2-v4_Q_flinch-0__crn-1__2000.json (16.23 gauntlets/s when recorded)
+file:runs/030-evidence/teams/b2-main.json: n 2000  A expectimax2-v4?crn=1 0.9305 [0.9185, 0.9408]  B expectimax2-v4?flinch=0&crn=1 0.9510 [0.9406, 0.9596]  only A 49 / only B 90  p 0.000638  verdict B  speed A 14.65 B 16.23 gauntlets/s

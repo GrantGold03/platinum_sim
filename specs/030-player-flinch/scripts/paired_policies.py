@@ -27,6 +27,7 @@ TEAM_NAMES = ("bench", "ref", "b2main", "b2branch")
 
 
 BATTLE_STYLE = "shift"  # set from --battle-style in main
+MASTER_SUFFIX = ""  # set from --master-suffix in main
 
 def safe_name(policy: str) -> str:
     """A filesystem-safe, injective-enough rendering of a policy name (candidate names carry ? & =)."""
@@ -86,14 +87,14 @@ def load_team_requests(name: str, out: Path) -> list[dict]:
 def run_side(pool, team: str, team_reqs: list[dict], policy: str, n: int, out: Path, log, suffix: str = "") -> dict:
     from platsim.sim.seeds import derive_seed
 
-    cache = out / f"{safe_name(team)}__{safe_name(policy)}__{n}{suffix}.json"
+    cache = out / f"{safe_name(team)}__{safe_name(policy)}__{n}{suffix}{('__' + MASTER_SUFFIX) if MASTER_SUFFIX else ''}.json"
     if cache.exists():
         entry = json.loads(cache.read_text())
         if cache_valid(entry, pool.sim_code_hash, n):
             log(f"cache hit {cache.name} ({entry['gauntlets_per_s']:.2f} gauntlets/s when recorded)")
             return entry
         log(f"cache {cache.name} ignored: sim_code_hash {entry.get('sim_code_hash')} != pool {pool.sim_code_hash} or n differs; recomputing")
-    master = f"018-pairs|{team}"
+    master = f"018-pairs|{team}" + (f"|{MASTER_SUFFIX}" if MASTER_SUFFIX else "")  # 030: --master-suffix for fresh seeds
     reqs = [{"op": "gauntlet", "id": f"{policy}-{i}", "team": team_reqs, "seed": derive_seed(master, i, 0),
              "player_policy": policy, "opponent_policy": OPPONENT, "stop_on_loss": True, "log": "none",
              "battle_style": BATTLE_STYLE} for i in range(n)]
@@ -124,10 +125,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--out", type=Path, default=REPO / "runs/018-evidence/pairs")
     ap.add_argument("--self", action="store_true", dest="self_check", help="pairing control: play --a twice on the first team")
+    ap.add_argument("--master-suffix", default="", help="030: a suffix for fresh seeds (confirmation runs)")
     ap.add_argument("--battle-style", default="shift", choices=("set", "shift"), help="028: today's default is shift (023)")
     args = ap.parse_args(argv)
     global BATTLE_STYLE
     BATTLE_STYLE = args.battle_style
+    global MASTER_SUFFIX
+    MASTER_SUFFIX = args.master_suffix
     from platsim.sim.pool import WorkerPool
 
     out = args.out

@@ -1,0 +1,5 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:875e8668d757a638c95ac3c6e9b27f3826733e318349c818d6aecd7444eb1e20
+paired_policies: expectimax2-v4?flinchAtk=0.5 on file:runs/030-evidence/teams/b2-main.json: 1880/2000 cleared, 132.8 s, 15.07 gauntlets/s
+paired_policies: cache file_runs_030-evidence_teams_b2-main.json__expectimax2-v4_Q_flinch-0__2000.json ignored: sim_code_hash sha256:b29b00f4559dfb9fceabe8ac32f32ea16677e9a532cd72e387c2b2790e39fb17 != pool sha256:875e8668d757a638c95ac3c6e9b27f3826733e318349c818d6aecd7444eb1e20 or n differs; recomputing
+paired_policies: expectimax2-v4?flinch=0 on file:runs/030-evidence/teams/b2-main.json: 1893/2000 cleared, 122.3 s, 16.35 gauntlets/s
+file:runs/030-evidence/teams/b2-main.json: n 2000  A expectimax2-v4?flinchAtk=0.5 0.9400 [0.9287, 0.9496]  B expectimax2-v4?flinch=0 0.9465 [0.9358, 0.9555]  only A 33 / only B 46  p 0.177  verdict indistinguishable  speed A 15.07 B 16.35 gauntlets/s

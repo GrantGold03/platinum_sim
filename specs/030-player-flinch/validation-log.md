@@ -105,3 +105,33 @@ reference-only seeds with flinch on.
 5. **Test of that reading** (B2, 2,000 pairs, 4 samples at the second ply in both arms): attack only 0.9485 vs 0.9545 (40 / 52, p 0.25).
    The deficit shrinks (-0.90 to -0.60 points) but does not vanish: sampling noise explains part of it. Side note: with 4 samples the
    reference arm itself clears 0.9545 against 0.9465 with one sample on the same seeds (not a paired test of that change).
+
+## Diagnosis, continued (owner away; instruction: keep digging so King's Rock is chosen when best; 5:20 to 6:00 PM EST)
+
+All on today's B2 winner, 2,000 pairs, the same seeds as T007 unless stated.
+
+| Variant (A) | Reference (B) | A | B | only A / only B | p |
+|---|---|---|---|---|---|
+| attack, common random numbers below the root (`crn=1`) | `flinch=0&crn=1` | 0.9340 | 0.9510 | 47 / 81 | 0.003 |
+| full, `crn=1` | `flinch=0&crn=1` | 0.9305 | 0.9510 | 49 / 90 | 0.0006 |
+| `flinch=0&crn=1` (crn alone) | `flinch=0` | 0.9510 | 0.9465 | 75 / 66 | 0.50 |
+| **full, move-hit fix** | `flinch=0` | 0.9335 | 0.9465 | 57 / 83 | 0.034 |
+| attack, move-hit fix | `flinch=0` | 0.9385 | 0.9465 | 50 / 66 | 0.16 |
+| full, own flinch odds at half weight (`flinchAtk=0.5`) | `flinch=0` | 0.9400 | 0.9465 | 33 / 46 | 0.18 |
+| full, `kPly2=4` | `flinch=0&kPly2=4` | 0.9475 | 0.9545 | 45 / 59 | 0.20 |
+
+- Common random numbers made it worse, so sampling noise is not the main cause; the bias is systematic.
+- **A model bug found and fixed** (`flinchStop`): in the game a flinched Pokemon's turn still ends through `ClearFlags`, which clears
+  its move-hit record (`battle_controller_player.c:4389`; the live AI tracker clears it on `|cant|`, `sim/ai/opponent.mjs:152`). The
+  model did not, so the trainer-AI prediction after a flinch saw a hit the game had cleared, and predicted switches (31% in the
+  Spiritomb probe, against none for the twin) that the game never makes. After the fix, flinched states are worth exactly their
+  HP-equal twins (Garchomp/Spiritomb and Floatzel/Milotic probes); Rock Slide's flinch bonus in the Spiritomb position fell from
+  +0.085 to +0.040 (below Crunch). Test added (11 flinch tests pass). The fix changed the B2 result little (0.9335 vs 0.9465).
+- **Pre-existing gap, not fixed (would change today's v4)**: the model does not clear the move-hit record for the model's other
+  "cannot move" turns either (sleep, full paralysis, freeze), while the game and the live tracker do. Recorded for a later feature.
+- Replays of the new discordant games: Cynthia's Lucario (Steadfast) is rarely flinched (Speed boosts 4 vs 0), so Steadfast is not the
+  cause. The model still prefers Rock Slide (140 vs 11) and Waterfall (169 vs 76) over Crunch (7 vs 93; 32 vs 110), e.g. Waterfall into
+  a resisting Milotic, and switches more in the games it loses (1,870 vs 1,400). In the Floatzel/Milotic probe, the flinch is worth
+  surviving a Dragon Pulse that otherwise knocks Floatzel out, a real gain within the two-turn view.
+- Reading so far: every variant that values the player's own flinch odds comes out 0.6 to 1.3 points behind on these seeds; valuing
+  only the foe's flinches is neutral to slightly better. Next: the same comparisons on fresh seeds (`--master-suffix fresh1`).
