@@ -1,0 +1,4 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:d8ff72aea4b456fb7f4128a6006dd924461aa1542ad34b8e68b9f1751aa016b0
+paired_policies: expectimax2-v4?flinch=attack&kPly2=4 on file:runs/030-evidence/teams/b2-main.json: 1897/2000 cleared, 227.3 s, 8.80 gauntlets/s
+paired_policies: expectimax2-v4?flinch=0&kPly2=4 on file:runs/030-evidence/teams/b2-main.json: 1909/2000 cleared, 209.2 s, 9.56 gauntlets/s
+file:runs/030-evidence/teams/b2-main.json: n 2000  A expectimax2-v4?flinch=attack&kPly2=4 0.9485 [0.9379, 0.9574]  B expectimax2-v4?flinch=0&kPly2=4 0.9545 [0.9445, 0.9628]  only A 40 / only B 52  p 0.251  verdict indistinguishable  speed A 8.80 B 9.56 gauntlets/s

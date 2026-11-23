@@ -573,6 +573,8 @@ const FLINCH_EFFECTS = new Set(['FLINCH_HIT', 'FLINCH_BURN_HIT', 'FLINCH_FREEZE_
 // cannot be flinched), survived, is not behind a substitute and lacks Inner Focus (Mold Breaker gets through).
 function flinchChance(X, S, side, rec, e, foeMovesLater) {
   if (!X.opts.flinch || !foeMovesLater || !FLINCH_EFFECTS.has(e)) return 0;
+  // 030 diagnosis knob: 'attack' = only the player's flinch moves, 'defend' = only the foe's (default true = both)
+  if ((X.opts.flinch === 'attack' && side !== 0) || (X.opts.flinch === 'defend' && side !== 1)) return 0;
   const u = activeOf(S, side), t = activeOf(S, 1 - side);
   if (!u || !t || t.hp <= 0) return 0;
   if (!t.fresh && t.ref.volatiles && t.ref.volatiles.substitute) return 0;

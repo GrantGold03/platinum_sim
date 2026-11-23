@@ -83,3 +83,25 @@ Notes for that decision: the three teams were each tested at the 0.05 level (wit
 p 0.025 would not be supported; the spec's rule is per team, so the stop stands unless the owner changes the rule). The stored results
 keep only cleared or not per gauntlet, so locating the extra losses (which trainer, which decisions) needs a replay of the 87
 reference-only seeds with flinch on.
+
+## Diagnosis of the B2 loss (owner's choice: diagnose; 4:40 to 5:14 PM EST; scripts in `evidence/diagnosis/`)
+
+1. **Where** (`diag030.py`, the 146 discordant gauntlets replayed, all reproduced): the differences sit in the Cynthia battle in both
+   directions (model lost 85 there that the reference won; won 54 there that the reference lost).
+2. **What changed in play** (`diag030b.py`, full logs, Cynthia battle, 146 gauntlets): Garchomp Rock Slide 220 uses vs 27, Crunch 11
+   vs 156; Floatzel Waterfall 360 vs 130, Crunch 40 vs 185; Cynthia's Pokemon flinched 106 times vs 25; in the 87 model losses more
+   switches (1,976 vs 1,454) and longer battles (1,727 vs 1,310 turns). The realized flinch rate (106 in 580 uses of the two flinch
+   moves) is close to what the model expects: the rule is right.
+3. **Which half** (owner approved a diagnosis knob `flinch=attack|defend`, default play unchanged; B2, 2,000 pairs each against
+   `flinch=0`): attack only 0.9375 vs 0.9465 (53 / 71, p 0.13); defence only 0.9490 vs 0.9465 (18 / 13, p 0.47). The harm is in valuing
+   the player's own flinch chances.
+4. **Why, in one position** (`probe030.mjs`, `probe030b.mjs`; Garchomp Lv 52 against Cynthia's Spiritomb): Rock Slide's score rises
+   from 0.058 to 0.144 with flinch (Earthquake 0.201 is still chosen there). A flinched end state is worth 0.59 against 0.24 for its
+   twin with the same HP for both Pokemon. The twin and the flinched state differ only in Spiritomb's last move, PP, "last move worked"
+   flag and the move-hit record; changing any one of them changes the trainer-AI prediction at the second ply, which v4 takes from
+   **one** sample (`kPly2=1`) seeded by the state: the flinched state's single draw predicted a switch. Each flinch outcome adds new
+   distinct states with their own one-draw predictions, and the player takes the best estimate, so moves that spread into more noisy
+   states win by luck (the optimizer's curse). This is the reading of one position, not a proof.
+5. **Test of that reading** (B2, 2,000 pairs, 4 samples at the second ply in both arms): attack only 0.9485 vs 0.9545 (40 / 52, p 0.25).
+   The deficit shrinks (-0.90 to -0.60 points) but does not vanish: sampling noise explains part of it. Side note: with 4 samples the
+   reference arm itself clears 0.9545 against 0.9465 with one sample on the same seeds (not a paired test of that change).
