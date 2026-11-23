@@ -140,3 +140,12 @@ test('player: Fake Out flinches on the first turn out and fails afterwards', () 
   const later = _internal.resolveTurn(c2.X, c2.T, act(c2.X, c2.me, 'fakeout'), act(c2.X, c2.foe, 'darkpulse'));
   assert.ok(later.every((b) => b.S.sides[1].mons[b.S.sides[1].active].hp === c2.foe.hp), 'Fake Out fails');
 });
+
+test('player: a flinched Pokemon\'s move-hit record is cleared, as the game\'s ClearFlags does (030 diagnosis)', () => {
+  const crobat = B('crobat', 60, ['air_slash', 'protect', 'haze', 'roost'], 'ABILITY_INNER_FOCUS');
+  const c = ctx(crobat);
+  const out = _internal.resolveTurn(c.X, c.T, act(c.X, c.me, 'airslash'), act(c.X, c.foe, 'darkpulse'));
+  const flinched = out.filter((b) => b.S.sides[0].mons[b.S.sides[0].active].hp === c.me.hp && b.S.sides[1].mons[b.S.sides[1].active].hp < c.foe.hp);
+  assert.ok(flinched.length > 0);
+  assert.ok(flinched.every((b) => b.S.moveHit[1] === 0), 'the foe\'s record of being hit is cleared when its turn is lost');
+});

@@ -62,6 +62,8 @@ const CANDIDATE_KEYS = {
   floor: (v) => (/^\d+(\.\d+)?$/.test(v) && +v >= 0 && +v <= 0.5 ? +v : undefined),
   shellBell: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 028: the reference arm of the player check
   resistBerries: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 029: the reference arm of the player check
+  flinchAtk: (v) => (/^(0(\.\d+)?|1(\.0+)?)$/.test(v) ? +v : undefined), // 030 diagnosis: weight on the player's own flinch odds
+  crn: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 030 diagnosis: common random numbers below the root
   flinch: (v) => (v === '0' ? false : v === '1' ? true : v === 'attack' || v === 'defend' ? v : undefined), // 030: reference arm; attack/defend: diagnosis
 };
 function parseCandidate(name) {

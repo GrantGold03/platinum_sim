@@ -580,11 +580,16 @@ function flinchChance(X, S, side, rec, e, foeMovesLater) {
   if (!t.fresh && t.ref.volatiles && t.ref.volatiles.substitute) return 0;
   const ua = staticInfo(X, u).ability;
   if (staticInfo(X, t).ability === 'ABILITY_INNER_FOCUS' && ua !== 'ABILITY_MOLD_BREAKER') return 0;
-  return Math.min(100, (rec.effect_chance || 0) * (ua === 'ABILITY_SERENE_GRACE' ? 2 : 1)) / 100;
+  const c = Math.min(100, (rec.effect_chance || 0) * (ua === 'ABILITY_SERENE_GRACE' ? 2 : 1)) / 100;
+  return side === 0 && X.opts.flinchAtk !== undefined ? c * X.opts.flinchAtk : c; // 030 diagnosis: weight on the player's own flinch odds
 }
 
 // 030: a flinched Pokemon loses its move (battle_controller_player.c:2528); Steadfast +1 Speed (subscript_flinched.s).
-function flinchStop(X, u) {
+// Its turn still ends through ClearFlags, which clears its move-hit record (battle_controller_player.c:4389; the live
+// AI tracker does the same on `|cant|`, sim/ai/opponent.mjs): without this the trainer-AI prediction after a flinch
+// sees a hit that the game has already cleared and predicts switches the game never makes (030 diagnosis).
+function flinchStop(X, S, side, u) {
+  S.moveHit[side] = 0;
   u.flinched = false;
   u.lastMoveOk = false;
   if (staticInfo(X, u).ability === 'ABILITY_STEADFAST') u.boosts.spe = clampStage(u.boosts.spe + 1);
@@ -737,7 +742,7 @@ function doMove(X, br, side, act, foeAct, foeMovesLater) {
     u.slp -= staticInfo(X, u).ability === 'ABILITY_EARLY_BIRD' ? 2 : 1;
     if (u.slp > 0) { u.lastMoveOk = false; return [br]; }
     u.status = ''; u.slp = 0;
-    if (u.flinched) { flinchStop(X, u); return [br]; } // 030: the game checks flinch after sleep
+    if (u.flinched) { flinchStop(X, S, side, u); return [br]; } // 030: the game checks flinch after sleep
     pre.push(br);
   } else if (u.status === 'frz') {
     const thaw = { p: br.p * 0.2, S: cloneState(S) };
@@ -745,7 +750,7 @@ function doMove(X, br, side, act, foeAct, foeMovesLater) {
     br.p *= 0.8;
     return [br, ...doMove(X, thaw, side, act, foeAct, foeMovesLater)];
   } else if (u.flinched) { // 030: after sleep and freeze, before paralysis (the game's status-check order)
-    flinchStop(X, u);
+    flinchStop(X, S, side, u);
     return [br];
   } else if (u.status === 'par') {
     const moves = { p: br.p * 0.75, S: cloneState(S) };
@@ -1018,7 +1023,9 @@ function predictOpponent(X, S, depthTag, K) {
     const view = viewOf(X, S);
     STATS.viewMs += performance.now() - tv;
     const counts = new Map();
-    const h = cheapHash(key);
+    // 030 (diagnosis, option `crn`): below the root, every state of one decision draws the trainer AI's samples from the same
+    // stream (common random numbers), so two sibling states differ in prediction only through the state, not through a reseed.
+    const h = X.opts.crn && depthTag !== 'root' ? cheapHash(depthTag) : cheapHash(key);
     for (let k = 0; k < K; k++) {
       const seed = (X.seedBase ^ Math.imul(h, 0x9e3779b1) ^ Math.imul(k + 1, 0x85ebca6b)) >>> 0;
       const ta = performance.now();

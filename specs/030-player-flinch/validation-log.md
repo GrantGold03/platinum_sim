@@ -135,3 +135,13 @@ All on today's B2 winner, 2,000 pairs, the same seeds as T007 unless stated.
   surviving a Dragon Pulse that otherwise knocks Floatzel out, a real gain within the two-turn view.
 - Reading so far: every variant that values the player's own flinch odds comes out 0.6 to 1.3 points behind on these seeds; valuing
   only the foe's flinches is neutral to slightly better. Next: the same comparisons on fresh seeds (`--master-suffix fresh1`).
+
+## Fresh seeds (6:05 PM EST)
+
+On fresh B2 seeds (`--master-suffix fresh1`, 2,000 pairs): the fixed full model 0.9395 vs 0.9395 without flinch (70 / 70, p 1);
+defence only 0.9410 vs 0.9395 (13 / 10, p 0.68). The deficit seen on the T007 seeds after the move-hit fix does not replicate.
+
+**Re-check declared before running** (the T007 seeds were examined many times during the diagnosis, so the stop-rule re-check uses
+a new seed set): the fixed full model (`expectimax2-v4`) against `expectimax2-v4?flinch=0`, 029's paired script with
+`--master-suffix fresh2`, the reference team, the benchmark team and today's B2 winner, 2,000 pairs each, plus the `--self` pairing
+control; the FR-008 rule applies unchanged (a supported loss on any team stops the feature).
