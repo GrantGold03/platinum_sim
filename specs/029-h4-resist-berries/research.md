@@ -22,6 +22,8 @@
 
 - **Finding**: `damageOutcomes(X, S, u, t, rec)` builds the per-roll damage list from `sim/damage.mjs`, whose type-chart pass computes
   the move-status mask including super-effective.
+- **Scope of the model**: only the hit's outcome sees the berry; the player's other judgements that read raw damage (switch-in
+  choice, threat assessment) do not; stated in the README (spec FR-012).
 - **Decision**: `damageOutcomes` adds `se: true|false` (and the hit count for multi-hit) to each outcome; `applyHit(X, S, side, rec, e,
   dmgIn, se, hits)` applies R1/R2; the knob `X.opts.resistBerries === false` turns it off. Both sides, for symmetry.
 
@@ -37,7 +39,9 @@
 - **Decision**: `resist_berry_ranking(const_member, level)`: for each League mon (weights as `league_opponents`: Elite Four 1, Cynthia
   2) and each of its stored damaging moves whose type hits the member super-effectively (or any Normal move, for Chilan), a threat value
   = power × accuracy × the opponent's STAB weight × the opponent's base attacking stat by category × the type multiplier against the
-  member; per mon and per type the largest; per type the weighted sum, halved (the damage the berry blocks). Berry types ranked by that
+  member, divided by the member's base Defense (physical move) or base Special Defense (special move), so the ranking reflects how hard
+  the hit lands on this member (owner's emphasis, analyze 2026-11-23); per mon and per type the largest; per type the weighted sum,
+  halved (the damage the berry blocks). Berry types ranked by that
   value, ties by type name; the top two with a copy appended to every moveset's `items_extra` after Shell Bell. Members with no threat
   get none.
 - **Alternative**: full damage formula per opponent (levels, the member's defences): rejected as unneeded for a ranking.

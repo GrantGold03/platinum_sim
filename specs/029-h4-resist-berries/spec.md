@@ -71,6 +71,9 @@ existing items; members with no super-effective threat get none; every other lis
    appear after the existing candidates, ordered by the damage they would block.
 2. **Given** a member no League move hits super-effectively and no League Normal move threatens, **When** its candidates are built,
    **Then** no resist berry is offered.
+4. **Given** a member with high Defense and low Special Defense facing an equally strong physical and special super-effective threat
+   of two types, **When** its berries are ranked, **Then** the berry for the special threat ranks first (and the reverse for a
+   specially bulky member).
 3. **Given** any member, **When** its candidates are built, **Then** its base sets, extra sets and existing items equal today's.
 
 ---
@@ -118,8 +121,11 @@ The owner reads a player check (with and without the berry model on a team holdi
 - **FR-005**: The screening player MUST be confirmed to need no change (it scores its own moves), with the check recorded.
 - **FR-006**: The optimizer MUST rank, per member, the resist berries by the expected damage they would block over the League's
   parties (each League move hitting the member super-effectively, or Normal moves for Chilan, weighted like the candidate move values:
-  Elite Four 1, Cynthia 2), and append the top two (owner's decision 2026-11-23; fewer when fewer berries block a threat) after
-  every moveset's existing item candidates; berries pass the
+  Elite Four 1, Cynthia 2). The damage estimate MUST account for the member's own defences: a physical move is weighed against the
+  member's Defense and a special move against its Special Defense, so a member with high Defense and low Special Defense ranks a
+  special threat above an equally strong physical one (owner's emphasis, 2026-11-23). The top two berries (owner's decision
+  2026-11-23; fewer when fewer berries block a threat) are appended after the existing item candidates of every moveset with an attack
+  (the append rule of feature 025); berries pass the
   single-use filter as feature 013 decided; copy limits hold.
 - **FR-007**: Resist berries MUST NOT create item-conditioned extra sets; base sets, extra sets and existing item candidates MUST be
   unchanged.
@@ -134,10 +140,14 @@ The owner reads a player check (with and without the berry model on a team holdi
 - **FR-011**: The README MUST state the berries offered and modelled and, per constitution Principle VII, what the player change does to
   the measurement; FUTURE-FEATURES section 0 MUST record the group as done.
 
+- **FR-012**: The player models the berry where a hit lands; its other judgements that read raw damage (which member to switch in,
+  how threatening a foe is) do not see the berry. This partial model MUST be stated in the README block.
+
 ### Key Entities
 
 - **Resist berry**: a held berry whose hold effect halves the first super-effective hit of one type (Chilan: any Normal hit), then is consumed.
-- **Threat ranking**: per member, the damage each berry would block over the League's parties, weighted by battle.
+- **Threat ranking**: per member, the damage each berry would block over the League's parties, weighted by battle, each threat
+  weighed against the member's Defense (physical) or Special Defense (special).
 - **Player check**: paired gauntlets of one fixed team with and without the player's berry model, under today's battle style.
 
 ## Success Criteria *(mandatory)*

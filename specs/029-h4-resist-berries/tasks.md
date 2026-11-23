@@ -39,7 +39,8 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 - [ ] T005 [US1] `sim/gauntlet.mjs`: v4 knob `resistBerries=0|1`
 - [ ] T006 [US1] `sim/test/resist_berries.test.mjs` part 2: super-effective hit halved and consumed; neutral unchanged and kept; a second
       super-effective hit after consumption unchanged; Chilan Normal neutral halved; multi-hit first-hit share; knob off unchanged; then the
-      Node suite (replay byte-identical); confirm greedy-v1 needs no change; record
+      Node suite (replay byte-identical); confirm greedy-v1 needs no change; record that no replay or identity team holds a resist berry
+      (reference team, benchmark team, the B2 winner, the replay fixtures: checked at analyze, recheck); record
 - [ ] T007 [US1] Player check, alone (FR-008): `make_check_team.py`; 028's `paired_policies.py --battle-style shift`: conditions control
       (`b2-plain.json`, 200 pairs, both arms), pairing control `--self` (200), then `--a expectimax2-v4 --b 'expectimax2-v4?resistBerries=0'`
       on `b2-berry.json`, 2,000 pairs, out `runs/029-evidence/pairs`; record; **a supported loss stops the feature**; Commit 2
@@ -49,11 +50,13 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 - [ ] T008 [US2] `src/platsim/optimizer/candidates.py`: `resist_berry_ranking(const_member, level, led) -> list[tuple[str, float]]` (R5:
       the League's stored damaging moves from `trainers.json`, weights as `league_opponents`, threat = power × accuracy × the opponent's
-      STAB weight × its base attacking stat by category × type multiplier against the member; per mon and type the largest; per berry
+      STAB weight × its base attacking stat by category × type multiplier against the member ÷ the member's base Defense (physical) or
+      base Special Defense (special); per mon and type the largest; per berry
       type the weighted sum halved; Chilan from Normal moves at any effectiveness; ties by type name; only berries with a copy);
       `extra_item_candidates` appends the top two after Shell Bell for every moveset with an attack (a member with no threat gets none)
 - [ ] T009 [US2] `tests/unit/test_resist_berries.py`: the ranking on known members (e.g. Garchomp: Ice first; a member with no
-      super-effective threat: empty); the berries last in `items_extra` and after `shell_bell`; over the 36 snapshot members only
+      super-effective threat: empty); the defences rule on a synthetic member (high Defense, low Special Defense: with an equally strong
+      physical and special super-effective threat of two types, the special threat's berry ranks first; swapped stats, the reverse); the berries last in `items_extra` and after `shell_bell`; over the 36 snapshot members only
       `appended` differences (028's attribution); update pins in `tests/unit/test_h4_items.py` and `tests/unit/test_shell_bell.py` that
       compare whole lists; run with the candidate tests (exit code kept) and record
 - [ ] T010 [US2] Hand check and the fast suite (`runs/029-evidence/fast.log`, exit code kept); log; Commit 3
@@ -65,7 +68,7 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 - [ ] T012 [US3] Merge gate (FR-010): a supported loss, a level diff above 1.0, a defect or a non-identical identity row: no merge, record
       and stop at the report; else continue
 - [ ] T013 [US3] Docs: validation log (player check, acceptance table, which members took which berry); `README.md` (029 block with the
-      Principle VII measurement statement; the items bullet names the berries); `FUTURE-FEATURES.md` section 0; `RUN-STATE.md`; Commit 4
+      Principle VII measurement statement and the partial-model note of FR-012; the items bullet names the berries); `FUTURE-FEATURES.md` section 0; `RUN-STATE.md`; Commit 4
       `feat(029): acceptance and player check; docs`; push
 
 ## Phase 6: Gates and close
