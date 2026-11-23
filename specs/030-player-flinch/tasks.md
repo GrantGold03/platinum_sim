@@ -10,12 +10,12 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/030-player-flinch/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
+- [x] T001 Start `specs/030-player-flinch/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
       main -- src sim tests pyproject.toml` empty) and copy 029's scripts into `specs/030-player-flinch/scripts/`: `acceptance.py`
       (`runs/030-evidence`, identity seed `030-ident`; the identity comparison **reports** each difference instead of failing (R7, spec
       US3 scenario 3); the pass rule: snapshot attribution all `identical`, equal-level pairs per the 024 rule, team build within 10 s),
       `attribution.py` (029's; every member must be `identical`), `equal_levels.py` (master `030-equal|B2`), `paired_policies.py` (029's)
-- [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/030-player-flinch/scripts/acceptance.py --side main --workers 16 > runs/030-evidence/acceptance-main.txt 2> runs/030-evidence/acceptance-main.err; echo exit=$?`;
+- [x] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/030-player-flinch/scripts/acceptance.py --side main --workers 16 > runs/030-evidence/acceptance-main.txt 2> runs/030-evidence/acceptance-main.err; echo exit=$?`;
       then, still before any code change, the v4 bench digest of `main` (`node sim/bench.mjs --policy expectimax2-v4`, its digest to
       `runs/030-evidence/v4-main-digest.txt`; analyze C1) and today's B2 winner written to `runs/030-evidence/teams/b2-main.json` and
       validated by the evaluate loader (analyze U1); copy outputs and the snapshot to `evidence/`; log; Commit 1
