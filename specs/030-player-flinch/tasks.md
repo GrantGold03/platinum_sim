@@ -52,13 +52,13 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 4: User Story 2 - The change is measured reference-first (Priority: P2)
 
-- [ ] T007 [US2] Player check, alone (FR-008, R6, about 45 min), 029's paired script, `--a expectimax2-v4 --b 'expectimax2-v4?flinch=0'`:
+- [x] T007 [US2] Player check, alone (FR-008, R6, about 45 min), 029's paired script, `--a expectimax2-v4 --b 'expectimax2-v4?flinch=0'`:
       pairing control `--self` on `ref`, 200 pairs (0 discordant); `ref`, `bench` and today's B2 winner as
       `file:runs/030-evidence/teams/b2-main.json` (not the script's `b2main`, which is feature 014's winner; analyze U1), 2,000 pairs each,
       outputs under `runs/030-evidence/pairs-<team>`; conditions control: the reference arm's clear rate on today's B2 winner within
       0.944 [0.920, 0.961];
       **a supported loss on any team stops the feature** (record and report)
-- [ ] T008 [US2] Speed (SC-004, R5): two 500-pair runs on `ref` with the arms in both orders; each arm's gauntlets per second = the mean
+- [x] T008 [US2] Speed (SC-004, R5): two 500-pair runs on `ref` with the arms in both orders; each arm's gauntlets per second = the mean
       of its two positions; the model must be at least 75% of the reference; over the bound: stop and report for the owner's decision
       (prune or stop); record T007 and T008 in the log; Commit 3 `docs(030): player check and speed`; push
 

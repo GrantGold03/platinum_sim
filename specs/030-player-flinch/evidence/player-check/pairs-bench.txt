@@ -1,0 +1,4 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:015992ec7660bd11bd1ead36fabcfbacdd1194610bfcb3036e4e74105d810c44
+paired_policies: expectimax2-v4 on bench: 1910/2000 cleared, 163.0 s, 12.27 gauntlets/s
+paired_policies: expectimax2-v4?flinch=0 on bench: 1907/2000 cleared, 144.4 s, 13.85 gauntlets/s
+bench: n 2000  A expectimax2-v4 0.9550 [0.9450, 0.9632]  B expectimax2-v4?flinch=0 0.9535 [0.9434, 0.9619]  only A 66 / only B 63  p 0.86  verdict indistinguishable  speed A 12.27 B 13.85 gauntlets/s

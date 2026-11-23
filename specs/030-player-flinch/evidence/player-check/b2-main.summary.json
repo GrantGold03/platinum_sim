@@ -1,0 +1,29 @@
+[
+ {
+  "team": "file:runs/030-evidence/teams/b2-main.json",
+  "a": "expectimax2-v4",
+  "b": "expectimax2-v4?flinch=0",
+  "n": 2000,
+  "a_cleared": 1865,
+  "b_cleared": 1893,
+  "a_rate": 0.9325,
+  "b_rate": 0.9465,
+  "a_ci95": [
+   0.9207,
+   0.9427
+  ],
+  "b_ci95": [
+   0.9358,
+   0.9555
+  ],
+  "a_only": 59,
+  "b_only": 87,
+  "p_value": 0.025111377256256735,
+  "verdict": "B",
+  "a_gauntlets_per_s": 13.4509,
+  "b_gauntlets_per_s": 15.3038,
+  "master": "018-pairs|file:runs/030-evidence/teams/b2-main.json",
+  "sim_code_hash": "sha256:015992ec7660bd11bd1ead36fabcfbacdd1194610bfcb3036e4e74105d810c44",
+  "date": "2026-11-23T16:34:52"
+ }
+]

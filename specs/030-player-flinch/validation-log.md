@@ -23,7 +23,7 @@ allocation. **v4 bench digest on `main`** (`node sim/bench.mjs --policy expectim
 digest_logs `624cbb4c…` (`evidence/pre/v4-main-bench.json`). Today's B2 winner written to `runs/030-evidence/teams/b2-main.json` and
 validated by the evaluate loader (analyze U1).
 
-## T003 Engine against the game (about 4:30 PM EST)
+## T003 Engine against the game (between 4:07 and 4:16 PM EST)
 
 `sim/test/flinch.test.mjs` part 1 (Flint's Houndoom, Lv 52, Dark Pulse 20%): (a) a faster Dark Pulse flinches a level-60 Bronzong on
 some seed of 40 and the Bronzong does not move; (b) over 30 seeds a slower Dark Pulse never flinches a faster Crobat; (c) Inner Focus
@@ -32,7 +32,7 @@ Lucario never flinches over 40 seeds; (e) Steadfast Lucario (Speed forced below 
 `CheckSubstitute` in `subscript_flinch_mon.s`; the engine applies no secondary effect through a substitute). All agree with the game:
 no ledger entry; ledger version unchanged.
 
-## T004 to T006 The player models flinch (4:20 to 4:55 PM EST)
+## T004 to T006 The player models flinch (4:07 to 4:16 PM EST; the times first written here were estimates, corrected from the T007 start time)
 
 `sim/policy/expectimax2.mjs`: `FLINCH_EFFECTS` (eight effects); `flinchChance` (zero unless the target still moves this turn, the
 owner's rule; survived; no substitute; no Inner Focus unless Mold Breaker; chance x2 Serene Grace); in `execMove` each landing outcome
@@ -61,3 +61,25 @@ fixture's own rule for an intended decision change; the identity proof for the s
 The 018 options pin gains `flinch: true`. Node suite: **412 pass, 0 fail**, exit 0 (one earlier run failed the seed test on its
 `|t:|` timestamp line crossing a second boundary; it passed on rerun and does not touch the player). greedy-v1 untouched (`git diff
 main -- sim/policy/greedy.mjs` empty).
+
+## T007 and T008 Player check and speed (4:17:32 to 4:38:57 PM EST, alone, all exit 0)
+
+029's paired script under Shift, model `expectimax2-v4` against reference `expectimax2-v4?flinch=0`, same seeds per pair.
+
+| Control or check | n | Model | Reference | only model / only reference | p | verdict |
+|---|---|---|---|---|---|---|
+| pairing control (`--self`, ref) | 200 | 0.9600 | 0.9600 | 0 / 0 | 1 | OK |
+| reference team | 2,000 | 0.9710 | 0.9745 | 28 / 35 | 0.45 | indistinguishable |
+| benchmark team | 2,000 | 0.9550 | 0.9535 | 66 / 63 | 0.86 | indistinguishable |
+| **today's B2 winner** | 2,000 | **0.9325** | **0.9465** | **59 / 87** | **0.025** | **supported loss** |
+
+Conditions control: the reference arm on today's B2 winner, 0.9465, lies within the optimizer's 0.944 [0.920, 0.961] for that team.
+
+Speed (SC-004, both orders on ref, 500 pairs each): model 11.61 (first) and 13.21 (second), mean 12.41 gauntlets/s; reference 13.94
+(second) and 12.03 (first), mean 12.99. Ratio 0.956: the model is about 4% slower, within the 25% bound.
+
+**Gate (FR-008): a supported loss on today's B2 winner. The feature stops here for the owner's decision**; no acceptance run, no merge.
+Notes for that decision: the three teams were each tested at the 0.05 level (with a Bonferroni correction for three tests, 0.0167,
+p 0.025 would not be supported; the spec's rule is per team, so the stop stands unless the owner changes the rule). The stored results
+keep only cleared or not per gauntlet, so locating the extra losses (which trainer, which decisions) needs a replay of the 87
+reference-only seeds with flinch on.
