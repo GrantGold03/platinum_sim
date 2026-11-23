@@ -5,7 +5,7 @@
 **Branch**: `030-player-flinch` from `main` 9877958, main checkout. Times US Eastern. Measurements alone (`pgrep -a -x node;
 pgrep -a pytest` empty); never pipe a gating command into `tail`; never amend or force-push; never edit `src/` or `sim/` while an
 acceptance, check or suite runs; paired checks use 029's `paired_policies.py --battle-style shift` with `file:` for team files and
-named teams `ref`, `bench`, `b2main`; engine tests drop Showdown's duplicate split lines; evidence under `runs/030-evidence/` (local)
+named teams `ref`, `bench` (its `b2main` is feature 014's winner: use `file:` for today's); engine tests drop Showdown's duplicate split lines; evidence under `runs/030-evidence/` (local)
 with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
@@ -16,7 +16,10 @@ with copies under `specs/030-player-flinch/evidence/`.
       US3 scenario 3); the pass rule: snapshot attribution all `identical`, equal-level pairs per the 024 rule, team build within 10 s),
       `attribution.py` (029's; every member must be `identical`), `equal_levels.py` (master `030-equal|B2`), `paired_policies.py` (029's)
 - [ ] T002 Run the pre-feature side alone (about 10 min): `uv run python specs/030-player-flinch/scripts/acceptance.py --side main --workers 16 > runs/030-evidence/acceptance-main.txt 2> runs/030-evidence/acceptance-main.err; echo exit=$?`;
-      copy outputs and the snapshot to `evidence/`; log; Commit 1 `docs(030): pre-feature evidence and scripts`; push
+      then, still before any code change, the v4 bench digest of `main` (`node sim/bench.mjs --policy expectimax2-v4`, its digest to
+      `runs/030-evidence/v4-main-digest.txt`; analyze C1) and today's B2 winner written to `runs/030-evidence/teams/b2-main.json` and
+      validated by the evaluate loader (analyze U1); copy outputs and the snapshot to `evidence/`; log; Commit 1
+      `docs(030): pre-feature evidence and scripts`; push
 
 ## Phase 2: Foundational
 
@@ -31,26 +34,29 @@ with copies under `specs/030-player-flinch/evidence/`.
 - [ ] T004 [US1] `sim/policy/expectimax2.mjs`: `FLINCH_EFFECTS` (R2: the eight effect names); in `execMove`, for each landing outcome
       when `X.opts.flinch !== false`, `foeMovesLater` is true, the move's effect is in `FLINCH_EFFECTS` and is not on a charge turn, the
       target survives, has no substitute (`!t.fresh && t.ref.volatiles.substitute`) and lacks Inner Focus (unless the user has Mold
-      Breaker): split the branch with p = min(1, `rec.effect_chance` x (2 if the user has Serene Grace)) / 100 into a flinched copy
+      Breaker, spec FR-001); the option is on in `V4_OPTS` only (`flinch: true`), off in the base options so v1 and v2 are unchanged
+      (spec FR-006): split the branch with p = min(1, `rec.effect_chance` x (2 if the user has Serene Grace)) / 100 into a flinched copy
       (`t.flinched = true`) and the rest; data-model: "`flinched` (boolean, false by default; set only within a turn by a landing flinch
       move whose target moves later; cleared when the target's move is lost, and at end of turn)"
 - [ ] T005 [US1] `sim/policy/expectimax2.mjs`: in `doMove`, after the sleep and freeze checks and before paralysis (the game's status-
       check order): a flinched Pokemon clears the mark, sets `lastMoveOk = false`, gains +1 Speed stage with Steadfast (`clampStage`),
       and loses its move; `endOfTurn` clears any mark; Fake Out (`ALWAYS_FLINCH_FIRST_TURN_ONLY`) fails when its user has been out a full
-      turn (`activeTurns > 0`, R3; confirm against T003 (f)); the header's "flinch not modelled" line updated; `sim/gauntlet.mjs`: v4 knob
+      turn (`activeTurns > 0`, R3; confirm against T003 (f); the game's rule decides, an engine difference is ledgered, FR-004); the header's "flinch not modelled" line updated; `sim/gauntlet.mjs`: v4 knob
       `flinch=0|1` (029's pattern)
 - [ ] T006 [US1] `sim/test/flinch.test.mjs` part 2 (the model's cases, spec US1 scenarios 1 to 8): faster foe's Air Slash: a flinched
       branch with p 0.30 where the member's move does not happen; slower foe: no flinched branch at all (FR-012); the player's faster
       member: the foe flinches; substitute, Inner Focus, already moved: none; Serene Grace doubles; Steadfast +1 Speed; Fake Out first
-      turn only; knob off: outcome lists identical to today's; then the Node suite (the replay test green with the knob off; if the
-      default replay fixture changes, re-record it only after confirming the change is flinch and state the difference); greedy-v1
+      turn only; knob off: outcome lists identical to today's; then the Node suite (the replay test, v1 and v2, green and never
+      re-recorded); the v4 bench digest of `expectimax2-v4?flinch=0` equal to T002's `main` digest (FR-006, SC-002); greedy-v1
       unchanged; record; Commit 2 `feat(030): the player models flinch; v4 knob; engine checks`; push
 
 ## Phase 4: User Story 2 - The change is measured reference-first (Priority: P2)
 
 - [ ] T007 [US2] Player check, alone (FR-008, R6, about 45 min), 029's paired script, `--a expectimax2-v4 --b 'expectimax2-v4?flinch=0'`:
-      pairing control `--self` on `ref`, 200 pairs (0 discordant); `ref`, `bench`, `b2main`, 2,000 pairs each, outputs under
-      `runs/030-evidence/pairs-<team>`; conditions control: the reference arm's clear rate on `b2main` within 0.944 [0.920, 0.961];
+      pairing control `--self` on `ref`, 200 pairs (0 discordant); `ref`, `bench` and today's B2 winner as
+      `file:runs/030-evidence/teams/b2-main.json` (not the script's `b2main`, which is feature 014's winner; analyze U1), 2,000 pairs each,
+      outputs under `runs/030-evidence/pairs-<team>`; conditions control: the reference arm's clear rate on today's B2 winner within
+      0.944 [0.920, 0.961];
       **a supported loss on any team stops the feature** (record and report)
 - [ ] T008 [US2] Speed (SC-004, R5): two 500-pair runs on `ref` with the arms in both orders; each arm's gauntlets per second = the mean
       of its two positions; the model must be at least 75% of the reference; over the bound: stop and report for the owner's decision

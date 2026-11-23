@@ -118,17 +118,21 @@ snapshot.
 ### Functional Requirements
 
 - **FR-001**: The battle player MUST expect a flinch, with the move's effect chance (doubled by the attacker's Serene Grace), when
-  a damaging flinch move hits a target that has not moved yet this turn, is not behind a substitute and lacks Inner Focus; the
+  a damaging flinch move hits a target that has not moved yet this turn, is not behind a substitute and lacks Inner Focus (unless
+  the attacker has Mold Breaker, which the game lets through Inner Focus); the
   flinched Pokemon's move that turn MUST NOT happen in the model.
 - **FR-002**: The rule MUST apply on both sides: foes flinching the player's members and the player's members flinching foes.
 - **FR-012**: A flinch chance MUST be considered only when the flinch move's user moves before its target in that turn's order
   (priority first, then Speed; a Speed tie counts each order with its own weight). When the flinch move's user moves second, the
   player MUST NOT consider any flinch chance for that hit (owner's rule, 2026-11-23), so no extra outcome is evaluated.
 - **FR-003**: Steadfast MUST raise the flinched Pokemon's Speed by one stage in the model.
-- **FR-004**: Fake Out MUST follow the game: it flinches only on its user's first turn out and fails otherwise.
+- **FR-004**: Fake Out MUST follow the game: it flinches only on its user's first turn out and fails otherwise. The game's rule
+  decides: if the engine differs, the difference is ledgered (FR-005) and the player models the game.
 - **FR-005**: The battle engine's flinch handling MUST be checked against the game for each condition in FR-001 to FR-004; each
   difference MUST be recorded in the divergence ledger with its effect on the League.
-- **FR-006**: The reference player (switch off) MUST play exactly as today: with the switch off, the replay test is byte-identical.
+- **FR-006**: The flinch model MUST be on only in the v4 player; the older v1 and v2 players MUST play exactly as today (the replay
+  test, which plays v1 and v2, stays byte-identical). The v4 player with the switch off MUST play exactly as `main`'s v4: a v4 bench
+  digest recorded on `main` before any code change MUST equal the branch's digest with the switch off.
 - **FR-007**: The greedy player MUST stay unchanged.
 - **FR-008**: The change MUST be measured reference-first (Story 2) before acceptance; a statistically supported loss on any of the
   three teams MUST stop the feature.
@@ -149,7 +153,8 @@ snapshot.
 
 - **SC-001**: In constructed positions, the player's expected outcome includes a lost move with exactly the game's chance (10%, 20%,
   30% or 100% for Fake Out, doubled for Serene Grace), and none when the target has moved, is behind a substitute or has Inner Focus.
-- **SC-002**: With the switch off, the replay test and the 028/029 player tests are unchanged.
+- **SC-002**: The replay test (v1, v2) and the 028/029 player tests pass unchanged; the v4 bench digest with the switch off equals
+  `main`'s v4 digest.
 - **SC-003**: On each of the three teams, 2,000 paired gauntlets show no supported loss for the flinch model; the per-team clear
   rates and their difference are reported.
 - **SC-004**: The player with flinch plays at least 75% as many gauntlets per second as without (at most 25% slower), measured
