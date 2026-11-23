@@ -22,7 +22,7 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 2: Foundational
 
-- [ ] T003 Engine-versus-game checks (FR-004, R4) in `sim/test/resist_berries.test.mjs` part 1 (028's pattern: `leagueBattle`, a player
+- [x] T003 Engine-versus-game checks (FR-004, R4) in `sim/test/resist_berries.test.mjs` part 1 (028's pattern: `leagueBattle`, a player
       member holding the berry, `turn()` with duplicate lines dropped): (a) a super-effective hit of the berry's type: halved (compare
       the HP lost with and without the berry on the same seed) and eaten; (b) a neutral hit: not eaten; (c) a hit on a substitute: eaten
       or not; (d) Chilan on a resisted Normal hit: halved or not; (e) a multi-hit move: first hit only; (f) rounding on an odd damage
@@ -31,17 +31,17 @@ with copies under `specs/029-h4-resist-berries/evidence/`.
 
 ## Phase 3: User Story 1 - The battle player knows resist berries halve a hit (Priority: P1) 🎯 MVP
 
-- [ ] T004 [US1] `sim/policy/expectimax2.mjs`: `damageOutcomes` adds `se` (super-effective, from the damage calculation's status mask)
+- [x] T004 [US1] `sim/policy/expectimax2.mjs`: `damageOutcomes` adds `se` (super-effective, from the damage calculation's status mask)
       and `hits` (1 or the multi-hit count) to each outcome; `applyHit(X, S, side, rec, e, dmgIn, se = false, hits = 1)` applies, before
       the clamp to the defender's HP and when `X.opts.resistBerries !== false`: defender hold effect `HOLD_EFFECT_WEAKEN_SE_<rec type>`
       with `se`, or `HOLD_EFFECT_WEAKEN_NORMAL` with a Normal move (Normalize: Normal) → single hit `dmg = floor(dmg / 2)`, multi-hit
       `dmg -= floor(floor(dmg / hits) / 2)`; berry removed (`t.item = ''`); header comment and `_internal` export updated
-- [ ] T005 [US1] `sim/gauntlet.mjs`: v4 knob `resistBerries=0|1`
-- [ ] T006 [US1] `sim/test/resist_berries.test.mjs` part 2: super-effective hit halved and consumed; neutral unchanged and kept; a second
+- [x] T005 [US1] `sim/gauntlet.mjs`: v4 knob `resistBerries=0|1`
+- [x] T006 [US1] `sim/test/resist_berries.test.mjs` part 2: super-effective hit halved and consumed; neutral unchanged and kept; a second
       super-effective hit after consumption unchanged; Chilan Normal neutral halved; multi-hit first-hit share; knob off unchanged; then the
       Node suite (replay byte-identical); confirm greedy-v1 needs no change; record that no replay or identity team holds a resist berry
       (reference team, benchmark team, the B2 winner, the replay fixtures: checked at analyze, recheck); record
-- [ ] T007 [US1] Player check, alone (FR-008): `make_check_team.py`; 028's `paired_policies.py --battle-style shift`: conditions control
+- [x] T007 [US1] Player check, alone (FR-008): `make_check_team.py`; 028's `paired_policies.py --battle-style shift`: conditions control
       (`b2-plain.json`, 200 pairs, both arms), pairing control `--self` (200), then `--a expectimax2-v4 --b 'expectimax2-v4?resistBerries=0'`
       on `b2-berry.json`, 2,000 pairs, out `runs/029-evidence/pairs`; record; **a supported loss stops the feature**; Commit 2
       `feat(029): the player models resist berries; v4 knob; engine checks; player check`; push

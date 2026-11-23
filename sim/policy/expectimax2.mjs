@@ -140,7 +140,9 @@
 //   toxic / burn (with type and ability immunities), Yawn, Rest, half-HP heals, Reflect,
 //   Light Screen, Protect / Detect (moving first blocks the foe's move; 1/2 after a success).
 //   held items: Sitrus Berry (effect_param % at <= 1/2 HP), Leftovers 1/16, Focus Sash, Life Orb, Shell Bell (028: damage
-//   dealt / effect_param, at least 1, holder hurt and standing; battle_controller_player.c:4738).
+//   dealt / effect_param, at least 1, holder hurt and standing; battle_controller_player.c:4738), resist berries (029: the
+//   first super-effective hit of the berry's type, any Normal hit for Chilan, halved and the berry used up; only where the hit
+//   lands: switch-in and threat judgements read unhalved damage).
 //   residual: burn and poison 1/8 (subscript_burn_damage.s, subscript_poison_damage.s), toxic n/16,
 //   sandstorm / hail 1/16.
 //   Intimidate on a modelled switch-in.
@@ -167,7 +169,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { calcDamage, critChance, DECOMP, ENUMS } from '../damage.mjs';
+import { calcDamage, critChance, DECOMP, ENUMS, MOVE_STATUS } from '../damage.mjs';
 import { createAdapter } from '../ai/adapter.mjs';
 import { AIRng, checkInvalidMoves, speedValuesNow, trainerAIMain } from '../ai/choose.mjs';
 import { createAIState, processLog, stateFor } from '../ai/opponent.mjs';
@@ -550,13 +552,27 @@ function damageTable(X, S, u, t, rec) {
   } else {
     const cr = calcDamage({ ...base, crit: true });
     const stage = /HIGH_CRITICAL/.test(e) ? 1 : 0;
-    d = { rolls: nc.rolls, crolls: cr.rolls, critP: critChance(base, stage) };
+    // 029: the hit's super-effectiveness and its type after Normalize, for the resist berries (damageOutcomes)
+    const mtype = base.attacker.ability === 'ABILITY_NORMALIZE' ? 'TYPE_NORMAL' : (type ?? rec.type);
+    d = { rolls: nc.rolls, crolls: cr.rolls, critP: critChance(base, stage), se: !!(nc.moveStatusMask & MOVE_STATUS.SUPER_EFFECTIVE), mtype };
   }
   X.dmg.set(key, d);
   return d;
 }
 
 const HITS = { MULTI_HIT: [[2, 3 / 8], [3, 3 / 8], [4, 1 / 8], [5, 1 / 8]], HIT_TWICE: [[2, 1]], POISON_MULTI_HIT: [[2, 1]] };
+
+// 029: a type-resist berry (HOLD_EFFECT_WEAKEN_SE_<TYPE>; FIGHTING is spelled FIGHT) halves a super-effective hit of its type,
+// Chilan (HOLD_EFFECT_WEAKEN_NORMAL) any Normal hit; the game halves the HP change (integer) after the final damage, first hit
+// only, then removes the berry (res/battle/scripts/subscripts/subscript_type_resist_berry.s, from subscript_update_hp.s:10).
+function resistBerryApplies(X, t, d) {
+  if (X.opts.resistBerries === false || !t.item || !d || !d.mtype) return false;
+  const h = holdEffect(X, t.item);
+  if (h === 'HOLD_EFFECT_WEAKEN_NORMAL') return d.mtype === 'TYPE_NORMAL';
+  if (!h.startsWith('HOLD_EFFECT_WEAKEN_SE_') || !d.se) return false;
+  const ty = h.slice('HOLD_EFFECT_WEAKEN_SE_'.length);
+  return d.mtype === `TYPE_${ty === 'FIGHT' ? 'FIGHTING' : ty}`;
+}
 
 // Outcome buckets [{p, dmg}] of one hit of `rec` (given it hits) against t's current HP.
 function damageOutcomes(X, S, u, t, rec) {
@@ -567,11 +583,13 @@ function damageOutcomes(X, S, u, t, rec) {
     return [{ p: 1, dmg }];
   }
   const hits = HITS[eff(rec)] ?? [[1, 1]];
+  const berry = resistBerryApplies(X, t, d); // 029: the first hit is halved (integer), the rest as rolled
+  const total = (r, n) => (berry ? Math.floor(r / 2) + (n - 1) * r : r * n);
   const ws = [];
   for (const [n, pn] of hits) {
     for (let i = 0; i < 16; i++) {
-      ws.push([d.rolls[i] * n, (1 - d.critP) / 16 * pn]);
-      if (d.critP > 0) ws.push([d.crolls[i] * n, d.critP / 16 * pn]);
+      ws.push([total(d.rolls[i], n), (1 - d.critP) / 16 * pn]);
+      if (d.critP > 0) ws.push([total(d.crolls[i], n), d.critP / 16 * pn]);
     }
   }
   let pKO = 0;
@@ -580,21 +598,21 @@ function damageOutcomes(X, S, u, t, rec) {
     if (dmg >= t.hp) pKO += w; else non.push([dmg, w]);
   }
   const out = [];
-  if (pKO > 0) out.push({ p: pKO, dmg: t.hp });
+  if (pKO > 0) out.push({ p: pKO, dmg: t.hp, berry });
   if (non.length) {
     non.sort((a, b) => a[0] - b[0]);
     const tot = non.reduce((s, x) => s + x[1], 0);
     const lo = non[0][0], hi = non[non.length - 1][0];
     if (hi - lo <= Math.max(2, t.maxhp * 0.06)) {
-      out.push({ p: tot, dmg: Math.round(non.reduce((s, x) => s + x[0] * x[1], 0) / tot) });
+      out.push({ p: tot, dmg: Math.round(non.reduce((s, x) => s + x[0] * x[1], 0) / tot), berry });
     } else {
       let acc = 0, s1 = 0, w1 = 0, s2 = 0, w2 = 0;
       for (const [dmg, w] of non) {
         if (acc + w / 2 <= tot / 2) { s1 += dmg * w; w1 += w; } else { s2 += dmg * w; w2 += w; }
         acc += w;
       }
-      if (w1 > 0) out.push({ p: w1, dmg: Math.round(s1 / w1) });
-      if (w2 > 0) out.push({ p: w2, dmg: Math.round(s2 / w2) });
+      if (w1 > 0) out.push({ p: w1, dmg: Math.round(s1 / w1), berry });
+      if (w2 > 0) out.push({ p: w2, dmg: Math.round(s2 / w2), berry });
     }
   }
   return out;
@@ -751,7 +769,7 @@ function execMove(X, br, side, act, foeAct, foeMovesLater) {
   outcomes.forEach((o, i) => {
     const last = i === outcomes.length - 1;
     const b = last ? { p: br.p * hc * o.p, S } : { p: br.p * hc * o.p, S: cloneState(S) };
-    applyHit(X, b.S, side, rec, e, o.dmg);
+    applyHit(X, b.S, side, rec, e, o.dmg, o.berry);
     out.push(...selfKO(X, b, side, e));
   });
   return out;
@@ -762,8 +780,9 @@ function selfKO(X, br, side, e) {
   return [br];
 }
 
-function applyHit(X, S, side, rec, e, dmgIn) {
+function applyHit(X, S, side, rec, e, dmgIn, berry = false) {
   const u = activeOf(S, side), t = activeOf(S, 1 - side);
+  if (berry) t.item = ''; // 029: the resist berry halved this hit (damageOutcomes) and is used up
   let dmg = Math.min(dmgIn, t.hp);
   if (dmg >= t.hp && t.hp === t.maxhp && t.item && itemConst(X, t.item) === 'ITEM_FOCUS_SASH') { dmg = t.hp - 1; t.item = ''; }
   t.hp -= dmg;
@@ -1297,7 +1316,7 @@ export function scoreShift(ctx, opts, name, foeIdx) {
 }
 
 // Internals exported for sim/test/expectimax2.test.mjs (read-only use).
-export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState, applyHit };
+export const _internal = { cloneState, viewOf, aiDecide, predictOpponent, resolveTurn, signature, shadowBattle, doSwitch, valuePly2, rootState, applyHit, damageOutcomes };
 
 /** A player policy object for one version: `name` also seeds its private AI sample streams. */
 export function makeExpectimax2(name, opts) {

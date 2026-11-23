@@ -1,0 +1,5 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:913f9f0c381b70c19212477c76b55c78b72aa48ebd282463315485c29985b048
+paired_policies: expectimax2-v4 on file:runs/029-evidence/teams/b2-berry.json: 163/200 cleared, 17.7 s, 11.32 gauntlets/s
+paired_policies: expectimax2-v4 on file:runs/029-evidence/teams/b2-berry.json: 163/200 cleared, 13.2 s, 15.21 gauntlets/s
+file:runs/029-evidence/teams/b2-berry.json: n 200  A expectimax2-v4 0.8150 [0.7554, 0.8627]  B expectimax2-v4 0.8150 [0.7554, 0.8627]  only A 0 / only B 0  p 1  verdict indistinguishable  speed A 11.32 B 15.21 gauntlets/s
+pairing control: 0 discordant pairs, OK

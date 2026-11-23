@@ -882,6 +882,74 @@ def _item_for_effect(effect: str, led) -> str | None:
     return sorted(found)[0][1] if found else None
 
 
+RESIST_BERRY_COUNT = 2  # 029: berries offered per member (owner's decision 2026-11-23)
+
+
+def _berry_effect(type_const: str) -> str:
+    if type_const == "TYPE_NORMAL":
+        return "HOLD_EFFECT_WEAKEN_NORMAL"
+    t = type_const.removeprefix("TYPE_")
+    return f"HOLD_EFFECT_WEAKEN_SE_{'FIGHT' if t == 'FIGHTING' else t}"
+
+
+# 029: abilities that make the holder immune to a move type in Platinum (battle_lib.c ability immunities); a type is skipped
+# in the berry ranking only when every ability the species can have is immune to it.
+_ABILITY_IMMUNE_TYPES = {
+    "ABILITY_LEVITATE": "TYPE_GROUND", "ABILITY_FLASH_FIRE": "TYPE_FIRE", "ABILITY_VOLT_ABSORB": "TYPE_ELECTRIC",
+    "ABILITY_MOTOR_DRIVE": "TYPE_ELECTRIC", "ABILITY_WATER_ABSORB": "TYPE_WATER", "ABILITY_DRY_SKIN": "TYPE_WATER",
+}
+
+
+def _ability_immune(me, move_type: str) -> bool:
+    abilities = [a for a in me.abilities if a]
+    return bool(abilities) and all(_ABILITY_IMMUNE_TYPES.get(a) == move_type for a in abilities)
+
+
+def resist_berry_ranking(const_member: str, level: int, led) -> list[tuple[str, float]]:
+    """029 (FR-006, research R5): the resist berries with a pre-Champion copy, ranked by the damage they would block over the
+    League's stored parties: for each League mon (Elite Four weight 1, Cynthia 2) and each of its damaging moves that hits the
+    member super-effectively (or any Normal move, for Chilan), a threat = power x accuracy x the mon's STAB weight x its base
+    attacking stat for the move's category x the type multiplier against the member, divided by the member's base Defense
+    (physical) or Special Defense (special), so a member with high Defense and low Special Defense ranks special threats higher;
+    per mon and berry type the largest threat; per berry type the weighted sum, halved (the damage the berry blocks). Ties by
+    the berry's key. A type every one of the species' abilities is immune to (Levitate: Ground) is skipped. `level` is part of the signature for the candidate call sites; the ranking uses base stats."""
+    mv = load_moves()
+    me = MS.by_constant()[const_member]
+    data = json.loads(TRAINERS_JSON.read_text())["trainers"]
+    by_key = {t["key"]: t for t in data}
+    blocked: dict[str, float] = {}
+    for k in GAUNTLET_KEYS:
+        w = CHAMPION_WEIGHT if k.startswith("champion") else 1.0
+        for mon in by_key[k]["party"]:
+            opp = MS.by_constant()[mon["species"]]
+            best: dict[str, float] = {}
+            for m in mon.get("moves") or []:
+                rec = mv.get(m)
+                if rec is None or not is_attack(rec):
+                    continue
+                mult = type_mult(rec.type, me.types)
+                if _ability_immune(me, rec.type):
+                    continue
+                if not (mult > 1 or (rec.type == "TYPE_NORMAL" and mult > 0)):
+                    continue
+                physical = rec.category == "CLASS_PHYSICAL"
+                atk = opp.base_stats["atk" if physical else "spa"]
+                dfn = me.base_stats["def" if physical else "spd"]
+                acc = 1.0 if rec.accuracy == 0 else rec.accuracy / 100
+                stab = STAB_WEIGHT if rec.type in opp.types else 1.0
+                threat = rec.power * acc * stab * atk / dfn * mult
+                eff = _berry_effect(rec.type)
+                best[eff] = max(best.get(eff, 0.0), threat)
+            for eff, v in best.items():
+                blocked[eff] = blocked.get(eff, 0.0) + w * v / 2
+    out = []
+    for eff, v in blocked.items():
+        item = _item_for_effect(eff, led)
+        if item:
+            out.append((item, v))
+    return sorted(out, key=lambda kv: (-kv[1], kv[0]))
+
+
 def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> list[str]:
     """025 (H4): items appended after today's candidates for a moveset: the ACCURACY_UP item when any attack can miss
     (0 < accuracy < 100), then the CRITRATE_UP item when the set has an attack; each only with a pre-Champion copy.

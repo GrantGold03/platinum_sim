@@ -24,3 +24,52 @@ player check.
 B2 quick: levels [52, 50, 50, 50, 51, 53], clear 0.9440 [0.9203, 0.961], wall 507.3 s, no resist-berry holder: the same winner as
 027 and 028. Generation at the job's reference level 47: 1.6 s for six members, 7.0 s with the allocation. Identity evaluations
 (seed 029-ident). Snapshot `evidence/candidates-main.json`: 36 records.
+
+## T003 Engine against the game (11:35 AM EST)
+
+`sim/test/resist_berries.test.mjs` part 1 on level-100 Bronzong (Steel/Psychic, 2x to Fire), Flint's Houndoom, same seed with and
+without Occa: HP lost 19 with the berry, 38 without; 19 = floor(38/2), the game's integer halving (`subscript_type_resist_berry.s`,
+`DivideVarByValue BTLVAR_HP_CALC_TEMP, 2`); the log shows `-enditem ... Occa Berry|[weaken]` and the item is gone. A neutral (Fire into
+Passho) hit leaves the berry. Read against the sources (no constructed battle needed, both sides agree):
+
+| Case | Game | Engine (vendored `data/items.ts`) | Same |
+|---|---|---|---|
+| Substitute hit | `BattleControllerPlayer_UpdateHP` loads `subscript_hit_substitute`, never `subscript_update_hp` (the berry's caller) | `if (hitSub) return;` (type berries); Chilan's condition excludes a substitute | yes |
+| Chilan on a resisted Normal hit | hold effect 35 skips the super-effective test | `move.type === 'Normal'` only | yes |
+| Multi-hit | `subscript_update_hp` per hit; `RemoveItem` after the first | `eatItem()` on the first hit | yes |
+| Normalize | move type read as Normal | Gen 4 Normalize sets the type to Normal | yes |
+| One-hit KO, type-ignoring moves | skipped | not super-effective; fixed damage | no League case |
+
+No difference found: no ledger entry; ledger version unchanged.
+
+## T004 to T006 The player models resist berries (11:30 to 11:36 AM EST)
+
+`sim/policy/expectimax2.mjs`: `damageTable` keeps the hit's super-effectiveness (`moveStatusMask`) and its type (`rec.type`, Hidden
+Power's type, Normal under Normalize); `resistBerryApplies` matches the defender's hold effect; `damageOutcomes` halves the first hit's
+roll (integer) before the knockout split, so a halved hit can turn a knockout into a survival, and flags each outcome; `applyHit`
+removes the berry when such an outcome lands. Only where the hit lands: switch-in and threat judgements read unhalved damage
+(FR-012). First implementation flaw, found by the tests: the damage input's move record has no `type`; fixed by taking it from the
+move record. `sim/gauntlet.mjs`: v4 knob `resistBerries=0|1`. Part 2 of the test file: halved and consumed; another type unchanged;
+after use not halved; Chilan on a resisted Normal hit; knob off. Node suite: **402 pass, 0 fail**, exit 0 (`evidence/player-check/
+node.log`); replay byte-identical. No replay or identity team holds a resist berry (checked at analyze: reference team, benchmark
+team, the B2 winner, the replay fixtures). greedy-v1 unchanged: it only estimates its own damage into the foe, and no League trainer
+holds a berry.
+
+## T007 Player check (11:37:59 to 11:45:33 AM EST, alone, Shift, 029's copy of 028's paired script)
+
+Check team (`make_check_team.py`, research R6; the ranking function was added to `candidates.py` before the check but not wired into
+the item lists until after it): the pre-feature B2 winner with Weavile's Icicle Plate replaced by Chople Berry (Weavile's top berry,
+blocking 2736; the largest of the six members). A first launch failed at once on the team argument (`file:` prefix missing); no
+battle ran.
+
+| Control or check | n | Model | Reference | only model / only reference | p |
+|---|---|---|---|---|---|
+| B2 winner unchanged (conditions control) | 200 | 0.9700 | 0.9700 | 0 / 0 | 1 |
+| pairing control (`--self`, berry team) | 200 | 0.8150 | 0.8150 | 0 / 0 | 1 |
+| **Berry team** | 2,000 | **0.8570** | **0.8560** | 3 / 1 | **0.625** |
+
+The unchanged team's 0.970 [0.936, 0.986] covers the optimizer's 0.944, so the conditions are right. **Verdict: not worse (no supported
+loss).** Only four battles of 2,000 differ: the berry fires at most once per battle. Speed: 14.30 vs 15.55 gauntlets/s in the main
+comparison; the controls show the first run of each pool is slower whatever the policy (11.32 vs 14.85 with identical play on the
+unchanged team), so the berry model's own cost is not separable here; stated in the README as at most about 8%. The berry team clears
+less than the unchanged team (0.857 vs 0.970) because the plate was Weavile's damage item; the optimizer decides that trade, not the player.

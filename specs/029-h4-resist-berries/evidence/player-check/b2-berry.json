@@ -1,0 +1,323 @@
+{
+ "builds": [
+  {
+   "species": "garchomp",
+   "source": "wild_slot:SPECIES_GIBLE@MAP_HEADER_WAYWARD_CAVE_B1F",
+   "start_level": 52,
+   "moves": [
+    {
+     "move": "earthquake",
+     "source_kind": "tm",
+     "detail": "TM26 - Item ball - Wayward Cave 1F (1 copy)",
+     "availability_ref": "res/field/events/events_wayward_cave_1f.json:53; res/items/data/tm26.json:1"
+    },
+    {
+     "move": "dragon_claw",
+     "source_kind": "pre_evo_level_up",
+     "detail": "Pre-evolution level-up (Gabite Lv 33)",
+     "availability_ref": "res/pokemon/gabite/data.json:35; src/pokemon.c:3528"
+    },
+    {
+     "move": "rock_slide",
+     "source_kind": "tm",
+     "detail": "TM80 - Item ball - Mt Coronet 2F (1 copy)",
+     "availability_ref": "res/field/events/events_mt_coronet_2f.json:51; res/items/data/tm80.json:1"
+    },
+    {
+     "move": "crunch",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 48",
+     "availability_ref": "res/pokemon/garchomp/data.json:35; src/pokemon.c:270"
+    }
+   ],
+   "ability": "ABILITY_SAND_VEIL",
+   "ability_reason": "single_ability",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "infernape",
+   "source": "gift:SPECIES_CHIMCHAR@MAP_HEADER_ROUTE_201",
+   "start_level": 50,
+   "moves": [
+    {
+     "move": "fire_blast",
+     "source_kind": "tm",
+     "detail": "TM38 - Shop - Veilstone Store 3F (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm38.json:1"
+    },
+    {
+     "move": "flamethrower",
+     "source_kind": "tm",
+     "detail": "TM35 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm35.json:1"
+    },
+    {
+     "move": "close_combat",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 41",
+     "availability_ref": "res/pokemon/infernape/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "grass_knot",
+     "source_kind": "tm",
+     "detail": "TM86 - Gift - Eterna City Gym (1 copy)",
+     "availability_ref": "res/field/scripts/scripts_eterna_city_gym.s:92; res/items/data/tm86.json:1"
+    }
+   ],
+   "ability": "ABILITY_BLAZE",
+   "ability_reason": "single_ability",
+   "held_item": "expert_belt",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "staraptor",
+   "source": "wild_slot:SPECIES_STARLY@MAP_HEADER_ROUTE_201",
+   "start_level": 50,
+   "moves": [
+    {
+     "move": "return",
+     "source_kind": "tm",
+     "detail": "TM27 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm27.json:1"
+    },
+    {
+     "move": "aerial_ace",
+     "source_kind": "pre_evo_level_up",
+     "detail": "Pre-evolution level-up (Staravia Lv 28)",
+     "availability_ref": "res/pokemon/staravia/data.json:35; src/pokemon.c:3528"
+    },
+    {
+     "move": "pluck",
+     "source_kind": "tm",
+     "detail": "TM88 - Gift - Floaroma Town Middle House (1 copy)",
+     "availability_ref": "res/field/scripts/scripts_floaroma_town_middle_house.s:38; res/items/data/tm88.json:1"
+    },
+    {
+     "move": "close_combat",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 34",
+     "availability_ref": "res/pokemon/staraptor/data.json:35; src/pokemon.c:270"
+    }
+   ],
+   "ability": "ABILITY_INTIMIDATE",
+   "ability_reason": "single_ability",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "rotom",
+   "source": "static:SPECIES_ROTOM@MAP_HEADER_OLD_CHATEAU_BACK_MIDDLE_WEST_ROOM",
+   "start_level": 50,
+   "moves": [
+    {
+     "move": "thunderbolt",
+     "source_kind": "tm",
+     "detail": "TM24 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm24.json:1"
+    },
+    {
+     "move": "shadow_ball",
+     "source_kind": "tm",
+     "detail": "TM30 - Item ball - Route 210 North (1 copy)",
+     "availability_ref": "res/field/events/events_route_210_north.json:301; res/items/data/tm30.json:1"
+    },
+    {
+     "move": "charge_beam",
+     "source_kind": "tm",
+     "detail": "TM57 - Gift - Sunyshore City Gym Room 3 (1 copy)",
+     "availability_ref": "res/field/scripts/scripts_sunyshore_city_gym_room_3.s:61; res/items/data/tm57.json:1"
+    },
+    {
+     "move": "thunder_shock",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 1",
+     "availability_ref": "res/pokemon/rotom/data.json:35; src/pokemon.c:270"
+    }
+   ],
+   "ability": "ABILITY_LEVITATE",
+   "ability_reason": "single_ability",
+   "held_item": "wise_glasses",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "floatzel",
+   "source": "wild_slot:SPECIES_FLOATZEL@MAP_HEADER_ROUTE_218",
+   "start_level": 51,
+   "moves": [
+    {
+     "move": "waterfall",
+     "source_kind": "hm",
+     "detail": "HM07 - Gift - Sunyshore City (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_sunyshore_city.s:444; res/items/data/hm07.json:1"
+    },
+    {
+     "move": "ice_punch",
+     "source_kind": "tutor",
+     "detail": "Route 212 tutor (2R/6B/0Y/0G)",
+     "availability_ref": "res/pokemon/move_tutors.json:67; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+    },
+    {
+     "move": "crunch",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 26",
+     "availability_ref": "res/pokemon/floatzel/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "focus_blast",
+     "source_kind": "tm",
+     "detail": "TM52 - Shop - Veilstone Store 3F (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm52.json:1"
+    }
+   ],
+   "ability": "ABILITY_SWIFT_SWIM",
+   "ability_reason": "single_ability",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "weavile",
+   "source": "wild_slot:SPECIES_SNEASEL@MAP_HEADER_ROUTE_216",
+   "start_level": 53,
+   "moves": [
+    {
+     "move": "ice_punch",
+     "source_kind": "tutor",
+     "detail": "Route 212 tutor (2R/6B/0Y/0G)",
+     "availability_ref": "res/pokemon/move_tutors.json:67; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+    },
+    {
+     "move": "night_slash",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 35",
+     "availability_ref": "res/pokemon/weavile/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "aerial_ace",
+     "source_kind": "tm",
+     "detail": "TM40 - Item ball - Route 213 (1 copy)",
+     "availability_ref": "res/field/events/events_route_213.json:458; res/items/data/tm40.json:1"
+    },
+    {
+     "move": "brick_break",
+     "source_kind": "tm",
+     "detail": "TM31 - Item ball - Oreburgh Gate B1F (1 copy)",
+     "availability_ref": "res/field/events/events_oreburgh_gate_b1f.json:201; res/items/data/tm31.json:1"
+    }
+   ],
+   "ability": "ABILITY_PRESSURE",
+   "ability_reason": "single_ability",
+   "held_item": "chople_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  }
+ ],
+ "resource_use": {
+  "ITEM_EXPERT_BELT": 1,
+  "ITEM_RAZOR_CLAW": 1,
+  "ITEM_WISE_GLASSES": 1,
+  "TM26": 1,
+  "TM30": 1,
+  "TM31": 1,
+  "TM40": 1,
+  "TM57": 1,
+  "TM80": 1,
+  "TM86": 1,
+  "TM88": 1
+ }
+}
