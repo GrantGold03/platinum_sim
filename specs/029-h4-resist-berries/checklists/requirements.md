@@ -31,4 +31,4 @@
 
 ## Notes
 
-- Defaults stated rather than marked: N = 2 berries per member (the expected clarify question); the player check needs "not worse" (as 028).
+- The number of berries per member (two) was confirmed at clarify (2026-11-23); the player check needs "not worse" (as 028).

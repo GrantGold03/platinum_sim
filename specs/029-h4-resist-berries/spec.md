@@ -24,6 +24,12 @@ deal it. It follows Shell Bell's path (feature 028): the player change is measur
 | Our player today | never | not modelled |
 | League trainers | hold none | the trainer AI already reacts to a held resist berry (the game's AI script lists them) |
 
+## Clarifications
+
+### Session 2026-11-23
+
+- Q: How many resist berries should the optimizer offer each member: only the single best one, the top two, or every berry that blocks a super-effective threat from the League? → A: B, the top two berries per member.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle player knows resist berries halve a hit (Priority: P1)
@@ -61,8 +67,8 @@ existing items; members with no super-effective threat get none; every other lis
 
 **Acceptance Scenarios**:
 
-1. **Given** a member that League moves hit super-effectively, **When** its item candidates are built, **Then** up to the configured
-   number of berries appear after the existing candidates, ordered by the damage they would block.
+1. **Given** a member that League moves hit super-effectively, **When** its item candidates are built, **Then** up to two berries
+   appear after the existing candidates, ordered by the damage they would block.
 2. **Given** a member no League move hits super-effectively and no League Normal move threatens, **When** its candidates are built,
    **Then** no resist berry is offered.
 3. **Given** any member, **When** its candidates are built, **Then** its base sets, extra sets and existing items equal today's.
@@ -95,7 +101,7 @@ The owner reads a player check (with and without the berry model on a team holdi
 - **A hit on a substitute**: the engine does not consume the berry; the game's behaviour is checked and any difference recorded.
 - **Normalize** (all moves Normal-type): Chilan's trigger in the game follows the move's resulting type; checked and recorded.
 - **Doubly super-effective hits (4x)**: halved once, like any super-effective hit.
-- **A member threatened in many types**: only the top-ranked berries are offered (the configured number).
+- **A member threatened in many types**: only the top two berries by blocked damage are offered.
 
 ## Requirements *(mandatory)*
 
@@ -112,7 +118,8 @@ The owner reads a player check (with and without the berry model on a team holdi
 - **FR-005**: The screening player MUST be confirmed to need no change (it scores its own moves), with the check recorded.
 - **FR-006**: The optimizer MUST rank, per member, the resist berries by the expected damage they would block over the League's
   parties (each League move hitting the member super-effectively, or Normal moves for Chilan, weighted like the candidate move values:
-  Elite Four 1, Cynthia 2), and append the top N (default 2) after every moveset's existing item candidates; berries pass the
+  Elite Four 1, Cynthia 2), and append the top two (owner's decision 2026-11-23; fewer when fewer berries block a threat) after
+  every moveset's existing item candidates; berries pass the
   single-use filter as feature 013 decided; copy limits hold.
 - **FR-007**: Resist berries MUST NOT create item-conditioned extra sets; base sets, extra sets and existing item candidates MUST be
   unchanged.
