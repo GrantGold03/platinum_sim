@@ -1,4 +1,16 @@
-# START HERE (updated 2026-11-23, feature 029 `029-h4-resist-berries` merged to `main`; next feature: the user's choice)
+# START HERE (updated 2026-11-23 ~6:45 PM EST, feature 030 `030-player-flinch`: awaiting the owner's decision, full model vs defence only)
+- **Feature 030 `030-player-flinch` (branch from `main` 9877958), the player models flinch.** T001-T008 done; diagnosis done (log
+  sections "Diagnosis" to "Declared defence-only candidate"). Bug fixed: a flinched Pokemon's move-hit record is now cleared (game
+  ClearFlags). The full model (valuing the player's own flinch odds too) still loses on B2 on fresh seeds (`fresh2`: 0.9375 vs 0.9585,
+  p 0.0002): flinch values are right and realized (23% flinch rate on the player's flinch-move turns, always moving first), but the
+  two-turn search trades damage for flinch chances badly (Waterfall into Milotic instead of Crunch). **Defence only**
+  (`expectimax2-v4?flinch=defend`: the foe's flinches on the player, move-hit fix, Fake Out rule) passes on fresh seeds `fresh3`
+  (ref 26/20, bench 35/24, B2 7/17 p 0.064; B2 pooled 38/40). Owner to decide: ship defence only as v4's default (then T009 acceptance
+  with V4_OPTS flinch 'defend', T010-T013), or continue on the attack side (a v4 evaluation retune). For 031: the engine applies
+  King's Rock's flinches in every simulated battle, so a King's Rock team is credited with them in the measurement whatever the
+  player values; the game rolls King's Rock after every hit of a multi-hit move (10% each). Diagnosis knobs in the v4 candidate
+  syntax: `flinch=attack|defend`, `crn=1`, `flinchAtk=<0..1>`; paired script `--master-suffix`. Pre-existing gap (not fixed): the model
+  does not clear the move-hit record on sleep, full paralysis or freeze turns. Traps: decisions on fresh seeds only.
 - **Feature 029 `029-h4-resist-berries` built 2026-11-23 on its branch from `main` 58f1570.** Commits: pre-feature evidence and
   scripts; the player models resist berries (v4 knob `resistBerries`, engine checks: no difference, so no ledger entry; player
   check under Shift 0.8570 vs 0.8560, p 0.63, not worse); the ranking (Defense or Special Defense per threat, ability immunities)

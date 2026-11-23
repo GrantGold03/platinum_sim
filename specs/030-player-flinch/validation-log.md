@@ -170,3 +170,16 @@ the player does not value its own flinch odds. What the player cannot do without
 
 **Next candidate declared before running**: defence only (`expectimax2-v4?flinch=defend`: the foe's flinches on the player, the
 move-hit fix, Fake Out rule) against `flinch=0`, on new seeds `fresh3`, the three teams, 2,000 pairs each; FR-008 unchanged.
+
+## Declared defence-only candidate on fresh seeds `fresh3` (6:28 to 6:38:29 PM EST, alone, all exit 0)
+
+| Team | n | Defence only | Without flinch | only with / only without | p | verdict |
+|---|---|---|---|---|---|---|
+| reference team | 2,000 | 0.9815 | 0.9785 | 26 / 20 | 0.46 | indistinguishable |
+| benchmark team | 2,000 | 0.9535 | 0.9480 | 35 / 24 | 0.19 | indistinguishable |
+| today's B2 winner | 2,000 | 0.9435 | 0.9485 | 7 / 17 | 0.064 | indistinguishable |
+
+**No supported loss: defence only passes FR-008.** Over B2's three seed sets defence only is even (18/13, 13/10, 7/17: 38 / 40).
+Speed in these runs (order-confounded): 14.79 vs 15.98, 13.88 vs 14.88, 15.35 vs 16.42 gauntlets/s (about 7% slower), within the
+25% bound. Status: stopped for the owner's decision between defence only (measured, shippable) and further work on the attack side
+(the leaf evaluation's trade of damage against a flinch, a v4 retune).
