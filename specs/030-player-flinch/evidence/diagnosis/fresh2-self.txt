@@ -1,0 +1,5 @@
+paired_policies: pool 16 workers, sim_code_hash sha256:875e8668d757a638c95ac3c6e9b27f3826733e318349c818d6aecd7444eb1e20
+paired_policies: expectimax2-v4 on ref: 192/200 cleared, 18.6 s, 10.74 gauntlets/s
+paired_policies: expectimax2-v4 on ref: 192/200 cleared, 14.1 s, 14.23 gauntlets/s
+ref: n 200  A expectimax2-v4 0.9600 [0.9231, 0.9796]  B expectimax2-v4 0.9600 [0.9231, 0.9796]  only A 0 / only B 0  p 1  verdict indistinguishable  speed A 10.74 B 14.23 gauntlets/s
+pairing control: 0 discordant pairs, OK

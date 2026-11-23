@@ -145,3 +145,28 @@ defence only 0.9410 vs 0.9395 (13 / 10, p 0.68). The deficit seen on the T007 se
 a new seed set): the fixed full model (`expectimax2-v4`) against `expectimax2-v4?flinch=0`, 029's paired script with
 `--master-suffix fresh2`, the reference team, the benchmark team and today's B2 winner, 2,000 pairs each, plus the `--self` pairing
 control; the FR-008 rule applies unchanged (a supported loss on any team stops the feature).
+
+## Declared re-check on fresh seeds `fresh2` (6:05:45 to 6:21:47 PM EST, alone, all exit 0)
+
+| Check | n | With flinch (fixed) | Without | only with / only without | p | verdict |
+|---|---|---|---|---|---|---|
+| pairing control (`--self`, ref) | 200 | | | 0 / 0 | 1 | OK |
+| reference team | 2,000 | 0.9715 | 0.9750 | 28 / 35 | 0.45 | indistinguishable |
+| benchmark team | 2,000 | 0.9400 | 0.9495 | 66 / 85 | 0.14 | indistinguishable |
+| **today's B2 winner** | 2,000 | **0.9375** | **0.9585** | **41 / 83** | **0.0002** | **supported loss** |
+
+**FR-008: the fixed full model stops again.** Over B2's three seed sets with the fix: 57/83, 70/70, 41/83.
+
+Move order and realized flinches (`diag030c.py`, 300 fresh2 gauntlets, Cynthia battles): the player's Rock Slide and Waterfall went
+first every time (988 of 988); Cynthia's Pokemon flinched on 227 of those turns (23%: Waterfall 20%, Rock Slide 27% x hit), as modelled.
+Targets: Milotic 613, Spiritomb 299, Togekiss 72. So the model's flinch values are internally right and are realized, yet trading
+damage for flinch chances (e.g. Waterfall into a resisting Milotic instead of Crunch) loses over the Cynthia fight: the two-turn
+search's leaf evaluation weighs avoiding one hit above the damage given up. Fixing that is a retune of v4's evaluation (all play),
+not this feature.
+
+For King's Rock (031): the optimizer measures a team by playing simulated battles, where the engine applies the item's flinches
+whatever the player believes; a King's Rock team (multi-hit moves included) is credited with its flinches in the measurement even if
+the player does not value its own flinch odds. What the player cannot do without the attack side is steer toward flinches.
+
+**Next candidate declared before running**: defence only (`expectimax2-v4?flinch=defend`: the foe's flinches on the player, the
+move-hit fix, Fake Out rule) against `flinch=0`, on new seeds `fresh3`, the three teams, 2,000 pairs each; FR-008 unchanged.
