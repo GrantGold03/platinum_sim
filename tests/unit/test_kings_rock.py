@@ -104,3 +104,16 @@ def test_only_appended_items_and_flinch_extras_change_over_the_36_members(led):
     for key, rec in snap.items():
         recs = A.attribute(rec, A.recompute(rec, led))
         assert all(r["cause"] in ("appended", "appended_extra") for r in recs), (key, recs)
+
+
+def test_every_extra_kind_the_candidates_produce_is_known_to_the_screen(led):
+    """031: B5 quick failed with KeyError 'flinch_item' in the screen's per-kind count (run.EXTRA_KINDS lacked the new kind)."""
+    from platsim.optimizer import run
+
+    consts = C.resolve_species(B5, led)
+    kinds = set()
+    for c in consts:
+        mc = C.member_candidates(c, C.variants(c, led)[0], 48, led, team=tuple(consts))
+        kinds |= set(mc.extra_kind.values())
+    assert "flinch_item" in kinds
+    assert kinds <= set(run.EXTRA_KINDS), kinds - set(run.EXTRA_KINDS)

@@ -64,8 +64,8 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 5: User Story 3 - Accepted on both codes, and shown to help (Priority: P3)
 
-- [ ] T010 [US3] Branch side alone: `uv run python specs/031-h4-kings-rock/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/031-evidence/acceptance.txt 2> runs/031-evidence/acceptance.err; echo exit=$?`; copy evidence
-- [ ] T011 [US3] Merge gate (FR-009): a supported equal-level loss, a level difference above 1.0, an attribution defect or a non-identical
+- [x] T010 [US3] Branch side alone: `uv run python specs/031-h4-kings-rock/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/031-evidence/acceptance.txt 2> runs/031-evidence/acceptance.err; echo exit=$?`; copy evidence
+- [x] T011 [US3] Merge gate (FR-009): a supported equal-level loss, a level difference above 1.0, an attribution defect or a non-identical
       identity row (no player change): no merge, record and stop at the report
 - [ ] T012 [US3] Multi-hit measurement, alone, report only (FR-007, R6 amended: B5 and Torterra's Bullet Seed set; the text below
       names B3 and Lucario from before the amendment): B3 quick on the branch (the acceptance script's optimize call

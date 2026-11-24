@@ -217,7 +217,7 @@ def _member_options(mcs: dict) -> list[tuple[str, tuple, str | None]]:
     return out
 
 
-EXTRA_KINDS = ("variable_power", "accuracy_item", "crit_item", "item_deviation")
+EXTRA_KINDS = ("variable_power", "accuracy_item", "crit_item", "flinch_item", "item_deviation")  # 031: flinch_item
 
 
 def _member_extra_options(mcs: dict) -> list[tuple[str, tuple[str, tuple, str | None]]]:

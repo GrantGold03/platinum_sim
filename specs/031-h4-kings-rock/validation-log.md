@@ -61,3 +61,22 @@ and Clefable's reason; two holders realize as King's Rock and Razor Fang, a thir
 snapshot members change only by `appended` items and `appended_extra` sets). The 028 and 029 snapshot tests ignore 031's additions
 (`_without_031`); four whole-list pins updated. Item tests 28 passed. Hand check: every B2 set has an affected move and gets King's
 Rock appended; no B2 member has a live multi-hit move. Fast suite **649 passed, 32 deselected, 4 xfailed**, exit 0.
+
+## T010 and T011 Branch acceptance (11:09:06 to 11:26:53 AM EST, alone, exit 0) and the merge gate
+
+| Measure | main | branch |
+|---|---|---|
+| B2 quick winner | levels [52, 50, 51, 50, 50, 53], clear 0.9280 | identical; flinch-item holders: none |
+| Teams screened | 269 | 301 (item deviations 142 → 174: King's Rock) |
+| Identity (ref, b2main) | | identical |
+| Equal levels, 2,000 pairs | 0.9410 | 0.9410 (0 / 0, p 1); level diff +0.00 |
+| Attribution, 36 members | | `appended` items on every member; Torterra (B5) also one `appended_extra`; 0 defects |
+| Extras | 271 | 272 (Torterra's flinch_item set); dead moves in extras 56 → 56, all with reasons |
+| Generation | 1.7 s / 7.2 s | 1.6 s / 7.0 s |
+
+**Gate (FR-009): pass.**
+
+**Bug found by T012's B5 quick search** (11:29 AM EST): `KeyError: 'flinch_item'` in the screen's per-kind count
+(`run.EXTRA_KINDS` listed the 024/025 kinds only). B2 has no flinch_item extra, so acceptance did not reach it. Fixed (the kind added);
+a guard test checks that every extra kind the candidates produce on B5 is known to the screen (fails without the fix, passes with
+it). The fix only adds a counter key, so the B2 acceptance above is unaffected.
