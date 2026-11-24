@@ -113,7 +113,9 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
     for any set with an attack (025; Scope Lens has no pre-Champion copy), then **Shell Bell** (heals 1/8 of the damage dealt,
     1 copy; the battle player models it) for any set with an attack (028), then the member's two best **resist berries** (Occa,
     Passho, Wacan, Rindo, Yache, Chople, Kebia, Shuca, Coba, Payapa, Tanga, Charti, Kasib, Haban, Colbur, Babiri and Chilan;
-    unlimited copies; the battle player models them) for any set with an attack (029). Items are picked by hold effect from the decomp. A held
+    unlimited copies; the battle player models them) for any set with an attack (029), then **King's Rock** (Razor Fang is the same
+    item: one option with 2 copies; a second holder gets the Razor Fang, and Gliscor's evolution uses it) for any set with a move it
+    affects (031). Items are picked by hold effect from the decomp. A held
     item the battle uses up when it triggers is never offered unless it is a berry (013; today Focus Sash,
     White Herb, Mental Herb, Power Herb, Berry Juice).
   - **Candidate move sets** (026): each member's ten-move pool is built by marginal coverage (each next move is the one
@@ -752,6 +754,22 @@ slower. The engine agrees with the game on every flinch rule checked. A model fa
 game clears the flinched Pokemon's "move that hit me" record; the player now does too. Not modelled: the player's own flinch odds,
 the Fangs' burn, freeze and paralysis chances, confusion and infatuation. **Acceptance**: the B2 quick winner is the same six
 Pokemon with the same moves and items, one level moved between Staraptor and Floatzel; at equal levels both codes clear 0.9375.
+
+Feature 031 (2026-11-24, `specs/031-h4-kings-rock/`): **King's Rock / Razor Fang**. Held by an attacker, each damaging hit of 202
+moves has a 10% chance to make a slower foe lose its turn; on a multi-hit move every hit rolls (a two-hit move flinches about 19% of
+the time, a five-hit move about 41%), and on a move that already flinches the item's chance is separate. The engine was checked
+against the game: 9.9% per hit for Tackle, 17% per use for Double Kick, 37% for Air Slash, and never through a substitute, Inner
+Focus or Shield Dust or from a slower holder. One copy of each before the Champion (King's Rock in Celestic Town, Razor Fang on Route
+214); the optimizer treats them as one option with two copies. It is offered last for every set with a move it affects, and for a
+member that learns a multi-hit move it builds one extra set with that move in place of a same-type move, held with the item, but
+only when the move is ever the set's best attack against some League Pokemon: **the battle player chooses moves by damage only**
+(feature 030), so a weaker multi-hit move would never be used and its flinches would never happen. On the standing teams only
+Torterra qualifies (Bullet Seed in place of Wood Hammer). The battles credit every flinch the item causes, so it is chosen when a
+team clears more often with it; the player does not steer toward it (that waits on a retune of the player, FUTURE-FEATURES).
+**Measured (report only)**: B5's winner with Torterra on Earthquake, Stone Edge, Crunch, Bullet Seed cleared 0.8185 with King's Rock
+against 0.8080 with its Sitrus Berry over 2,000 paired gauntlets (p 0.41, no supported difference). **Acceptance**: on B2 quick
+King's Rock was offered (32 more teams screened) and not chosen; the winner is identical on both codes; at equal levels both clear
+0.9410.
 
 Measured run times:
 

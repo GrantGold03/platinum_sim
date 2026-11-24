@@ -1,0 +1,320 @@
+{
+ "builds": [
+  {
+   "species": "torterra",
+   "source": "gift:SPECIES_TURTWIG@MAP_HEADER_ROUTE_201",
+   "start_level": 59,
+   "moves": [
+    {
+     "move": "earthquake",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 32",
+     "availability_ref": "res/pokemon/torterra/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "stone_edge",
+     "source_kind": "tm",
+     "detail": "TM71 - Item ball - Victory Road 2F (1 copy)",
+     "availability_ref": "res/field/events/events_victory_road_2f.json:66; res/items/data/tm71.json:1"
+    },
+    {
+     "move": "crunch",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 45",
+     "availability_ref": "res/pokemon/torterra/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "bullet_seed",
+     "source_kind": "tm",
+     "detail": "TM09 - Item ball - Route 204 North (1 copy)",
+     "availability_ref": "res/field/events/events_route_204_north.json:151; res/items/data/tm09.json:1"
+    }
+   ],
+   "ability": "ABILITY_OVERGROW",
+   "ability_reason": "tie_default",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "magnezone",
+   "source": "wild_slot:SPECIES_MAGNETON@MAP_HEADER_ROUTE_222",
+   "start_level": 60,
+   "moves": [
+    {
+     "move": "thunderbolt",
+     "source_kind": "tm",
+     "detail": "TM24 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm24.json:1"
+    },
+    {
+     "move": "thunder",
+     "source_kind": "tm",
+     "detail": "TM25 - Shop - Veilstone Store 3F (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm25.json:1"
+    },
+    {
+     "move": "flash_cannon",
+     "source_kind": "tm",
+     "detail": "TM91 - Gift - Canalave City Gym (1 copy)",
+     "availability_ref": "res/field/scripts/scripts_canalave_city_gym.s:55; res/items/data/tm91.json:1"
+    },
+    {
+     "move": "tri_attack",
+     "source_kind": "relearner",
+     "detail": "Move relearner - Pastoria City (1 Heart Scale; Magneton Lv 1 move, as Magneton (Lv <= 59))",
+     "availability_ref": "res/pokemon/magneton/data.json:35; res/field/scripts/scripts_pastoria_city_east_house.s:15; res/field/scripts/scripts_pastoria_city_east_house.s:53; res/field/scripts/scripts_pastoria_city_east_house.s:59; src/move_reminder_data.c:50; include/data/map_headers.h:2886"
+    }
+   ],
+   "ability": "ABILITY_MAGNET_PULL",
+   "ability_reason": "tie_default",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "clefable",
+   "source": "wild_slot:SPECIES_CLEFAIRY@MAP_HEADER_MT_CORONET_1F_SOUTH",
+   "start_level": 61,
+   "moves": [
+    {
+     "move": "ice_beam",
+     "source_kind": "tm",
+     "detail": "TM13 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm13.json:1"
+    },
+    {
+     "move": "fire_blast",
+     "source_kind": "tm",
+     "detail": "TM38 - Shop - Veilstone Store 3F (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_store_3f.s:95; res/items/data/tm38.json:1"
+    },
+    {
+     "move": "return",
+     "source_kind": "tm",
+     "detail": "TM27 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm27.json:1"
+    },
+    {
+     "move": "grass_knot",
+     "source_kind": "tm",
+     "detail": "TM86 - Gift - Eterna City Gym (1 copy)",
+     "availability_ref": "res/field/scripts/scripts_eterna_city_gym.s:92; res/items/data/tm86.json:1"
+    }
+   ],
+   "ability": "ABILITY_CUTE_CHARM",
+   "ability_reason": "tie_default",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "lumineon",
+   "source": "wild_slot:SPECIES_LUMINEON@MAP_HEADER_ROUTE_219",
+   "start_level": 60,
+   "moves": [
+    {
+     "move": "surf",
+     "source_kind": "hm",
+     "detail": "HM03 - Gift - Celestic Town Cave (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_celestic_town_cave.s:131; res/items/data/hm03.json:1"
+    },
+    {
+     "move": "ice_beam",
+     "source_kind": "tm",
+     "detail": "TM13 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm13.json:1"
+    },
+    {
+     "move": "return",
+     "source_kind": "tm",
+     "detail": "TM27 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm27.json:1"
+    },
+    {
+     "move": "air_cutter",
+     "source_kind": "tutor",
+     "detail": "Route 212 tutor (2R/4B/0Y/2G)",
+     "availability_ref": "res/pokemon/move_tutors.json:123; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+    }
+   ],
+   "ability": "ABILITY_SWIFT_SWIM",
+   "ability_reason": "tie_default",
+   "held_item": "expert_belt",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "gallade",
+   "source": "wild_slot:SPECIES_RALTS@MAP_HEADER_ROUTE_208",
+   "start_level": 61,
+   "moves": [
+    {
+     "move": "close_combat",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 53",
+     "availability_ref": "res/pokemon/gallade/data.json:35; src/pokemon.c:270"
+    },
+    {
+     "move": "ice_punch",
+     "source_kind": "tutor",
+     "detail": "Route 212 tutor (2R/6B/0Y/0G)",
+     "availability_ref": "res/pokemon/move_tutors.json:67; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+    },
+    {
+     "move": "leaf_blade",
+     "source_kind": "relearner",
+     "detail": "Move relearner - Pastoria City (1 Heart Scale; Gallade Lv 1 move)",
+     "availability_ref": "res/pokemon/gallade/data.json:35; res/field/scripts/scripts_pastoria_city_east_house.s:15; res/field/scripts/scripts_pastoria_city_east_house.s:53; res/field/scripts/scripts_pastoria_city_east_house.s:59; src/move_reminder_data.c:50; include/data/map_headers.h:2886"
+    },
+    {
+     "move": "psycho_cut",
+     "source_kind": "level_up",
+     "detail": "Level-up Lv 31",
+     "availability_ref": "res/pokemon/gallade/data.json:35; src/pokemon.c:270"
+    }
+   ],
+   "ability": "ABILITY_STEADFAST",
+   "ability_reason": "tie_default",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  },
+  {
+   "species": "spiritomb",
+   "source": "static:SPECIES_SPIRITOMB@MAP_HEADER_ROUTE_209",
+   "start_level": 60,
+   "moves": [
+    {
+     "move": "shadow_ball",
+     "source_kind": "tm",
+     "detail": "TM30 - Item ball - Route 210 North (1 copy)",
+     "availability_ref": "res/field/events/events_route_210_north.json:301; res/items/data/tm30.json:1"
+    },
+    {
+     "move": "psychic",
+     "source_kind": "tm",
+     "detail": "TM29 - Game Corner - Veilstone City Prize Exchange (unlimited)",
+     "availability_ref": "res/field/scripts/scripts_veilstone_city_prize_exchange.s:28; res/items/data/tm29.json:1"
+    },
+    {
+     "move": "water_pulse",
+     "source_kind": "tm",
+     "detail": "TM03 - Item ball - Ravaged Path (1 copy)",
+     "availability_ref": "res/field/events/events_ravaged_path.json:439; res/items/data/tm03.json:1"
+    },
+    {
+     "move": "icy_wind",
+     "source_kind": "tutor",
+     "detail": "Route 212 tutor (0R/6B/0Y/2G)",
+     "availability_ref": "res/pokemon/move_tutors.json:27; res/field/scripts/scripts_route_212_house.s:56; include/data/map_headers.h:8232"
+    }
+   ],
+   "ability": "ABILITY_PRESSURE",
+   "ability_reason": "tie_default",
+   "held_item": "sitrus_berry",
+   "nature": "Hardy",
+   "ivs": {
+    "hp": 15,
+    "atk": 15,
+    "def": 15,
+    "spa": 15,
+    "spd": 15,
+    "spe": 15
+   },
+   "evs": {
+    "hp": 85,
+    "atk": 85,
+    "def": 85,
+    "spa": 85,
+    "spd": 85,
+    "spe": 85
+   }
+  }
+ ],
+ "resource_use": {
+  "ITEM_DAWN_STONE": 1,
+  "ITEM_EXPERT_BELT": 1,
+  "TM03": 1,
+  "TM09": 1,
+  "TM30": 1,
+  "TM71": 1,
+  "TM86": 1,
+  "TM91": 1
+ }
+}

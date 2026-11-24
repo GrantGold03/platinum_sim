@@ -1,0 +1,7 @@
+levels [59, 60, 61, 60, 61, 60]; A(branch) moves [['earthquake', 'stone_edge', 'crunch', 'bullet_seed'], ['thunderbolt', 'thunder', 'flash_cannon', 'tri_attack'], ['ice_beam', 'fire_blast', 'return', 'grass_knot'], ['surf', 'ice_beam', 'return', 'air_cutter'], ['close_combat', 'ice_punch', 'leaf_blade', 'psycho_cut'], ['shadow_ball', 'psychic', 'water_pulse', 'icy_wind']]; B(today) moves [['earthquake', 'stone_edge', 'crunch', 'bullet_seed'], ['thunderbolt', 'thunder', 'flash_cannon', 'tri_attack'], ['ice_beam', 'fire_blast', 'return', 'grass_knot'], ['surf', 'ice_beam', 'return', 'air_cutter'], ['close_combat', 'ice_punch', 'leaf_blade', 'psycho_cut'], ['shadow_ball', 'psychic', 'water_pulse', 'icy_wind']]; player expectimax2-v4
+platsim evaluate: full gauntlets 128/200 (8.93/s, cleared 93)
+platsim evaluate: full gauntlets 200/200 (9.87/s, cleared 153)
+platsim evaluate: full gauntlets 128/200 (12.92/s, cleared 93)
+platsim evaluate: full gauntlets 200/200 (12.78/s, cleared 153)
+pairing control: 0 discordant pairs, OK
+{"n": 200, "a_rate": 0.765, "b_rate": 0.765, "a_only": 0, "b_only": 0, "p_value": 1.0, "verdict": "indistinguishable", "mean_final_level_a": 60.593681917211335, "mean_final_level_b": 60.593681917211335, "levels": [59, 60, 61, 60, 61, 60], "player": "expectimax2-v4", "wall_s": 38.5}

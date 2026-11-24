@@ -80,3 +80,20 @@ Rock appended; no B2 member has a live multi-hit move. Fast suite **649 passed, 
 (`run.EXTRA_KINDS` listed the 024/025 kinds only). B2 has no flinch_item extra, so acceptance did not reach it. Fixed (the kind added);
 a guard test checks that every extra kind the candidates produce on B5 is known to the screen (fails without the fix, passes with
 it). The fix only adds a counter key, so the B2 acceptance above is unaffected.
+
+## T012 Multi-hit measurement (report only; 11:30 to 11:49 AM EST, alone)
+
+B5 quick on the branch (seed `031-b5`, 11:30:15 to 11:41:02, exit 0): the screen tried 297 teams, including Torterra's King's Rock
+set (1 flinch_item extra) and King's Rock on other sets (168 item deviations); the winner clears 0.842 [0.807, 0.871] with Torterra
+on Earthquake, Wood Hammer, Stone Edge, Crunch holding Sitrus Berry (levels [59, 60, 61, 60, 61, 60]). Teams
+(`scripts/make_multi_teams.py`, realized and validated): the winner with Torterra on its flinch_item set (Earthquake, Stone Edge,
+Crunch, Bullet Seed) holding King's Rock (A) against the same set holding Sitrus Berry (B). `scripts/equal_levels_multi.py` (master
+`031-multi|B5`, expectimax2-v4, the winner's levels):
+
+| Check | n | King's Rock (A) | Sitrus Berry (B) | only A / only B | p | verdict |
+|---|---|---|---|---|---|---|
+| pairing control (`--self`) | 200 | 0.765 | 0.765 | 0 / 0 | 1 | OK |
+| Torterra, Bullet Seed set | 2,000 | 0.8185 | 0.8080 | 308 / 287 | 0.41 | indistinguishable |
+
+King's Rock is +1.0 point on this set, not a supported difference; both are below the winner's own set (0.842 at its search
+levels, a different measurement). Report only (owner's decision 2026-11-24).

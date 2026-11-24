@@ -76,6 +76,11 @@ Built from the decomp and `main`, not from the 007-010 archive.
   King's Rock / Razor Fang (031)**: one option with 2 copies (dominance rule; Gliscor's evolution uses the Razor Fang); the game rolls
   it after every hit of a multi-hit move (10% each); Shield Dust blocks it; the battles credit its flinches even though the player
   does not value them.
+- **H4 King's Rock / Razor Fang** (feature 031, built 2026-11-24): one option with 2 copies (a second holder gets the Razor Fang);
+  appended for sets with an affected move; a multi-hit extra set (same-type swap) only where the multi-hit move is live, so only
+  Torterra's Bullet Seed on the standing teams; engine equal to the game (per-hit rolls). Offered and not chosen on B2; on B5
+  Torterra's Bullet Seed set: 0.8185 with King's Rock vs 0.8080 with Sitrus (p 0.41). Multi-hit King's Rock sets in general wait on
+  the v4 retune (the player valuing its own flinches). Remaining H4 groups: Metronome, Lum Berry, the Choice items.
 - **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
   (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome,
   King's Rock / Razor Fang, then Lum Berry (resist berries done in 029). Life Orb has no
