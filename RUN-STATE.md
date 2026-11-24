@@ -1,10 +1,11 @@
-# START HERE (updated 2026-11-24 ~12:30 AM EST, feature 030 `030-player-flinch` merged to `main`; assessment `player-own-flinch-value` experiments next)
+# START HERE (updated 2026-11-24 ~12:45 AM EST, feature 030 merged; assessment `player-own-flinch-value` closed: kill for now; next: 031 King's Rock / Razor Fang)
 - **Feature 030 `030-player-flinch` built 2026-11-23 on its branch from `main` 9877958.** v4 models the foe's flinches on the player
   (`flinch: 'defend'`, the owner's decision after the player check and diagnosis); both sides stays available as `flinch=1`. Fixed:
   the flinched Pokemon's move-hit record is cleared. Measured on fresh seeds `fresh3`: ref 26/20, bench 35/24, B2 7/17 (no supported
   loss); about 7% slower. Acceptance (10:29 to 10:47 PM EST): snapshot identical, equal levels 0.9375 both, winner one level moved
-  between Staraptor and Floatzel. Gates (10:48 PM to 12:25 AM EST): Node 414 pass, full pytest 675 passed + 4 xfailed. **Merged to `main` 2026-11-24 about 12:30 AM EST on the owner's go (fast-forward, pushed).** In parallel: a `/speckit-assess`
-  run on valuing the player's own flinch odds (the attack side), needed for King's Rock (031) to be steered toward. Diagnosis
+  between Staraptor and Floatzel. Gates (10:48 PM to 12:25 AM EST): Node 414 pass, full pytest 675 passed + 4 xfailed. **Merged to `main` 2026-11-24 about 12:30 AM EST on the owner's go (fast-forward, pushed).** Assessment `player-own-flinch-value` (2026-11-23/24, `.specify/assessments/`): **kill for now**; on fresh seeds `fresh4`, turning the
+  leaf's Full Restore rule off made the attack side worse (p 0.009) and more AI samples on flinch states changed nothing; knobs on
+  branch `assess-own-flinch-experiments` (pushed, not merged). 031 proceeds on defence only. Diagnosis
   knobs in the v4 candidate syntax: `flinch=attack|defend|0|1`, `crn=1`, `flinchAtk=<0..1>`; paired script `--master-suffix`.
   Traps: decisions on fresh seeds only; never edit `sim/` or `src/` while a run or suite is going.
 - **Feature 029 `029-h4-resist-berries` built 2026-11-23 on its branch from `main` 58f1570.** Commits: pre-feature evidence and
