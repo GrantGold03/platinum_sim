@@ -64,8 +64,8 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 5: User Story 3 - Accepted on both codes (Priority: P3)
 
-- [ ] T009 [US3] Branch side alone: `uv run python specs/030-player-flinch/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/030-evidence/acceptance.txt 2> runs/030-evidence/acceptance.err; echo exit=$?`; copy evidence
-- [ ] T010 [US3] Merge gate (FR-011): a supported loss in T007, a speed under 75% in T008, a snapshot difference, a supported equal-level
+- [x] T009 [US3] Branch side alone: `uv run python specs/030-player-flinch/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/030-evidence/acceptance.txt 2> runs/030-evidence/acceptance.err; echo exit=$?`; copy evidence
+- [x] T010 [US3] Merge gate (FR-011): a supported loss in T007, a speed under 75% in T008, a snapshot difference, a supported equal-level
       loss or a level difference above 1.0: no merge, record and stop at the report; identity differences are reported with the reason
       (flinch), not failures
 - [ ] T011 [US3] Docs: validation log (player check table per team, speed, acceptance table); `README.md` (030 block: what flinch

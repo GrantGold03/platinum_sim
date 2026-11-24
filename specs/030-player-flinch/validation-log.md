@@ -184,9 +184,24 @@ Speed in these runs (order-confounded): 14.79 vs 15.98, 13.88 vs 14.88, 15.35 vs
 25% bound. Status: stopped for the owner's decision between defence only (measured, shippable) and further work on the attack side
 (the leaf evaluation's trade of damage against a flinch, a v4 retune).
 
-## Owner's decision (about 7:45 PM EST): ship defence only
+## Owner's decision (committed 10:29 PM EST): ship defence only
 
 v4's default becomes `flinch: 'defend'`. The 018 options pin and the flinch tests updated (the model's both-sides cases run with
 `flinch: true`; a new test checks the default values only the foe's flinches); 12 flinch tests pass. The replay fixture's v4 entry
 re-recorded for the new default (v1 and v2 entries unchanged). Node suite **414 pass, 0 fail**, exit 0. The defence-only player was
 measured on fresh seeds `fresh3` (previous section); the T007 table above is the both-sides model's and stays as the record of why.
+
+## T009 and T010 Branch acceptance (10:29:12 to 10:47:23 PM EST, alone, exit 0) and the merge gate
+
+| Measure | main | branch (defence only) |
+|---|---|---|
+| B2 quick winner | levels [52, 50, 50, 50, 51, 53], clear 0.9440 | the same six with the same moves and items, levels [52, 50, 51, 50, 50, 53] (Staraptor +1, Floatzel -1), clear 0.9280; same average |
+| Equal levels, 2,000 pairs | 0.9375 | 0.9375 (0 / 0, p 1); expected average final level 51.69 on both, diff +0.00 |
+| Candidate snapshot, 36 members | | all identical (`snapshot_members_changed` 0) |
+| Teams screened | 269 | 269, overlap 269 |
+| Identity (ref, b2main) | | differ as expected (flinch changes play): ref in rates, per-battle and levels; b2main in expected final levels |
+| Generation | 1.6 s / 7.0 s | 1.6 s / 7.0 s |
+
+**Gate (FR-011): pass** for the shipped defence-only player: no supported loss on fresh seeds (previous sections), speed within the
+bound, snapshot identical, equal-level comparison passes. The quick search's winner differs only in how one level is split between
+Staraptor and Floatzel (the search's own noise between two codes whose players differ).

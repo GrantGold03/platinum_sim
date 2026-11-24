@@ -1,0 +1,48 @@
+start 2026-11-23 10:29:12 PM EST side branch
+b2-branch: ['garchomp', 'infernape', 'staraptor', 'rotom', 'floatzel', 'weavile'] levels [52, 50, 51, 50, 50, 53] clear 0.9280 [0.9019, 0.9475] n 500 attempts 2 wall 601.8 s; resist-berry holders {}
+identity ref: DIFFERS ['champion_ci95', 'champion_rate', 'clear_ci95', 'clear_rate', 'expected_avg_final_level', 'expected_final_levels', 'loss_causes', 'per_battle', 'provenance', 'sampling_detail'] (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+identity b2main: DIFFERS ['expected_avg_final_level', 'expected_final_levels'] (removed: ['divergence_ledger_version', 'divergences', 'member_notes', 'platsim_code_hash', 'provenance.divergence_ledger_file_version', 'provenance.member_defaults', 'provenance.worker.divergence_ledger_version', 'repo_commit', 'repo_dirty', 'sim_code_hash'])
+screen: main 269 teams, branch 269 (extras {'accuracy_item': 14, 'crit_item': 18, 'item_deviation': 142, 'total': 188, 'variable_power': 14}); overlap 269 of 269
+candidate generation, six B2 species at Lv 47: 1.6 s (SC-006)
+full team build with the allocation, B2 at Lv 47: 7.0 s (SC-006, at most 10 s)
+dead moves in extras: before 56 after 56 (without a filler reason 0); extras 271 -> 271
+generation main {'members': '1.6', 'team': '7.0'} branch {'members': '1.6', 'team': '7.0'} (s); baseline repairs 0
+diff B2quick|SPECIES_GARCHOMP|own: identical
+diff B2quick|SPECIES_INFERNAPE|own: identical
+diff B2quick|SPECIES_STARAPTOR|own: identical
+diff B2quick|SPECIES_ROTOM|own: identical
+diff B2quick|SPECIES_FLOATZEL|own: identical
+diff B2quick|SPECIES_WEAVILE|own: identical
+diff B1|SPECIES_INFERNAPE|own: identical
+diff B1|SPECIES_STARAPTOR|own: identical
+diff B1|SPECIES_LUXRAY|own: identical
+diff B1|SPECIES_GARCHOMP|own: identical
+diff B1|SPECIES_GYARADOS|own: identical
+diff B1|SPECIES_GARDEVOIR|own: identical
+diff B2|SPECIES_GARCHOMP|own: identical
+diff B2|SPECIES_INFERNAPE|own: identical
+diff B2|SPECIES_STARAPTOR|own: identical
+diff B2|SPECIES_ROTOM|own: identical
+diff B2|SPECIES_FLOATZEL|own: identical
+diff B2|SPECIES_WEAVILE|own: identical
+diff B3|SPECIES_INFERNAPE|own: identical
+diff B3|SPECIES_GARCHOMP|own: identical
+diff B3|SPECIES_GYARADOS|own: identical
+diff B3|SPECIES_LUCARIO|own: identical
+diff B3|SPECIES_CHATOT|own: identical
+diff B3|SPECIES_STARAPTOR|own: identical
+diff B4|SPECIES_ROSERADE|own: identical
+diff B4|SPECIES_BLISSEY|own: identical
+diff B4|SPECIES_GLISCOR|own: identical
+diff B4|SPECIES_MILOTIC|own: identical
+diff B4|SPECIES_BRONZONG|own: identical
+diff B4|SPECIES_LUCARIO|own: identical
+diff B5|SPECIES_TORTERRA|own: identical
+diff B5|SPECIES_MAGNEZONE|own: identical
+diff B5|SPECIES_CLEFABLE|own: identical
+diff B5|SPECIES_LUMINEON|own: identical
+diff B5|SPECIES_GALLADE|own: identical
+diff B5|SPECIES_SPIRITOMB|own: identical
+equal levels at [52, 50, 51, 50, 50, 53]: n 2000 A(branch) 0.9375 B(main) 0.9375 only A 0 / only B 0 p 1 verdict indistinguishable; winners' expected avg final level branch 51.69 vs main 51.69 (diff +0.00); defects 0; identity differs (expected, reported); snapshot members changed 0; dead in extras without a reason 0; team build 7.0 s; pass True
+end 2026-11-23 10:47:23 PM EST
+exit=0

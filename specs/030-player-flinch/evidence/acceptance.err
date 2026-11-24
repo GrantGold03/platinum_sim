@@ -1,0 +1,5 @@
+acceptance: optimize -> b2-branch
+acceptance: evaluate ref -> ident-branch/ref
+acceptance: evaluate b2main -> ident-branch/b2main
+acceptance: snapshot: 36 member variants -> candidates-branch.json
+acceptance: equal levels

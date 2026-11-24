@@ -32,7 +32,7 @@ held-item flinch chance), which follow as feature 031.
 
 - Q: If modelling flinch makes the battle player slower, how much slowdown is acceptable before the feature has to be redesigned or stopped? → A: B, at most 25% slower (fewer gauntlets per second); over that, prune or stop for the owner's decision. Owner's addition: when the Pokemon with the flinch move moves second, no flinch chance is considered at all, because the Pokemon that already moved cannot be flinched.
 
-- Q (after the player check and its diagnosis): ship the full model, which values the player's own flinch odds and lost on B2 on fresh seeds (0.9375 vs 0.9585, p 0.0002), or only the foe's flinches on the player, which passed on fresh seeds? → A: ship defence only (owner's decision, 2026-11-23, about 7:45 PM EST); the attack side goes to a `/speckit-assess` run.
+- Q (after the player check and its diagnosis): ship the full model, which values the player's own flinch odds and lost on B2 on fresh seeds (0.9375 vs 0.9585, p 0.0002), or only the foe's flinches on the player, which passed on fresh seeds? → A: ship defence only (owner's decision, 2026-11-23, recorded at 10:29 PM EST); the attack side goes to a `/speckit-assess` run.
 
 ## User Scenarios & Testing *(mandatory)*
 
