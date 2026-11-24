@@ -592,6 +592,7 @@ function flinchChance(X, S, side, rec, e, foeMovesLater) {
 // sees a hit that the game has already cleared and predicts switches the game never makes (030 diagnosis).
 function flinchStop(X, S, side, u) {
   S.moveHit[side] = 0;
+  u.flMark = true; // assessment knob `flinchK`: marks a state a flinch created (read at the second ply)
   u.flinched = false;
   u.lastMoveOk = false;
   if (staticInfo(X, u).ability === 'ABILITY_STEADFAST') u.boosts.spe = clampStage(u.boosts.spe + 1);
@@ -1143,7 +1144,7 @@ export function leafValue(X, S) {
   let v = 0;
   if (oppAlive === 0) v += P.WIN;
   if (myAlive === 0) v -= P.WIN;
-  let fr = oppAlive > 0 ? frUsable(S) : 0;
+  let fr = oppAlive > 0 && !X.opts.noFR ? frUsable(S) : 0; // assessment knob `fr=0`: no Full Restore rule or penalty in the leaf
   const oa = activeOf(S, 1);
   const wAlive = X.opts.wAlive ?? P.W_ALIVE;
   for (const m of S.sides[0].mons) if (m.hp > 0) v += wAlive + m.hp / m.maxhp - statusPenalty(X, m);
@@ -1229,7 +1230,9 @@ function valuePly2(X, S) {
   X.nodes++;
   replaceFainted(X, S);
   if (terminal(S)) return leafValue(X, S);
-  const opp = predictOpponent(X, S, 'p2', X.opts.kPly2 ?? PARAMS.K_PLY2); // 018: per-version budget
+  // assessment knob `flinchK`: more trainer-AI samples at the second ply only on states a flinch created this turn
+  const fk = X.opts.flinchK && S.sides.some((sd) => sd.mons.some((m) => m.flMark)) ? X.opts.flinchK : 0;
+  const opp = fk ? predictOpponent(X, S, 'p2f', fk) : predictOpponent(X, S, 'p2', X.opts.kPly2 ?? PARAMS.K_PLY2); // 018: per-version budget
   let sp;
   const speedOf = () => (sp ??= speedInfo(X, S)); // 017: once per state
   let best = -Infinity;

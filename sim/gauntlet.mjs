@@ -63,6 +63,8 @@ const CANDIDATE_KEYS = {
   shellBell: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 028: the reference arm of the player check
   resistBerries: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 029: the reference arm of the player check
   flinchAtk: (v) => (/^(0(\.\d+)?|1(\.0+)?)$/.test(v) ? +v : undefined), // 030 diagnosis: weight on the player's own flinch odds
+  fr: (v) => (v === '0' ? true : undefined), // assessment: fr=0 = no Full Restore rule in the leaf (stored as noFR)
+  flinchK: (v) => (/^\d+$/.test(v) && +v >= 1 && +v <= 32 ? +v : undefined), // assessment: AI samples on flinch-created states
   crn: (v) => (v === '0' ? false : v === '1' ? true : undefined), // 030 diagnosis: common random numbers below the root
   flinch: (v) => (v === '0' ? false : v === '1' ? true : v === 'attack' || v === 'defend' ? v : undefined), // 030: reference arm; attack/defend: diagnosis
 };
@@ -78,7 +80,7 @@ function parseCandidate(name) {
     if (key in knobs) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: repeated key ${key}`);
     const value = eq >= 0 ? parse(part.slice(eq + 1)) : undefined;
     if (value === undefined) throw new RequestError('invalid_policy', `invalid expectimax2-v4 candidate ${name}: bad value for ${key}`);
-    knobs[key] = value;
+    knobs[key === 'fr' ? 'noFR' : key] = value;
   }
   return knobs;
 }
