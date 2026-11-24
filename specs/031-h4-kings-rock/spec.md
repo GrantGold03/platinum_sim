@@ -25,6 +25,12 @@ simulated battle applies the item's flinches, so a team holding it is measured w
 | League | no trainer holds either item |
 | Affected multi-hit moves | Arm Thrust, Barrage, Bone Rush, Bonemerang, Bullet Seed, Comet Punch, Double Hit, Double Kick, Double Slap, Fury Attack, Fury Swipes, Icicle Spear, Pin Missile, Rock Blast, Spike Cannon (Triple Kick is not affected) |
 
+## Clarifications
+
+### Session 2026-11-24
+
+- Q: If the multi-hit measurement shows the team does no better, or even worse, when its multi-hit member holds King's Rock instead of its usual item, should that block merging 031? → A: A, report only: record both clear rates and the paired verdict; the merge depends on the 029 acceptance rules alone.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle engine flinches as the game does (Priority: P1)
@@ -115,11 +121,12 @@ The usual acceptance runs compare the branch with `main`, and a dedicated measur
 - **FR-005**: The battle player MUST be unchanged (no League trainer holds the item; the player's own flinch odds stay unvalued).
 - **FR-006**: Acceptance MUST follow the 029 protocol on both codes and report which members took the flinch item.
 - **FR-007**: A measurement MUST compare a team whose multi-hit member holds the flinch item with the same team holding its usual
-  item, 2,000 paired gauntlets under Shift on fresh seeds, reporting both clear rates.
+  item, 2,000 paired gauntlets under Shift on fresh seeds, reporting both clear rates and the paired verdict. It is report only
+  (owner's decision 2026-11-24): its result does not block the merge.
 - **FR-008**: The README MUST state the item rule, the copies, that the battles credit its flinches while the player does not steer
   toward them, and the measurement of FR-007.
 - **FR-009**: Merge only if acceptance passes the 029 rules (no supported loss at equal levels, level difference at most 1.0, no
-  attribution defect).
+  attribution defect); the FR-007 measurement is reported, not gated.
 
 ### Key Entities
 
