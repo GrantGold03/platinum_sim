@@ -81,9 +81,9 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 6: Gates and close
 
-- [ ] T014 Gates, nothing else running: engine diff empty; `sim` diff only the new test; hashes and ledger version as expected; Node
+- [x] T014 Gates, nothing else running: engine diff empty; `sim` diff only the new test; hashes and ledger version as expected; Node
       suite; `uv run pytest -q --durations=25 > runs/031-evidence/full.log 2>&1; echo full exit=$?`; log and `evidence/gates.txt`
-- [ ] T015 Closing commit `docs(031): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
+- [x] T015 Closing commit `docs(031): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
 
 ## Dependencies
 

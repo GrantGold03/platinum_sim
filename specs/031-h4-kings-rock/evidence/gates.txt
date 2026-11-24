@@ -1,0 +1,22 @@
+start 11:49:47 AM EST
+== engine diff (vendored pokemon-showdown) vs main:
+== sim diff vs main:
+ sim/test/kings_rock.test.mjs | 68 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+== src diff vs main:
+ src/platsim/optimizer/candidates.py | 48 +++++++++++++++++++++++++++++++++++++
+ src/platsim/optimizer/resources.py  | 13 ++++++++++
+ src/platsim/optimizer/run.py        |  2 +-
+ 3 files changed, 62 insertions(+), 1 deletion(-)
+== hashes:
+sha256:d305a55582d8a59722f853216eb8e82489d7cf924f3a14c218656671425f7e4a sha256:1ba2df1f7529ab03fce2e13d5db56b6a6d105dc6f084aa501126d36692d6bc74
+ledger sha256:821f33356f6a61bb
+node exit=0
+# tests 418
+# pass 418
+# fail 0
+full exit=0
+7.72s call     tests/unit/test_resist_berries.py::test_only_the_appended_items_change_over_the_36_members
+7.28s call     tests/integration/test_champion_topup.py::test_deterministic_for_fixed_seed
+682 passed, 4 xfailed, 1 warning in 5656.71s (1:34:16)
+end 1:26:36 PM EST

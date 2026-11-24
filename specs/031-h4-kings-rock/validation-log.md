@@ -97,3 +97,10 @@ Crunch, Bullet Seed) holding King's Rock (A) against the same set holding Sitrus
 
 King's Rock is +1.0 point on this set, not a supported difference; both are below the winner's own set (0.842 at its search
 levels, a different measurement). Report only (owner's decision 2026-11-24).
+
+## T014 Gates (11:49:47 AM to 1:26:36 PM EST, alone)
+
+Vendored engine diff against `main`: empty. `sim` diff: only the new engine test (`kings_rock.test.mjs`), so `sim_code_hash` is
+unchanged (sha256:d305a555…; the hash does not cover test files). `src` diff: `candidates.py`, `resources.py`, `run.py` (EXTRA_KINDS);
+platsim hash sha256:1ba2df1f… (changed, as expected). Ledger version unchanged at sha256:821f33356f6a61bb. Node suite: **418 pass,
+0 fail**, exit 0. Full pytest: **682 passed, 4 xfailed**, exit 0 (1:34:16).
