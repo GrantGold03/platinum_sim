@@ -31,6 +31,8 @@ simulated battle applies the item's flinches, so a team holding it is measured w
 
 - Q: If the multi-hit measurement shows the team does no better, or even worse, when its multi-hit member holds King's Rock instead of its usual item, should that block merging 031? → A: A, report only: record both clear rates and the paired verdict; the merge depends on the 029 acceptance rules alone.
 
+- Q (at implementation): the multi-hit extra sets came out dead for almost every member (e.g. Lucario's Bone Rush always does less than its other moves; the damage-only player would never use it, so its flinches would never happen); how should 031 handle them? → A: swap the multi-hit move in for a same-type move when the set has one (else the lowest-scoring move) and keep 027's dead-move rule, so the extra is offered only where the move is live; multi-hit King's Rock sets in general wait on the v4 retune (the player valuing its own flinches).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle engine flinches as the game does (Priority: P1)
@@ -116,7 +118,8 @@ The usual acceptance runs compare the branch with `main`, and a dedicated measur
 - **FR-003**: The flinch item MUST be appended after each moveset's existing item candidates for every set with at least one affected
   move, and MUST NOT be offered for a set with none.
 - **FR-004**: For a member that learns an affected multi-hit move, the optimizer MUST offer an item-conditioned extra set: its best
-  multi-hit move in its best set, held with the flinch item, following feature 025's pattern; the existing sets and their item lists
+  multi-hit move in its best set in place of a move of the same type (else the set's lowest-scoring move), held with the flinch item,
+  following feature 025's pattern, and only when the multi-hit move is live (027's dead-move rule; owner's decision 2026-11-24); the existing sets and their item lists
   MUST otherwise be unchanged.
 - **FR-005**: The battle player MUST be unchanged (no League trainer holds the item; the player's own flinch odds stay unvalued).
 - **FR-006**: Acceptance MUST follow the 029 protocol on both codes and report which members took the flinch item.
@@ -142,8 +145,8 @@ The usual acceptance runs compare the branch with `main`, and a dedicated measur
   four blockers; every difference found is ledgered.
 - **SC-002**: Every set with an affected move offers the flinch item last; no set without one does; two holders get one of each item,
   a third is refused.
-- **SC-003**: Every snapshot member that learns an affected multi-hit move gains exactly one multi-hit extra set; members without one
-  change only by the appended item.
+- **SC-003**: Every snapshot member whose best affected multi-hit move is live after the swap gains exactly one multi-hit extra set;
+  the others record why none was offered; members without such a move change only by the appended item.
 - **SC-004**: The B2 acceptance passes the 029 rules on both codes.
 - **SC-005**: The multi-hit measurement reports both clear rates over 2,000 paired gauntlets with the paired test's verdict.
 - **SC-006**: The Node and full Python suites pass; team build stays within 10 s.

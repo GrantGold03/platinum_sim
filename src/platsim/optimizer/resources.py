@@ -36,6 +36,8 @@ found by bisection and verified.
 
 from __future__ import annotations
 
+import dataclasses
+
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -262,6 +264,17 @@ def realize(specs: TeamSpec, levels, led, *, required_hms=()) -> Realized | Refu
     options = []
     team = tuple(s.species for s in specs)
     for slot, (spec, level) in enumerate(zip(specs, levels)):
+        # 031: identical items are one option (candidates.EQUIVALENT_ITEMS): a holder whose item's copies are all taken by
+        # earlier members (or by an evolution on the team) holds the next affordable item of its group; past the group's
+        # copies the member is refused below as before.
+        group = C.EQUIVALENT_ITEMS.get(spec.item) if spec.item else None
+        if group:
+            for alt in group:
+                n = copies(f"ITEM_{alt.upper()}", led, team)
+                if n == UNLIMITED or used[f"ITEM_{alt.upper()}"] < int(n):
+                    if alt != spec.item:
+                        spec = dataclasses.replace(spec, item=alt)
+                    break
         variant = variant_of(spec, led)
         best = None
         for opt in variant.options(led):

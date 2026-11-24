@@ -39,3 +39,25 @@ First run: the Double Kick case read 0/400 because a Lv-80 Crobat's super-effect
 target cannot flinch); the test now counts only surviving targets and uses a Lv-45 holder. No difference from the game: no ledger
 entry, ledger version unchanged. Node suite in the next line of this log.
 Node suite: # tests 418 # pass 417 # fail 1 
+The one failure is `seeds.test.mjs` 'Showdown accepts a derived seed and replays identically': its two runs differ only in the `|t:|` timestamp line (a second boundary crossed, as in 030); rerun alone it passes (see the next commit). It does not touch the item.
+
+## T005 to T009 The optimizer offers the flinch item (10:30 to 11:08 AM EST)
+
+`candidates.py`: `KINGS_ROCK_FLAG`, `FLINCH_ITEM` (`kings_rock`), `EQUIVALENT_ITEMS = {kings_rock: (kings_rock, razor_fang)}`,
+`kings_rock_affected`, `kings_rock_multi_hit` (15 moves); `extra_item_candidates` appends `kings_rock` last for a set with an affected
+move; a `flinch_item` extra set per member variant (the best affected multi-hit move from the full legal list, since pruning may
+drop it as dominated; swapped in for a same-type move, else the lowest-scoring move; 027's dead-move rule decides). `resources.py`:
+`realize` gives a holder whose group item's copies are taken the next affordable item of the group (the report shows it).
+
+**Finding at implementation, owner's decision**: with the planned swap (the lowest-scoring move) every multi-hit move came out dead
+(Bone Rush, Fury Swipes, Fury Attack, Bullet Seed, Double Slap always do less than the member's other moves). The battle player picks
+moves by damage only (030), so a dead multi-hit move would never be used and its flinches never happen. The owner chose the same-type
+swap and keeping the dead-move rule: on the snapshot teams only Torterra (B5) gets a set: Earthquake, Stone Edge, Crunch, Bullet Seed
+held with King's Rock (Bullet Seed in place of Wood Hammer); every other learner records "<move> is dead in the League". Multi-hit
+King's Rock sets in general wait on the v4 retune (FUTURE-FEATURES). The FR-007 measurement therefore uses B5 and Torterra.
+
+Tests: `tests/unit/test_kings_rock.py` (7: affected and multi-hit moves; appended last only with an affected move; Torterra's extra
+and Clefable's reason; two holders realize as King's Rock and Razor Fang, a third refused; with Gliscor only one fits; the 36
+snapshot members change only by `appended` items and `appended_extra` sets). The 028 and 029 snapshot tests ignore 031's additions
+(`_without_031`); four whole-list pins updated. Item tests 28 passed. Hand check: every B2 set has an affected move and gets King's
+Rock appended; no B2 member has a live multi-hit move. Fast suite **649 passed, 32 deselected, 4 xfailed**, exit 0.

@@ -25,6 +25,18 @@ def _helper():
     return mod
 
 
+def _without_031(mc):
+    """031 appends King's Rock and adds flinch_item extra sets; this feature's check ignores them."""
+    keep = [ms for ms in mc.movesets if mc.extra_kind.get(ms) != "flinch_item"]
+    dropped = len(mc.movesets) - len(keep)
+    return dataclasses.replace(
+        mc, movesets=keep, extras=mc.extras - dropped,
+        item_extras={k: v for k, v in mc.item_extras.items() if k in keep},
+        extra_kind={k: v for k, v in mc.extra_kind.items() if k in keep},
+        extras_by_kind={k: v for k, v in mc.extras_by_kind.items() if k != "flinch_item"},
+        items_extra={k: [i for i in v if i != "kings_rock"] for k, v in mc.items_extra.items()})
+
+
 @pytest.fixture(scope="module")
 def led():
     from platsim.availability.ledger import build_ledger
@@ -45,7 +57,7 @@ def test_appended_last_for_every_set_with_an_attack_on_b2(led):
         mc = C.member_candidates(c, C.variants(c, led)[0], 48, led, team=tuple(consts))
         for ms, extra in mc.items_extra.items():
             has_attack = any(C.is_attack(C.load_moves()[m]) or m in C.OFFERED_VARIABLE for m in ms)
-            plain = [i for i in extra if not i.endswith("_berry")]  # 029 appends resist berries after the bell
+            plain = [i for i in extra if not i.endswith("_berry") and i != "kings_rock"]  # 029 berries and 031 King's Rock after the bell
             assert (plain[-1:] == ["shell_bell"]) == has_attack, (c, ms, extra)
             assert "shell_bell" not in mc.items[ms]  # never among the existing candidates
 
@@ -56,7 +68,7 @@ def test_only_the_appended_items_change_over_the_36_members(led):
     assert len(snap) == 36
     for key, rec in snap.items():
         mc = A.recompute(rec, led)  # 029: resist berries appended after the bell are 029's change, checked in its own test
-        mc = dataclasses.replace(mc, items_extra={k: [i for i in v if not i.endswith("_berry")] for k, v in mc.items_extra.items()})
+        mc = _without_031(dataclasses.replace(mc, items_extra={k: [i for i in v if not i.endswith("_berry")] for k, v in mc.items_extra.items()}))
         recs = A.attribute(rec, mc)
         defects = [r for r in recs if r["cause"] == "defect"]
         assert not defects, (key, defects)

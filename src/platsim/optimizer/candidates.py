@@ -884,6 +884,25 @@ def _item_for_effect(effect: str, led) -> str | None:
 
 RESIST_BERRY_COUNT = 2  # 029: berries offered per member (owner's decision 2026-11-23)
 
+# 031: King's Rock / Razor Fang (HOLD_EFFECT_SOMETIMES_FLINCH, 10% per hit of a move with the flag below, every hit of a
+# multi-hit move; battle_controller_player.c CheckExtraFlinch). Identical items are ONE option with a copy count (dominance
+# assessment 2026-11-13): candidates name the first of the group; realize gives a later holder the next affordable one.
+KINGS_ROCK_FLAG = "MOVE_FLAG_TRIGGERS_KINGS_ROCK"
+FLINCH_ITEM_EFFECT = "HOLD_EFFECT_SOMETIMES_FLINCH"
+FLINCH_ITEM = "kings_rock"
+EQUIVALENT_ITEMS = {"kings_rock": ("kings_rock", "razor_fang")}
+_MULTI_HIT_EFFECTS = ("MULTI_HIT", "HIT_TWICE", "TWICE")
+
+
+def kings_rock_affected(move: str) -> bool:
+    return KINGS_ROCK_FLAG in (load_moves()[move].flags or [])
+
+
+def kings_rock_multi_hit(move: str) -> bool:
+    """031: an affected move that hits more than once (15 moves; Triple Kick has no flag)."""
+    r = load_moves()[move]
+    return kings_rock_affected(move) and any(x in r.effect for x in _MULTI_HIT_EFFECTS)
+
 
 def _berry_effect(type_const: str) -> str:
     if type_const == "TYPE_NORMAL":
@@ -972,6 +991,9 @@ def extra_item_candidates(const_member: str, moveset: tuple[str, ...], led) -> l
             out.append(it)
         # 029: the member's top resist berries by the League damage they would block (none when nothing threatens it)
         out.extend(k for k, _ in resist_berry_ranking(const_member, 100, led)[:RESIST_BERRY_COUNT])
+    # 031: the flinch item, last, for a set with a move it affects (it adds a 10% flinch per hit; re-ranks no move)
+    if any(kings_rock_affected(m) for m in moveset) and _item_copies(led, "ITEM_KINGS_ROCK") != 0:
+        out.append(FLINCH_ITEM)
     return out
 
 
@@ -1133,6 +1155,32 @@ def member_candidates(const: str, variant: Variant, ref_level: int, led, k: int 
                 extra_kind[c] = kind
                 for m in c:
                     scores.setdefault(m, sc_i[m])
+    # 031 (FR-004, research R4): one flinch_item extra set: the member's best affected multi-hit move swapped into its first-ranked
+    # base set in place of a same-type move (else the set's lowest-scoring move), held with the flinch item; dropped when the
+    # multi-hit move is dead (the damage-only player would never use it, so its flinches would never happen). Move values are damage only (a flinch item
+    # changes none), so 025's re-valuation would only re-find existing sets; the set is built directly.
+    if size == 4 and chosen and _item_copies(led, "ITEM_KINGS_ROCK") != 0:
+        # from the full legal list: the pruning above may drop a multi-hit move as dominated by a stronger move of its type
+        mvals = {m: (vals[m] if m in vals else move_value(const, m, level)) for m in legal if is_attack(load_moves()[m]) and kings_rock_multi_hit(m)}
+        multi = sorted(mvals, key=lambda m: (-sum(mvals[m]), m))
+        base0 = tuple(chosen[0])
+        if multi and multi[0] not in base0:
+            # owner's decision 2026-11-24: replace a move of the multi-hit move's type when the set has one (the multi-hit move
+            # then carries that type's coverage), else the set's lowest-scoring move; 027's dead-move rule then decides
+            same = [m for m in base0 if load_moves()[m].type == load_moves()[multi[0]].type and is_attack(load_moves()[m])]
+            out_move = sorted(same or base0, key=lambda m: (scores.get(m, 0.0), m))[0]
+            c = tuple(sorted([m for m in base0 if m != out_move] + [multi[0]]))
+            existing_all = {tuple(sorted(x)) for x in list(chosen) + list(extras) + [x for x, _, _ in item_sets]}
+            vals_f = {**vals, multi[0]: mvals[multi[0]]}
+            if multi[0] in dead_moves(c, vals_f):
+                dropped_extras["flinch_item"] = {"offered": 0, "reason": f"{multi[0]} is dead in the League"}
+            elif c in existing_all:
+                dropped_extras["flinch_item"] = {"offered": 0, "reason": "only duplicates of offered sets remain"}
+            else:
+                extra_vals[c] = vals_f
+                scores.setdefault(multi[0], sum(mvals[multi[0]]))
+                item_sets.append((c, FLINCH_ITEM, "flinch_item"))
+                extra_kind[c] = "flinch_item"
     # order each moveset by score (stable display; worker order does not matter for legality)
     chosen = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in chosen]
     extras = [tuple(sorted(c, key=lambda m: (-scores.get(m, 0), m))) for c in extras]

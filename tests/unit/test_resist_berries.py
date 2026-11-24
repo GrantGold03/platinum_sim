@@ -3,6 +3,7 @@ Special Defense, and the top two appended after each moveset's existing items (s
 
 from __future__ import annotations
 
+import dataclasses
 import importlib.util
 import json
 import sys
@@ -27,6 +28,18 @@ def _helper():
     sys.modules["attribution_029"] = mod
     spec.loader.exec_module(mod)
     return mod
+
+
+def _without_031(mc):
+    """031 appends King's Rock and adds flinch_item extra sets; this feature's check ignores them."""
+    keep = [ms for ms in mc.movesets if mc.extra_kind.get(ms) != "flinch_item"]
+    dropped = len(mc.movesets) - len(keep)
+    return dataclasses.replace(
+        mc, movesets=keep, extras=mc.extras - dropped,
+        item_extras={k: v for k, v in mc.item_extras.items() if k in keep},
+        extra_kind={k: v for k, v in mc.extra_kind.items() if k in keep},
+        extras_by_kind={k: v for k, v in mc.extras_by_kind.items() if k != "flinch_item"},
+        items_extra={k: [i for i in v if i != "kings_rock"] for k, v in mc.items_extra.items()})
 
 
 @pytest.fixture(scope="module")
@@ -91,7 +104,8 @@ def test_top_two_appended_last_after_shell_bell_on_b2(led):
         for ms, extra in mc.items_extra.items():
             has_attack = any(C.is_attack(C.load_moves()[m]) or m in C.OFFERED_VARIABLE for m in ms)
             if has_attack:
-                assert extra[-len(top) - 1:] == ["shell_bell", *top], (c, ms, extra)
+                plain = [i for i in extra if i != "kings_rock"]  # 031 appends King's Rock after the berries
+                assert plain[-len(top) - 1:] == ["shell_bell", *top], (c, ms, extra)
             assert not BERRIES & set(mc.items[ms])  # never among the existing candidates
 
 
@@ -100,5 +114,5 @@ def test_only_the_appended_items_change_over_the_36_members(led):
     snap = json.loads(SNAPSHOT.read_text())
     assert len(snap) == 36
     for key, rec in snap.items():
-        recs = A.attribute(rec, A.recompute(rec, led))
+        recs = A.attribute(rec, _without_031(A.recompute(rec, led)))  # 031's additions checked in its own test
         assert all(r["cause"] == "appended" for r in recs), (key, recs)

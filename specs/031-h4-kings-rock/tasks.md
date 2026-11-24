@@ -37,21 +37,21 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 4: User Story 2 - The optimizer offers the flinch item (Priority: P2)
 
-- [ ] T005 [US2] `src/platsim/optimizer/candidates.py`: `KINGS_ROCK_FLAG = "MOVE_FLAG_TRIGGERS_KINGS_ROCK"`, `FLINCH_ITEM_EFFECT =
+- [x] T005 [US2] `src/platsim/optimizer/candidates.py`: `KINGS_ROCK_FLAG = "MOVE_FLAG_TRIGGERS_KINGS_ROCK"`, `FLINCH_ITEM_EFFECT =
       "HOLD_EFFECT_SOMETIMES_FLINCH"`, `EQUIVALENT_ITEMS = {"kings_rock": ("kings_rock", "razor_fang")}` (data-model: "the candidates
       name the first; realize assigns the first affordable member of the group; at most the group's total copies on a team");
       `extra_item_candidates` appends `kings_rock` last (after the resist berries) when the moveset has a move with the flag, never
       otherwise (FR-003)
-- [ ] T006 [US2] `src/platsim/optimizer/candidates.py`: extra kind `flinch_item` (R4): when the variant's candidate moves include an
+- [x] T006 [US2] `src/platsim/optimizer/candidates.py`: extra kind `flinch_item` (R4): when the variant's candidate moves include an
       affected multi-hit move, take the variant's first-ranked base set, swap the member's highest-scoring affected multi-hit move
       (ties: the move key) in for the set's lowest-scoring move (ties: the lowest score, then the move key) (unless already in it), offer it held with `kings_rock` if not already offered; at most one per variant;
       not if the swapped-in move is dead in the League (reason in `dropped_extras`); recorded in `item_extras`, `extra_kind`,
       `extras_by_kind`
-- [ ] T007 [US2] `src/platsim/optimizer/resources.py`: in the member item check of `realize`, when the item is in an
+- [x] T007 [US2] `src/platsim/optimizer/resources.py`: in the member item check of `realize`, when the item is in an
       `EQUIVALENT_ITEMS` group and its copy is not affordable, use the next affordable item of the group and record it as the member's
       held item (the report and `team.txt` show the actual item); a holder beyond the group's copies is refused; team-gated copies
       (Gliscor's Razor Fang) unchanged
-- [ ] T008 [US2] `tests/unit/test_kings_rock.py`: appended last for sets with an affected move, not for sets without; a `flinch_item`
+- [x] T008 [US2] `tests/unit/test_kings_rock.py`: appended last for sets with an affected move, not for sets without; a `flinch_item`
       extra for a known multi-hit learner (e.g. Lucario: Bone Rush) and none for a member without one; two holders realize as King's
       Rock and Razor Fang, a third refused, with Gliscor only one fits; the 36 snapshot members change only by `appended` items and
       `flinch_item` extras (031 attribution); update pins in `tests/unit/test_h4_items.py`, `tests/unit/test_shell_bell.py`,
@@ -59,7 +59,7 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
       `tests/unit/test_shell_bell.py` (`test_only_the_appended_items_change_over_the_36_members`) and `tests/unit/test_resist_berries.py`
       (the same name): strip `kings_rock` from `items_extra` and drop the `flinch_item` extras before their checks, as 029 did for
       028's test (analyze C1); run them with the candidate and resources tests (exit kept)
-- [ ] T009 [US2] Hand check and the fast suite (`uv run pytest -q -m "not battle_sim" > runs/031-evidence/fast.log 2>&1; echo exit=$?`);
+- [x] T009 [US2] Hand check and the fast suite (`uv run pytest -q -m "not battle_sim" > runs/031-evidence/fast.log 2>&1; echo exit=$?`);
       log; Commit 3 `feat(031): the flinch item offered (appended, multi-hit extras, one option with two copies)`; push
 
 ## Phase 5: User Story 3 - Accepted on both codes, and shown to help (Priority: P3)
@@ -67,7 +67,8 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 - [ ] T010 [US3] Branch side alone: `uv run python specs/031-h4-kings-rock/scripts/acceptance.py --side branch --workers 16 --runs 2000 > runs/031-evidence/acceptance.txt 2> runs/031-evidence/acceptance.err; echo exit=$?`; copy evidence
 - [ ] T011 [US3] Merge gate (FR-009): a supported equal-level loss, a level difference above 1.0, an attribution defect or a non-identical
       identity row (no player change): no merge, record and stop at the report
-- [ ] T012 [US3] Multi-hit measurement, alone, report only (FR-007, R6): B3 quick on the branch (the acceptance script's optimize call
+- [ ] T012 [US3] Multi-hit measurement, alone, report only (FR-007, R6 amended: B5 and Torterra's Bullet Seed set; the text below
+      names B3 and Lucario from before the amendment): B3 quick on the branch (the acceptance script's optimize call
       or `platsim optimize` with B3's species, quick preset; about 10 min); if Lucario is in the winner, build two team files: Lucario
       on its `flinch_item` set holding the flinch item, and the same set with its usual first item, both validated (both arms the
       same set; only the held item differs, FR-007); else the best

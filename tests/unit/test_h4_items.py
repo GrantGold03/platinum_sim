@@ -116,9 +116,9 @@ BELL = "shell_bell"  # 028: appended after the claw for every set with an attack
 def test_item_rules_on_fixed_movesets(led):
     # Stone Edge misses (80): the lens is offered; every attacker gets the claw; order accuracy then crit
     out = C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_STONE_EDGE"), led)
-    assert out[:3] == [LENS, CLAW, BELL] and all(i.endswith("_berry") for i in out[3:])  # 029: berries after
+    assert out[:3] == [LENS, CLAW, BELL] and all(i.endswith("_berry") or i == "kings_rock" for i in out[3:])  # 029 berries, 031 King's Rock
     # every attack hits: no lens, the claw stays
-    assert C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), led) == [CLAW, BELL, "yache_berry", "haban_berry"]
+    assert C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_EARTHQUAKE", "MOVE_DRAGON_CLAW"), led) == [CLAW, BELL, "yache_berry", "haban_berry", "kings_rock"]
     # a never-miss move (accuracy 0 in the data) is not "missing"
     assert LENS not in C.extra_item_candidates("SPECIES_GARCHOMP", ("MOVE_AERIAL_ACE",), led)
     # no attack: nothing
@@ -154,7 +154,7 @@ def test_item_conditioned_extras_follow_the_rule(led):
         base = mc.movesets[:n_base]
         for ms, item in mc.item_extras.items():
             assert ms in mc.movesets[n_base:] and ms not in base
-            assert mc.items[ms][0] == item and item in (LENS, CLAW)
+            assert mc.items[ms][0] == item and item in (LENS, CLAW, "kings_rock")  # 031: flinch_item extras
         kinds = mc.extras_by_kind
         assert sum(kinds.values()) == mc.extras
         if kinds.get("accuracy_item", 0) + kinds.get("crit_item", 0) > 0:
@@ -162,7 +162,7 @@ def test_item_conditioned_extras_follow_the_rule(led):
         else:
             seen_none = True
         for ms in base:
-            assert {i for i in mc.items_extra.get(ms, []) if not i.endswith("_berry")} <= {LENS, CLAW, BELL}  # 029: berries
+            assert {i for i in mc.items_extra.get(ms, []) if not i.endswith("_berry")} <= {LENS, CLAW, BELL, "kings_rock"}  # 029 berries, 031
     assert seen_extra, "no B2 member gained an item-conditioned extra set"
     # the no-extra branch may legitimately not occur on B2; it is covered by the constructed case below
     _ = seen_none

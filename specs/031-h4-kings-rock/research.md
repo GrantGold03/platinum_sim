@@ -47,7 +47,9 @@
 
 - Snapshot species that can learn an affected multi-hit move: Infernape and Weavile (Fury Swipes), Lucario (Bone Rush), Chatot (Fury
   Attack), Blissey and Clefable (Double Slap) (learnset read; legality confirmed by the candidates).
-- **Decision**: run B3 quick on the branch (B3 includes Lucario); if Lucario is in the winner, measure the winner with Lucario on its
+- **Amended at implementation (owner's decision 2026-11-24)**: with the same-type swap and 027's rule, the only snapshot member whose
+  multi-hit move stays live is Torterra (Bullet Seed in place of Wood Hammer; B5); the measurement uses B5 quick and Torterra.
+- **Original decision (superseded)**: run B3 quick on the branch (B3 includes Lucario); if Lucario is in the winner, measure the winner with Lucario on its
   `flinch_item` extra set holding the flinch item against the same set with its usual (first) item (both arms the same set; the
   team therefore differs from the B3 winner itself only in that member's set), 2,000 pairs under Shift, fresh
   seeds, `--self` control; else the snapshot's best multi-hit user in its team's winner. Report both rates and the verdict.
