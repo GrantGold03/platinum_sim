@@ -21,7 +21,7 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 2: Foundational
 
-- [ ] T003 Engine-versus-game checks (FR-001, R1) in `sim/test/kings_rock.test.mjs` (030's pattern; the holder faster than Flint's
+- [x] T003 Engine-versus-game checks (FR-001, R1) in `sim/test/kings_rock.test.mjs` (030's pattern; the holder faster than Flint's
       Houndoom; seeds scanned): (a) a single-hit affected move: flinch rate over 400 seeds within a 99% interval of 10%; (b) a two-hit
       affected move (Double Kick): rate over 400 seeds near 19% and more than one roll per use (a flinch after the first hit's miss is
       impossible to tell apart, so test the rate); (c) Air Slash with the item: rate near 37%; (d) a substitute, Inner Focus, Shield Dust
@@ -32,7 +32,7 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 3: User Story 1 - The battle engine flinches as the game does (Priority: P1) 🎯 MVP
 
-- [ ] T004 [US1] Run `sim/test/kings_rock.test.mjs` and the Node suite (exit code kept; replay unchanged: no player change); record the
+- [x] T004 [US1] Run `sim/test/kings_rock.test.mjs` and the Node suite (exit code kept; replay unchanged: no player change); record the
       rates with their intervals; Commit 2 `test(031): King's Rock engine checks against the game`; push
 
 ## Phase 4: User Story 2 - The optimizer offers the flinch item (Priority: P2)

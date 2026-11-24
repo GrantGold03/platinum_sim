@@ -1,0 +1,38 @@
+TAP version 13
+# \# Tackle + King's Rock: 37/373 hits flinched
+# \# Double Kick + King's Rock: 68/400 uses flinched
+# \# Air Slash + King's Rock: 130/353 hits flinched
+# \# blockers: shield dust 0, inner focus 0, substitute 0, slower holder 0
+# Subtest: engine: a single-hit affected move (Tackle) flinches at 10% per hit with the item, never without
+ok 1 - engine: a single-hit affected move (Tackle) flinches at 10% per hit with the item, never without
+  ---
+  duration_ms: 653.902499
+  type: 'test'
+  ...
+# Subtest: engine: a two-hit move (Double Kick) rolls after each hit: about 19%
+ok 2 - engine: a two-hit move (Double Kick) rolls after each hit: about 19%
+  ---
+  duration_ms: 423.394595
+  type: 'test'
+  ...
+# Subtest: engine: the item's roll is separate from a flinch move's own (Air Slash 30%): about 37% per hit
+ok 3 - engine: the item's roll is separate from a flinch move's own (Air Slash 30%): about 37% per hit
+  ---
+  duration_ms: 392.459358
+  type: 'test'
+  ...
+# Subtest: engine: never through Shield Dust, Inner Focus or a substitute, nor from a slower holder
+ok 4 - engine: never through Shield Dust, Inner Focus or a substitute, nor from a slower holder
+  ---
+  duration_ms: 379.624048
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2519.471768
