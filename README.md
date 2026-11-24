@@ -34,9 +34,11 @@ Full spec: [`specs/001-champion-team-optimizer/`](specs/001-champion-team-optimi
   does well: it knows the League's parties, moves and items as the game stores them and the visible
   battle state; it looks two turns ahead, choosing moves and switches on expected damage with the
   game's own trainer AI sampled for the opponent's replies; it takes the Shift free switch after a KO
-  when a bench member is better placed. What it does not model: payoffs past two turns (weather,
-  Wish, Taunt, Substitute setups), Hidden Power, Magnitude and the other moves listed under feature
-  024, and the opponent's random draws (it never reads them; a human cannot either). A change to its
+  when a bench member is better placed; it expects a faster foe's flinch moves to cost it a turn
+  (feature 030). What it does not model: payoffs past two turns (weather, Wish, Taunt, Substitute
+  setups), its own moves' chance to flinch the foe (features 030 and 031: it chooses moves by damage,
+  so it does not steer toward flinch moves or King's Rock, though the battles apply every flinch),
+  Hidden Power, Magnitude and the other moves listed under feature 024, and the opponent's random draws (it never reads them; a human cannot either). A change to its
   strength is a change to the levels the tool reports, which is why such changes are made
   reference-first with the level cost stated. **The policy is `expectimax2-v4`** (the default everywhere since
   2026-11-03, feature 018): `expectimax2-v2`'s model, leaf and horizon with a smaller search budget (4 root
@@ -719,8 +721,9 @@ not), recorded as ledger entry `mech-shell-bell-substitute` with no effect in th
 both identity evaluations are byte-identical); for a holder, a reference-first check on the B2 team with Shell Bell on Garchomp
 measured 0.9565 with the model against 0.9515 without over 2,000 paired gauntlets (p 0.41, not worse). The policy keeps the name
 `expectimax2-v4`. **Acceptance**: on B2 quick Shell Bell was offered and screened (32 more teams beyond the cap) and not chosen;
-the winner is the identical team on both codes. Remaining item groups, each needing more player work: King's Rock / Razor Fang
-(flinch odds), Metronome (consecutive use), Lum and the resist berries (single-use triggers), the Choice items (move locking).
+the winner is the identical team on both codes. Remaining item groups as of 028, each needing more player work: King's Rock /
+Razor Fang (flinch odds), Metronome (consecutive use), Lum and the resist berries (single-use triggers), the Choice items (move
+locking); since done: the resist berries (029), flinch (030) and King's Rock / Razor Fang (031).
 
 Feature 029 (2026-11-23, `specs/029-h4-resist-berries/`): **resist berries**. Each of the 16 type berries halves the first
 super-effective hit of its type and is used up; Chilan Berry does the same for any Normal hit. **The player now models them**
@@ -877,15 +880,16 @@ uv run pytest -q -m "not battle_sim"                       # fast mode: every te
 uv run pytest -q -m battle_sim                             # only the tests that start the battle worker
 uv run pytest -q -m browser tests/browser/                 # web page in the system Chrome (about 1 min)
 uv run pytest -q --ignore=tests/integration/test_policy_strength.py -k "not v7"   # skips the two long ones
-(cd sim && node --test test/*.test.mjs)                    # Node suites (372 tests, about 3 min)
+(cd sim && node --test test/*.test.mjs)                    # Node suites (418 tests, about 3 min)
 uv run pytest -q --durations=25                            # full suite with the 25 slowest tests listed (the merge gate)
 ```
 
 The full pytest run includes long tests: the policy-strength benchmark (2,000 paired gauntlets ×
 3 policies, plus 400 × 2 on the reversal team), the V7 evaluate determinism check (2 × 2,000
 gauntlets) and two `quick` optimizes.
-- **Full pytest:** the last full run was on 2026-11-04 (feature 023 merge gate):
-  `uv run pytest -q --durations=25` gave **614 passed, 4 xfailed in 4,936 s (1 h 22 min)** plus 2 unit tests whose fake pool
+- **Full pytest:** the last full run was on 2026-11-24 (feature 031 merge gate): `uv run pytest -q --durations=25` gave
+  **682 passed, 4 xfailed in 5,657 s (1 h 34 min)** (030's gate 675 passed, 029's 669, both about 1 h 34 min). On 2026-11-04
+  (feature 023 merge gate) it gave 614 passed, 4 xfailed in 4,936 s (1 h 22 min) plus 2 unit tests whose fake pool
   did not echo the battle style, fixed (test file only) and rerun green; 616 tests in all. Earlier: 2026-11-03 (018 gate)
   561 passed in 55 min plus 2 tests that pinned the old default player name, fixed and rerun green. The same suite took 2 h 09 min on 2026-10-30
   before feature 015, 1 h 20 min after it, 1 h 05 min after 016 and 55 min after 017: the three slowest tests
@@ -902,16 +906,18 @@ gauntlets) and two `quick` optimizes.
   worker start, an unmarked test that starts the worker fails at its teardown, and an unmarked test using a
   fixture that started it, a start outside any test, or a marked test that never reached the worker fail the
   session. The "battle split" section at the end of each run lists the counts and each marked test's route.
-  On 2026-11-04 the fast mode gave 583 passed, 30 deselected, 4 xfailed in 632 s (10.5 min; 535 on 2026-11-02, 528 before feature 018); its slowest test
+  On 2026-11-24 the fast mode gave 649 passed, 32 deselected, 4 xfailed in 660 s (11 min; 583 on 2026-11-04, 535 on 2026-11-02,
+  528 before feature 018); its slowest test
   is `test_extract.py::test_extract_twice_identical_check_and_corruption` (220 s). The battle set is 28 tests
   (26 before features 015 and 016 added the bench tests).
 - **Browser tests** need Google Chrome installed (`google-chrome` on `PATH`) and skip with a reason
   otherwise. Playwright drives it with `channel="chrome"`, so no Playwright browser download is needed.
-- **Node suite:** on 2026-11-02 it gave **351 pass, 0 fail, exit 0 in about 2.5 min** (347 before feature 018, 334
+- **Node suite:** on 2026-11-24 it gave **418 pass, 0 fail, exit 0** (feature 031's gate; 351 on 2026-11-02, 347 before feature 018, 334
   before 017, 314 before 015 and 016; the replay test now covers three policies, 120 gauntlets, 20-45 s on 16 worker
   threads). Known flake, not a regression:
   `sim/test/seeds.test.mjs` compares two raw battle logs including their `|t:|` timestamp lines and fails when
-  the two battles straddle a second boundary (seen once on 2026-10-31; a rerun passes). With
+  the two battles straddle a second boundary (seen on 2026-10-31, 2026-11-23 and 2026-11-24; a rerun passes; a fix that strips
+  the timestamp lines is listed in FUTURE-FEATURES). With
   `PLATSIM_AI_FREEZE=1` the cached AI structs are frozen and `PLATSIM_AI_CHECK=1` recomputes every memoised AI
   value, including (since 017) the shared battler and field structs and the speed pair (`sim/ai/INTERFACE.md`); both
   runs are recorded in the 015/016/017 validation logs.

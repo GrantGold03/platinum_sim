@@ -1,4 +1,22 @@
-# START HERE (updated 2026-11-24 ~6:30 PM EST, feature 031 `031-h4-kings-rock` merged to `main`; next feature: the owner's choice)
+# START HERE (updated 2026-11-24 ~6:40 PM EST, end of session; 029, 030 and 031 merged to `main`; next feature: the owner's choice)
+- **RESUME (end of session 2026-11-24).** `main` is checked out in the main checkout, in sync with origin; clean apart from the
+  owner's untracked files (`.specify/assessments/`, `.specify/extensions*`, `.claude/skills/speckit-assess-*`, `held_items.md`, the
+  deleted `.claude/scheduled_tasks.lock`). Nothing is running; no stash. A power cut rebooted the machine at 6:24 PM EST on
+  2026-11-24 after all work was pushed (checked: branches equal origin, `git fsck` clean, local evidence intact; the session
+  scratchpad was wiped, everything needed from it is under `specs/030-player-flinch/evidence/diagnosis/` and the features'
+  scripts). Merged today and yesterday: 029 resist berries (2026-11-23), 030 player flinch, defence only (2026-11-24, 2203692),
+  031 King's Rock / Razor Fang (2026-11-24, cb63cf8). Assessment `player-own-flinch-value` closed: kill for now (its experiments are
+  on branch `assess-own-flinch-experiments`, pushed, not merged; findings recorded under the v4 retune in FUTURE-FEATURES).
+  **Next, the owner's choice**: the remaining H4 groups (Metronome, Lum Berry, the Choice items last), the seeds-test timestamp fix
+  (FUTURE-FEATURES item 7, small), the speedups before the next long run, the v4 retune (now including own-flinch valuation,
+  second-ply samples, the move-hit record on sleep/paralysis/freeze turns). Start a feature with `git checkout -b 032-<name>` from
+  `main`, then `/speckit-specify`. Hand checks before starting: `git status -sb` shows `main...origin/main`; `pgrep -a -x node` empty.
+  Standing traps: read the clock with `date`, never estimate times; decisions on fresh seeds (`--master-suffix`) when seeds were
+  examined during a diagnosis; the paired script compares policies (use an equal-levels script with its own master to compare
+  teams); never pipe a gating command into tail; never amend or force-push; measurements alone; never edit `src/` or `sim/` while an
+  acceptance, check or suite runs; a new extra kind must be added to `run.EXTRA_KINDS` (guard test); never key a cache on `id()`
+  alone; feature 018's `paired_policies.py` plays Set: use 030's copy with `--battle-style` and `--master-suffix`; Showdown writes split
+  log lines twice; `seeds.test.mjs` can fail on a timestamp line (rerun).
 - **Feature 031 `031-h4-kings-rock` (branch from `main` 5d8650d): King's Rock / Razor Fang.** Engine checked against the game (no
   difference); offered last for sets with an affected move, one option with 2 copies (realize gives a second holder the Razor Fang);
   multi-hit extra sets only where live (owner's decision: same-type swap, dead-move rule kept: only Torterra's Bullet Seed). Bug found

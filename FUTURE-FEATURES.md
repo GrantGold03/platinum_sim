@@ -35,6 +35,8 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
      sleep, full paralysis or freeze turns, which the game's ClearFlags and the live AI tracker do; fixing it changes today's v4 play,
      so it belongs in the retune's measurement.
 6. **Plain-language output** (section 4).
+7. **Seeds-test timestamp flake** (small): `sim/test/seeds.test.mjs` compares raw logs including `|t:|` lines and fails when two
+   battles straddle a second boundary (seen 2026-10-31, 2026-11-23, 2026-11-24); strip the timestamp lines before comparing.
 Not needed now (user, 2026-11-04): the lead named in every output (section 8; the rule is documented in the README, the search half
 was closed by the 020 spike). Blocked: the alternatives stage and its acceptance (sections 1.5, 2). Killed by evidence: see section 7's
 last bullet and section 8.
