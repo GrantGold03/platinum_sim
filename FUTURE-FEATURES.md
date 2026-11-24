@@ -15,6 +15,25 @@ layer, short acceptance runs). Ordered roughly by priority; the order is a propo
 5. **v4 near-threshold retune** (section 7 follow-up (a)): deferred until after the last model change above, so the ladder runs once
    on the settled model (every model change moves where the deficit shows, and every player change breaks checkpoints); the ladder
    must include a threshold team. Until then `--player-policy expectimax2-v2` is the workaround for runs whose levels must be right.
+   **Additional parts from the flinch work (feature 030 and assessment `player-own-flinch-value`, 2026-11-23/24)** — fold into
+   the same ladder:
+   - **Own flinch odds (attack side).** v4 ships defence only (`flinch: 'defend'`). Valuing the player's own flinch chances
+     (`expectimax2-v4?flinch=1`) lost on today's B2 winner: fresh2 0.9375 vs 0.9585 (p 0.0002), fresh4 0.9430 vs 0.9490 (p 0.32);
+     ref and bench even. The flinches it expects happen at the expected rate (23%, always moving first); the loss is the trade:
+     the two-turn search gives up sure damage for a flinch chance (Waterfall into a resisting Milotic instead of Crunch; Rock Slide
+     over Crunch against Spiritomb). Ruled out on fresh seeds: sampling noise (common random numbers made it worse, 0.9340 vs
+     0.9510), the leaf's Full Restore rule (off in both arms: 0.9340 vs 0.9495, p 0.009, worse), more trainer-AI samples on
+     flinch-created states (`flinchK=8`: 0.9425 vs 0.9490, unchanged), half weight (`flinchAtk=0.5`: 0.9400 vs 0.9465). Left for the
+     retune: the leaf's weighing of damage dealt against damage avoided, or more depth on flinch turns. Payoff: King's Rock / Razor
+     Fang (031) and flinch moves, especially multi-hit moves, played toward rather than only credited. Knobs on branch
+     `assess-own-flinch-experiments` (`fr=0`, `flinchK`); `flinch`, `flinchAtk`, `crn` are on `main`. Evidence:
+     `specs/030-player-flinch/validation-log.md` (Diagnosis onward), `.specify/assessments/player-own-flinch-value/`.
+   - **Second-ply AI samples.** `kPly2=4` raised the flinch-off player on B2 from 0.9465 to 0.9545 on the same seeds (not a paired
+     test of that change) at about 37% speed; the 018 ladder chose `kPly2 1` with a 0.5 to 1.9 point deficit for speed. Re-measure
+     paired, with a threshold team.
+   - **Move-hit record on lost turns.** The model clears the move-hit record when a flinched Pokemon loses its turn (030) but not on
+     sleep, full paralysis or freeze turns, which the game's ClearFlags and the live AI tracker do; fixing it changes today's v4 play,
+     so it belongs in the retune's measurement.
 6. **Plain-language output** (section 4).
 Not needed now (user, 2026-11-04): the lead named in every output (section 8; the rule is documented in the README, the search half
 was closed by the 020 spike). Blocked: the alternatives stage and its acceptance (sections 1.5, 2). Killed by evidence: see section 7's
