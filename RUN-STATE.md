@@ -1,10 +1,10 @@
-# START HERE (updated 2026-11-24 ~1:30 PM EST, feature 031 `031-h4-kings-rock` built and gated on its branch; awaiting the owner's merge)
+# START HERE (updated 2026-11-24 ~6:30 PM EST, feature 031 `031-h4-kings-rock` merged to `main`; next feature: the owner's choice)
 - **Feature 031 `031-h4-kings-rock` (branch from `main` 5d8650d): King's Rock / Razor Fang.** Engine checked against the game (no
   difference); offered last for sets with an affected move, one option with 2 copies (realize gives a second holder the Razor Fang);
   multi-hit extra sets only where live (owner's decision: same-type swap, dead-move rule kept: only Torterra's Bullet Seed). Bug found
   by B5 quick and fixed: the screen's EXTRA_KINDS lacked `flinch_item` (guard test added). Acceptance (11:09 to 11:27 AM EST): B2
   identical, offered not chosen, equal levels 0.9410 both, 0 defects. Multi-hit measurement (report only): B5 Torterra Bullet Seed set
-  0.8185 with King's Rock vs 0.8080 with Sitrus (p 0.41). Gates (11:50 AM to 1:27 PM EST): Node 418 pass, full pytest 682 passed + 4 xfailed. Next: merge on the owner's go. Note: the
+  0.8185 with King's Rock vs 0.8080 with Sitrus (p 0.41). Gates (11:50 AM to 1:27 PM EST): Node 418 pass, full pytest 682 passed + 4 xfailed. **Merged to `main` 2026-11-24 about 6:30 PM EST on the owner's go (fast-forward to cb63cf8, pushed).** Next: the remaining H4 groups (Metronome, Lum Berry, the Choice items last), the seeds-test timestamp fix, the v4 retune (FUTURE-FEATURES). Note: the
   seeds test (`sim/test/seeds.test.mjs`) fails now and then on its `|t:|` timestamp line (seen in 030 and 031); worth a small fix.
 - **Feature 030 `030-player-flinch` built 2026-11-23 on its branch from `main` 9877958.** v4 models the foe's flinches on the player
   (`flinch: 'defend'`, the owner's decision after the player check and diagnosis); both sides stays available as `flinch=1`. Fixed:
