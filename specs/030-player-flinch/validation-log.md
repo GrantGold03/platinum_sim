@@ -183,3 +183,10 @@ move-hit fix, Fake Out rule) against `flinch=0`, on new seeds `fresh3`, the thre
 Speed in these runs (order-confounded): 14.79 vs 15.98, 13.88 vs 14.88, 15.35 vs 16.42 gauntlets/s (about 7% slower), within the
 25% bound. Status: stopped for the owner's decision between defence only (measured, shippable) and further work on the attack side
 (the leaf evaluation's trade of damage against a flinch, a v4 retune).
+
+## Owner's decision (about 7:45 PM EST): ship defence only
+
+v4's default becomes `flinch: 'defend'`. The 018 options pin and the flinch tests updated (the model's both-sides cases run with
+`flinch: true`; a new test checks the default values only the foe's flinches); 12 flinch tests pass. The replay fixture's v4 entry
+re-recorded for the new default (v1 and v2 entries unchanged). Node suite **414 pass, 0 fail**, exit 0. The defence-only player was
+measured on fresh seeds `fresh3` (previous section); the T007 table above is the both-sides model's and stays as the record of why.

@@ -32,6 +32,8 @@ held-item flinch chance), which follow as feature 031.
 
 - Q: If modelling flinch makes the battle player slower, how much slowdown is acceptable before the feature has to be redesigned or stopped? → A: B, at most 25% slower (fewer gauntlets per second); over that, prune or stop for the owner's decision. Owner's addition: when the Pokemon with the flinch move moves second, no flinch chance is considered at all, because the Pokemon that already moved cannot be flinched.
 
+- Q (after the player check and its diagnosis): ship the full model, which values the player's own flinch odds and lost on B2 on fresh seeds (0.9375 vs 0.9585, p 0.0002), or only the foe's flinches on the player, which passed on fresh seeds? → A: ship defence only (owner's decision, 2026-11-23, about 7:45 PM EST); the attack side goes to a `/speckit-assess` run.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The battle player knows flinch (Priority: P1)
@@ -121,7 +123,11 @@ snapshot.
   a damaging flinch move hits a target that has not moved yet this turn, is not behind a substitute and lacks Inner Focus (unless
   the attacker has Mold Breaker, which the game lets through Inner Focus); the
   flinched Pokemon's move that turn MUST NOT happen in the model.
-- **FR-002**: The rule MUST apply on both sides: foes flinching the player's members and the player's members flinching foes.
+- **FR-002**: The rule MUST be modelled for foes flinching the player's members. The player's own flinch odds on foes are NOT
+  valued by the shipped v4 (owner's decision after the player check, 2026-11-23: valuing them lost on B2 because the two-turn search
+  trades damage for flinch chances badly); the both-sides model remains available as `expectimax2-v4?flinch=1` for measurement, and
+  the attack side is assessed separately. The battles themselves (the engine) apply every flinch on both sides, so a team's measured
+  clear rate always includes its own flinches.
 - **FR-012**: A flinch chance MUST be considered only when the flinch move's user moves before its target in that turn's order
   (priority first, then Speed; a Speed tie counts each order with its own weight). When the flinch move's user moves second, the
   player MUST NOT consider any flinch chance for that hit (owner's rule, 2026-11-23), so no extra outcome is evaluated.

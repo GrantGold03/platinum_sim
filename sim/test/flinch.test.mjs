@@ -5,7 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { B, gd, leagueBattle, sendIn } from './ai_fixtures.mjs';
-import { _internal, makeContext, V4_OPTS } from '../policy/expectimax2.mjs';
+import { _internal, makeContext, V4_OPTS as V4_DEFAULT } from '../policy/expectimax2.mjs';
+// The model's cases test both sides (`flinch: true`); v4's default is the foe's side only ('defend', tested below).
+const V4_OPTS = { ...V4_DEFAULT, flinch: true };
 
 const dedupe = (lines) => lines.filter((l, i, a) => l !== a[i - 1]);
 const seedOf = (i) => 'sodium,' + i.toString(16).padStart(32, '0');
@@ -148,4 +150,13 @@ test('player: a flinched Pokemon\'s move-hit record is cleared, as the game\'s C
   const flinched = out.filter((b) => b.S.sides[0].mons[b.S.sides[0].active].hp === c.me.hp && b.S.sides[1].mons[b.S.sides[1].active].hp < c.foe.hp);
   assert.ok(flinched.length > 0);
   assert.ok(flinched.every((b) => b.S.moveHit[1] === 0), 'the foe\'s record of being hit is cleared when its turn is lost');
+});
+
+test('player: v4\'s default models the foe\'s flinches only (owner\'s decision, 030)', () => {
+  assert.equal(V4_DEFAULT.flinch, 'defend');
+  const crobat = B('crobat', 60, ['air_slash', 'protect', 'haze', 'roost'], 'ABILITY_INNER_FOCUS');
+  const d = ctx(crobat, V4_DEFAULT);
+  assert.equal(_internal.flinchChance(d.X, d.T, 0, gd.moves[gd.fromSdMove.get('airslash')], 'FLINCH_HIT', true), 0, 'own flinch odds not valued');
+  const s = ctx(SLOW(), V4_DEFAULT);
+  assert.equal(_internal.flinchChance(s.X, s.T, 1, gd.moves[gd.fromSdMove.get('darkpulse')], 'FLINCH_HIT', true), 0.2, 'the foe\'s flinch is');
 });

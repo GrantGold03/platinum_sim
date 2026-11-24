@@ -68,6 +68,10 @@ sim/test/flinch.test.mjs     engine against game; the model's cases
 
 **Structure Decision**: player only; the optimizer, the engine and the AI port are untouched.
 
+**Amendment after the player check (2026-11-23)**: v4's default is `flinch: 'defend'` (the foe's flinches on the player only); the
+both-sides model is `flinch=1`. Diagnosis knobs kept in the candidate syntax: `flinch=attack|defend`, `crn=1`, `flinchAtk`. Fix found by
+the diagnosis: a flinched Pokemon's move-hit record is cleared, as the game's ClearFlags does.
+
 ## Complexity Tracking
 
 None.

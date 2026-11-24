@@ -153,7 +153,7 @@ test('017 speedInfo once per state: calls <= ply-2 nodes + root actions + 1; one
 test('018 version options: v1/v2 unchanged, V4_OPTS, the floor counter, root samples and beam bounds', () => {
   assert.deepEqual({ ...V1_OPTS }, { koStop: false });
   assert.deepEqual({ ...V2_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1 });
-  assert.deepEqual({ ...V4_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05, flinch: true }); // the 018 ladder's result; 030: flinch in v4 only
+  assert.deepEqual({ ...V4_OPTS }, { koStop: true, wAlive: 0.25, wFR: 0.1, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05, flinch: 'defend' }); // the 018 ladder's result; 030: the foe's flinches, v4 only
   assert.ok(Object.isFrozen(V4_OPTS));
   assert.equal(EXPECTIMAX2_V4, 'expectimax2-v4');
   assert.equal(expectimax2v4.name, EXPECTIMAX2_V4);

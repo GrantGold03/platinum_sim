@@ -152,9 +152,11 @@
 //     Room, confusion, Leech Seed, ...) is modelled as having NO effect: scored conservatively,
 //     so the policy only picks one when nothing else is better.
 //   - Secondary effect chances of damaging moves (burn 10%, stat drops on the target, confusion) are
-//     ignored. Confusion and infatuation are not modelled. Flinch is modelled in v4 only (030; off in v1/v2
-//     and with `expectimax2-v4?flinch=0`): a landing flinch move whose target still moves this turn flinches
-//     it with the move's chance (x2 Serene Grace; not through a substitute or Inner Focus unless Mold
+//     ignored. Confusion and infatuation are not modelled. Flinch (030) is modelled in v4 for the FOE's
+//     flinch moves only (`flinch: 'defend'`, the owner's decision after the player check: valuing the player's
+//     own flinch odds, `flinch=1` or `flinch=attack`, lost on B2 because the two-turn search trades damage for
+//     flinch chances badly); off in v1/v2 and with `expectimax2-v4?flinch=0`. A landing flinch move whose target
+//     still moves this turn flinches it with the move's chance (x2 Serene Grace; not through a substitute or Inner Focus unless Mold
 //     Breaker); the flinched Pokemon loses its move, Steadfast +1 Speed; Fake Out fails after its user's
 //     first turn out (activeTurns > 1). No flinch is considered when the flinch move's user moves second (owner's rule).
 //   - Weather never changes inside the search (Sunny Day / Sandstorm / Sand Stream have no
@@ -206,7 +208,7 @@ export const V2_OPTS = Object.freeze({ koStop: true, wAlive: 0.25, wFR: 0.1 });
 // (p 0.0065) and is excluded, so the beam stays 2. The combination 4 / 1 / 2 / 0.05 passed on all four teams
 // (deficits 0.3 to 1.05 points, p 0.33 to 0.71, none supported) at about 1.55x v2 in the pool.
 export const EXPECTIMAX2_V4 = 'expectimax2-v4';
-export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05, flinch: true }); // 030: flinch in v4 only
+export const V4_OPTS = Object.freeze({ ...V2_OPTS, kRoot: 4, kPly2: 1, beam: 2, floor: 0.05, flinch: 'defend' }); // 030: the foe's flinches, v4 only (owner's decision)
 
 // Process-wide counters (diagnostics and benchmarks only; never read by the search).
 export const STATS = { decisions: 0, aiCalls: 0, turns: 0, leaves: 0, ms: 0, aiMs: 0, viewMs: 0, aiDraws: 0, speedInfo: 0, floored: 0 }; // speedInfo: 017 calls; floored: 018 leaf-valued branches
