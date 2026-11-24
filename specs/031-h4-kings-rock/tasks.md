@@ -10,13 +10,13 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
 
 ## Phase 1: Setup (pre-feature evidence, before any code change)
 
-- [ ] T001 Start `specs/031-h4-kings-rock/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
+- [x] T001 Start `specs/031-h4-kings-rock/validation-log.md` (before-values: both code hashes, the ledger version; `git diff --stat
       main -- src sim tests pyproject.toml` empty) and adapt 029's scripts into `specs/031-h4-kings-rock/scripts/`: `acceptance.py`
       (`runs/031-evidence`, identity seed `031-ident`, `NEW_ITEMS = {kings_rock, razor_fang}`, flinch-item holders reported per winner),
       `attribution.py` (an appended-items list may gain `kings_rock` at its end; new extras allowed only of kind `flinch_item`; anything
       else a defect), `equal_levels.py` (master `031-equal|B2`), `hand_check.py` (each B2 member's appended items and `flinch_item`
       extras), and 030's `paired_policies.py` (with `--master-suffix`)
-- [ ] T002 Run the pre-feature side alone (about 15 min): `uv run python specs/031-h4-kings-rock/scripts/acceptance.py --side main --workers 16 > runs/031-evidence/acceptance-main.txt 2> runs/031-evidence/acceptance-main.err; echo exit=$?`;
+- [x] T002 Run the pre-feature side alone (about 15 min): `uv run python specs/031-h4-kings-rock/scripts/acceptance.py --side main --workers 16 > runs/031-evidence/acceptance-main.txt 2> runs/031-evidence/acceptance-main.err; echo exit=$?`;
       copy outputs and the snapshot to `evidence/`; log; Commit 1 `docs(031): pre-feature evidence and scripts`; push
 
 ## Phase 2: Foundational

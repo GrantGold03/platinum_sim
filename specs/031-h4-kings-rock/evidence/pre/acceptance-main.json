@@ -1,0 +1,99 @@
+{
+ "side": "main",
+ "start": "2026-11-24 9:59:40 AM EST",
+ "b2_wall_s": 600.6,
+ "b2": {
+  "dir": "b2-main",
+  "species": [
+   "garchomp",
+   "infernape",
+   "staraptor",
+   "rotom",
+   "floatzel",
+   "weavile"
+  ],
+  "moves": [
+   [
+    "earthquake",
+    "dragon_claw",
+    "rock_slide",
+    "crunch"
+   ],
+   [
+    "fire_blast",
+    "flamethrower",
+    "close_combat",
+    "grass_knot"
+   ],
+   [
+    "return",
+    "aerial_ace",
+    "pluck",
+    "close_combat"
+   ],
+   [
+    "thunderbolt",
+    "shadow_ball",
+    "charge_beam",
+    "thunder_shock"
+   ],
+   [
+    "waterfall",
+    "ice_punch",
+    "crunch",
+    "focus_blast"
+   ],
+   [
+    "ice_punch",
+    "night_slash",
+    "aerial_ace",
+    "brick_break"
+   ]
+  ],
+  "items": [
+   "sitrus_berry",
+   "expert_belt",
+   "sitrus_berry",
+   "wise_glasses",
+   "sitrus_berry",
+   "icicle_plate"
+  ],
+  "levels": [
+   52,
+   50,
+   51,
+   50,
+   50,
+   53
+  ],
+  "variable_members": [
+   "infernape",
+   "staraptor"
+  ],
+  "clear_rate": 0.928,
+  "clear_ci95": [
+   0.9019315959830375,
+   0.9475419685818739
+  ],
+  "n_runs": 500,
+  "qualified": false,
+  "borderline": false,
+  "expected_avg_final_level": 51.69324712643679,
+  "new_item_members": {},
+  "confirm_attempts": 2,
+  "sim_code_hash": "sha256:d305a55582d8a59722f853216eb8e82489d7cf924f3a14c218656671425f7e4a",
+  "platsim_code_hash": "sha256:f3271a011f8a55146cccdac95b0b5baeecb638885f83dd0d4b4f493c16f2b974",
+  "repo_commit": "0a2556f14048c03853d2ce0c04281ef4d37e9f38"
+ },
+ "identity_runs": {
+  "ref": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/031-evidence/ident-main/ref",
+   "wall_s": 61.1
+  },
+  "b2main": {
+   "dir": "/home/grant/Desktop/platinum_sim/runs/031-evidence/ident-main/b2main",
+   "wall_s": 59.0
+  }
+ },
+ "end": "2026-11-24 10:12:34 AM EST"
+}
