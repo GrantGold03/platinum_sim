@@ -121,7 +121,8 @@ The usual acceptance runs compare the branch with `main`, and a dedicated measur
 - **FR-005**: The battle player MUST be unchanged (no League trainer holds the item; the player's own flinch odds stay unvalued).
 - **FR-006**: Acceptance MUST follow the 029 protocol on both codes and report which members took the flinch item.
 - **FR-007**: A measurement MUST compare a team whose multi-hit member holds the flinch item with the same team holding its usual
-  item, 2,000 paired gauntlets under Shift on fresh seeds, reporting both clear rates and the paired verdict. It is report only
+  item, 2,000 paired gauntlets under Shift on fresh seeds, reporting both clear rates and the paired verdict. Both arms give the
+  multi-hit member the same set (its multi-hit extra set); only the held item differs. It is report only
   (owner's decision 2026-11-24): its result does not block the merge.
 - **FR-008**: The README MUST state the item rule, the copies, that the battles credit its flinches while the player does not steer
   toward them, and the measurement of FR-007.

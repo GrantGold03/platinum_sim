@@ -32,8 +32,9 @@
 
 - 025's item-conditioned extras re-value moves under the item; the move values are damage only and do not change with a flinch item,
   so that path would only re-find existing sets.
-- **Decision**: kind `flinch_item`: if the member's candidate moves include an affected multi-hit move, take its best base set, swap
-  the member's highest-scoring affected multi-hit move in for the set's lowest-scoring move (unless already in the set), and offer the
+- **Decision**: kind `flinch_item`: if the member's candidate moves include an affected multi-hit move, take its best base set (the
+  variant's first-ranked base set), swap the member's highest-scoring affected multi-hit move (ties: the move key) in for the set's
+  lowest-scoring move (ties: the lowest score, then the move key) (unless already in the set), and offer the
   result held with `kings_rock` if it is not already an offered set; at most one per member variant; 027's dead-move rule: no extra
   if the swapped-in move is dead in the League (its reason recorded in `dropped_extras`).
 
@@ -47,5 +48,6 @@
 - Snapshot species that can learn an affected multi-hit move: Infernape and Weavile (Fury Swipes), Lucario (Bone Rush), Chatot (Fury
   Attack), Blissey and Clefable (Double Slap) (learnset read; legality confirmed by the candidates).
 - **Decision**: run B3 quick on the branch (B3 includes Lucario); if Lucario is in the winner, measure the winner with Lucario on its
-  `flinch_item` extra set holding the flinch item against the same set with its usual (first) item, 2,000 pairs under Shift, fresh
+  `flinch_item` extra set holding the flinch item against the same set with its usual (first) item (both arms the same set; the
+  team therefore differs from the B3 winner itself only in that member's set), 2,000 pairs under Shift, fresh
   seeds, `--self` control; else the snapshot's best multi-hit user in its team's winner. Report both rates and the verdict.

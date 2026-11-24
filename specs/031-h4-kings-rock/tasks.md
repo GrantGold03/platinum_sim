@@ -25,7 +25,9 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
       Houndoom; seeds scanned): (a) a single-hit affected move: flinch rate over 400 seeds within a 99% interval of 10%; (b) a two-hit
       affected move (Double Kick): rate over 400 seeds near 19% and more than one roll per use (a flinch after the first hit's miss is
       impossible to tell apart, so test the rate); (c) Air Slash with the item: rate near 37%; (d) a substitute, Inner Focus, Shield Dust
-      and a slower holder: never over 100 seeds each; record against the decomp; ledger entries for confirmed differences
+      and a slower holder: never over 100 seeds each (no League Pokemon has Shield Dust or Inner Focus or uses Substitute: the test
+      sets the target's ability with the battle API, or adds a substitute volatile, before the turn; the slower-holder case uses a
+      holder slower than Houndoom); record against the decomp; ledger entries for confirmed differences
       (`src/platsim/divergence/mechanics.py`, then `uv run platsim divergences`)
 
 ## Phase 3: User Story 1 - The battle engine flinches as the game does (Priority: P1) 🎯 MVP
@@ -41,8 +43,8 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
       `extra_item_candidates` appends `kings_rock` last (after the resist berries) when the moveset has a move with the flag, never
       otherwise (FR-003)
 - [ ] T006 [US2] `src/platsim/optimizer/candidates.py`: extra kind `flinch_item` (R4): when the variant's candidate moves include an
-      affected multi-hit move, take the best base set, swap the member's highest-scoring affected multi-hit move in for the set's
-      lowest-scoring move (unless already in it), offer it held with `kings_rock` if not already offered; at most one per variant;
+      affected multi-hit move, take the variant's first-ranked base set, swap the member's highest-scoring affected multi-hit move
+      (ties: the move key) in for the set's lowest-scoring move (ties: the lowest score, then the move key) (unless already in it), offer it held with `kings_rock` if not already offered; at most one per variant;
       not if the swapped-in move is dead in the League (reason in `dropped_extras`); recorded in `item_extras`, `extra_kind`,
       `extras_by_kind`
 - [ ] T007 [US2] `src/platsim/optimizer/resources.py`: in the member item check of `realize`, when the item is in an
@@ -53,7 +55,10 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
       extra for a known multi-hit learner (e.g. Lucario: Bone Rush) and none for a member without one; two holders realize as King's
       Rock and Razor Fang, a third refused, with Gliscor only one fits; the 36 snapshot members change only by `appended` items and
       `flinch_item` extras (031 attribution); update pins in `tests/unit/test_h4_items.py`, `tests/unit/test_shell_bell.py`,
-      `tests/unit/test_resist_berries.py` that compare whole appended lists; run them with the candidate and resources tests (exit kept)
+      `tests/unit/test_resist_berries.py` that compare whole appended lists, and the 36-member attribution tests in
+      `tests/unit/test_shell_bell.py` (`test_only_the_appended_items_change_over_the_36_members`) and `tests/unit/test_resist_berries.py`
+      (the same name): strip `kings_rock` from `items_extra` and drop the `flinch_item` extras before their checks, as 029 did for
+      028's test (analyze C1); run them with the candidate and resources tests (exit kept)
 - [ ] T009 [US2] Hand check and the fast suite (`uv run pytest -q -m "not battle_sim" > runs/031-evidence/fast.log 2>&1; echo exit=$?`);
       log; Commit 3 `feat(031): the flinch item offered (appended, multi-hit extras, one option with two copies)`; push
 
@@ -64,7 +69,8 @@ duplicate split lines; evidence under `runs/031-evidence/` (local) with copies u
       identity row (no player change): no merge, record and stop at the report
 - [ ] T012 [US3] Multi-hit measurement, alone, report only (FR-007, R6): B3 quick on the branch (the acceptance script's optimize call
       or `platsim optimize` with B3's species, quick preset; about 10 min); if Lucario is in the winner, build two team files: Lucario
-      on its `flinch_item` set holding the flinch item, and the same set with its usual first item, both validated; else the best
+      on its `flinch_item` set holding the flinch item, and the same set with its usual first item, both validated (both arms the
+      same set; only the held item differs, FR-007); else the best
       multi-hit user of a winner; 030's paired script, `--master-suffix 031-multi`, `--self` 200 pairs, then 2,000 pairs; record both
       rates and the verdict
 - [ ] T013 [US3] Docs: validation log; `README.md` (031 block: the item rule, the copies, one option with two copies, the multi-hit
