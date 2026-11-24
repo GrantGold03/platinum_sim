@@ -1,16 +1,12 @@
-# START HERE (updated 2026-11-23 ~6:45 PM EST, feature 030 `030-player-flinch`: awaiting the owner's decision, full model vs defence only)
-- **Feature 030 `030-player-flinch` (branch from `main` 9877958), the player models flinch.** T001-T008 done; diagnosis done (log
-  sections "Diagnosis" to "Declared defence-only candidate"). Bug fixed: a flinched Pokemon's move-hit record is now cleared (game
-  ClearFlags). The full model (valuing the player's own flinch odds too) still loses on B2 on fresh seeds (`fresh2`: 0.9375 vs 0.9585,
-  p 0.0002): flinch values are right and realized (23% flinch rate on the player's flinch-move turns, always moving first), but the
-  two-turn search trades damage for flinch chances badly (Waterfall into Milotic instead of Crunch). **Defence only**
-  (`expectimax2-v4?flinch=defend`: the foe's flinches on the player, move-hit fix, Fake Out rule) passes on fresh seeds `fresh3`
-  (ref 26/20, bench 35/24, B2 7/17 p 0.064; B2 pooled 38/40). Owner to decide: ship defence only as v4's default (then T009 acceptance
-  with V4_OPTS flinch 'defend', T010-T013), or continue on the attack side (a v4 evaluation retune). For 031: the engine applies
-  King's Rock's flinches in every simulated battle, so a King's Rock team is credited with them in the measurement whatever the
-  player values; the game rolls King's Rock after every hit of a multi-hit move (10% each). Diagnosis knobs in the v4 candidate
-  syntax: `flinch=attack|defend`, `crn=1`, `flinchAtk=<0..1>`; paired script `--master-suffix`. Pre-existing gap (not fixed): the model
-  does not clear the move-hit record on sleep, full paralysis or freeze turns. Traps: decisions on fresh seeds only.
+# START HERE (updated 2026-11-23 ~10:55 PM EST, feature 030 `030-player-flinch`: defence only shipped on the branch; gates running; attack-side assessment)
+- **Feature 030 `030-player-flinch` built 2026-11-23 on its branch from `main` 9877958.** v4 models the foe's flinches on the player
+  (`flinch: 'defend'`, the owner's decision after the player check and diagnosis); both sides stays available as `flinch=1`. Fixed:
+  the flinched Pokemon's move-hit record is cleared. Measured on fresh seeds `fresh3`: ref 26/20, bench 35/24, B2 7/17 (no supported
+  loss); about 7% slower. Acceptance (10:29 to 10:47 PM EST): snapshot identical, equal levels 0.9375 both, winner one level moved
+  between Staraptor and Floatzel. Next: the gates (T012), closing commit, merge on the owner's go. In parallel: a `/speckit-assess`
+  run on valuing the player's own flinch odds (the attack side), needed for King's Rock (031) to be steered toward. Diagnosis
+  knobs in the v4 candidate syntax: `flinch=attack|defend|0|1`, `crn=1`, `flinchAtk=<0..1>`; paired script `--master-suffix`.
+  Traps: decisions on fresh seeds only; never edit `sim/` or `src/` while a run or suite is going.
 - **Feature 029 `029-h4-resist-berries` built 2026-11-23 on its branch from `main` 58f1570.** Commits: pre-feature evidence and
   scripts; the player models resist berries (v4 knob `resistBerries`, engine checks: no difference, so no ledger entry; player
   check under Shift 0.8570 vs 0.8560, p 0.63, not worse); the ranking (Defense or Special Defense per threat, ability immunities)

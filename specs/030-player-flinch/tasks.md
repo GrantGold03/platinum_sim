@@ -68,7 +68,7 @@ with copies under `specs/030-player-flinch/evidence/`.
 - [x] T010 [US3] Merge gate (FR-011): a supported loss in T007, a speed under 75% in T008, a snapshot difference, a supported equal-level
       loss or a level difference above 1.0: no merge, record and stop at the report; identity differences are reported with the reason
       (flinch), not failures
-- [ ] T011 [US3] Docs: validation log (player check table per team, speed, acceptance table); `README.md` (030 block: what flinch
+- [x] T011 [US3] Docs: validation log (player check table per team, speed, acceptance table); `README.md` (030 block: what flinch
       modelling changes per team and the speed cost, what the player still does not model: the Fangs' status chances, confusion,
       infatuation; Principle VII); `FUTURE-FEATURES.md` section 0 (flinch done; 031 King's Rock / Razor Fang next, Shield Dust blocks the
       item flinch); `RUN-STATE.md`; Commit 4 `feat(030): acceptance; docs`; push

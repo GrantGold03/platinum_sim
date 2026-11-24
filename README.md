@@ -737,6 +737,22 @@ against 1 differing, p 0.63, not worse); the cost in speed is at most about 8%. 
 **Acceptance**: on B2 quick the berries were offered and screened (64 more teams beyond the cap) and none was chosen; the winner is
 the identical team on both codes.
 
+Feature 030 (2026-11-23, `specs/030-player-flinch/`): **flinch**. A damaging move such as Air Slash, Dark Pulse, Iron Head, the
+elemental Fangs or Dragon Rush can make its target lose its move for the turn, but only when the attacker moves first. **The player
+now expects the foe's flinches**: when a faster League Pokemon uses such a move, it allows for losing its own move that turn with the
+move's chance (doubled by Serene Grace; never through a substitute or Inner Focus; Steadfast's Speed boost included; Fake Out only on
+its user's first turn). It does **not** value its own flinch moves' chance to flinch the foe: that version was measured and lost on
+the B2 team (0.9375 against 0.9585 over 2,000 paired gauntlets on fresh seeds), because the player's two-turn look-ahead trades sure
+damage for a flinch chance too readily (for example Waterfall into a Milotic that resists it instead of Crunch); that side is being
+assessed separately. The battles themselves apply every flinch on both sides, so a team's measured clear rate always includes the
+flinches its own moves cause. **What this changes in the measurement** (constitution Principle VII): the player with the foe's
+flinches modelled, against the same player without, over 2,000 paired gauntlets each on fresh seeds: reference team 0.9815 against
+0.9785, benchmark team 0.9535 against 0.9480, B2 winner 0.9435 against 0.9485 (no difference supported on any team); it is about 7%
+slower. The engine agrees with the game on every flinch rule checked. A model fault found on the way and fixed: after a flinch the
+game clears the flinched Pokemon's "move that hit me" record; the player now does too. Not modelled: the player's own flinch odds,
+the Fangs' burn, freeze and paralysis chances, confusion and infatuation. **Acceptance**: the B2 quick winner is the same six
+Pokemon with the same moves and items, one level moved between Staraptor and Floatzel; at equal levels both codes clear 0.9375.
+
 Measured run times:
 
 | Run | Wall time |

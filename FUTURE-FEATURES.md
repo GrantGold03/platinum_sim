@@ -50,6 +50,13 @@ Built from the decomp and `main`, not from the 007-010 archive.
   of the type, Chilan any Normal hit; consumed); engine equal to the game; the top two per member offered, ranked by blocked League
   damage weighed against the member's Defense or Special Defense, ability immunities skipped; check not worse (0.857 vs 0.856,
   p 0.63); offered and not chosen on B2. Not modelled: the player's switch-in and threat judgements ignore the berry.
+- **Player flinch** (feature 030, built 2026-11-23): v4 expects the foe's flinches (defence only, the owner's decision); valuing its
+  own flinch odds lost on B2 (fresh seeds 0.9375 vs 0.9585) because the two-turn search trades damage for flinch chances; a
+  `/speckit-assess` run on the attack side follows. Fixed on the way: the flinched Pokemon's move-hit record is cleared. Open: the
+  model does not clear that record on sleep, full paralysis or freeze turns (would change today's play). **Next item group:
+  King's Rock / Razor Fang (031)**: one option with 2 copies (dominance rule; Gliscor's evolution uses the Razor Fang); the game rolls
+  it after every hit of a multi-hit move (10% each); Shield Dust blocks it; the battles credit its flinches even though the player
+  does not value them.
 - **H4+** One item group per feature, with the player learning each group where needed. Remaining groups
   (out of scope in H3): Choice Band / Specs / Scarf (the player must model choice lock first), Metronome,
   King's Rock / Razor Fang, then Lum Berry (resist berries done in 029). Life Orb has no
