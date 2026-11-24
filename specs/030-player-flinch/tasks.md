@@ -75,9 +75,9 @@ with copies under `specs/030-player-flinch/evidence/`.
 
 ## Phase 6: Gates and close
 
-- [ ] T012 Gates, nothing else running: engine diff empty; `sim` diff only the player, the knob and the test; `src` diff only a ledger
+- [x] T012 Gates, nothing else running: engine diff empty; `sim` diff only the player, the knob and the test; `src` diff only a ledger
       entry if T003 found one; hashes and ledger version as expected; Node suite; `uv run pytest -q --durations=25 > runs/030-evidence/full.log 2>&1; echo full exit=$?`; log and `evidence/gates.txt`
-- [ ] T013 Closing commit `docs(030): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
+- [x] T013 Closing commit `docs(030): gates recorded; feature closed on its branch`; push; report with the merge command; merge on the user's go
 
 ## Dependencies
 

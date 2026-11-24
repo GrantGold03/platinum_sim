@@ -205,3 +205,10 @@ measured on fresh seeds `fresh3` (previous section); the T007 table above is the
 **Gate (FR-011): pass** for the shipped defence-only player: no supported loss on fresh seeds (previous sections), speed within the
 bound, snapshot identical, equal-level comparison passes. The quick search's winner differs only in how one level is split between
 Staraptor and Floatzel (the search's own noise between two codes whose players differ).
+
+## T012 Gates (10:48:14 PM to 12:25:27 AM EST, alone)
+
+Vendored engine diff against `main`: empty. `src` diff: empty (no ledger entry needed). `sim` diff: the player (`expectimax2.mjs`), the
+knobs (`gauntlet.mjs`), the bench's v4-candidate support (`bench.mjs`), the tests (`flinch.test.mjs` new, the 018 options pin) and the
+replay fixture's v4 entry. Hashes: sim sha256:d305a555… (changed, as expected), platsim sha256:f3271a01… (unchanged); ledger version
+unchanged at sha256:821f33356f6a61bb. Node suite: **414 pass, 0 fail**, exit 0. Full pytest: **675 passed, 4 xfailed**, exit 0 (1:34:34).

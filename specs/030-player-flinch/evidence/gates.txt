@@ -1,0 +1,23 @@
+start 10:48:14 PM EST
+== engine diff (vendored pokemon-showdown) vs main:
+== sim diff vs main:
+ sim/bench.mjs                 |   5 +-
+ sim/gauntlet.mjs              |   3 +
+ sim/policy/expectimax2.mjs    |  63 ++++++++++++++--
+ sim/test/expectimax2.test.mjs |   2 +-
+ sim/test/flinch.test.mjs      | 162 ++++++++++++++++++++++++++++++++++++++++++
+ sim/test/replay_prof_a.json   |   2 +-
+ 6 files changed, 228 insertions(+), 9 deletions(-)
+== src diff vs main:
+== hashes:
+sha256:d305a55582d8a59722f853216eb8e82489d7cf924f3a14c218656671425f7e4a sha256:f3271a011f8a55146cccdac95b0b5baeecb638885f83dd0d4b4f493c16f2b974
+ledger sha256:821f33356f6a61bb
+node exit=0
+# tests 414
+# pass 414
+# fail 0
+full exit=0
+7.46s call     tests/integration/test_champion_topup.py::test_deterministic_for_fixed_seed
+6.84s setup    tests/unit/test_marginal_coverage.py::test_b2_allocation_record_names_the_contested_tms
+675 passed, 4 xfailed, 1 warning in 5674.36s (1:34:34)
+end 12:25:27 AM EST
